@@ -12,7 +12,6 @@ debian/tmp/sbin/MAKEDEV
 debian/tmp/sbin/losetup
 debian/tmp/sbin/reboot
 debian/tmp/sbin/halt
-debian/tmp/sbin/fsck
 debian/tmp/sbin/swapon
 debian/tmp/sbin/swapoff
 debian/tmp/sbin/fsck.ufs
