@@ -24,6 +24,7 @@ hurd (20050119-1) UNRELEASED; urgency=low
     of debian/tmp/bin/fakeroot.
   * NEWS: New file.  Explain the console-client command line interface
     changes.
+  * debian/patches/siocgifhwaddr.patch: New patch by Marco Gerards.
 
  -- Michael Banck <mbanck@debian.org>  Fri, 18 Feb 2005 02:45:06 +0100
 

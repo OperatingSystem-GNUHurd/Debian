@@ -1,0 +1,71 @@
+2004-08-03  Marco Gerards  <metgerards@student.han.nl>
+
+	* iioctl.defs (iioctl_siocgifhwaddr): New RPC.
+
+Index: iioctl.defs
+===================================================================
+RCS file: /cvsroot/hurd/hurd/hurd/iioctl.defs,v
+retrieving revision 1.1
+diff -u -p -r1.1 iioctl.defs
+--- iioctl.defs	11 Jan 2001 22:28:29 -0000	1.1
++++ iioctl.defs	3 Aug 2004 13:12:34 -0000
+@@ -131,7 +131,14 @@ routine iioctl_siocgifnetmask (
+ 	inout ifnam: ifname_t;
+ 	inout netmask: sockaddr_t);
+ 
+-skip; skip; skip; skip; /* 38, 39, 40, 41 unused */
++skip; /* 38 SIOCGARP -- Not implemented yet */
++
++routine iioctl_siocgifhwaddr (
++	reqport: io_t;
++	inout ifnam: ifname_t;
++	inout netmask: sockaddr_t);
++
++skip; skip; /* 40, 41 unused */
+ skip; skip; skip; skip; /* 42, 43, 44, 45 unused */
+ skip; skip; skip; skip; /* 46, 47, 48, 49 unused */
+ skip; /* 50 unused */
+
+
+
+2004-08-03  Marco Gerards  <metgerards@student.han.nl>
+
+	* iioctl-ops.c (S_iioctl_siocgifhwaddr): New function.
+
+
+Index: iioctl-ops.c
+===================================================================
+RCS file: /cvsroot/hurd/hurd/pfinet/iioctl-ops.c,v
+retrieving revision 1.2
+diff -u -p -r1.2 iioctl-ops.c
+--- iioctl-ops.c	17 Jan 2001 01:37:51 -0000	1.2
++++ iioctl-ops.c	3 Aug 2004 13:11:45 -0000
+@@ -361,3 +361,28 @@ S_iioctl_siocgifname (io_t port,
+ 
+   return err;
+ }
++
++error_t
++S_iioctl_siocgifhwaddr (io_t port,
++			ifname_t ifname,
++			sockaddr_t *addr)
++{
++  error_t err = 0;
++  struct device *dev;
++
++  if (!port)
++    return EOPNOTSUPP;
++
++  dev = get_dev (ifname);
++  if (!dev)
++    err = ENODEV;
++  else
++    {
++      memcpy (addr->sa_data, dev->dev_addr, MAX_ADDR_LEN);
++      addr->sa_family = dev->type;
++
++    }
++  
++  __mutex_unlock (&global_lock);
++  return err;
++}
