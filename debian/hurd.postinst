@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -e
+
+update-alternatives --quiet \
+	--install /libexec/runsystem runsystem /libexec/runsystem.gnu 20
+
+if ! grep --quiet '^login:' /etc/passwd; then
+	adduser --quiet --system --home /etc/login --gecos "Not logged in" --not-create-home login
+	chsh -s /bin/bash login
+fi
+
+#DEBHELPER#
+
+(cd /dev && /sbin/MAKEDEV vcs) || true
+(cd /dev && /sbin/MAKEDEV tty1) || true
+(cd /dev && /sbin/MAKEDEV tty2) || true
+(cd /dev && /sbin/MAKEDEV tty3) || true
+(cd /dev && /sbin/MAKEDEV tty4) || true
+(cd /dev && /sbin/MAKEDEV tty5) || true
+(cd /dev && /sbin/MAKEDEV tty6) || true
+

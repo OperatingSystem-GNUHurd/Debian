@@ -1,0 +1,14 @@
+--- hurd-20040301.orig/exec/exec.c
++++ hurd-20040301/exec/exec.c
+@@ -39,6 +39,11 @@
+ #include <sys/stat.h>
+ #include <sys/param.h>
+ #include <unistd.h>
++#include <elf.h>
++
++#ifndef PT_GNU_STACK
++#define PT_GNU_STACK 0x6474e551
++#endif
+ 
+ mach_port_t procserver;	/* Our proc port.  */
+ 
