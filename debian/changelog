@@ -1,8 +1,8 @@
-hurd (20040508-4) UNRELEASED; urgency=low
+hurd (20040508-4) unstable; urgency=low
 
   [ Michael Banck ]
   * debian/changelog: Added back 20040301-1 entry which got lost.
-  * debian/hurd.install: Do not install /sbin/fsck. (Closes: #272655) 
+  * debian/hurd.install: Do not install /sbin/fsck. (Closes: #272655)
   * debian/patches/rc.patch: Updated to use e2fsprog's /sbin/fsck
     command-line options.  Make sure the root file system is read-only
     during the fsck run, and update it to be writable again if fsck
@@ -19,7 +19,7 @@ hurd (20040508-4) UNRELEASED; urgency=low
       (Closes: #273507)
       Thanks Ognyan Kulev <ogi@fmi.uni-sofia.bg>.
 
- -- Michael Banck <mbanck@debian.org>  Tue, 21 Sep 2004 19:23:51 +0200
+ -- Michael Banck <mbanck@debian.org>  Thu,  7 Oct 2004 20:11:38 +0200
 
 hurd (20040508-3) unstable; urgency=low
 
