@@ -7,8 +7,8 @@ Index: iioctl.defs
 RCS file: /cvsroot/hurd/hurd/hurd/iioctl.defs,v
 retrieving revision 1.1
 diff -u -p -r1.1 iioctl.defs
---- iioctl.defs	11 Jan 2001 22:28:29 -0000	1.1
-+++ iioctl.defs	3 Aug 2004 13:12:34 -0000
+--- hurd/iioctl.defs	11 Jan 2001 22:28:29 -0000	1.1
++++ hurd/iioctl.defs	3 Aug 2004 13:12:34 -0000
 @@ -131,7 +131,14 @@ routine iioctl_siocgifnetmask (
  	inout ifnam: ifname_t;
  	inout netmask: sockaddr_t);
@@ -38,8 +38,8 @@ Index: iioctl-ops.c
 RCS file: /cvsroot/hurd/hurd/pfinet/iioctl-ops.c,v
 retrieving revision 1.2
 diff -u -p -r1.2 iioctl-ops.c
---- iioctl-ops.c	17 Jan 2001 01:37:51 -0000	1.2
-+++ iioctl-ops.c	3 Aug 2004 13:11:45 -0000
+--- pfinet/iioctl-ops.c	17 Jan 2001 01:37:51 -0000	1.2
++++ pfinet/iioctl-ops.c	3 Aug 2004 13:11:45 -0000
 @@ -361,3 +361,28 @@ S_iioctl_siocgifname (io_t port,
  
    return err;
