@@ -5,7 +5,9 @@ hurd (20050119-1) UNRELEASED; urgency=low
       Pietro Ferrari. (Closes: #184344)
     + Contains console repeaters by Marco Gerards.
     + Contains mount argp fixes. (Closes: #151407)
-  [ Michael Banck] * debian/patches/exec.patch: Removed, no longer needed.
+
+  [ Michael Banck] 
+  * debian/patches/exec.patch: Removed, no longer needed.
   * debian/patches/mouse.patch: Likewise.
   * debian/patches/console_repeater.patch: Removed, applied upstream.
   * debian/patches/libcons_repeater.patch: Likewise.
@@ -17,14 +19,16 @@ hurd (20050119-1) UNRELEASED; urgency=low
   * debian/control (hurd-dbg): New package.
   * debian/rules (DEB_DH_STRIP_ARGS): Add support for hurd-dbg.
   * debian/hurd-dbg.dirs: New file.
-  * debian/rules (install/hurd::): Rename /bin/fakeroot to 
+  * debian/rules (install/hurd::): Rename /bin/fakeroot to
     /bin/fakeroot-hurd.
-  * debian/control (hurd): Removed fakeroot from Provides:, Replaces: 
+  * debian/control (hurd): Removed fakeroot from Provides:, Replaces:
     and Conflicts:. (Closes: #293511)
   * debian/hurd.install: Install debian/tmp/bin/fakeroot-hurd instead
     of debian/tmp/bin/fakeroot.
+  * NEWS: New file.  Explain the console-client command line interface
+    changes.
 
- -- Michael Banck <mbanck@debian.org>  Fri, 21 Jan 2005 02:33:36 +0100
+ -- Michael Banck <mbanck@debian.org>  Fri, 18 Feb 2005 02:45:06 +0100
 
 hurd (20040508-6) unstable; urgency=low
 
