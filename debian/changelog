@@ -14,6 +14,9 @@ hurd (20050119-1) unreleased; urgency=low
   * debian/patches-contrib/kbd.patch: Removed, no longer needed.
   * debian/patches/libpthread_linker_script.patch: New patch.  Install
     libpthread.a linker script correctly. (Closes: #291307)
+  * debian/control (hurd-dbg): New package.
+  * debian/rules (DEB_DH_STRIP_ARGS): Add support for hurd-dbg.
+  * debian/hurd-dbg.dirs: New file.
 
  -- Michael Banck <mbanck@debian.org>  Wed, 19 Jan 2005 21:58:24 +0100
 

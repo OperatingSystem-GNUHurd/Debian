@@ -26,3 +26,11 @@ Architecture: hurd-i386
 Depends: hurd
 Description: The GNU Hurd (development files)
  This package includes the header files and the static libraries.
+
+Package: hurd-dbg
+Priority: optional
+Section: libdevel
+Architecture: hurd-i386
+Depends: hurd (= ${Source-Version})
+Description: The GNU Hurd (debugging files)
+ This package includes the unstripped binaries and libraries.
