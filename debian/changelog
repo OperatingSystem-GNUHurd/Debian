@@ -1,4 +1,4 @@
-hurd (20050119-1) UNRELEASED; urgency=low
+hurd (20050119-1) unstable; urgency=low
 
   * New snapshot from CVS.
     + Contains libpthread header fixes by Neal Walfield and
@@ -6,7 +6,7 @@ hurd (20050119-1) UNRELEASED; urgency=low
     + Contains console repeaters by Marco Gerards.
     + Contains mount argp fixes. (Closes: #151407)
 
-  [ Michael Banck] 
+  [ Michael Banck]
   * debian/patches/exec.patch: Removed, no longer needed.
   * debian/patches/mouse.patch: Likewise.
   * debian/patches/console_repeater.patch: Removed, applied upstream.
@@ -27,7 +27,7 @@ hurd (20050119-1) UNRELEASED; urgency=low
   * debian/patches/siocgifhwaddr.patch: New patch by Marco Gerards.
   * debian/patches/isofs_boot.patch: New patch by Alfred M. Szmidt.
 
- -- Michael Banck <mbanck@debian.org>  Fri, 18 Feb 2005 02:45:06 +0100
+ -- Michael Banck <mbanck@debian.org>  Wed, 23 Feb 2005 20:52:07 +0100
 
 hurd (20040508-6) unstable; urgency=low
 
