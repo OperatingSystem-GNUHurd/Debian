@@ -25,6 +25,7 @@ hurd (20050119-1) UNRELEASED; urgency=low
   * NEWS: New file.  Explain the console-client command line interface
     changes.
   * debian/patches/siocgifhwaddr.patch: New patch by Marco Gerards.
+  * debian/patches/isofs_boot.patch: New patch by Alfred M. Szmidt.
 
  -- Michael Banck <mbanck@debian.org>  Fri, 18 Feb 2005 02:45:06 +0100
 
