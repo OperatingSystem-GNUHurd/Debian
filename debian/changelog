@@ -9,7 +9,11 @@ hurd (20040508-4) UNRELEASED; urgency=low
     succeeds. (Closes: #273508)
 
   [ Guillem Jover ]
-  * debian/hurd.postinst: Move /bin/login suid root chmod to debian/rules.
+  * debian/hurd.postinst:
+    - Move /bin/login suid root chmod to debian/rules.
+    - Set suid bit to other binaries (/bin/ps, /bin/ids, /bin/w).
+      (Closes: #273507)
+      Thanks Ognyan Kulev <ogi@fmi.uni-sofia.bg>.
 
  -- Michael Banck <mbanck@debian.org>  Tue, 21 Sep 2004 19:23:51 +0200
 
