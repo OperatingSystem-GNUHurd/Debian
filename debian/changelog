@@ -1,4 +1,4 @@
-hurd (20050119-2) unstable; urgency=low
+hurd (20050119-2) unreleased; urgency=low
 
   [ Michael Banck ]
   * debian/hurd-dev.install: Install development libraries into /lib,
