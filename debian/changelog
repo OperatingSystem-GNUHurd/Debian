@@ -1,7 +1,9 @@
 hurd (200501xx-1) unreleased; urgency=low
 
   * New snapshot from CVS.
-
+    + Contains libpthread header fixes by Neal Walfield and
+      Pietro Ferrari. (Closes: #184344)
+    + Contains console repeaters by Marco Gerards.
   [ Michael Banck]
   * debian/patches/exec.patch: Removed, no longer needed.
   * debian/patches/mouse.patch: Likewise.
