@@ -1,0 +1,2557 @@
+diff -upN --exclude=CVS ../console-client.cvs/Makefile ./Makefile
+--- console-client.cvs/Makefile	2002-09-17 12:26:10.000000000 +0000
++++ console-client/Makefile	2004-07-27 07:19:22.000000000 +0000
+@@ -19,13 +19,13 @@ dir := console-client
+ makemode := utility
+ 
+ target = console
+-SRCS = console.c timer.c driver.c
++SRCS = console.c timer.c driver.c trans.c
+ LCLHDRS = timer.h driver.h display.h input.h bell.h \
+-	  unicode.h bdf.h \
++	  unicode.h bdf.h inputdev.h \
+ 	  vga-dynafont.h vga-dynacolor.h vga-hw.h vga.h
+ 
+ OBJS = $(filter-out %.sh,$(SRCS:.c=.o))
+-HURDLIBS = cons threads ports
++HURDLIBS = cons threads ports netfs fshelp iohelp
+ LDLIBS = -ldl
+ module-dir = $(libdir)/hurd/console
+ console-LDFLAGS = -Wl,-E
+@@ -41,11 +41,13 @@ driver-CPPFLAGS = -D'CONSOLE_DEFPATH="$(
+ console: ../libcons/libcons.a ../libports/libports.a \
+ 	../libthreads/libthreads.a ../libshouldbeinlibc/libshouldbeinlibc.a
+ 
+-modules = vga pc_kbd generic_speaker
++modules = vga pc_kbd generic_speaker pc_mouse
+ 
+ vga.so.$(hurd-version): $(patsubst %.c,%_pic.o,bdf.c vga-dynafont.c \
+ 	vga-dynacolor.c vga-support.c vga.c)
+-pc_kbd.so.$(hurd-version): $(patsubst %.c,%_pic.o,pc-kbd.c)
++pc_kbd.so.$(hurd-version): $(patsubst %.c,%_pic.o,pc-kbd.c kdioctlServer.o kbd-repeat.c)
++pc_mouse.so.$(hurd-version): $(patsubst %.c,%_pic.o,pc-mouse.c)
++
+ generic_speaker.so.$(hurd-version): $(patsubst %.c,%_pic.o,generic-speaker.c)
+ 
+ ifneq ($(LIBNCURSESW),)
+diff -upN --exclude=CVS ../console-client.cvs/console.c ./console.c
+--- console-client.cvs/console.c	2004-07-27 07:14:05.000000000 +0000
++++ console-client/console.c	2004-07-27 06:52:59.000000000 +0000
+@@ -47,6 +47,15 @@ static struct mutex global_lock;
+    displayed.  */
+ static vcons_t active_vcons = NULL;
+ 
++/* Contains the VT id when switched away.  */
++static int saved_id = 0;
++
++/* The console, used to switch back.  */
++static cons_t saved_cons;
++
++/* The pathname of the node on which the translator is set.  */
++static char *consnode_path;
++
+ 
+ /* Callbacks for input source drivers.  */
+ 
+@@ -121,6 +130,36 @@ console_input (char *buf, size_t size)
+ }
+ 
+ 
++error_t
++console_move_mouse (mouse_event_t ev)
++{
++  error_t err;
++  vcons_t vcons;
++
++  mutex_lock (&global_lock);
++  vcons = active_vcons;
++
++  vcons = active_vcons;
++  if (!vcons)
++    {
++      mutex_unlock (&global_lock);
++      return EINVAL;
++    }
++  ports_port_ref (vcons);
++  mutex_unlock (&global_lock);
++
++  if (vcons)
++    {
++      err = cons_vcons_move_mouse (vcons, ev);
++      ports_port_deref (vcons);
++    }
++
++  mutex_unlock (&global_lock);
++
++  return 0;
++}
++
++
+ /* Scroll the active console by TYPE and VALUE as specified by
+    cons_vcons_scrollback.  */
+ int
+@@ -148,6 +187,52 @@ console_scrollback (cons_scroll_t type, 
+ }
+ 
+ 
++/* Switch away from the console an external use of the console like
++   XFree.  */
++void
++console_switch_away (void)
++{
++  mutex_lock (&global_lock);
++  saved_id = active_vcons->id;
++  saved_cons = active_vcons->cons;
++  cons_vcons_close (active_vcons);
++  active_vcons = NULL;
++  mutex_unlock (&global_lock);
++}
++
++/* Switch back to the console client from an external user of the
++   console like XFree.  */
++void
++console_switch_back (void)
++{
++  vcons_list_t conslist;
++  mutex_lock (&global_lock);
++  if (saved_cons)
++    {
++      error_t err;
++
++      err = cons_lookup (saved_cons, saved_id, 1, &conslist);
++      if (err)
++	{
++	  mutex_unlock (&global_lock);
++	  return;
++	}
++
++      err = cons_vcons_open (saved_cons, conslist, &active_vcons);
++      if (err)
++	{
++	  mutex_unlock (&global_lock);
++	  return;
++	}
++	
++      conslist->vcons = active_vcons;
++      saved_cons = NULL;
++      mutex_unlock (&active_vcons->lock);
++    }
++  mutex_unlock (&global_lock);
++}
++
++
+ /* Exit the console client.  Does not return.  */
+ void
+ console_exit (void)
+@@ -371,6 +456,33 @@ cons_vcons_set_dimension (vcons_t vcons,
+   return 0;
+ }
+ 
++
++error_t
++cons_vcons_set_mousecursor_pos (vcons_t vcons, float x, float y)
++{
++  mutex_lock (&global_lock);
++  if (vcons == active_vcons)
++    display_iterate
++      if (display->ops->set_mousecursor_pos)
++	display->ops->set_mousecursor_pos (display->handle, x, y);
++  mutex_unlock (&global_lock);
++  return 0;
++}
++
++
++error_t
++cons_vcons_set_mousecursor_status (vcons_t vcons, int status)
++{
++  mutex_lock (&global_lock);
++  if (vcons == active_vcons)
++    display_iterate
++      if (display->ops->set_mousecursor_status)
++	display->ops->set_mousecursor_status (display->handle, status);
++  mutex_unlock (&global_lock);
++  return 0;
++
++}
++
+ 
+ /* Console-specific options.  */
+ static const struct argp_option
+@@ -378,6 +490,7 @@ options[] =
+   {
+     {"driver-path", 'D', "PATH", 0, "Specify search path for driver modules" },
+     {"driver", 'd', "NAME", 0, "Add driver NAME to the console" },
++    {"consnode", 'c', "PATH", 0, "Set a translator on the node PATH" },
+     {0}
+   };
+ 
+@@ -426,6 +539,12 @@ parse_opt (int key, char *arg, struct ar
+       devcount++;
+       break;
+ 
++    case 'c':
++      consnode_path = strdup (arg);
++      if (!consnode_path)
++	return ENOMEM;
++      break;
++      
+     case ARGP_KEY_SUCCESS:
+       if (!devcount)
+ 	{
+@@ -446,6 +565,33 @@ static const struct argp_child startup_c
+ static struct argp startup_argp = {options, parse_opt, 0,
+ 				   0, startup_children};
+ 
++static int exit_signal = 0;
++
++static void
++sighandler (int sig)
++{
++  exit_signal = 1;
++}
++
++static any_t
++wait_for_exit (any_t unused)
++{
++  while (!exit_signal)
++    sleep (1);
++  console_exit ();
++  return 0;
++}
++
++#define HANDLE_SIGNAL(SIG)				\
++  if (signal (SIG, sighandler))				\
++    {							\
++      driver_fini ();					\
++      error (1, errno, "Couldn't set signal handler");	\
++    }
++
++error_t test_read (loff_t offset, size_t *len, void *data);
++error_t test_read2 (loff_t offset, size_t *len, void *data);
++
+ int
+ main (int argc, char *argv[])
+ {
+@@ -456,7 +602,13 @@ main (int argc, char *argv[])
+ 
+   /* Parse our command line.  This shouldn't ever return an error.  */
+   argp_parse (&startup_argp, argc, argv, ARGP_IN_ORDER, 0, 0);
+-
++  
++  HANDLE_SIGNAL (SIGTERM);
++  HANDLE_SIGNAL (SIGINT);
++  HANDLE_SIGNAL (SIGQUIT);
++  HANDLE_SIGNAL (SIGILL);
++  HANDLE_SIGNAL (SIGSEGV);
++  
+   err = driver_start (&errname);
+   if (err)
+     error (1, err, "Starting driver %s failed", errname);
+@@ -469,14 +621,19 @@ main (int argc, char *argv[])
+       driver_fini ();
+       error (1, err, "Console library initialization failed");
+     }
+-
++  
+   err = timer_init ();
+   if (err)
+     {
+       driver_fini ();
+       error (1, err, "Timer thread initialization failed");
+     }
+-
++  
++  cthread_detach (cthread_fork (wait_for_exit, NULL));
++  
++  if (consnode_path)
++    console_setup_node (consnode_path);
++  
+   cons_server_loop ();
+ 
+   /* Never reached.  */
+diff -upN --exclude=CVS ../console-client.cvs/display.h ./display.h
+--- console-client.cvs/display.h	2004-03-07 00:27:08.000000000 +0000
++++ console-client/display.h	2004-04-02 07:29:55.000000000 +0000
+@@ -1,5 +1,5 @@
+ /* display.h - The interface to and for a display driver.
+-   Copyright (C) 2002, 2003 Free Software Foundation, Inc.
++   Copyright (C) 2002, 2003, 2004 Free Software Foundation, Inc.
+    Written by Marcus Brinkmann.
+ 
+    This file is part of the GNU Hurd.
+@@ -141,6 +141,15 @@ struct display_ops
+      write that covers the whole new screen.  */
+   error_t (*set_dimension) (void *handle, unsigned int width,
+ 			    unsigned int height);
++
++  /* Move the mouse cursor to the position X, Y.  If the mouse cursor
++     is visible, update its position.  */
++  error_t (*set_mousecursor_pos) (void *handle, float x, float y);
++
++  /* If STATUS is set to 0, hide the mouse cursor, otherwise show
++     it.  */
++  error_t (*set_mousecursor_status) (void *handle, int status);
++
+ };
+ 
+ #endif	/* _DISPLAY_H_ */
+diff -upN --exclude=CVS ../console-client.cvs/driver.c ./driver.c
+--- console-client.cvs/driver.c	2004-03-21 19:57:00.000000000 +0000
++++ console-client/driver.c	2004-04-02 07:29:40.000000000 +0000
+@@ -248,8 +248,8 @@ error_t
+ driver_start (char **name)
+ {
+   error_t err = 0;
+-  unsigned int i;
+-
++  int i;
++  
+   mutex_lock (&driver_list_lock);
+   for (i = 0; i < driver_list_len; i++)
+     {
+diff -upN --exclude=CVS ../console-client.cvs/input.h ./input.h
+--- console-client.cvs/input.h	2002-09-17 12:26:10.000000000 +0000
++++ console-client/input.h	2004-07-27 06:47:14.000000000 +0000
+@@ -1,5 +1,5 @@
+ /* input.h - The interface to and for an input driver.
+-   Copyright (C) 2002 Free Software Foundation, Inc.
++   Copyright (C) 2002, 2004 Free Software Foundation, Inc.
+    Written by Marcus Brinkmann.
+ 
+    This file is part of the GNU Hurd.
+@@ -65,6 +65,17 @@ void console_error (const wchar_t *const
+ /* Exit the console client.  Does not return.  */
+ void console_exit (void);
+ 
++/* Switch away from the console an external use of the console like
++   XFree.  */
++void console_switch_away (void);
++
++/* Switch back to the console client from an external user of the
++   console like XFree.  */
++void console_switch_back (void);
++
++error_t console_move_mouse (mouse_event_t ev);
++
++
+ #if QUAERENDO_INVENIETIS
+ /* Do not use, do not remove.  */
+ void console_deprecated (int key);
+diff -upN --exclude=CVS ../console-client.cvs/inputdev.h ./inputdev.h
+--- console-client.cvs/inputdev.h	1970-01-01 00:00:00.000000000 +0000
++++ console-client/inputdev.h	2004-07-25 01:55:17.000000000 +0000
+@@ -0,0 +1,138 @@
++/* inputdev.h - Interfaces for the PC pc-kbd and mouse input drivers.
++   Copyright (C) 2002, 2004 Free Software Foundation, Inc.
++   Written by Marco Gerards.
++
++   This file is part of the GNU Hurd.
++
++   The GNU Hurd is free software; you can redistribute it and/or
++   modify it under the terms of the GNU General Public License as
++   published by the Free Software Foundation; either version 2, or (at
++   your option) any later version.
++
++   The GNU Hurd is distributed in the hope that it will be useful, but
++   WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this program; if not, write to the Free Software
++   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA. */
++
++/* This gross stuff is cut & pasted from Mach sources, as Mach doesn't
++   export the interface we are using here.  */
++
++/*
++ * Mach Operating System
++ * Copyright (c) 1991,1990,1989 Carnegie Mellon University
++ * All Rights Reserved.
++ *
++ * Permission to use, copy, modify and distribute this software and its
++ * documentation is hereby granted, provided that both the copyright
++ * notice and this permission notice appear in all copies of the
++ * software, derivative works or modified versions, and any portions
++ * thereof, and that both notices appear in supporting documentation.
++ *
++ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
++ * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
++ * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
++ *
++ * Carnegie Mellon requests users of this software to return to
++ *
++ *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
++ *  School of Computer Science
++ *  Carnegie Mellon University
++ *  Pittsburgh PA 15213-3890
++ *
++ * any improvements or extensions that they make and grant Carnegie Mellon
++ * the rights to redistribute these changes.
++ */
++
++#ifndef _INPUTDEV_H_
++#define _INPUTDEV_H_ 1
++
++#include <trans.h>
++
++typedef u_short kev_type;               /* kd event type */
++
++/* (used for event records) */
++struct mouse_motion {
++  short mm_deltaX;                /* units? */
++  short mm_deltaY;
++};
++typedef u_char Scancode;
++
++typedef struct {
++  kev_type type;                  /* see below */
++  struct timeval time;            /* timestamp */
++  union {                         /* value associated with event */
++    boolean_t up;           /* MOUSE_LEFT .. MOUSE_RIGHT */
++    Scancode sc;            /* KEYBD_EVENT */
++    struct mouse_motion mmotion;    /* MOUSE_MOTION */
++  } value;
++} kd_event;
++#define m_deltaX        mmotion.mm_deltaX
++#define m_deltaY        mmotion.mm_deltaY
++
++/*
++ * kd_event ID's.
++ */
++#define MOUSE_LEFT      1               /* mouse left button up/down */
++#define MOUSE_MIDDLE    2
++#define MOUSE_RIGHT     3
++#define MOUSE_MOTION    4               /* mouse motion */
++#define KEYBD_EVENT     5               /* key up/down */
++
++
++#define IOCPARM_MASK    0x1fff          /* parameter length, at most 13 bits */
++#define IOC_OUT         0x40000000      /* copy out parameters */
++#define IOC_IN          0x80000000U     /* copy in parameters */
++
++#ifndef _IOC
++#define _IOC(inout,group,num,len) \
++        (inout | ((len & IOCPARM_MASK) << 16) | ((group) << 8) | (num))
++#endif
++#ifndef _IOR
++#define _IOR(g,n,t)     _IOC(IOC_OUT,   (g), (n), sizeof(t))
++#endif
++#ifndef _IOW
++#define _IOW(g,n,t)     _IOC(IOC_IN,    (g), (n), sizeof(t))
++#endif
++
++#define KDSKBDMODE      _IOW('K', 1, int)       /* set keyboard mode */
++#define KB_EVENT        1
++#define KB_ASCII        2
++
++#define KDGKBDTYPE      _IOR('K', 2, int)       /* get keyboard type */
++#define KB_VANILLAKB    0
++
++#define KDSETLEDS      _IOW('K', 5, int)        /* set keyboard leds */
++
++/*
++ * Low 3 bits of minor are the com port #.
++ * The high 5 bits of minor are the mouse type
++ */
++#define MOUSE_SYSTEM_MOUSE      0
++#define MICROSOFT_MOUSE         1
++#define IBM_MOUSE               2
++#define NO_MOUSE                3
++#define LOGITECH_TRACKMAN       4
++#define MICROSOFT_MOUSE7        5
++
++#define DEV_COM0	"com0"
++#define DEV_COM1	"com1"
++
++/* End of Mach code.  */
++
++
++/* Amount of times the device was opened.  Normally this translator
++   should be only opened once.  */ 
++extern int kbd_repeater_opened;
++
++/* Place the keyboard event KEY in the keyboard buffer.  */
++void kbd_repeat_key (kd_event *key);
++
++/* Set the repeater translator.  The node will be named NODENAME and
++   NODE will be filled with information about this node.  */
++error_t kbd_setrepeater (const char *nodename, consnode_t *node);
++
++#endif	/* _INPUTDEV_H_ */
+diff -upN --exclude=CVS ../console-client.cvs/kbd-repeat.c ./kbd-repeat.c
+--- console-client.cvs/kbd-repeat.c	1970-01-01 00:00:00.000000000 +0000
++++ console-client/kbd-repeat.c	2004-07-27 06:51:47.000000000 +0000
+@@ -0,0 +1,258 @@
++/* kbd-repeat.c - Keyboard repeater.
++   Copyright (C) 2004 Free Software Foundation, Inc.
++   Written by Marco Gerards.
++
++   This file is part of the GNU Hurd.
++
++   The GNU Hurd is free software; you can redistribute it and/or
++   modify it under the terms of the GNU General Public License as
++   published by the Free Software Foundation; either version 2, or (at
++   your option) any later version.
++
++   The GNU Hurd is distributed in the hope that it will be useful, but
++   WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this program; if not, write to the Free Software
++   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA. */
++
++#include <hurd/netfs.h>
++#include <stdlib.h>
++#include <error.h>
++#include <string.h>
++#include <fcntl.h>
++#include <sys/mman.h>
++
++#include "kdioctl_S.h"
++#include "inputdev.h"
++#include "input.h"
++
++/* The amount of keyboard events that can be stored in the keyboard buffer.  */
++#define KBDEVTBUFSZ	20
++
++/* The size of the keyboard buffer in bytes.  */
++#define KBDBUFSZ	(KBDEVTBUFSZ * sizeof (kd_event))
++
++/* Return the position of X in the buffer.  */
++#define KBDBUF_POS(x)	((x) % KBDBUFSZ)
++
++/* The keyboard buffer.  */
++static struct kbdbuf
++{
++  char keybuffer[KBDBUFSZ];
++  int pos;
++  size_t size;
++  struct condition readcond;
++  struct condition writecond;
++} kbdbuf;
++
++/* Wakeup for select */
++static struct condition select_alert;
++
++/* The global lock */
++static struct mutex global_lock;
++
++/* Amount of times the device was opened.  Normally this translator
++   should be only opened once.  */ 
++int kbd_repeater_opened;
++
++
++/* Place the keyboard event KEY in the keyboard buffer.  */
++void
++kbd_repeat_key (kd_event *key)
++{
++  kd_event *ev;
++
++  mutex_lock (&global_lock);
++  while (kbdbuf.size + sizeof (kd_event) > KBDBUFSZ)
++    {
++      /* The input buffer is full, wait until there is some space.  */
++      if (hurd_condition_wait (&kbdbuf.writecond, &global_lock))
++	{
++	  mutex_unlock (&global_lock);
++	  /* Interrupt, silently continue.  */
++	}
++    }
++  ev = (kd_event *) &kbdbuf.keybuffer[KBDBUF_POS (kbdbuf.pos 
++						  + kbdbuf.size)];
++  kbdbuf.size += sizeof (kd_event);
++  memcpy (ev, key, sizeof (kd_event));
++  
++  condition_broadcast (&kbdbuf.readcond);
++  mutex_unlock (&global_lock);
++}
++
++
++static error_t
++repeater_select (struct protid *cred, mach_port_t reply,
++		 mach_msg_type_name_t replytype, int *type)
++{
++  if (!cred)
++    return EOPNOTSUPP;
++
++  if (*type & ~SELECT_READ)
++    return EINVAL;
++
++  if (*type == 0)
++    return 0;
++
++  mutex_lock (&global_lock);
++  while (1)
++    {
++      if (kbdbuf.size > 0)
++	{
++	  *type = SELECT_READ;
++	  mutex_unlock (&global_lock);
++
++	  return 0;
++	}
++      
++      ports_interrupt_self_on_port_death (cred, reply);
++      if (hurd_condition_wait (&select_alert, &global_lock))
++	{
++	  *type = 0;
++	  mutex_unlock (&global_lock);
++
++	  return EINTR;
++	}
++    }
++}
++
++
++static error_t
++repeater_read (struct protid *cred, char **data,
++	       mach_msg_type_number_t *datalen, off_t offset,
++	       mach_msg_type_number_t amount)
++{
++  /* Deny access if they have bad credentials. */
++  if (! cred)
++    return EOPNOTSUPP;
++  else if (! (cred->po->openstat & O_READ))
++    return EBADF;
++  
++  mutex_lock (&global_lock);
++  while (amount > kbdbuf.size)
++    {
++      if (cred->po->openstat & O_NONBLOCK && amount > kbdbuf.size)
++	{
++	  mutex_unlock (&global_lock);
++	  return EWOULDBLOCK;
++	}
++      
++      if (hurd_condition_wait (&kbdbuf.readcond, &global_lock))
++	{
++	  mutex_unlock (&global_lock);
++	  return EINTR;
++	}
++    }
++  
++  if (amount > 0)
++    {
++      char *keydata;
++      unsigned int i = 0;
++
++      /* Allocate a buffer when this is required.  */
++      if (*datalen < amount)
++	{
++	  *data = mmap (0, amount, PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);
++	  if (*data == MAP_FAILED)
++	    {
++	      mutex_unlock (&global_lock);
++	      return ENOMEM;
++	    }
++	}
++      
++      /* Copy the bytes to the user's buffer and remove them from the
++	 keyboard buffer.  */
++      keydata = *data;
++      while (i != amount)
++	{
++	  keydata[i++] = kbdbuf.keybuffer[kbdbuf.pos++];
++	  kbdbuf.pos = KBDBUF_POS (kbdbuf.pos);
++	}
++      kbdbuf.size -= amount;
++      condition_broadcast (&kbdbuf.writecond);
++    }
++  
++  *datalen = amount;
++  mutex_unlock (&global_lock);
++
++  return 0;
++}
++
++
++static void
++repeater_open (void)
++{
++  /* Make sure the console does not access the hardware anymore.  */
++  if (! kbd_repeater_opened)
++    console_switch_away ();
++  kbd_repeater_opened++;
++}
++
++
++static void
++repeater_close (void)
++{
++  kbd_repeater_opened--;
++
++  /* Allow the console to access the hardware again.  */
++  if (! kbd_repeater_opened)
++    {
++      console_switch_back ();
++      kbdbuf.pos = 0;
++      kbdbuf.size = 0;
++    }
++}
++
++
++/* Set the repeater translator.  The node will be named NODENAME and
++   NODE will be filled with information about this node.  */
++error_t
++kbd_setrepeater (const char *nodename, consnode_t *cn)
++{
++  extern int kdioctl_server (mach_msg_header_t *inp, mach_msg_header_t *outp);
++  error_t err;
++  
++  err = console_create_consnode (nodename, cn);
++  if (err)
++    return err;
++  
++  (*cn)->read = repeater_read;
++  (*cn)->write = 0;
++  (*cn)->select = repeater_select;
++  (*cn)->open = repeater_open;
++  (*cn)->close = repeater_close;
++  (*cn)->demuxer = kdioctl_server;
++  
++  mutex_init (&global_lock);
++
++  condition_init (&kbdbuf.readcond);
++  condition_init (&kbdbuf.writecond);
++
++  condition_init (&select_alert);
++  condition_implies (&kbdbuf.readcond, &select_alert);
++  
++  console_register_consnode (*cn);
++  
++  return 0;
++}
++
++
++/* Some RPC calls for controlling the keyboard.  These calls are just
++   ignored and just exist to make XFree happy.  */
++
++kern_return_t
++S_kdioctl_kdskbdmode (io_t port, int mode)
++{
++  return 0;
++}
++
++
++kern_return_t
++S_kdioctl_kdgkbdmode (io_t port, int *mode)
++{
++  return 0;
++}
+diff -upN --exclude=CVS ../console-client.cvs/pc-kbd.c ./pc-kbd.c
+--- console-client.cvs/pc-kbd.c	2004-02-02 22:08:14.000000000 +0000
++++ console-client/pc-kbd.c	2004-07-27 06:59:25.000000000 +0000
+@@ -23,6 +23,7 @@
+ #include <string.h>
+ #include <iconv.h>
+ #include <sys/mman.h>
++#include <argp.h>
+ 
+ #include <device/device.h>
+ #include <cthreads.h>
+@@ -31,6 +32,7 @@
+ #include <hurd/cons.h>
+ 
+ #include "driver.h"
++#include "inputdev.h"
+ 
+ 
+ /* The keyboard device in the kernel.  */
+@@ -52,6 +54,11 @@ int gnumach_v1_compat;
+ /* Forward declaration.  */
+ static struct input_ops pc_kbd_ops;
+ 
++/* The name of the repeater node.  */
++static char *repeater_node;
++
++/* The repeater node.  */
++static consnode_t cnode;
+ 
+ /* A list of scan codes generated by the keyboard, in the set 2 encoding.  */
+ enum scancode
+@@ -558,87 +565,6 @@ enum scancode sc_set1_to_set2_x1[] =
+     SC_X1_DEL
+   };
+ 
+-
+-/* This gross stuff is cut & pasted from Mach sources, as Mach doesn't
+-   export the interface we are using here.  */
+-
+-/*
+- * Mach Operating System
+- * Copyright (c) 1991,1990,1989 Carnegie Mellon University
+- * All Rights Reserved.
+- *
+- * Permission to use, copy, modify and distribute this software and its
+- * documentation is hereby granted, provided that both the copyright
+- * notice and this permission notice appear in all copies of the
+- * software, derivative works or modified versions, and any portions
+- * thereof, and that both notices appear in supporting documentation.
+- *
+- * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
+- * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
+- * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
+- *
+- * Carnegie Mellon requests users of this software to return to
+- *
+- *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
+- *  School of Computer Science
+- *  Carnegie Mellon University
+- *  Pittsburgh PA 15213-3890
+- *
+- * any improvements or extensions that they make and grant Carnegie Mellon
+- * the rights to redistribute these changes.
+- */
+-
+-typedef u_short kev_type;               /* kd event type */
+-
+-/* (used for event records) */
+-struct mouse_motion {
+-  short mm_deltaX;                /* units? */
+-  short mm_deltaY;
+-};
+-typedef u_char Scancode;
+-
+-typedef struct {
+-  kev_type type;                  /* see below */
+-  struct timeval time;            /* timestamp */
+-  union {                         /* value associated with event */
+-    boolean_t up;           /* MOUSE_LEFT .. MOUSE_RIGHT */
+-    Scancode sc;            /* KEYBD_EVENT */
+-    struct mouse_motion mmotion;    /* MOUSE_MOTION */
+-  } value;
+-} kd_event;
+-#define m_deltaX        mmotion.mm_deltaX
+-#define m_deltaY        mmotion.mm_deltaY
+-
+-/*
+- * kd_event ID's.
+- */
+-#define MOUSE_LEFT      1               /* mouse left button up/down */
+-#define MOUSE_MIDDLE    2
+-#define MOUSE_RIGHT     3
+-#define MOUSE_MOTION    4               /* mouse motion */
+-#define KEYBD_EVENT     5               /* key up/down */
+-
+-
+-#define IOCPARM_MASK    0x1fff          /* parameter length, at most 13 bits */
+-#define IOC_OUT         0x40000000      /* copy out parameters */
+-#define IOC_IN          0x80000000U     /* copy in parameters */
+-#define _IOC(inout,group,num,len) \
+-        (inout | ((len & IOCPARM_MASK) << 16) | ((group) << 8) | (num))
+-#define _IOR(g,n,t)     _IOC(IOC_OUT,   (g), (n), sizeof(t))
+-#define _IOW(g,n,t)     _IOC(IOC_IN,    (g), (n), sizeof(t))
+-
+-#define KDSKBDMODE      _IOW('K', 1, int)       /* set keyboard mode */
+-#define KB_EVENT        1
+-#define KB_ASCII        2
+-
+-#define KDGKBDTYPE      _IOR('K', 2, int)       /* get keyboard type */
+-#define KB_VANILLAKB    0
+-
+-#define KDSETLEDS      _IOW('K', 5, int)        /* set keyboard leds */
+-
+-
+-/* End of Mach code.  */
+-
+ static enum scancode
+ gnumach_v1_input_next ()
+ {
+@@ -658,6 +584,13 @@ gnumach_v1_input_next ()
+ 	 terminate.  */
+       if (err)
+ 	return 0;
++
++      if (kbd_repeater_opened && data_buf.type == KEYBD_EVENT)
++	{
++	  kbd_repeat_key (&data_buf);
++	  data_buf.type = 0;
++	  continue;
++	}
+     }
+   while (data_buf.type != KEYBD_EVENT);
+ 
+@@ -1088,10 +1021,56 @@ input_loop (any_t unused)
+ 
+ 
+ 
++
++
++static const char doc[] = "PC Keyboard Driver";
++
++static const struct argp_option options[] =
++  {
++    {"repeat",		'r', "NODE", 0, "Set a repeater translator on NODE"},
++    { 0 }
++  };
++
++static error_t
++parse_opt (int key, char *arg, struct argp_state *state)
++{
++  int *pos = (int *) state->input;
++  
++  switch (key)
++    {
++    case 'r':
++      repeater_node = arg;
++      break;
++      
++    case ARGP_KEY_END:
++      break;
++
++    default:
++      return ARGP_ERR_UNKNOWN;
++    }
++
++  *pos = state->next;
++  return 0;
++}
++
++static struct argp argp = {options, parse_opt, 0, doc};
++
+ /* Initialize the PC keyboard driver.  */
+ static error_t
+ pc_kbd_init (void **handle, int no_exit, int argc, char *argv[], int *next)
+ {
++  error_t err;
++  int pos = 1;
++
++  /* Parse the arguments.  */
++  err = argp_parse (&argp, argc, argv, ARGP_IN_ORDER | ARGP_NO_EXIT
++		    | ARGP_SILENT, 0 , &pos);
++  *next += pos - 1;
++
++  if (err && err != EINVAL)
++    return err;
++
++
+   return 0;
+ }
+ 
+@@ -1156,6 +1135,10 @@ pc_kbd_start (void *handle)
+       iconv_close (cd);
+       return err;
+     }
++  
++  if (repeater_node)
++    kbd_setrepeater (repeater_node, &cnode);
++  
+   cthread_detach (cthread_fork (input_loop, NULL));
+ 
+   return 0;
+@@ -1175,6 +1158,9 @@ pc_kbd_fini (void *handle, int force)
+   mach_port_deallocate (mach_task_self (), kbd_dev);
+   iconv_close (cd);
+ 
++  console_unregister_consnode (cnode);
++  console_destroy_consnode (cnode);
++  
+   return 0;
+ }
+ 
+diff -upN --exclude=CVS ../console-client.cvs/pc-mouse.c ./pc-mouse.c
+--- console-client.cvs/pc-mouse.c	1970-01-01 00:00:00.000000000 +0000
++++ console-client/pc-mouse.c	2004-07-27 06:57:04.000000000 +0000
+@@ -0,0 +1,475 @@
++/* pc-mouse.c - Mouse driver.
++   Copyright (C) 2004 Free Software Foundation, Inc.
++   Written by Marco Gerards.
++
++   This file is part of the GNU Hurd.
++
++   The GNU Hurd is free software; you can redistribute it and/or
++   modify it under the terms of the GNU General Public License as
++   published by the Free Software Foundation; either version 2, or (at
++   your option) any later version.
++
++   The GNU Hurd is distributed in the hope that it will be useful, but
++   WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this program; if not, write to the Free Software
++   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA. */
++
++#include <argp.h>
++#include <hurd.h>
++#include <hurd/ports.h>
++#include <device/device.h>
++#include <fcntl.h>
++#include <sys/mman.h>
++#include "driver.h"
++#include "inputdev.h"
++
++static struct input_ops pc_mouse_ops;
++
++/* Default to the protocol I use :).  */
++static int majordev = IBM_MOUSE;
++static int minordev = 0;
++
++static device_t mousedev;
++
++
++/* The amount of mouse events that can be stored in the event buffer.  */
++#define MOUSEDEVTBUFSZ	256
++
++/* The size of the event buffer in bytes.  */
++#define MOUSEBUFSZ	(MOUSEDEVTBUFSZ * sizeof (kd_event))
++
++/* Return the position of X in the buffer.  */
++#define MOUSEBUF_POS(x)	((x) % MOUSEBUFSZ)
++
++/* The mouse event buffer.  */
++static struct mousebuf
++{
++  char evtbuffer[MOUSEBUFSZ];
++  int pos;
++  size_t size;
++  struct condition readcond;
++  struct condition writecond;
++} mousebuf;
++
++/* Wakeup for select */
++static struct condition select_alert;
++
++/* The global lock */
++static struct mutex global_lock;
++
++/* Amount of times the device was opened.  Normally this translator
++   should be only opened once.  */ 
++static int mouse_repeater_opened;
++
++/* The name of the repeater node.  */
++static char *repeater_node;
++
++/* The repeater node.  */
++static consnode_t cnode;
++
++
++/* Place the mouse event EVNT in the mouse event buffer.  */
++static void
++repeat_event (kd_event *evt)
++{
++  kd_event *ev;
++
++  mutex_lock (&global_lock);
++  while (mousebuf.size + sizeof (kd_event) > MOUSEBUFSZ)
++    {
++      /* The input buffer is full, wait until there is some space.  */
++      if (hurd_condition_wait (&mousebuf.writecond, &global_lock))
++	{
++	  mutex_unlock (&global_lock);
++	  /* Interrupt, silently continue.  */
++	}
++    }
++  ev = (kd_event *) &mousebuf.evtbuffer[MOUSEBUF_POS (mousebuf.pos 
++						      + mousebuf.size)];
++  mousebuf.size += sizeof (kd_event);
++  memcpy (ev, evt, sizeof (kd_event));
++  
++  condition_broadcast (&mousebuf.readcond);
++  mutex_unlock (&global_lock);
++}
++
++
++static error_t
++repeater_select (struct protid *cred, mach_port_t reply,
++		 mach_msg_type_name_t replytype, int *type)
++{
++  if (!cred)
++    return EOPNOTSUPP;
++
++  if (*type & ~SELECT_READ)
++    return EINVAL;
++
++  if (*type == 0)
++    return 0;
++  
++  mutex_lock (&global_lock);
++  while (1)
++    {
++      if (mousebuf.size > 0)
++	{
++	  *type = SELECT_READ;
++	  mutex_unlock (&global_lock);
++
++	  return 0;
++	}
++
++      ports_interrupt_self_on_port_death (cred, reply);
++      if (hurd_condition_wait (&select_alert, &global_lock))
++	{
++	  *type = 0;
++	  mutex_unlock (&global_lock);
++
++	  return EINTR;
++	}
++    }
++}
++
++
++static void
++repeater_open (void)
++{
++  mouse_repeater_opened++;
++}
++
++
++static void
++repeater_close (void)
++{
++  mouse_repeater_opened--;
++  if (!mouse_repeater_opened)
++    {
++      mousebuf.pos = 0;
++      mousebuf.size = 0;
++    }
++}
++
++
++static error_t
++repeater_read (struct protid *cred, char **data,
++	       mach_msg_type_number_t *datalen, off_t offset,
++	       mach_msg_type_number_t amount)
++{
++  /* Deny access if they have bad credentials. */
++  if (! cred)
++    return EOPNOTSUPP;
++  else if (! (cred->po->openstat & O_READ))
++    return EBADF;
++  
++  mutex_lock (&global_lock);
++  while (!mousebuf.size)
++    {
++      if (cred->po->openstat & O_NONBLOCK && mousebuf.size == 0)
++	{
++	  mutex_unlock (&global_lock);
++	  return EWOULDBLOCK;
++	}
++      
++      if (hurd_condition_wait (&mousebuf.readcond, &global_lock))
++	{
++	  mutex_unlock (&global_lock);
++	  return EINTR;
++	}
++    }
++  
++  amount = (amount / sizeof (kd_event) - 1) * sizeof (kd_event);
++  if (amount > mousebuf.size)
++    amount = mousebuf.size;
++  
++  if (amount > 0)
++    {
++      char *mousedata;
++      unsigned int i = 0;
++
++      /* Allocate a buffer when this is required.  */
++      if (*datalen < amount)
++	{
++	  *data = mmap (0, amount, PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);
++	  if (*data == MAP_FAILED)
++	    {
++	      mutex_unlock (&global_lock);
++	      return ENOMEM;
++	    }
++	}
++      
++      /* Copy the bytes to the user's buffer and remove them from the
++	 mouse events buffer.  */
++      mousedata = *data;
++      while (i != amount)
++	{
++	  mousedata[i++] = mousebuf.evtbuffer[mousebuf.pos++];
++	  mousebuf.pos = MOUSEBUF_POS (mousebuf.pos);
++	}
++      mousebuf.size -= amount;
++      condition_broadcast (&mousebuf.writecond);
++    }
++  
++  *datalen = amount;
++  mutex_unlock (&global_lock);
++
++  return 0;
++}
++
++
++
++static any_t
++input_loop (any_t unused)
++{
++  kd_event *ev;
++  vm_offset_t buf;
++  mach_msg_type_number_t buf_size;
++  
++  while (1)
++    {
++      struct mouse_event evt = { 0 };
++      device_read (mousedev, 0, 0, sizeof (kd_event), (char **)&buf, &buf_size);
++      ev = (kd_event *) buf;
++
++      /* The repeater is set, send the event to the repeater.  */
++      if (mouse_repeater_opened)
++	{
++	  repeat_event (ev);
++	  continue;
++	}
++      
++      evt.mouse_movement = MOUSE_MOVE_REL;
++
++      switch (ev->type)
++	{
++	case MOUSE_LEFT:
++	  evt.button = CONS_MOUSE_BUTTON1;
++	  break;
++	case MOUSE_MIDDLE:
++	  evt.button = CONS_MOUSE_BUTTON2;
++	  break;
++	case MOUSE_RIGHT:
++	  evt.button = CONS_MOUSE_BUTTON3;
++	  break;
++
++	case MOUSE_MOTION:
++	  evt.x = ev->value.mmotion.mm_deltaX;
++	  evt.y = -ev->value.mmotion.mm_deltaY;
++	  break;
++	}
++
++      if (ev->type > 0 && ev->type <= 3)
++	{
++	  if (ev->value.up)
++	    evt.mouse_button = MOUSE_BUTTON_RELEASED;
++	  else
++	    evt.mouse_button = MOUSE_BUTTON_PRESSED;
++	}
++      
++      /* Generate a mouse movement event.  */
++      console_move_mouse (&evt);
++    }
++}
++
++
++#define PROTO_MOUSESYSTEM	"mousesystem"
++#define PROTO_MICROSOFT		"microsoft"
++#define PROTO_PS2		"ps/2"
++#define PROTO_NOMOUSE		"nomouse"
++#define PROTO_LOGITECH		"logitech"
++#define PROTO_MOUSE7		"mouse7"
++
++/* The supported mouse protocols.  Be careful with adding more, the
++   protocols are carefully ordered so the index is the major device
++   number.  */
++static char *mouse_protocols[] =
++  {
++    PROTO_MOUSESYSTEM,
++    PROTO_MICROSOFT,
++    PROTO_PS2,
++    PROTO_NOMOUSE,
++    PROTO_LOGITECH,
++    PROTO_MOUSE7
++  };
++
++static const char doc[] = "Mouse Driver";
++
++static const struct argp_option options[] =
++  {
++    { "protocol",	'p', "PROTOCOL", 0, "One of the protocols: " 
++      PROTO_MOUSESYSTEM ", " PROTO_MICROSOFT ", " PROTO_PS2 ", "
++      PROTO_NOMOUSE ", " PROTO_LOGITECH ", " PROTO_MOUSE7 },
++    { "device",		'e', "DEVICE"  , 0, "One of the devices: " DEV_COM0 ", " DEV_COM1 },
++    { "repeat",		'r', "NODE", 0, "Set a repeater translator on NODE"},
++    { 0 }
++  };
++
++static error_t setrepeater (const char *nodename);
++
++static error_t
++parse_opt (int key, char *arg, struct argp_state *state)
++{
++  int *pos = (int *) state->input;
++  
++  switch (key)
++    {
++    case 'p':
++      {
++	unsigned int i;
++	
++	for (i = 0; i < (sizeof (mouse_protocols) / sizeof (char *)); i++)
++	  {
++	    if (!strcasecmp (arg, mouse_protocols[i]))
++	      {
++		majordev = i;
++		*pos = state->next;
++		return 0;
++	      }
++	  }
++	fprintf (stderr, "Unknown protocol `%s'\n", arg);
++	argp_usage (state);
++	return ARGP_ERR_UNKNOWN;
++      }
++
++    case 'e':
++      {
++	if (!strcasecmp (DEV_COM0, arg))
++	  minordev = 0;
++	else if (!strcasecmp (DEV_COM1, arg))
++	  minordev = 1;
++	else
++	  {
++	    fprintf (stderr, "Unknown device `%s'\n", arg);
++	    argp_usage (state);
++	    return ARGP_ERR_UNKNOWN;
++	  }
++	break;
++      }
++      
++    case 'r':
++      repeater_node = arg;
++      break;
++      
++    case ARGP_KEY_END:
++      break;
++
++    default:
++      return ARGP_ERR_UNKNOWN;
++    }
++
++  *pos = state->next;
++  return 0;
++}
++
++
++static struct argp argp = {options, parse_opt, 0, doc};
++
++static error_t
++pc_mouse_init (void **handle, int no_exit, int argc, char *argv[], int *next)
++{
++  error_t err;
++  int pos = 1;
++  
++  /* Parse the arguments.  */
++  err = argp_parse (&argp, argc, argv, ARGP_IN_ORDER | ARGP_NO_EXIT
++		    | ARGP_SILENT, 0, &pos);
++  *next += pos - 1;
++  if (err && err != EINVAL)
++    return err;
++
++  return 0;
++}
++
++
++static error_t
++pc_mouse_start (void *handle)
++{
++  error_t err;
++  char device_name[9];
++  int devnum = majordev << 3 | minordev;
++  device_t device_master;
++
++  sprintf (device_name, "mouse%d", devnum);
++  err = get_privileged_ports (0, &device_master);
++  
++  err = device_open (device_master, D_READ, device_name, &mousedev);
++  mach_port_deallocate (mach_task_self (), device_master);
++  if (err)
++    return ENODEV;
++
++  err = driver_add_input (&pc_mouse_ops, NULL);
++  if (err)
++    {
++      device_close (mousedev);
++      mach_port_deallocate (mach_task_self (), mousedev);
++
++      return err;
++    }
++
++  cthread_detach (cthread_fork (input_loop, NULL));
++  
++  if (repeater_node)
++    setrepeater (repeater_node);
++  
++  return 0;
++}
++
++
++static error_t
++pc_mouse_fini (void *handle, int force)
++{
++  device_close (mousedev);
++  mach_port_deallocate (mach_task_self (), mousedev);
++  console_unregister_consnode (cnode);
++  console_destroy_consnode (cnode);
++
++  return 0;
++}
++
++
++
++struct driver_ops driver_pc_mouse_ops =
++  {
++    pc_mouse_init,
++    pc_mouse_start,
++    pc_mouse_fini
++  };
++
++static struct input_ops pc_mouse_ops =
++  {
++    NULL,
++    NULL
++  };
++
++
++/* Set make repeater translator node named NODENAME.  */
++static error_t
++setrepeater (const char *nodename)
++{
++  error_t err;
++  
++  err = console_create_consnode (nodename, &cnode);
++  if (err)
++    return err;
++  
++  cnode->read = repeater_read;
++  cnode->write = 0;
++  cnode->select = repeater_select;
++  cnode->open = repeater_open;
++  cnode->close = repeater_close;
++  cnode->demuxer = 0;
++  
++  mutex_init (&global_lock);
++  
++  condition_init (&mousebuf.readcond);
++  condition_init (&mousebuf.writecond);
++  
++  condition_init (&select_alert);
++  condition_implies (&mousebuf.readcond, &select_alert);
++  
++  console_register_consnode (cnode);
++  
++  return 0;
++}
+diff -upN --exclude=CVS ../console-client.cvs/trans.c ./trans.c
+--- console-client.cvs/trans.c	1970-01-01 00:00:00.000000000 +0000
++++ console-client/trans.c	2004-07-27 05:42:40.000000000 +0000
+@@ -0,0 +1,872 @@
++/* trans.c -- Control a translator node for the repeaters.
++   Copyright (C) 2004 Free Software Foundation, Inc.
++   Written by Marco Gerards.
++   
++   This program is free software; you can redistribute it and/or
++   modify it under the terms of the GNU General Public License as
++   published by the Free Software Foundation; either version 2, or (at
++   your option) any later version.
++
++   This program is distributed in the hope that it will be useful, but
++   WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this program; if not, write to the Free Software
++   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
++
++#include <fcntl.h>
++#include <maptime.h>
++#include <stddef.h>
++#include <dirent.h>
++#include <sys/mman.h>
++#include <unistd.h>
++#include <hurd/hurd_types.h>
++#include <error.h>
++#include <version.h>
++
++#include "trans.h"
++
++
++/* The user must define this variable.  Set this to the name of the
++   filesystem server. */
++char *netfs_server_name = "console";
++
++/* The user must define this variables.  Set this to be the server
++   version number.  */
++char *netfs_server_version = HURD_VERSION;
++
++int netfs_maxsymlinks = 0;
++
++/* Handy source of time.  */
++static volatile struct mapped_time_value *console_maptime;
++
++static consnode_t node_list = 0;
++
++struct netnode
++{
++  consnode_t node;
++};
++
++typedef mach_msg_header_t request_t;
++
++
++
++int
++console_demuxer (mach_msg_header_t *inp,
++		 mach_msg_header_t *outp)
++{
++  int ret;
++  struct protid *user = (struct protid *) inp;
++  request_t *inop = (request_t *) inp;
++
++  ret = netfs_demuxer (inp, outp);
++  if (ret)
++    return ret;
++  
++  user = ports_lookup_port (netfs_port_bucket, inop->msgh_local_port, netfs_protid_class);
++  if (!user)
++    return ret;
++  
++  /* Don't do anything for the root node.  */
++  if (user->po->np == netfs_root_node)
++    {
++      ports_port_deref (user);
++      return 0;
++    }    
++  
++  if (!ret && user->po->np->nn->node->demuxer)
++    ret = user->po->np->nn->node->demuxer (inp, outp);
++  
++  ports_port_deref (user);
++  return ret;
++}
++
++
++
++/* The user must define this function.  Make sure that NP->nn_stat is
++   filled with the most current information.  CRED identifies the user
++   responsible for the operation. NP is locked.  */
++error_t
++netfs_validate_stat (struct node *np, struct iouser *cred)
++{
++  return 0;
++}
++
++
++/* The user must define this function.  This should attempt a chmod
++   call for the user specified by CRED on locked node NP, to change
++   the owner to UID and the group to GID.  */
++error_t
++netfs_attempt_chown (struct iouser *cred, struct node *np,
++		     uid_t uid, uid_t gid)
++{
++  return EOPNOTSUPP;
++}
++
++
++/* The user must define this function.  This should attempt a chauthor
++   call for the user specified by CRED on locked node NP, thereby
++   changing the author to AUTHOR.  */
++error_t
++netfs_attempt_chauthor (struct iouser *cred, struct node *np,
++			uid_t author)
++{
++  return EOPNOTSUPP;
++}
++
++
++/* The user must define this function.  This should attempt a chmod
++   call for the user specified by CRED on locked node NODE, to change
++   the mode to MODE.  Unlike the normal Unix and Hurd meaning of
++   chmod, this function is also used to attempt to change files into
++   other types.  If such a transition is attempted which is
++   impossible, then return EOPNOTSUPP.  */
++error_t
++netfs_attempt_chmod (struct iouser *cred, struct node *np,
++		     mode_t mode)
++{
++  return EOPNOTSUPP;
++}
++
++
++/* The user must define this function.  Attempt to turn locked node NP
++   (user CRED) into a symlink with target NAME.  */
++error_t
++netfs_attempt_mksymlink (struct iouser *cred, struct node *np,
++			 char *name)
++{
++  return EOPNOTSUPP;
++}
++
++
++/* The user must define this function.  Attempt to turn NODE (user
++   CRED) into a device.  TYPE is either S_IFBLK or S_IFCHR.  NP is
++   locked.  */
++error_t
++netfs_attempt_mkdev (struct iouser *cred, struct node *np,
++		     mode_t type, dev_t indexes)
++{
++  return EOPNOTSUPP;
++}
++
++
++/* The user may define this function.  Attempt to set the passive
++   translator record for FILE to ARGZ (of length ARGZLEN) for user
++   CRED. NP is locked.  */
++error_t
++netfs_set_translator (struct iouser *cred, struct node *np,
++		      char *argz, size_t argzlen)
++{
++  return EOPNOTSUPP;
++}
++
++
++/* The user may define this function (but should define it together
++   with netfs_set_translator).  For locked node NODE with S_IPTRANS
++   set in its mode, look up the name of its translator.  Store the
++   name into newly malloced storage, and return it in *ARGZ; set
++   *ARGZ_LEN to the total length.  */
++error_t
++netfs_get_translator (struct node *node, char **argz,
++		      size_t *argz_len)
++{
++  return EOPNOTSUPP;
++}
++
++
++/* The user must define this function.  This should attempt a chflags
++   call for the user specified by CRED on locked node NP, to change
++   the flags to FLAGS.  */
++error_t
++netfs_attempt_chflags (struct iouser *cred, struct node *np,
++		       int flags)
++{
++  return EOPNOTSUPP;
++}
++
++
++/* The user must define this function.  This should attempt a utimes
++   call for the user specified by CRED on locked node NP, to change
++   the atime to ATIME and the mtime to MTIME.  If ATIME or MTIME is
++   null, then set to the current time.  */
++error_t
++netfs_attempt_utimes (struct iouser *cred, struct node *np,
++		      struct timespec *atime, struct timespec *mtime)
++{
++  error_t err = fshelp_isowner (&np->nn_stat, cred);
++  int flags = TOUCH_CTIME;
++  
++  if (! err)
++    {
++      if (mtime)
++        {
++          np->nn_stat.st_mtime = mtime->tv_sec;
++          np->nn_stat.st_mtime_usec = mtime->tv_nsec / 1000;
++        }
++      else
++        flags |= TOUCH_MTIME;
++      
++      if (atime)
++        {
++          np->nn_stat.st_atime = atime->tv_sec;
++          np->nn_stat.st_atime_usec = atime->tv_nsec / 1000;
++        }
++      else
++        flags |= TOUCH_ATIME;
++      
++      fshelp_touch (&np->nn_stat, flags, console_maptime);
++    }
++  return err;
++
++}
++
++
++/* The user must define this function.  This should attempt to set the
++   size of the locked file NP (for user CRED) to SIZE bytes long.  */
++error_t
++netfs_attempt_set_size (struct iouser *cred, struct node *np,
++			loff_t size)
++{
++  return EOPNOTSUPP;
++}
++
++/* The user must define this function.  This should attempt to fetch
++   filesystem status information for the remote filesystem, for the
++   user CRED. NP is locked.  */
++error_t
++netfs_attempt_statfs (struct iouser *cred, struct node *np,
++		      fsys_statfsbuf_t *st)
++{
++  return EOPNOTSUPP;
++}
++
++
++/* The user must define this function.  This should sync the locked
++   file NP completely to disk, for the user CRED.  If WAIT is set,
++   return only after the sync is completely finished.  */
++error_t
++netfs_attempt_sync (struct iouser *cred, struct node *np,
++		    int wait)
++{
++  return 0;
++}
++
++
++/* The user must define this function.  This should sync the entire
++   remote filesystem.  If WAIT is set, return only after the sync is
++   completely finished.  */
++error_t
++netfs_attempt_syncfs (struct iouser *cred, int wait)
++{
++  return 0;
++}
++
++
++/* The user must define this function.  Lookup NAME in DIR (which is
++   locked) for USER; set *NP to the found name upon return.  If the
++   name was not found, then return ENOENT.  On any error, clear *NP.
++   (*NP, if found, should be locked and a reference to it generated.
++   This call should unlock DIR no matter what.)  */
++error_t
++netfs_attempt_lookup (struct iouser *user, struct node *dir,
++		      char *name, struct node **node)
++{
++  error_t err;
++  consnode_t cn;
++  
++  *node = 0;
++  err = fshelp_access (&dir->nn_stat, S_IEXEC, user);
++  if (err)
++    goto out;
++
++  if (strcmp (name, ".") == 0)
++    {
++      /* Current directory -- just add an additional reference to DIR
++	 and return it.  */
++      netfs_nref (dir);
++      *node = dir;
++      goto out;
++    }
++
++  if (strcmp (name, "..") == 0)
++    {
++      err = EAGAIN;
++      goto out;
++    }
++  
++  for (cn = node_list; cn; cn = cn->next)
++    if (!strcmp (name, cn->name))
++      {
++	if (cn->node == NULL)
++	  {
++	    struct netnode *nn = calloc (1, sizeof *nn);
++	    if (nn == NULL)
++	      {
++		err = ENOMEM;
++		goto out;
++	      }
++	    
++	    *node = netfs_make_node (nn);
++	    
++	    nn->node = cn;
++	    (*node)->nn_stat = netfs_root_node->nn_stat;
++	    (*node)->nn_stat.st_mode = S_IFCHR | (netfs_root_node->nn_stat.st_mode & ~S_IFMT & ~S_ITRANS);
++	    (*node)->nn_stat.st_size = 0;
++	    cn->node = *node;
++	    goto out;
++	  }
++	else
++	  {
++	    *node = cn->node;
++	    
++	    netfs_nref (*node);
++	    goto out;
++	  }
++      }
++  
++  err = ENOENT;
++  
++ out:
++  mutex_unlock (&dir->lock);
++  if (err)
++    *node = 0;
++  else
++    mutex_lock (&(*node)->lock);
++  
++  if (!err && (*node)->nn->node->open)
++    (*node)->nn->node->open ();
++
++  return err;
++}
++
++
++error_t
++netfs_S_io_seek (struct protid *user, off_t offset,
++		 int whence, off_t *newoffset)
++{
++  /* XXX: Will all nodes be device nodes?  */
++  if (!user)
++    return EOPNOTSUPP;
++  else
++    return ESPIPE;
++}
++
++
++error_t
++netfs_S_io_select (struct protid *user, mach_port_t reply,
++		   mach_msg_type_name_t replytype, int *type)
++{
++  struct node *np;
++  
++  if (!user)
++    return EOPNOTSUPP;
++  
++  np = user->po->np;
++  
++  if (np->nn->node->select)
++    return np->nn->node->select (user, reply, replytype, type);
++  return EOPNOTSUPP;
++}
++
++
++/* The user must define this function.  Delete NAME in DIR (which is
++   locked) for USER.  */
++error_t
++netfs_attempt_unlink (struct iouser *user, struct node *dir,
++		      char *name)
++{
++  return EOPNOTSUPP;
++}
++
++
++/* The user must define this function.  Attempt to rename the
++   directory FROMDIR to TODIR. Note that neither of the specific nodes
++   are locked.  */
++error_t
++netfs_attempt_rename (struct iouser *user, struct node *fromdir,
++		      char *fromname, struct node *todir,
++		      char *toname, int excl)
++{
++  return EOPNOTSUPP;
++}
++
++
++/* The user must define this function.  Attempt to create a new
++   directory named NAME in DIR (which is locked) for USER with mode
++   MODE. */
++error_t
++netfs_attempt_mkdir (struct iouser *user, struct node *dir,
++		     char *name, mode_t mode)
++{
++  return EOPNOTSUPP;
++}
++
++
++/* The user must define this function.  Attempt to remove directory
++   named NAME in DIR (which is locked) for USER.  */
++error_t
++netfs_attempt_rmdir (struct iouser *user,
++		     struct node *dir, char *name)
++{
++  return EOPNOTSUPP;
++}
++
++
++/* The user must define this function.  Create a link in DIR with name
++   NAME to FILE for USER. Note that neither DIR nor FILE are
++   locked. If EXCL is set, do not delete the target.  Return EEXIST if
++   NAME is already found in DIR.  */
++error_t
++netfs_attempt_link (struct iouser *user, struct node *dir,
++		    struct node *file, char *name, int excl)
++{
++  return EOPNOTSUPP;
++}
++
++
++/* The user must define this function.  Attempt to create an anonymous
++   file related to DIR (which is locked) for USER with MODE.  Set *NP
++   to the returned file upon success. No matter what, unlock DIR.  */
++error_t
++netfs_attempt_mkfile (struct iouser *user, struct node *dir,
++			     mode_t mode, struct node **np)
++{
++  return EOPNOTSUPP;
++}
++
++
++/* The user must define this function.  Attempt to create a file named
++   NAME in DIR (which is locked) for USER with MODE.  Set *NP to the
++   new node upon return.  On any error, clear *NP.  *NP should be
++   locked on success; no matter what, unlock DIR before returning.  */
++error_t
++netfs_attempt_create_file (struct iouser *user, struct node *dir,
++			   char *name, mode_t mode, struct node **np)
++{
++  *np = 0;
++  mutex_unlock (&dir->lock);
++  return EOPNOTSUPP;
++}
++
++
++/* The user must define this function.  Read the contents of locked
++   node NP (a symlink), for USER, into BUF.  */
++error_t
++netfs_attempt_readlink (struct iouser *user, struct node *np,
++			char *buf)
++{
++  return EOPNOTSUPP;
++}
++
++
++/* The user must define this function. Locked node NP is being opened
++   by USER, with FLAGS.  NEWNODE is nonzero if we just created this
++   node.  Return an error if we should not permit the open to complete
++   because of a permission restriction.  */
++error_t
++netfs_check_open_permissions (struct iouser *user, struct node *np,
++			      int flags, int newnode)
++{
++  error_t err = 0;
++  
++  if (flags & O_READ)
++    err = fshelp_access (&np->nn_stat, S_IREAD, user);
++  if (!err && (flags & O_WRITE))
++    err = fshelp_access (&np->nn_stat, S_IWRITE, user);
++  if (!err && (flags & O_EXEC))
++    err = fshelp_access (&np->nn_stat, S_IEXEC, user);
++  return err;
++
++}
++
++
++/* This function will never be called.  It is only used when a node is
++   a symlink or by io_read, which is overridden.  */
++error_t
++netfs_attempt_read (struct iouser *cred, struct node *np,
++		    loff_t offset, size_t *len, void *data)
++{
++  return EOPNOTSUPP;
++}
++
++
++/* This function will never be called.  It is only called from
++   io_write, which is overridden.  */
++error_t
++netfs_attempt_write (struct iouser *cred, struct node *np,
++		     loff_t offset, size_t *len, void *data)
++{
++  return EOPNOTSUPP;
++}
++
++
++error_t
++netfs_S_io_read (struct protid *user,
++		 char **data,
++		 mach_msg_type_number_t *datalen,
++		 off_t offset,
++		 mach_msg_type_number_t amount)
++{
++  struct node *np;
++  
++  if (!user)
++    return EOPNOTSUPP;
++  np = user->po->np;
++  
++  if (np->nn->node->read)
++    return np->nn->node->read (user, data, datalen, offset, amount);
++  return EOPNOTSUPP;
++}
++
++
++error_t
++netfs_S_io_write (struct protid *user,
++		  char *data,
++		  mach_msg_type_number_t datalen,
++		  off_t offset,
++		  mach_msg_type_number_t *amount)
++{
++  struct node *np;
++  
++  if (!user)
++    return EOPNOTSUPP;
++  
++  np = user->po->np;
++  if (np->nn->node->read)
++    return np->nn->node->write (user, data, datalen, offset, amount);
++  return EOPNOTSUPP;
++}
++
++
++/* The user must define this function.  Return the valid access
++   types (bitwise OR of O_READ, O_WRITE, and O_EXEC) in *TYPES for
++   locked file NP and user CRED.  */
++error_t
++netfs_report_access (struct iouser *cred, struct node *np,
++		     int *types)
++{
++  *types = 0;
++  if (fshelp_access (&np->nn_stat, S_IREAD, cred) == 0)
++    *types |= O_READ;
++  if (fshelp_access (&np->nn_stat, S_IWRITE, cred) == 0)
++    *types |= O_WRITE;
++  if (fshelp_access (&np->nn_stat, S_IEXEC, cred) == 0)
++    *types |= O_EXEC;
++  return 0;
++
++}
++
++/* The user must define this function.  Node NP has no more references;
++   free all its associated storage. */
++void netfs_node_norefs (struct node *np)
++     
++{
++  if (np->nn->node->close)
++    np->nn->node->close ();
++  np->nn->node->node = 0;
++
++  spin_unlock (&netfs_node_refcnt_lock);
++  free (np->nn);
++  free (np);
++}
++
++
++/* Returned directory entries are aligned to blocks this many bytes long.
++   Must be a power of two.  */
++#define DIRENT_ALIGN 4
++#define DIRENT_NAME_OFFS offsetof (struct dirent, d_name)
++/* Length is structure before the name + the name + '\0', all
++   padded to a four-byte alignment.  */
++#define DIRENT_LEN(name_len)                                                  \
++  ((DIRENT_NAME_OFFS + (name_len) + 1 + (DIRENT_ALIGN - 1))                   \
++   & ~(DIRENT_ALIGN - 1))
++
++/* The user must define this function.  Fill the array *DATA of size
++   BUFSIZE with up to NENTRIES dirents from DIR (which is locked)
++   starting with entry ENTRY for user CRED.  The number of entries in
++   the array is stored in *AMT and the number of bytes in *DATACNT.
++   If the supplied buffer is not large enough to hold the data, it
++   should be grown.  */
++error_t
++netfs_get_dirents (struct iouser *cred, struct node *dir,
++		   int first_entry, int num_entries, char **data,
++		   mach_msg_type_number_t *data_len,
++		   vm_size_t max_data_len, int *data_entries)
++{
++  error_t err;
++  int count = 0;
++  size_t size = 0;              /* Total size of our return block.  */
++  consnode_t cn = node_list;
++  consnode_t first_node;
++  
++
++  /* Add the length of a directory entry for NAME to SIZE and return true,
++     unless it would overflow MAX_DATA_LEN or NUM_ENTRIES, in which case
++     return false.  */
++  int bump_size (const char *name)
++    {
++      if (num_entries == -1 || count < num_entries)
++        {
++          size_t new_size = size + DIRENT_LEN (strlen (name));
++          if (max_data_len > 0 && new_size > max_data_len)
++            return 0;
++          size = new_size;
++          count++;
++          return 1;
++        }
++      else
++        return 0;
++    }
++
++  if (dir != netfs_root_node)
++    return ENOTDIR;
++
++  for (first_node = node_list, count = 2;
++       first_node && first_entry > count;
++       first_node = first_node->next);
++  count++;
++
++  count = 0;
++
++  /* Make space for the `.' and `..' entries.  */
++  if (first_entry == 0)
++    bump_size (".");
++  if (first_entry <= 1)
++    bump_size ("..");
++
++  for (cn = first_node; cn; cn = cn->next)
++    bump_size (cn->name);
++  
++  
++  /* Allocate it.  */
++  *data = mmap (0, size, PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);
++  err = ((void *) *data == (void *) -1) ? errno : 0;
++
++  if (! err)
++    /* Copy out the result.  */
++    {
++      char *p = *data;
++
++      int add_dir_entry (const char *name, ino_t fileno, int type)
++        {
++          if (num_entries == -1 || count < num_entries)
++            {
++              struct dirent hdr;
++              size_t name_len = strlen (name);
++              size_t sz = DIRENT_LEN (name_len);
++
++              if (sz > size)
++                return 0;
++              else
++                size -= sz;
++
++              hdr.d_fileno = fileno;
++              hdr.d_reclen = sz;
++              hdr.d_type = type;
++              hdr.d_namlen = name_len;
++
++              memcpy (p, &hdr, DIRENT_NAME_OFFS);
++              strcpy (p + DIRENT_NAME_OFFS, name);
++              p += sz;
++
++              count++;
++
++              return 1;
++            }
++          else
++            return 0;
++        }
++
++      *data_len = size;
++      *data_entries = count;
++      
++      count = 0;
++
++      /* Add `.' and `..' entries.  */
++      if (first_entry == 0)
++	add_dir_entry (".", 2, DT_DIR);
++      if (first_entry <= 1)
++	add_dir_entry ("..", 2, DT_DIR);
++      
++      /* Fill in the real directory entries.  */
++      for (cn = first_node; cn; cn = cn->next)
++	if (!add_dir_entry (cn->name, cn->id, DT_CHR))
++	  break;
++    }
++      
++  fshelp_touch (&dir->nn_stat, TOUCH_ATIME, console_maptime);
++  return err;
++}
++
++
++/* The user may define this function.  For a full description,
++   see hurd/hurd_types.h.  The default response indicates a network
++   store.  If the supplied buffers are not large enough, they should
++   be grown as necessary.  NP is locked.  */
++error_t
++netfs_file_get_storage_info (struct iouser *cred,
++			     struct node *np,
++			     mach_port_t **ports,
++			     mach_msg_type_name_t *ports_type,
++			     mach_msg_type_number_t *num_ports,
++			     int **ints,
++			     mach_msg_type_number_t *num_ints,
++			     loff_t **offsets,
++			     mach_msg_type_number_t *num_offsets,
++				     char **data,
++			     mach_msg_type_number_t *data_len)
++{
++  return EOPNOTSUPP;
++}
++
++
++
++static any_t
++console_client_translator (any_t unused)
++{
++  error_t err;
++
++  do 
++    {
++      ports_manage_port_operations_multithread (netfs_port_bucket,
++						console_demuxer,
++						1000 * 60 * 2,
++						1000 * 60 * 10,
++						0);
++      err = netfs_shutdown (0);
++    }
++  while (err);
++  return 0;
++}
++
++error_t
++console_create_consnode (const char *name, consnode_t *cn)
++{
++  *cn = malloc (sizeof (struct consnode));
++  if (!*cn)
++    return ENOMEM;
++  
++  (*cn)->name = strdup (name);
++  if (!(*cn)->name)
++    {
++      free (cn);
++      return ENOMEM;
++    }
++
++  return 0;
++}
++
++
++void
++console_destroy_consnode (consnode_t cn)
++{
++  if (!cn)
++    return;
++  free (cn->name);
++  free (cn);
++}
++
++
++void
++console_register_consnode (consnode_t cn)
++{
++  cn->node = 0;
++  cn->next = node_list;
++  node_list = cn;
++}
++
++
++void
++console_unregister_consnode (consnode_t cn)
++{
++  if (!cn)
++    return;
++  
++  if (node_list == cn)
++    node_list = cn->next;
++  else
++    {
++      consnode_t prev = node_list;
++      
++      for (prev = node_list; prev->next != cn; prev = prev->next)
++	;
++      
++      prev->next = cn->next;
++    }
++  
++  return 0;
++}
++
++
++error_t
++console_setup_node (char *path)
++{
++  mach_port_t underlying;
++  mach_port_t bootstrap;
++  error_t err;
++  struct stat ul_stat;
++  file_t node;
++  struct port_info *newpi;
++  mach_port_t right;
++  
++  node = file_name_lookup (path, O_CREAT|O_NOTRANS, 0664);
++  if (node == MACH_PORT_NULL)
++    return errno;
++  
++  task_get_bootstrap_port (mach_task_self (), &bootstrap);
++  netfs_init ();
++  
++  /* Create the root node (some attributes initialized below).  */
++  netfs_root_node = netfs_make_node (0);
++  if (! netfs_root_node)
++    error (1, ENOMEM, "Cannot create root node");
++  
++  err = maptime_map (0, 0, &console_maptime);
++  if (err)
++    error (1, err, "Cannot map time");
++  
++  err = ports_create_port (netfs_control_class, netfs_port_bucket, sizeof (struct port_info), &newpi);
++  right = ports_get_send_right (newpi);
++  err = file_set_translator (node, 0, FS_TRANS_EXCL | FS_TRANS_SET, 0, 0, 0,
++			     right, MACH_MSG_TYPE_COPY_SEND); 
++  mach_port_deallocate (mach_task_self (), right);
++  underlying = node;
++  
++  err = io_stat (node, &ul_stat);
++  if (err)
++    error (1, err, "Cannot stat underlying node");
++  
++  netfs_root_node->nn_stat.st_ino = 2;
++  netfs_root_node->nn_stat.st_mode |= S_IFDIR;
++  netfs_root_node->nn_stat.st_uid = ul_stat.st_uid;
++  netfs_root_node->nn_stat.st_gid = ul_stat.st_gid;
++  netfs_root_node->nn_stat.st_author = ul_stat.st_author;
++  netfs_root_node->nn_stat.st_mode = S_IFDIR | (ul_stat.st_mode & ~S_IFMT & ~S_ITRANS);
++  netfs_root_node->nn_stat.st_fsid = getpid ();
++  netfs_root_node->nn_stat.st_nlink = 1;
++  netfs_root_node->nn_stat.st_size = 0;
++  netfs_root_node->nn_stat.st_fstype = FSTYPE_MISC;
++
++  netfs_root_node->nn_translated = 0;
++
++  /* If the underlying node isn't a directory, propagate read permission to
++     execute permission since we need that for lookups.  */
++  if (! S_ISDIR (ul_stat.st_mode))
++    {
++      if (ul_stat.st_mode & S_IRUSR)
++        netfs_root_node->nn_stat.st_mode |= S_IXUSR;
++      if (ul_stat.st_mode & S_IRGRP)
++        netfs_root_node->nn_stat.st_mode |= S_IXGRP;
++      if (ul_stat.st_mode & S_IROTH)
++        netfs_root_node->nn_stat.st_mode |= S_IXOTH;
++    }
++      
++  fshelp_touch (&netfs_root_node->nn_stat, TOUCH_ATIME|TOUCH_MTIME|TOUCH_CTIME,
++                console_maptime);
++  
++  cthread_detach (cthread_fork (console_client_translator, NULL));
++
++  return 0;
++}
+diff -upN --exclude=CVS ../console-client.cvs/trans.h ./trans.h
+--- console-client.cvs/trans.h	1970-01-01 00:00:00.000000000 +0000
++++ console-client/trans.h	2004-07-27 05:40:11.000000000 +0000
+@@ -0,0 +1,68 @@
++/* trans.h -- Control a translator node for the repeaters.
++   Copyright (C) 2004 Free Software Foundation, Inc.
++   Written by Marco Gerards.
++
++   This program is free software; you can redistribute it and/or
++   modify it under the terms of the GNU General Public License as
++   published by the Free Software Foundation; either version 2, or (at
++   your option) any later version.
++
++   This program is distributed in the hope that it will be useful, but
++   WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this program; if not, write to the Free Software
++   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
++
++#include <hurd/netfs.h>
++
++struct consnode
++{
++  /* The filename of the node.  */
++  char *name;
++
++  /* The id of the node.  */
++  int id;
++  
++  /* Cached if the node is already opened.  */
++  struct node *node;
++  
++  /* Read data from a node.  This is exactly the same as io_read
++     does.  */
++  error_t (*read) (struct protid *user, char **data,
++		   mach_msg_type_number_t *datalen, off_t offset,
++		   mach_msg_type_number_t amount);
++
++  /* Read data to a node.  This is exactly the same as io_write
++     does.  */
++  error_t (*write) (struct protid *user, char *data,
++		    mach_msg_type_number_t datalen, off_t offset,
++		    mach_msg_type_number_t *amount);
++
++  /* This is exactly the same as io_select does.  */
++  error_t (*select) (struct protid *user, mach_port_t reply,
++		     mach_msg_type_name_t replytype, int *type);
++
++  /* Called when the node is opened.  */
++  void (*open) (void);
++  
++  /* Called when the node is closed.  */
++  void (*close) (void);
++  
++  /* The demuxer used for this node.  */
++  int (*demuxer) (mach_msg_header_t *inp, mach_msg_header_t *outp);
++
++  struct consnode *next;
++};
++
++typedef struct consnode *consnode_t;
++
++void console_register_consnode (consnode_t cn);
++
++void console_unregister_consnode (consnode_t node);
++
++error_t console_create_consnode (const char *name, consnode_t *cn);
++
++void console_destroy_consnode (consnode_t cn);
+diff -upN --exclude=CVS ../console-client.cvs/vga.c ./vga.c
+--- console-client.cvs/vga.c	2004-03-21 19:57:00.000000000 +0000
++++ console-client/vga.c	2004-04-02 07:16:38.000000000 +0000
+@@ -93,6 +93,15 @@ struct refchr
+ };
+ 
+ 
++typedef struct vga_mousecursor
++{
++  float posx;
++  float posy;
++  char oldcolor;
++  int visible;
++  int enabled;
++} vga_mousecursor_t;
++
+ struct vga_display
+ {
+   /* The VGA font for this display.  */
+@@ -110,6 +119,9 @@ struct vga_display
+   conchar_attr_t cur_conchar_attr;
+   char cur_attr;
+ 
++  /* The state of the mouse cursor.  */
++  vga_mousecursor_t mousecursor;
++
+   /* Remember for each cell on the display the glyph written to it and
+      the colors (in the upper byte) assigned.  0 means unassigned.  */
+ 
+@@ -151,6 +163,37 @@ vga_display_flash (void *handle)
+   return 0;
+ }
+ 
++
++static void
++hide_mousecursor (struct vga_display *disp)
++{
++  char *oldpos  = vga_videomem + 2 * ((int) disp->mousecursor.posy * disp->width 
++				      + (int) disp->mousecursor.posx) + 1;
++
++  if (!disp->mousecursor.visible)
++    return;
++
++  /* First remove the old cursor.  */
++  *oldpos = disp->mousecursor.oldcolor;
++  disp->mousecursor.visible = 0;
++}
++
++
++static void
++draw_mousecursor (struct vga_display *disp)
++{
++  char *newpos  = vga_videomem + 2 * ((int) disp->mousecursor.posy * disp->width 
++				      + (int) disp->mousecursor.posx) + 1;
++
++  if (disp->mousecursor.visible)
++    return;
++
++  /* Draw the new cursor.  */
++  disp->mousecursor.oldcolor = *newpos;
++  *newpos = (127) ^ *newpos;
++  
++  disp->mousecursor.visible = 1;
++}
+ 
+ 
+ static const char doc[] = "VGA Driver";
+@@ -408,6 +451,8 @@ vga_display_scroll (void *handle, int de
+   int count = abs(delta) * disp->width;
+   int i;
+   struct refchr *refpos;
++  
++  hide_mousecursor (disp);
+ 
+   /* XXX: If the virtual console is bigger than the physical console it is
+      impossible to scroll because the data to scroll is not in memory.  */
+@@ -595,6 +640,7 @@ vga_display_write (void *handle, conchar
+   struct vga_display *disp = handle;
+   char *pos;
+   struct refchr *refpos = &disp->refmatrix[row][col];
++  char *mouse_cursor_pos;
+ 
+   /* The starting column is outside the physical screen.  */
+   if (disp->width < current_width && col >= disp->width)
+@@ -607,6 +653,9 @@ vga_display_write (void *handle, conchar
+     }
+ 
+   pos  = vga_videomem + 2 * (row * disp->width + col);
++  mouse_cursor_pos  = vga_videomem + 2 
++    * ((int) disp->mousecursor.posy 
++       * disp->width + (int) disp->mousecursor.posx) + 1;
+ 
+   /* Although all references to the current fgcol or bgcol could have
+      been released here, for example due to a scroll operation, we
+@@ -662,6 +711,10 @@ vga_display_write (void *handle, conchar
+ 	}
+ 
+       *(pos++) = charval & 0xff;
++      
++      if (pos == mouse_cursor_pos)
++	disp->mousecursor.visible = 0;
++      
+       *(pos++) = disp->cur_attr
+ 	| (disp->df_size == 512 ? (charval >> 5) & 0x8 : 0);
+ 
+@@ -700,6 +753,57 @@ vga_set_dimension (void *handle, unsigne
+   return 0;
+ }
+ 
++
++static error_t
++vga_display_update (void *handle)
++{
++  struct vga_display *disp = handle;
++
++  if (disp->mousecursor.enabled)
++    draw_mousecursor (disp);
++
++  return 0;
++}
++
++
++static error_t
++vga_set_mousecursor_pos (void *handle, float x, float y)
++{
++  struct vga_display *disp = handle;
++  
++  /* If the mouse did not move from the character position, don't
++     bother about updating the cursor position.  */
++  if (disp->mousecursor.visible && x == (int) disp->mousecursor.posx 
++      && y == (int) disp->mousecursor.posy)
++    return 0;
++  
++  hide_mousecursor (disp);
++  
++  disp->mousecursor.posx = x;
++  disp->mousecursor.posy = y;
++  
++  if (disp->mousecursor.enabled)
++    draw_mousecursor (disp);
++  
++  return 0;
++}
++
++
++static error_t
++vga_set_mousecursor_status (void *handle, int status)
++{
++  struct vga_display *disp = handle;
++
++  disp->mousecursor.enabled = status;
++  if (!status)
++    hide_mousecursor (disp);
++  else
++    draw_mousecursor (disp);
++      
++  return 0;
++}
++
++
+ 
+ struct driver_ops driver_vga_ops =
+   {
+@@ -715,8 +819,10 @@ static struct display_ops vga_display_op
+     vga_display_scroll,
+     vga_display_clear,
+     vga_display_write,
+-    NULL,
++    vga_display_update,
+     vga_display_flash,
+     NULL,
+-    vga_set_dimension
++    vga_set_dimension,
++    vga_set_mousecursor_pos,
++    vga_set_mousecursor_status
+   };

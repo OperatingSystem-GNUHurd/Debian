@@ -12,11 +12,11 @@ fi
 
 #DEBHELPER#
 
-(cd /dev && /sbin/MAKEDEV vcs) || true
-(cd /dev && /sbin/MAKEDEV tty1) || true
-(cd /dev && /sbin/MAKEDEV tty2) || true
-(cd /dev && /sbin/MAKEDEV tty3) || true
-(cd /dev && /sbin/MAKEDEV tty4) || true
-(cd /dev && /sbin/MAKEDEV tty5) || true
-(cd /dev && /sbin/MAKEDEV tty6) || true
+for i in vcs tty1 tty2 tty3 tty4 tty5 tty6; do
+	if ! [ -e /dev/$i ]; then
+		cd /dev
+		/sbin/MAKEDEV $i || true
+	fi
+done
 
+chmod u+s /bin/login

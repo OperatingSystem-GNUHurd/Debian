@@ -1,3 +1,21 @@
+hurd (20040508-3) unstable; urgency=low
+
+  * debian/local/rc: Removed.
+  * debian/patches/rc.patch: New file. (Closes: #254147)
+  * debian/hurd.install: Install tmp/libexec/rc.
+  * debian/patches/console_switch3.patch: Removed.
+  * debian/patches/console_repeater.patch: New patch by Marco Gerards.
+  * debian/patches/libcons_repeater.patch: New patch by Marco Gerards.
+  * debian/patches/netfs_io_select.patch: New patch by Marco Gerards.
+  * debian/patches/netfs_nonblock.patch: New patch by Marco Gerards.
+  * Rebuilt against glibc_2.3.2.ds1-16.
+  * debian/hurd.postinst: Make sure /bin/login is suid. (Closes: #251863)
+  * debian/control (Uploaders): Added myself.
+  * debian/hurd.postinst: Only create the tty devices if they do not
+    exist already. (Closes: #268347) 
+
+ -- Michael Banck <mbanck@debian.org>  Thu,  9 Sep 2004 22:32:07 +0200
+
 hurd (20040508-2) unstable; urgency=low
 
   * Fix typo in postinst.  (Closes: #253662)

@@ -1,0 +1,21 @@
+2004-07-24  Marco Gerards  <metgerards@student.han.nl>
+
+	* misc.h (OPENONLY_STATE_MODES): Remove O_NONBLOCK.
+
+
+Index: misc.h
+===================================================================
+RCS file: /cvsroot/hurd/hurd/libnetfs/misc.h,v
+retrieving revision 1.2
+diff -u -p -r1.2 misc.h
+--- libnetfs/misc.h	18 Dec 1995 19:02:52 -0000	1.2
++++ libnetfs/misc.h	24 Jul 2004 19:14:12 -0000
+@@ -21,4 +21,4 @@
+ #include <fcntl.h>
+ 
+ /* Bits that are turned off after open */
+-#define OPENONLY_STATE_MODES (O_CREAT|O_EXCL|O_NOLINK|O_NOTRANS|O_NONBLOCK)
++#define OPENONLY_STATE_MODES (O_CREAT|O_EXCL|O_NOLINK|O_NOTRANS)
+
+
+

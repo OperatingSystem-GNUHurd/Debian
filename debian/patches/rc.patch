@@ -1,0 +1,54 @@
+--- hurd/daemons/rc.sh.orig	2004-07-09 21:48:42.000000000 +0000
++++ hurd/daemons/rc.sh	2004-07-09 21:48:25.000000000 +0000
+@@ -85,7 +85,15 @@
+ 
+ fi
+ if test -d /var/run; then
+-  (cd /var/run && { rm -rf -- *; cp /dev/null utmp; chmod 644 utmp; })
++  (cd /var/run && {
++    find . ! -type d ! -name utmp ! -name innd.pid \
++      -exec rm -f -- {} \;
++    cp /dev/null utmp
++    if grep -q ^utmp: /etc/group
++    then
++	chmod 664 utmp
++	chgrp utmp utmp
++    fi; })
+ fi
+ echo done
+ 
+@@ -104,15 +112,25 @@
+ 
+ chmod 664 /etc/motd
+ 
+-echo -n starting daemons:
++(
++	trap ":" INT QUIT TSTP
+ 
+-/sbin/syslogd	&& echo -n ' syslogd'
+-/sbin/inetd	&& echo -n ' inetd'
+-
+-if test -x /sbin/sendmail -a -r /etc/sendmail.cf; then
+-  /sbin/sendmail -bd -q30m	&& echo -n ' sendmail'
+-fi
+-
+-echo .
++	if [ -d /etc/rc.boot ]
++	then
++		for i in /etc/rc.boot/S*
++		do
++			[ ! -f $i ] && continue
++			$i start
++		done
++	fi
++	if [ -d /etc/rc2.d ]
++	then
++		for i in /etc/rc2.d/S*
++		do
++			[ ! -f $i ] && continue
++			$i start
++		done
++	fi
++)
+ 
+ date

@@ -1,7 +1,7 @@
 debian/tmp/lib/*.so.*
 debian/tmp/lib/hurd/console/*.so.*
 debian/tmp/hurd/*
-debian/local/rc libexec
+debian/tmp/libexec/rc
 debian/tmp/libexec/getty
 debian/tmp/libexec/console-run
 debian/tmp/libexec/runttys
