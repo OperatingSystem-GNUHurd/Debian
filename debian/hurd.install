@@ -1,5 +1,5 @@
 debian/tmp/lib/*.so.*
-debian/tmp/lib/hurd/console/*.so.*
+debian/tmp/lib/hurd/console/*.so.* usr/lib
 debian/tmp/hurd/*
 debian/tmp/libexec/rc
 debian/tmp/libexec/getty

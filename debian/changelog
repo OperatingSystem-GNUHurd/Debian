@@ -3,6 +3,8 @@ hurd (20050119-2) unstable; urgency=low
   [ Michael Banck ]
   * debian/hurd-dev.install: Install development libraries into /lib,
     not /usr/lib.
+  * debian/hurd.install: Install Hurd console drivers into 
+    /usr/lib/hurd/console, not /lib/hurd/console.
 
  -- Michael Banck <mbanck@debian.org>  Thu, 24 Mar 2005 19:06:59 +0100
 
