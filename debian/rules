@@ -34,6 +34,9 @@ install/hurd::
 	# runsystem is managed by update-alternatives
 	mv debian/tmp/libexec/runsystem debian/tmp/libexec/runsystem.gnu
 
+	# move away fakeroot to not conflict with the one from the fakeroot package
+	mv debian/tmp/bin/fakeroot debian/tmp/bin/fakeroot-hurd
+
 SUID_PROGRAMS = /bin/ids /bin/login /bin/ps /bin/w
 
 binary-predeb/hurd::
