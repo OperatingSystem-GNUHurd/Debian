@@ -9,8 +9,8 @@ Index: Makefile
 RCS file: /cvsroot/hurd/hurd/libpthread/Makefile,v
 retrieving revision 1.2
 diff -u -r1.2 Makefile
---- Makefile	20 Aug 2003 20:40:06 -0000	1.2
-+++ Makefile	20 Jan 2005 23:35:31 -0000
+--- libpthread/Makefile	20 Aug 2003 20:40:06 -0000	1.2
++++ libpthread/Makefile	20 Jan 2005 23:35:31 -0000
 @@ -181,14 +181,16 @@
  .PHONY: $(libdir)/libpthread.a $(libdir)/libpthread_pic.a
  
