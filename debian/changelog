@@ -1,3 +1,9 @@
+hurd (20040508-4) UNRELEASED; urgency=low
+
+  * debian/changelog: Added back 20040301-1 entry which got lost.
+
+ -- Michael Banck <mbanck@debian.org>  Tue, 21 Sep 2004 19:20:41 +0200
+
 hurd (20040508-3) unstable; urgency=low
 
   * debian/local/rc: Removed.
@@ -37,6 +43,16 @@ hurd (20040508-1) unstable; urgency=low
     Thanks to Robert Millan
 
  -- Jeff Bailey <jbailey@raspberryginger.com>  Sat,  8 May 2004 16:55:18 -0400
+
+hurd (20040301-1) unstable; urgency=low
+
+  * New snapshot from CVS.
+    kbd, mouse as usual.  exec/exec.c PT_GNU_STACK work-around.
+    Provide example entries for new console in config/ttys.
+  * debian/rules: Do not call autoconf.
+  * debian/control: Remove build dependency autoconf.
+
+ -- Marcus Brinkmann <brinkmd@debian.org>  Mon,  1 Mar 2004 01:36:23 +0200
 
 hurd (20021118-1) unstable; urgency=low
 
