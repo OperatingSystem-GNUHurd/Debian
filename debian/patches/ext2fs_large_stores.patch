@@ -306,7 +306,7 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/ext2fs.h hurd/ext2f
  /* ---------------------------------------------------------------- */
  /* pager.c */
  
-+#define DISK_CACHE_BLOCKS	100
++#define DISK_CACHE_BLOCKS	65536
 +
  #include <hurd/diskfs-pager.h>
  
