@@ -1,3 +1,10 @@
+hurd (20040508-5) UNRELEASED; urgency=low
+
+  * debian/patches-contrib/ext2fs_20040930.diff: Removed and ...
+  * debian/patches-contrib/ext2fs_20041029.diff: ... updated to this.
+
+ -- Michael Banck <mbanck@debian.org>  Tue, 26 Oct 2004 00:31:21 +0200
+
 hurd (20040508-4) unstable; urgency=low
 
   [ Michael Banck ]
