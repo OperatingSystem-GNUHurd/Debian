@@ -32,3 +32,7 @@ DEB_MAKE_INSTALL_TARGET = install prefix=$(DEB_DESTDIR) sysconfdir=$(DEB_DESTDIR
 install/hurd::
 	# runsystem is managed by update-alternatives
 	mv debian/tmp/libexec/runsystem debian/tmp/libexec/runsystem.gnu
+
+binary-predeb/hurd::
+	chmod u+s $(DEB_DESTDIR)/bin/login
+

@@ -19,4 +19,3 @@ for i in vcs tty1 tty2 tty3 tty4 tty5 tty6; do
 	fi
 done
 
-chmod u+s /bin/login
