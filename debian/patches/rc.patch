@@ -6,7 +6,7 @@
  
 -	/sbin/fsck --preen --writable
 +	fsysopts / --update --readonly
-+	/sbin/fsck -C -A
++	/sbin/fsck -p -A
  
  	case $? in
  	# Successful completion
