@@ -1,0 +1,149 @@
+2005-01-06  Marco Gerards  <metgerards@student.han.nl>
+
+	* options.c (options): Add the option `dhcp'.
+	(parse_hook_add_interface): Initialize the `dhcp' member for the
+	parse hook.
+	(parse_opt): In case pfinet is started with the argument `--dhcp',
+	set the address to `0.0.0.0', the netmask to `255.0.0.0' and add
+	the route for `0.0.0.0' so broadcasting works.
+
+	* linux-src/net/ipv4/devinet.c (inet_insert_ifa) [_HURD_]: Don't
+	fail when the address is `0.0.0.0'.
+
+
+Index: pfinet/options.c
+===================================================================
+RCS file: /cvsroot/hurd/hurd/pfinet/options.c,v
+retrieving revision 1.11
+diff -u -p -r1.11 options.c
+--- pfinet/options.c	18 Jul 2001 16:56:57 -0000	1.11
++++ pfinet/options.c	6 Jan 2005 18:52:30 -0000
+@@ -1,6 +1,6 @@
+ /* Pfinet option parsing
+ 
+-   Copyright (C) 1996,97,2000,01 Free Software Foundation, Inc.
++   Copyright (C) 1996,97,2000,01,2005 Free Software Foundation, Inc.
+ 
+    Written by Miles Bader <miles@gnu.org>
+ 
+@@ -60,6 +60,7 @@ static const struct argp_option options[
+   {"netmask",   'm', "MASK",    0, "Set the netmask"},
+   {"peer",      'p', "ADDRESS", 0, "Set the peer address"},
+   {"gateway",   'g', "ADDRESS", 0, "Set the default gateway"},
++  {"dhcp",	'd', 0	      , 0, "Prepare pfinet for dhcp"},
+   {"shutdown",  's', 0,         0, "Shut it down"},
+   {0}
+ };
+@@ -76,6 +77,9 @@ struct parse_interface
+ 
+   /* New values to apply to it.  */
+   uint32_t address, netmask, peer, gateway;
++
++  /* Set to one if the interface is configured for DHCP.  */
++  int dhcp;
+ };
+ 
+ /* Used to hold data during argument parsing.  */
+@@ -108,6 +112,7 @@ parse_hook_add_interface (struct parse_h
+   h->curint->netmask = INADDR_NONE;
+   h->curint->peer = INADDR_NONE;
+   h->curint->gateway = INADDR_NONE;
++  h->curint->dhcp = 0;
+   return 0;
+ }
+ 
+@@ -189,6 +194,11 @@ parse_opt (int opt, char *arg, struct ar
+ 		  "%s: Illegal or undefined network address", arg);
+ 	}
+       break;
++    case 'd':
++      h->curint->dhcp = 1;
++      h->curint->address = ADDR ("0.0.0.0", "address");
++      h->curint->netmask = ADDR ("255.0.0.0", "netmask");
++      break;
+     case 'm':
+       h->curint->netmask = ADDR (arg, "netmask"); break;
+     case 'p':
+@@ -315,6 +325,55 @@ parse_opt (int opt, char *arg, struct ar
+ 	  }
+       }
+ 
++      /*  Setup the routing required for DHCP. */
++      for (in = h->interfaces; in < h->interfaces + h->num_interfaces; in++)
++	if (in->dhcp)
++	  {
++	    struct kern_rta rta;
++	    struct
++	    {
++	      struct nlmsghdr nlh;
++	      struct rtmsg rtm;
++	    } req;
++	    struct fib_table *tb;
++	    struct rtentry route;
++	    struct sockaddr_in *dst;
++	    struct device *dev;
++	    
++	    dst = (struct sockaddr_in *) &route.rt_dst;
++	    
++	    dev = dev_get (in->device->name);
++	    if (!dev)
++	      {
++		__mutex_unlock (&global_lock);
++		FAIL (ENODEV, 17, 0, "unknown device");
++	      }
++	    
++	    /* Simulate the SIOCADDRT behavior.  */
++	    bzero (&route, sizeof (struct rtentry));
++	    bzero (&req.rtm, sizeof req.rtm);
++	    bzero (&rta, sizeof rta);
++	    req.nlh.nlmsg_type = RTM_NEWROUTE;
++	    req.nlh.nlmsg_flags = NLM_F_REQUEST | NLM_F_CREATE;
++	    req.rtm.rtm_protocol = RTPROT_BOOT;
++	    req.rtm.rtm_scope = RT_SCOPE_LINK;
++	    req.rtm.rtm_type = RTN_UNICAST;
++	    rta.rta_dst = &dst->sin_addr.s_addr;
++	    rta.rta_oif = &dev->ifindex;
++	    
++	    tb = fib_new_table (req.rtm.rtm_table);
++	    if (tb)
++	      err = tb->tb_insert (tb, &req.rtm, &rta, &req.nlh, NULL);
++	    else
++	      err = ENOBUFS;
++	    
++	    if (err)
++	      {
++		__mutex_unlock (&global_lock);
++		FAIL (err, 17, 0, "cannot add route");
++	      }
++	  }
++      
+       __mutex_unlock (&global_lock);
+ 
+       /* Fall through to free hook.  */
+Index: pfinet/linux-src/net/ipv4/devinet.c
+===================================================================
+RCS file: /cvsroot/hurd/hurd/pfinet/linux-src/net/ipv4/devinet.c,v
+retrieving revision 1.8
+diff -u -p -r1.8 devinet.c
+--- pfinet/linux-src/net/ipv4/devinet.c	18 Jul 2001 17:37:13 -0000	1.8
++++ pfinet/linux-src/net/ipv4/devinet.c	6 Jan 2005 18:52:32 -0000
+@@ -214,10 +214,12 @@ inet_insert_ifa(struct in_device *in_dev
+ {
+ 	struct in_ifaddr *ifa1, **ifap, **last_primary;
+ 
++#ifndef _HURD_
+ 	if (ifa->ifa_local == 0) {
+ 		inet_free_ifa(ifa);
+ 		return 0;
+ 	}
++#endif
+ 
+ 	ifa->ifa_flags &= ~IFA_F_SECONDARY;
+ 	last_primary = &in_dev->ifa_list;
+
+
+
+_______________________________________________
+Bug-hurd mailing list
+Bug-hurd@gnu.org
+http://lists.gnu.org/mailman/listinfo/bug-hurd

@@ -1,3 +1,10 @@
+hurd (20040508-6) unstable; urgency=low
+
+  [ Michael Banck ]
+  * debian/patches/pfinet_dhcp.patch: New patch by Marco Gerards. 
+
+ -- Michael Banck <mbanck@debian.org>  Sat, 15 Jan 2005 21:04:33 +0100
+
 hurd (20040508-5) unstable; urgency=low
 
   [ Michael Banck ]
