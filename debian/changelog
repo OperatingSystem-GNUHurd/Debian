@@ -1,4 +1,4 @@
-hurd (200501xx-1) unreleased; urgency=low
+hurd (20050119-1) unreleased; urgency=low
 
   * New snapshot from CVS.
     + Contains libpthread header fixes by Neal Walfield and
@@ -12,6 +12,8 @@ hurd (200501xx-1) unreleased; urgency=low
   * debian/patches/netfs_io_select.patch: Likewise.
   * debian/patches/netfs_nonblock.patch: Likewise.
   * debian/patches-contrib/kbd.patch: Removed, no longer needed.
+  * debian/patches/libpthread_linker_script.patch: New patch.  Install
+    libpthread.a linker script correctly. (Closes: #291307)
 
  -- Michael Banck <mbanck@debian.org>  Wed, 19 Jan 2005 21:58:24 +0100
 
