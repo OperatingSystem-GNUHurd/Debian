@@ -8,6 +8,8 @@ Sources are available from ftp://alpha.gnu.org/pub/hurd/src/
 
 Copyright statement:
 
+The GNU Hurd is copyrighted by the Free Software Foundation, Inc.
+
 Note that the libraries distributed with the GNU Hurd are placed under
 the standard GNU General Public License (*not* the Library General
 Public License).
