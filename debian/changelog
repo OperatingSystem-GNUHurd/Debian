@@ -1,8 +1,10 @@
 hurd (20040508-5) UNRELEASED; urgency=low
 
   [ Michael Banck ]
-  * debian/patches-contrib/ext2fs_20040930.diff: Removed and ...
-  * debian/patches-contrib/ext2fs_20041111.diff: ... updated to this.
+  * debian/patches-contrib/ext2fs_20040930.diff: Moved to ...
+  * debian/patches/ext2fs_large_stores.diff: ... here, updated from
+    Ognyan Kulev's 20041111 version.  Set DISK_CACHE_BLOCKS to 
+    65536 in ext2fs.h.
 
  -- Michael Banck <mbanck@debian.org>  Tue, 26 Oct 2004 00:31:21 +0200
 
