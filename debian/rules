@@ -34,5 +34,5 @@ install/hurd::
 	mv debian/tmp/libexec/runsystem debian/tmp/libexec/runsystem.gnu
 
 binary-predeb/hurd::
-	chmod u+s $(DEB_DESTDIR)/bin/login
+	chmod u+s $(CURDIR)/debian/$(cdbs_curpkg)/bin/login
 
