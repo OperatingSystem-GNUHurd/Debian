@@ -6,6 +6,8 @@ hurd (20050119-2) unreleased; urgency=low
   * debian/hurd.install: Install Hurd console drivers into 
     /usr/lib/hurd/console, not /lib/hurd/console.
   * debian/copyright: Clarify that the FSF is the copyright holder.
+  * debian/copyright: Update download location to Savannah's GNU Hurd
+    project page.
 
  -- Michael Banck <mbanck@debian.org>  Thu, 24 Mar 2005 19:06:59 +0100
 
