@@ -11,6 +11,7 @@ hurd (200501xx-1) unreleased; urgency=low
   * debian/patches/libcons_repeater.patch: Likewise.
   * debian/patches/netfs_io_select.patch: Likewise.
   * debian/patches/netfs_nonblock.patch: Likewise.
+  * debian/patches-contrib/kbd.patch: Removed, no longer needed.
 
  -- Michael Banck <mbanck@debian.org>  Wed, 19 Jan 2005 21:58:24 +0100
 
