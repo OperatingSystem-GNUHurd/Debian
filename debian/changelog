@@ -4,7 +4,9 @@ hurd (20040508-4) UNRELEASED; urgency=low
   * debian/changelog: Added back 20040301-1 entry which got lost.
   * debian/hurd.install: Do not install /sbin/fsck. (Closes: #272655) 
   * debian/patches/rc.patch: Updated to use e2fsprog's /sbin/fsck
-    command-line options.
+    command-line options.  Make sure the root file system is read-only
+    during the fsck run, and update it to be writable again if fsck
+    succeeds. (Closes: #273508)
 
   [ Guillem Jover ]
   * debian/hurd.postinst: Move /bin/login suid root chmod to debian/rules.

@@ -1,16 +1,25 @@
---- hurd/daemons/rc.sh.orig	2004-09-22 14:26:58.000000000 +0200
-+++ hurd/daemons/rc.sh	2004-09-22 14:27:23.000000000 +0200
-@@ -19,7 +19,8 @@
+--- hurd/daemons/rc.sh.orig	2004-09-27 11:54:22.000000000 +0200
++++ hurd/daemons/rc.sh	2004-09-27 11:54:27.000000000 +0200
+@@ -19,14 +19,17 @@
  	echo Automatic boot in progress...
  	date
  
 -	/sbin/fsck --preen --writable
-+	# taken from Debian GNU/Linux's /etc/init.d/checkfs.sh
-+	/sbin/fsck -C -R -A
++	fsysopts / --update --readonly
++	/sbin/fsck -C -A
  
  	case $? in
  	# Successful completion
-@@ -85,7 +86,15 @@
+ 	0)
++		fsysopts / --update --writable
+ 		;;
+ 	# Filesystem modified (but ok now)
+ 	1 | 2)
++		fsysopts / --update --writable
+ 		;;
+ 	# Fsck couldn't fix it.
+ 	4 | 8)
+@@ -85,7 +88,15 @@
  
  fi
  if test -d /var/run; then
@@ -27,7 +36,7 @@
  fi
  echo done
  
-@@ -104,15 +113,25 @@
+@@ -104,15 +115,25 @@
  
  chmod 664 /etc/motd
  
