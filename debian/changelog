@@ -7,6 +7,9 @@ hurd (20040508-4) UNRELEASED; urgency=low
     command-line options.  Make sure the root file system is read-only
     during the fsck run, and update it to be writable again if fsck
     succeeds. (Closes: #273508)
+  * debian/patches-contrib/ext2fs_20040930.diff: New file.  Just put it
+    in debian/patches and recompile the package to get (experimental)
+    support for ext2 files systems larger than 2GB.
 
   [ Guillem Jover ]
   * debian/hurd.postinst:
