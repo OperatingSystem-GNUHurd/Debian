@@ -2,6 +2,14 @@ hurd (200501xx-1) unreleased; urgency=low
 
   * New snapshot from CVS.
 
+  [ Michael Banck]
+  * debian/patches/exec.patch: Removed, no longer needed.
+  * debian/patches/mouse.patch: Likewise.
+  * debian/patches/console_repeater.patch: Removed, applied upstream.
+  * debian/patches/libcons_repeater.patch: Likewise.
+  * debian/patches/netfs_io_select.patch: Likewise.
+  * debian/patches/netfs_nonblock.patch: Likewise.
+
  -- Michael Banck <mbanck@debian.org>  Wed, 19 Jan 2005 21:58:24 +0100
 
 hurd (20040508-6) unstable; urgency=low
