@@ -1,6 +1,16 @@
---- hurd/daemons/rc.sh.orig	2004-07-09 21:48:42.000000000 +0000
-+++ hurd/daemons/rc.sh	2004-07-09 21:48:25.000000000 +0000
-@@ -85,7 +85,15 @@
+--- hurd/daemons/rc.sh.orig	2004-09-22 14:26:58.000000000 +0200
++++ hurd/daemons/rc.sh	2004-09-22 14:27:23.000000000 +0200
+@@ -19,7 +19,8 @@
+ 	echo Automatic boot in progress...
+ 	date
+ 
+-	/sbin/fsck --preen --writable
++	# taken from Debian GNU/Linux's /etc/init.d/checkfs.sh
++	/sbin/fsck -C -R -A
+ 
+ 	case $? in
+ 	# Successful completion
+@@ -85,7 +86,15 @@
  
  fi
  if test -d /var/run; then
@@ -17,7 +27,7 @@
  fi
  echo done
  
-@@ -104,15 +112,25 @@
+@@ -104,15 +113,25 @@
  
  chmod 664 /etc/motd
  
