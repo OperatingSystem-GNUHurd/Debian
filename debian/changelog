@@ -10,6 +10,7 @@ hurd (20040508-4) UNRELEASED; urgency=low
   * debian/patches-contrib/ext2fs_20040930.diff: New file.  Just put it
     in debian/patches and recompile the package to get (experimental)
     support for ext2 files systems larger than 2GB.
+  * debian/control (Maintainer): Changed Maintainer address.
 
   [ Guillem Jover ]
   * debian/hurd.postinst:

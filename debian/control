@@ -1,7 +1,7 @@
 Source: hurd
 Section: base
 Priority: required
-Maintainer: GNU Hurd Maintainers <bug-hurd@gnu.org>
+Maintainer: GNU Hurd Maintainers <debian-hurd@lists.debian.org>
 Standards-Version: 3.6.1.0
 Build-Depends: mig (>= 1.3-2), texinfo, libncursesw5-dev, cdbs, debhelper
 Uploaders: Jeff Bailey <jbailey@raspberryginger.com>, Marcus Brinkmann <brinkmd@debian.org>, Neal H. Walfield <neal@debian.org>, Michael Banck <mbanck@debian.org>
