@@ -6,7 +6,7 @@ update-alternatives --quiet \
 	--install /libexec/runsystem runsystem /libexec/runsystem.gnu 20
 
 if ! grep --quiet '^login:' /etc/passwd; then
-	adduser --quiet --system --home /etc/login --gecos "Not logged in" --not-create-home login
+	adduser --quiet --system --home /etc/login --gecos "Not logged in" --no-create-home login
 	chsh -s /bin/bash login
 fi
 

@@ -1,0 +1,21 @@
+--- daemons/rc.sh.old	2004-06-11 13:31:03.030701904 -0400
++++ daemons/rc.sh	2004-06-11 13:31:14.870307857 -0400
+@@ -1,6 +1,6 @@
+ #!/bin/bash
+ 
+-PATH=/bin:/sbin
++PATH=/bin:/sbin:/usr/bin:/usr/sbin
+ 
+ # Start the default pager.  It will bail if there is already one running.
+ /hurd/mach-defpager
+--- daemons/runsystem.sh.old	2004-06-11 13:31:07.771817617 -0400
++++ daemons/runsystem.sh	2004-06-11 13:31:25.036119303 -0400
+@@ -11,7 +11,7 @@
+ ### Where to find programs, etc.
+ ###
+ 
+-PATH=/bin:/sbin
++PATH=/bin:/sbin:/usr/bin:/usr/sbin
+ export PATH
+ 
+ # If we lose badly, try to exec each of these in turn.

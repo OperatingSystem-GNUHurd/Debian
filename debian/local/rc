@@ -1,5 +1,5 @@
 #!/bin/bash
-PATH=/bin:/sbin
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
 # Start the default pager.  It will bail if there is already one running.
 /hurd/mach-defpager
