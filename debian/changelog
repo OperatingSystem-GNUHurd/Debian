@@ -1,3 +1,9 @@
+hurd (200501xx-1) unreleased; urgency=low
+
+  * New snapshot from CVS.
+
+ -- Michael Banck <mbanck@debian.org>  Wed, 19 Jan 2005 21:58:24 +0100
+
 hurd (20040508-6) unstable; urgency=low
 
   [ Michael Banck ]
