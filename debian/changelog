@@ -1,3 +1,9 @@
+hurd (20050119-3+SVN) unreleased; urgency=low
+
+  * 
+
+ -- Michael Banck <mbanck@debian.org>  Sat, 16 Apr 2005 01:24:47 +0200
+
 hurd (20050119-3) unstable; urgency=low
 
   * debian/control (hurd-dbg): New package.
