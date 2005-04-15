@@ -1,4 +1,4 @@
-hurd (20050119-2+SVN) unreleased; urgency=low
+hurd (20050119-3) unstable; urgency=low
 
   * debian/control (hurd-dbg): New package.
   * debian/rules (DEB_DH_STRIP_ARGS): Add support for hurd-dbg.
@@ -9,7 +9,7 @@ hurd (20050119-2+SVN) unreleased; urgency=low
   * debian/hurd-doc.info: New file.
   * debian/hurd-doc.docs: New file.
 
- -- Michael Banck <mbanck@debian.org>  Sun, 10 Apr 2005 22:20:58 +0200
+ -- Michael Banck <mbanck@debian.org>  Fri, 15 Apr 2005 23:03:34 +0200
 
 hurd (20050119-2) unstable; urgency=low
 
