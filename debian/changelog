@@ -1,6 +1,6 @@
 hurd (20050119-3+SVN) unreleased; urgency=low
 
-  * 
+  * debian/changelog: Added overlooked Closes: tag for 20050119-3. 
 
  -- Michael Banck <mbanck@debian.org>  Sat, 16 Apr 2005 01:24:47 +0200
 
@@ -9,7 +9,7 @@ hurd (20050119-3) unstable; urgency=low
   * debian/control (hurd-dbg): New package.
   * debian/rules (DEB_DH_STRIP_ARGS): Add support for hurd-dbg.
   * debian/hurd-dbg.dirs: New file.
-  * debian/control (hurd-doc): New package.
+  * debian/control (hurd-doc): New package. (Closes: #264858)
     (Build-Depends-Indep): Added texi2html.
   * debian/rules (build/hurd::): Generate html version of the manual.
   * debian/hurd-doc.info: New file.
