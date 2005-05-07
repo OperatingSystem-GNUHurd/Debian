@@ -7,6 +7,7 @@ hurd (20050507-0+SVN) unreleased; urgency=low
   * debian/control (hurd-dbg/Priority:) Set to extra as requested by
     the ftp-masters.
   * debian/patches/isofs_boot.patch: Removed, applied upstream.
+  * debian/patches/libpthread_linker_script.patch: Likewise.
 
  -- Michael Banck <mbanck@debian.org>  Sat, 16 Apr 2005 01:24:47 +0200
 
