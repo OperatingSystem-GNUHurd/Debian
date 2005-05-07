@@ -1,5 +1,8 @@
-hurd (20050119-3+SVN) unreleased; urgency=low
+hurd (20050507-0+SVN) unreleased; urgency=low
 
+  * New snapshot from CVS.
+    + Contains libpthread fixes for various test suites by Neal 
+      Walfield.
   * debian/changelog (20050119-3): Added overlooked Closes: tag. 
   * debian/control (hurd-dbg/Priority:) Set to extra as requested by
     the ftp-masters.
