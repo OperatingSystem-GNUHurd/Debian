@@ -6,8 +6,6 @@ hurd (20050507-0+SVN) unreleased; urgency=low
   * debian/changelog (20050119-3): Added overlooked Closes: tag. 
   * debian/control (hurd-dbg/Priority:) Set to extra as requested by
     the ftp-masters.
-  * debian/patches/pt-setschedparam_api_fix.patch: New patch, taken 
-    from upstream CVS.
 
  -- Michael Banck <mbanck@debian.org>  Sat, 16 Apr 2005 01:24:47 +0200
 
