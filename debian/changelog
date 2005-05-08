@@ -1,3 +1,9 @@
+hurd (20050507-1+SVN) unreleased; urgency=low
+
+  * 
+ 
+ -- Michael Banck <mbanck@debian.org>  Sat,  7 May 2005 15:28:51 +0200
+
 hurd (20050507-1) unstable; urgency=low
 
   * New snapshot from CVS.
