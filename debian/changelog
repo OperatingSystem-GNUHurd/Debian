@@ -1,15 +1,15 @@
-hurd (20050507-0+SVN) unreleased; urgency=low
+hurd (20050507-1) unstable; urgency=low
 
   * New snapshot from CVS.
-    + Contains libpthread fixes for various test suites by Neal 
+    + Contains libpthread fixes for various test suites by Neal
       Walfield.
-  * debian/changelog (20050119-3): Added overlooked Closes: tag. 
+  * debian/changelog (20050119-3): Added overlooked Closes: tag.
   * debian/control (hurd-dbg/Priority:) Set to extra as requested by
     the ftp-masters.
   * debian/patches/isofs_boot.patch: Removed, applied upstream.
   * debian/patches/libpthread_linker_script.patch: Likewise.
 
- -- Michael Banck <mbanck@debian.org>  Sat, 16 Apr 2005 01:24:47 +0200
+ -- Michael Banck <mbanck@debian.org>  Sat,  7 May 2005 15:28:51 +0200
 
 hurd (20050119-3) unstable; urgency=low
 
