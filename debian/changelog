@@ -1,11 +1,11 @@
-hurd (20050513-0+SVN) unreleased; urgency=low
+hurd (20050513-1) unstable; urgency=low
 
   * New snapshot from CVS.
     + Contains a POSIX semaphore implementation by Neal Walfield.
     + Contains more libpthread fixes for test suites by Neal Walfield.
   * debian/hurd.postinst: Handle /bin/fakeroot-hurd by alternatives.
- 
- -- Michael Banck <mbanck@debian.org>  Sat,  7 May 2005 15:28:51 +0200
+
+ -- Michael Banck <mbanck@debian.org>  Sun, 15 May 2005 13:00:12 +0200
 
 hurd (20050507-1) unstable; urgency=low
 
