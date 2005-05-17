@@ -1,0 +1,19 @@
+2005-05-17  Neal H. Walfield  <neal@gnu.org>
+
+	* include/pthread/pthread.h: Define __need_clockid_t before
+	including <time.h>.
+
+Index: include/pthread/pthread.h
+===================================================================
+RCS file: /cvsroot/hurd/hurd/libpthread/include/pthread/pthread.h,v
+diff -u -r1.5 -r1.6
+--- libpthread/include/pthread/pthread.h	12 May 2005 20:55:38 -0000	1.5
++++ libpthread/include/pthread/pthread.h	17 May 2005 09:40:50 -0000	1.6
+@@ -26,6 +26,7 @@
+ #include <features.h>
+ 
+ #include <sched.h>
++#define __need_clockid_t
+ #include <time.h>
+ 
+ __BEGIN_DECLS
