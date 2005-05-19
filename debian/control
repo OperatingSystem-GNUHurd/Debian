@@ -43,4 +43,4 @@ Section: doc
 Architecture: all
 Suggests: hurd (= ${Source-Version})
 Description: The GNU Hurd manual
- This package includes the manual in info and PostScript format.
+ This package includes the manual in info and HTML format.
