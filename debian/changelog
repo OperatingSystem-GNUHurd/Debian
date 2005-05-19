@@ -1,10 +1,10 @@
-hurd (20050513-1+SVN) unreleased; urgency=low
+hurd (20050513-2) unstable; urgency=low
 
   * debian/patches/libpthread_need_clockid_t.patch: New patch by Neal
     Walfield.
   * debian/patches/pflocal.patch: New patch by Neal Walfield.
 
- -- Michael Banck <mbanck@debian.org>  Mon, 16 May 2005 21:55:04 +0200
+ -- Michael Banck <mbanck@debian.org>  Tue, 17 May 2005 18:37:08 +0200
 
 hurd (20050513-1) unstable; urgency=low
 
