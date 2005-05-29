@@ -26,6 +26,9 @@ Priority: standard
 Section: libdevel
 Architecture: hurd-i386
 Depends: hurd
+Provides: libsem-dev
+Replaces: libsem-dev
+Conflicts: libsem-dev
 Description: The GNU Hurd (development files)
  This package includes the header files and the static libraries.
 
