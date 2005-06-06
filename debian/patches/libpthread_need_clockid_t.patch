@@ -1,3 +1,8 @@
+2005-05-31  Neal H. Walfield  <neal@gnu.org>
+
+	* include/pthread/pthread.h: If clockid_t is still not defined
+	after including <time.h>, define it manually.
+
 2005-05-17  Neal H. Walfield  <neal@gnu.org>
 
 	* include/pthread/pthread.h: Define __need_clockid_t before
@@ -17,3 +22,28 @@ diff -u -r1.5 -r1.6
  #include <time.h>
  
  __BEGIN_DECLS
+Index: libpthread/include/pthread/pthread.h
+===================================================================
+RCS file: /cvsroot/hurd/hurd/libpthread/include/pthread/pthread.h,v
+retrieving revision 1.6
+retrieving revision 1.7
+diff -u -r1.6 -r1.7
+--- libpthread/include/pthread/pthread.h	17 May 2005 09:40:50 -0000	1.6
++++ libpthread/include/pthread/pthread.h	31 May 2005 17:34:36 -0000	1.7
+@@ -29,6 +29,16 @@
+ #define __need_clockid_t
+ #include <time.h>
+ 
++/* If we are in a mode where clockid_t is not automatically defined
++   and another header has already included <time.h> then defining
++   __need_clockid_t was not enough.  */
++#ifndef __clockid_t_defined
++# define __clockid_t_defined    1
++# include <bits/types.h>
++/* Clock ID used in clock and timer functions.  */
++typedef __clockid_t clockid_t;
++#endif
++
+ __BEGIN_DECLS
+ 
+ #include <bits/pthread.h>
