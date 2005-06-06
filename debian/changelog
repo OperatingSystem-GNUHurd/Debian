@@ -3,6 +3,10 @@ hurd (20050513-2+SVN) unreleased; urgency=low
   * debian/control (hurd-doc): Fix description to indicate the manual
     is included in HTML and not PostScript format. (Closes: #309748)
   * debian/control (hurd-dev): Provide/Replace/Conflict libsem-dev.
+  * debian/control (Build-Depends): Version dependency on debhelper to 
+    >= 4.2.
+  * debian/control (hurd-udeb): New package.
+  * debian/hurd-udeb.install: New file.
 
  -- Michael Banck <mbanck@debian.org>  Thu, 19 May 2005 12:31:01 +0200
 
