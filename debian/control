@@ -50,7 +50,7 @@ Description: The GNU Hurd manual
 
 Package: hurd-udeb
 XC-Package-Type: udeb
-Priority: required
+Priority: optional
 Section: debian-installer
 Architecture: hurd-i386
 Description: The GNU Hurd - udeb
