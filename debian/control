@@ -51,6 +51,7 @@ Description: The GNU Hurd manual
 Package: hurd-udeb
 XC-Package-Type: udeb
 Priority: required
+Section: debian-installer
 Architecture: hurd-i386
 Description: The GNU Hurd - udeb
  This is the GNU Hurd udeb package. It contains essential system software and
