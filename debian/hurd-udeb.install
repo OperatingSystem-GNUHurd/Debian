@@ -61,6 +61,7 @@ debian/tmp/hurd/hostmux
 debian/tmp/hurd/ifsock
 debian/tmp/hurd/init
 debian/tmp/hurd/iso9660fs
+debian/tmp/hurd/iso9660fs.static
 debian/tmp/hurd/mach-defpager
 debian/tmp/hurd/magic
 debian/tmp/hurd/new-fifo

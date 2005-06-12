@@ -26,7 +26,7 @@ include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/autotools.mk
 
 DEB_CONFIGURE_LIBEXECDIR ="\$${prefix}/libexec"
-DEB_CONFIGURE_USER_FLAGS := --disable-profile
+DEB_CONFIGURE_USER_FLAGS := --disable-profile --enable-static-progs='ext2fs,ufs,iso9660fs'
 DEB_MAKE_INSTALL_TARGET = install prefix=$(DEB_DESTDIR) sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var
 DEB_DH_STRIP_ARGS := --dbg-package=hurd
 
