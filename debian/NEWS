@@ -1,3 +1,13 @@
+hurd (20050513-4) unstable; urgency=low
+
+  * The Hurd console may now be started automatically on bootup.  The
+    file `/etc/default/hurd-console' controls whether the Hurd console
+    will be started, and if so, which options are used.  To get the 
+    Hurd console on bootup, change ENABLE to `true' and adjust the
+    other options to your liking.
+
+ -- Michael Banck <mbanck@debian.org>  Mon, 20 Jun 2005 01:43:31 +0200
+
 hurd (20050119-1) unstable; urgency=low
 
   * The command line syntax for the console client has slightly
