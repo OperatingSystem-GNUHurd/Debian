@@ -8,6 +8,7 @@ hurd (20050513-3+SVN) unreleased; urgency=low
   * debian/hurd-console.default: New file.
   * debian/rules (install/hurd::) Install it into debian/tmp/etc/default.
   * debian/rules/hurd.install: Ship debian/tmp/etc/default/hurd-console.
+  * debian/hurd.postinst: Removed creation of user `login'.
 
  -- Michael Banck <mbanck@debian.org>  Sun, 12 Jun 2005 23:53:59 +0200
 

@@ -8,11 +8,6 @@ update-alternatives --quiet \
 update-alternatives \
 	--install /usr/bin/fakeroot fakeroot /bin/fakeroot-hurd 30
 
-if ! grep --quiet '^login:' /etc/passwd; then
-	adduser --quiet --system --home /etc/login --gecos "Not logged in" --no-create-home login
-	chsh -s /bin/bash login
-fi
-
 #DEBHELPER#
 
 for i in vcs tty1 tty2 tty3 tty4 tty5 tty6; do
