@@ -41,6 +41,8 @@ install/hurd::
 	# fakeroot package
 	mv debian/tmp/bin/fakeroot debian/tmp/bin/fakeroot-hurd
 
+	install -m664 debian/hurd-console.default debian/tmp/etc/default/hurd-console
+
 SUID_PROGRAMS = /bin/ids /bin/login /bin/ps /bin/w
 
 binary-predeb/hurd::

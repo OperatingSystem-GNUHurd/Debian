@@ -3,6 +3,11 @@ hurd (20050513-3+SVN) unreleased; urgency=low
   * debian/rules (DEB_CONFIGURE_USER_FLAGS): Build iso9660fs.static
     as well.
   * debian/hurd-udeb.install: Added iso9660fs.static.
+  * debian/patches/hurd_console_startup.patch: New patch, adding
+    support for starting the Hurd console on bootup.
+  * debian/hurd-console.default: New file.
+  * debian/rules (install/hurd::) Install it into debian/tmp/etc/default.
+  * debian/rules/hurd.install: Ship debian/tmp/etc/default/hurd-console.
 
  -- Michael Banck <mbanck@debian.org>  Sun, 12 Jun 2005 23:53:59 +0200
 

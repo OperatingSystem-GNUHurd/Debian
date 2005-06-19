@@ -1,0 +1,27 @@
+--- daemons/runsystem.sh.orig	2001-12-20 18:29:33.000000000 +0100
++++ daemons/runsystem.sh	2005-06-18 01:05:30.398035896 +0200
+@@ -127,10 +127,24 @@
+     trap "kill -$sig \${runttys_pid}" $sig
+   done
+ 
++  # Touch the first tty so that the Hurd console is certain to pick it
++  # and not some random other tty.
++  touch /dev/tty1
++
+   # This program reads /etc/ttys and starts the programs it says to.
+   ${RUNTTYS} &
+   runttys_pid=$!
+ 
++  # Startup the Hurd console if configured.
++  if [ -e /etc/default/hurd-console ]; then
++    unset DISPLAY KBD KBD_REPEAT MOUSE MOUSE_REPEAT SPEAKER
++    . /etc/default/hurd-console
++  fi
++  if [ "$ENABLE" = "true" ]; then
++    console ${DISPLAY} ${KBD} ${KBD_REPEAT} \
++            ${SPEAKER} ${MOUSE} ${MOUSE_REPEAT} -c /dev/vcs
++  fi
++
+   # Wait for runttys to die, meanwhile handling trapped signals.
+   wait
+ 
