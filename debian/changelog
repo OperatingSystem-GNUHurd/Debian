@@ -6,8 +6,8 @@ hurd (20050513-3+SVN) unreleased; urgency=low
   * debian/patches/hurd_console_startup.patch: New patch, adding
     support for starting the Hurd console on bootup.
   * debian/hurd-console.default: New file.
-  * debian/rules (install/hurd::) Install it into debian/hurd/etc/default.
   * debian/hurd.dirs: Added `etc/default'.
+  * debian/rules (install/hurd::) Install it into debian/hurd/etc/default.
   * debian/hurd.postinst: Removed creation of user `login'.
 
  -- Michael Banck <mbanck@debian.org>  Sun, 12 Jun 2005 23:53:59 +0200
