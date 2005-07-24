@@ -9,15 +9,27 @@ DISPLAY='-d vga'
 # The keyboard driver, mandatory.  Either `pc_kbd' or `xkb' from the
 # console-driver-xkb package.
 KBD='-d pc_kbd'
+
+# The alternative xkb keyboard driver, as provided by the 
+# console-driver-xkb package.  It uses X11 style keymaps and supports
+# different keymaps.  Possible options are:
+# --xkbdir : The root directory of the xkb configuration, by default
+# this is /etc/X11/xkb.
+# --keymapfile : The file that hold the descriptions of the default
+# keymaps file. This file holds the description of all keymaps. This
+# path should be relative to the path set by `xkbdir'. By default
+# "keymap/xfree86" is used.
+# --keymap : The keymap to use. By default en_US is used. Examples of
+# some other keymaps are: fr, us, de, dvorak.
 #KBD='-d xkb'
 
-# The keyboard repeater.  Required for X11.
+# The keyboard repeater.  Required for running X11.
 #KBD_REPEAT='--repeat=kbd'
 
 # The mouse driver.  Optional.
 #MOUSE='-d pc_mouse --protocol=ps/2'
 
-# The mouse repeater.  Required for X11.
+# The mouse repeater.  Required for running X11.
 #MOUSE_REPEAT='--repeat=mouse'
 
 # The pc speaker.  Optional.
