@@ -1,0 +1,17 @@
+2005-07-28  Anders Juel Jensen  <macavity@aracer.com>
+
+        * node.c (netfs_node_norefs) <hurd_ihash_locp_remove>:
+        Missing dereference of an argument.
+
+--- ftpfs/node.c      1 Mar 2004 09:58:44 -0000       1.2
++++ ftpfs/node.c      28 Jul 2005 18:14:47 -0000
+@@ -92,7 +92,7 @@
+
+   /* Remove this entry from the set of known inodes.  */
+   spin_lock (&nn->fs->inode_mappings_lock);
+-  hurd_ihash_locp_remove (&nn->fs->inode_mappings, nn->dir_entry-
+>inode_locp);
++  hurd_ihash_locp_remove (&nn->fs->inode_mappings, &nn->dir_entry-
+>inode_locp); spin_unlock (&nn->fs->inode_mappings_lock);
+
+   if (nn->contents)

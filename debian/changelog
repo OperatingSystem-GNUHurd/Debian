@@ -13,6 +13,7 @@ hurd (20050513-3+SVN) unreleased; urgency=low
     on bootup.
   * debian/patches/magic_port_leak.patch: New patch by Marcus
     Brinkmann, taken from CVS.
+  * debian/patches/ftpfs_fix.patch: New patch by Anders Juel Jensen.
 
  -- Michael Banck <mbanck@debian.org>  Sun, 12 Jun 2005 23:53:59 +0200
 
