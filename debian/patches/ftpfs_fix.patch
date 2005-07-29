@@ -9,9 +9,8 @@
 
    /* Remove this entry from the set of known inodes.  */
    spin_lock (&nn->fs->inode_mappings_lock);
--  hurd_ihash_locp_remove (&nn->fs->inode_mappings, nn->dir_entry-
->inode_locp);
-+  hurd_ihash_locp_remove (&nn->fs->inode_mappings, &nn->dir_entry-
->inode_locp); spin_unlock (&nn->fs->inode_mappings_lock);
+-  hurd_ihash_locp_remove (&nn->fs->inode_mappings, nn->dir_entry->inode_locp);
++  hurd_ihash_locp_remove (&nn->fs->inode_mappings, &nn->dir_entry->inode_locp); 
+   spin_unlock (&nn->fs->inode_mappings_lock);
 
    if (nn->contents)
