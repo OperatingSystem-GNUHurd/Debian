@@ -14,6 +14,7 @@ hurd (20050513-3+SVN) unreleased; urgency=low
   * debian/patches/magic_port_leak.patch: New patch by Marcus
     Brinkmann, taken from CVS.
   * debian/patches/ftpfs_fix.patch: New patch by Samuel Thibault.
+  * debian/patches/sysvshm.patch: New patch by Marcus Brinkmann.
 
  -- Michael Banck <mbanck@debian.org>  Sun, 12 Jun 2005 23:53:59 +0200
 
