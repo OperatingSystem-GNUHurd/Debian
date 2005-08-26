@@ -13,14 +13,14 @@ KBD='-d pc_kbd'
 # The alternative xkb keyboard driver, as provided by the 
 # console-driver-xkb package.  It uses X11 style keymaps and supports
 # different keymaps.  Possible options are:
-# --xkbdir : The root directory of the xkb configuration, by default
-# this is /etc/X11/xkb.
-# --keymapfile : The file that hold the descriptions of the default
+# --keymap: The keymap to use. By default en_US is used. Examples of
+# some other keymaps are: fr, us, de, dvorak.
+# --keymapfile: The file that hold the descriptions of the default
 # keymaps file. This file holds the description of all keymaps. This
 # path should be relative to the path set by `xkbdir'. By default
 # "keymap/xfree86" is used.
-# --keymap : The keymap to use. By default en_US is used. Examples of
-# some other keymaps are: fr, us, de, dvorak.
+# --xkbdir: The root directory of the xkb configuration, by default
+# this is /etc/X11/xkb.
 #KBD='-d xkb'
 
 # The keyboard repeater.  Required for running X11.
