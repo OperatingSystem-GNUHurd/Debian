@@ -1,0 +1,28 @@
+Index: libpthread/include/semaphore.h
+===================================================================
+RCS file: /cvsroot/hurd/hurd/libpthread/include/semaphore.h,v
+retrieving revision 1.1
+diff -u -r1.1 semaphore.h
+--- libpthread/include/semaphore.h	12 May 2005 11:50:42 -0000	1.1
++++ libpthread/include/semaphore.h	26 Jul 2005 21:33:22 -0000
+@@ -36,7 +36,7 @@
+ extern int sem_destroy (sem_t *sem);
+ 
+ /* Store the value of semaphore *SEM in *VALUE.  */
+-extern int sem_getvalue (sem_t *restrict sem, int *restrict value);
++extern int sem_getvalue (sem_t *__restrict sem, int *__restrict value);
+ 
+ /* Perform a down operation on semaphore *SEM.  */
+ extern int sem_wait (sem_t *sem);
+@@ -47,8 +47,8 @@
+ 
+ /* Perform a down operation on semaphore *SEM but don't wait longer
+    than TIMEOUT.  */
+-extern int sem_timedwait (sem_t *restrict sem,
+-			  const struct timespec *restrict timeout);
++extern int sem_timedwait (sem_t *__restrict sem,
++			  const struct timespec *__restrict timeout);
+ 
+ /* Perform an up operation on semaphore *SEM.  */
+ extern int sem_post (sem_t *sem);
+
