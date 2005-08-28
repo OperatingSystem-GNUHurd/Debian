@@ -9,18 +9,27 @@
 	mode.
 
 diff -rup cvs/hurd/ext2fs/inode.c work/hurd/ext2fs/inode.c
---- ext2fs/inode.c	2002-10-08 19:10:09.000000000 -0400
-+++ ext2fs/inode.c	2005-03-09 17:27:34.000000000 -0500
-@@ -310,6 +312,9 @@ read_node (struct node *np)
-       offset = np->allocsize & ((1 << log2_block_size) - 1);
-       if (offset > 0)
- 	np->allocsize += block_size - offset;
-+
-+      /* We start out with no map users.  */
-+      st->st_mode |= S_IMMAP0;
-     }
-   else
+--- ext2fs/inode.c	2005-08-28 15:12:07.465246232 +0200
++++ ext2fs/inode.c	2005-08-28 15:12:59.372355152 +0200
+@@ -309,7 +309,7 @@
+   if (S_ISREG (st->st_mode) || S_ISDIR (st->st_mode)
+       || (S_ISLNK (st->st_mode) && st->st_blocks))
+     np->allocsize = round_block (np->dn_stat.st_size);
+-  else
++  else {
      /* Allocsize should be zero for anything except directories, files, and
+        long symlinks.  These are the only things allowed to have any blocks
+        allocated as well, although st_size may be zero for any type (cases
+@@ -317,6 +317,9 @@
+        linux, some devices).  */
+     np->allocsize = 0;
+ 
++    /* We start out with no map users.  */
++    st->st_mode |= S_IMMAP0;
++  }
+   return 0;
+ }
+ 
 diff -rup cvs/hurd/ext2fs/pager.c work/hurd/ext2fs/pager.c
 --- ext2fs/pager.c	2002-06-11 17:38:01.000000000 -0400
 +++ ext2fs/pager.c	2005-03-09 17:45:27.000000000 -0500
