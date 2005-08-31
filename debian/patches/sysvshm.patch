@@ -8,9 +8,8 @@
 	* inode.c (read_node): Set the S_IMMAP0 flag in the node's stat
 	mode.
 
-diff -rup cvs/hurd/ext2fs/inode.c work/hurd/ext2fs/inode.c
---- ext2fs/inode.c	2005-08-28 15:12:07.465246232 +0200
-+++ ext2fs/inode.c	2005-08-28 15:12:59.372355152 +0200
+--- ext2fs/inode.c	2005-08-30 17:08:51.000000000 +0200
++++ ext2fs/inode.c.new	2005-08-30 17:09:16.000000000 +0200
 @@ -309,7 +309,7 @@
    if (S_ISREG (st->st_mode) || S_ISDIR (st->st_mode)
        || (S_ISLNK (st->st_mode) && st->st_blocks))
@@ -20,54 +19,60 @@ diff -rup cvs/hurd/ext2fs/inode.c work/hurd/ext2fs/inode.c
      /* Allocsize should be zero for anything except directories, files, and
         long symlinks.  These are the only things allowed to have any blocks
         allocated as well, although st_size may be zero for any type (cases
-@@ -317,6 +317,9 @@
+@@ -317,6 +317,11 @@
         linux, some devices).  */
      np->allocsize = 0;
  
++#ifdef S_IMMAP0
 +    /* We start out with no map users.  */
 +    st->st_mode |= S_IMMAP0;
++#endif
 +  }
    return 0;
  }
  
-diff -rup cvs/hurd/ext2fs/pager.c work/hurd/ext2fs/pager.c
---- ext2fs/pager.c	2002-06-11 17:38:01.000000000 -0400
-+++ ext2fs/pager.c	2005-03-09 17:45:27.000000000 -0500
-@@ -20,6 +20,7 @@
- 
+--- ext2fs/pager.c	2005-08-30 17:08:51.000000000 +0200
++++ ext2fs/pager.c.new	2005-08-30 17:09:17.000000000 +0200
+@@ -21,6 +21,7 @@
+ #include <unistd.h>
  #include <string.h>
  #include <errno.h>
 +#include <sys/stat.h>
  #include <hurd/store.h>
  #include "ext2fs.h"
  
-@@ -744,6 +745,7 @@ pager_clear_user_data (struct user_pager
+@@ -799,6 +800,9 @@
    if (upi->type == FILE_DATA)
      {
        struct pager *pager;
++#ifdef S_IMMAP0
 +      struct node *np;
++#endif
  
        spin_lock (&node_to_page_lock);
        pager = upi->node->dn->pager;
-@@ -751,6 +753,11 @@ pager_clear_user_data (struct user_pager
+@@ -806,6 +810,13 @@
  	upi->node->dn->pager = 0;
        spin_unlock (&node_to_page_lock);
  
++#ifdef S_IMMAP0
 +      np = upi->node;
 +      mutex_lock (&np->lock);
 +      np->dn_stat.st_mode |= S_IMMAP0;
 +      mutex_unlock (&np->lock);
++#endif
 +
        diskfs_nrele_light (upi->node);
      }
  
-@@ -824,6 +831,8 @@ diskfs_get_filemap (struct node *node, v
+@@ -1251,6 +1262,10 @@
  	      return MACH_PORT_NULL;
  	    }
  
++#ifdef S_IMMAP0
 +	  node->dn_stat.st_mode &= ~S_IMMAP0;
++#endif
 +
  	  right = pager_get_port (node->dn->pager);
  	  ports_port_deref (node->dn->pager);
  	}
-
