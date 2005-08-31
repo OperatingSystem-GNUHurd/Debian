@@ -20,6 +20,8 @@
 DEB_TAR_SRCDIR := hurd
 DEB_BUILDDIR = $(DEB_SRCDIR)/build
 
+CC=gcc-3.3
+
 include /usr/share/cdbs/1/rules/tarball.mk
 include /usr/share/cdbs/1/rules/simple-patchsys.mk
 include /usr/share/cdbs/1/rules/debhelper.mk

@@ -19,6 +19,7 @@ hurd (20050513-3+SVN) unreleased; urgency=low
   * debian/patches/semaphore_restrict_fix.patch: New patch by Samuel
     Thibault. (Closes: #320121)
   * debian/control (Build-Depends): Added gcc-3.3.
+  * debian/rules (CC): New variable, set to gcc-3.3.
 
  -- Michael Banck <mbanck@debian.org>  Sun, 12 Jun 2005 23:53:59 +0200
 
