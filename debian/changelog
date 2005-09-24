@@ -1,6 +1,7 @@
 hurd (20050513-4+SVN) unreleased; urgency=low
 
   * debian/patches/thread-throttle.patch: New patch by Sergio Lopez.
+  * debian/patches/gcc-4.0_fixes.patch: New patch by Thomas Schwinge.
 
  -- Michael Banck <mbanck@debian.org>  Sat, 24 Sep 2005 13:34:26 +0200
 
