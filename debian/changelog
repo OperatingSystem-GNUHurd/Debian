@@ -1,4 +1,4 @@
-hurd (20050513-3+SVN) unreleased; urgency=low
+hurd (20050513-4) unstable; urgency=low
 
   * debian/rules (DEB_CONFIGURE_USER_FLAGS): Build iso9660fs.static
     as well.
@@ -21,7 +21,7 @@ hurd (20050513-3+SVN) unreleased; urgency=low
   * debian/control (Build-Depends): Added gcc-3.3.
   * debian/rules (CC): New variable, set to gcc-3.3.
 
- -- Michael Banck <mbanck@debian.org>  Sun, 12 Jun 2005 23:53:59 +0200
+ -- Michael Banck <mbanck@debian.org>  Sun, 28 Aug 2005 14:45:55 +0200
 
 hurd (20050513-3) unstable; urgency=low
 
