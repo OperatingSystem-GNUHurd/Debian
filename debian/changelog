@@ -1,3 +1,9 @@
+hurd (20050513-4+SVN) unreleased; urgency=low
+
+  * 
+
+ -- Michael Banck <mbanck@debian.org>  Sat, 24 Sep 2005 13:34:26 +0200
+
 hurd (20050513-4) unstable; urgency=low
 
   * debian/rules (DEB_CONFIGURE_USER_FLAGS): Build iso9660fs.static
