@@ -6,7 +6,7 @@ hurd (20050513-4) unstable; urgency=low
     Hurd console on bootup, change ENABLE to `true' and adjust the
     other options to your liking.
 
- -- Michael Banck <mbanck@debian.org>  Mon, 20 Jun 2005 01:43:31 +0200
+ -- Michael Banck <mbanck@debian.org>  Sun, 28 Aug 2005 14:43:31 +0200
 
 hurd (20050119-1) unstable; urgency=low
 
