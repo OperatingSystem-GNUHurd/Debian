@@ -1,6 +1,6 @@
 hurd (20050513-4+SVN) unreleased; urgency=low
 
-  * 
+  * debian/patches/thread-throttle.patch: New patch by Sergio Lopez.
 
  -- Michael Banck <mbanck@debian.org>  Sat, 24 Sep 2005 13:34:26 +0200
 
