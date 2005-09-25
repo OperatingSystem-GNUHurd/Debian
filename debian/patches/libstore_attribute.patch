@@ -1,0 +1,29 @@
+2005-09-24  Roland McGrath  <roland@frob.com>
+
+	* store.h (STORE_STD_CLASS): Use __attribute_used__ macro
+	instead of `unused' attribute.
+
+===================================================================
+RCS file: /cvsroot/hurd/cvsroot/hurd/hurd/libstore/store.h,v
+retrieving revision 1.46
+retrieving revision 1.47
+diff -u -r1.46 -r1.47
+--- hurd/hurd/libstore/store.h	2004/09/07 21:35:45	1.46
++++ hurd/hurd/libstore/store.h	2005/09/25 00:38:07	1.47
+@@ -1,6 +1,6 @@
+ /* Store I/O
+ 
+-   Copyright (C) 1995,96,97,98,99,2001,02,04 Free Software Foundation, Inc.
++   Copyright (C) 1995,96,97,98,99,2001,02,04,05 Free Software Foundation, Inc.
+    Written by Miles Bader <miles@gnu.org>
+    This file is part of the GNU Hurd.
+ 
+@@ -627,7 +627,7 @@
+ 
+ #define STORE_STD_CLASS(name) \
+   static const struct store_class *const store_std_classes_##name[] \
+-    __attribute__ ((unused, section ("store_std_classes"))) \
++    __attribute_used__ __attribute__ ((section ("store_std_classes"))) \
+     = { &store_##name##_class }
+ 
+ 
