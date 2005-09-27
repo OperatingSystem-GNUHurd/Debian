@@ -37,6 +37,14 @@ utils/ChangeLog
 	* ps.c (current_tty_name): Don't declare as `static'.
 	* rpctrace.c (print_contents): Don't use ?: as a lvalue.
 
+serverboot/ChageLog
+2005-08-13  Alfred M. Szmidt  <ams@gnu.org>
+
+	* kalloc.c: #include <malloc.h>
+	(init_hook, malloc_hook, free_hook): New functions.
+	(__malloc_initialize_hook): New variable.
+	(malloc, free): Functions removed.
+
 diff -rN -u old-hurd-0-branch.1.tmp-1/boot/boot.c new-hurd-0-branch.1.tmp-1/boot/boot.c
 --- old-hurd-0-branch.1.tmp-1/boot/boot.c	2005-09-01 19:18:01.293715312 +0200
 +++ new-hurd-0-branch.1.tmp-1/boot/boot.c	2005-09-01 19:18:01.307713184 +0200
@@ -195,5 +203,50 @@ diff -rN -u old-hurd-0-branch.1.tmp-1/utils/rpctrace.c new-hurd-0-branch.1.tmp-1
  	}
        else
  	print_data (name, data, nelt, eltsize);
-
-
+===================================================================
+RCS file: /cvsroot/hurd/cvsroot/hurd/hurd/serverboot/kalloc.c,v
+retrieving revision 1.1
+retrieving revision 1.1.2.1
+diff -u -r1.1 -r1.1.2.1
+--- hurd/serverboot/kalloc.c	1997/04/03 23:27:41	1.1
++++ hurd/serverboot/kalloc.c	2005/09/19 20:19:56	1.1.2.1
+@@ -34,6 +34,14 @@
+ 
+ #include <mach.h>
+ #include <cthreads.h>		/* for spin locks */
++#include <malloc.h> 		/* for malloc_hook/free_hook */
++
++static void init_hook (void);
++static void *malloc_hook (size_t size, const void *caller);
++static void free_hook (void *ptr, const void *caller);
++
++void (*__malloc_initialize_hook) (void) = init_hook;
++
+ 
+ #define	DEBUG
+ 
+@@ -250,12 +258,21 @@
+ 	}
+ }
+ 
+-void *malloc(vm_size_t size)
++static void
++init_hook (void)
++{
++  __malloc_hook = malloc_hook;
++  __free_hook = free_hook;
++}
++
++static void *
++malloc_hook (size_t size, const void *caller)
+ {
+-	return (void *)kalloc(size);
++  return (void *) kalloc ((vm_size_t) size);
+ }
+ 
+-void free(void *addr)
++static void
++free_hook (void *ptr, const void *caller)
+ {
+   /* Just ignore harmless attempts at cleanliness.  */
+   /*	panic("free not implemented"); */
