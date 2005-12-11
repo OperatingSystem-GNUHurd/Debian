@@ -6,6 +6,8 @@ hurd (20050513-4+SVN) unreleased; urgency=low
     McGrath, taken from CVS.
   * debian/rules (CC): Removed.
   * debian/control (Build-Depends): Removed gcc-3.3.
+  * debian/patches/libpthread_weak_inline.patch: New patch by Neal 
+    Walfield.
 
  -- Michael Banck <mbanck@debian.org>  Sat, 24 Sep 2005 13:34:26 +0200
 
