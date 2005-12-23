@@ -1,3 +1,9 @@
+hurd (20050513-5+SVN) unreleased; urgency=low
+
+  * 
+
+ -- Michael Banck <mbanck@debian.org>  Fri, 23 Dec 2005 12:28:46 +0100
+
 hurd (20050513-5) unstable; urgency=low
 
   * debian/patches/thread-throttle.patch: New patch by Sergio Lopez.
