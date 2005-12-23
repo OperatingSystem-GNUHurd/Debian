@@ -1,15 +1,15 @@
-hurd (20050513-4+SVN) unreleased; urgency=low
+hurd (20050513-5) unstable; urgency=low
 
   * debian/patches/thread-throttle.patch: New patch by Sergio Lopez.
   * debian/patches/gcc-4.0_fixes.patch: New patch by Thomas Schwinge.
-  * debian/patches/libstore_attribute.patch: New patch by Roland 
+  * debian/patches/libstore_attribute.patch: New patch by Roland
     McGrath, taken from CVS.
   * debian/rules (CC): Removed.
   * debian/control (Build-Depends): Removed gcc-3.3.
-  * debian/patches/libpthread_weak_inline.patch: New patch by Neal 
+  * debian/patches/libpthread_weak_inline.patch: New patch by Neal
     Walfield.
 
- -- Michael Banck <mbanck@debian.org>  Sat, 24 Sep 2005 13:34:26 +0200
+ -- Michael Banck <mbanck@debian.org>  Sun, 11 Dec 2005 13:31:11 +0100
 
 hurd (20050513-4) unstable; urgency=low
 
