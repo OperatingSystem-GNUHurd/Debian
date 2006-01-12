@@ -11,11 +11,11 @@ Package: hurd
 Priority: required
 Section: base
 Essential: yes
-Depends: gnumach (>= 20050801-3), sysv-rc, ${shlibs:Depends}
+Depends: gnumach (>= 1:20050801-3), sysv-rc, ${shlibs:Depends}
 Suggests: hurd-doc
 Provides: makedev, login
 Replaces: makedev, login
-Conflicts: makedev, login, gnumach (<< 20050801-3)
+Conflicts: makedev, login
 Architecture: hurd-i386
 Description: The GNU Hurd
  This is the GNU Hurd package. It contains essential system software and
