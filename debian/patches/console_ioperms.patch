@@ -1,0 +1,126 @@
+2006-01-02  Samuel Thibault  <samuel.thibault@ens-lyon.org>
+
+        * generic-speaker.c: include <mach.h>, <mach/i386/mach_i386.h> and
+        <device/device.h> for IO ports access.
+	(kd_port): New variable.
+	(generic_speaker_start): Add IO ports access request for gnumach1.
+        * vga-support.c: include <mach.h>, <mach/i386/mach_i386.h> and
+        <device/device.h> for IO ports access.
+	(kd_port): New variable.
+	(vga_init): Add IO ports access request for gnumach1.
+	(vga_fini): Add IO ports access relinquish for gnumach1.
+
+Index: console-client/generic-speaker.c
+===================================================================
+RCS file: /cvsroot/hurd/hurd/console-client/generic-speaker.c,v
+retrieving revision 1.4
+diff -u -u -r1.4 generic-speaker.c
+--- console-client/generic-speaker.c	21 Mar 2004 19:57:00 -0000	1.4
++++ console-client/generic-speaker.c	2 Jan 2006 22:47:54 -0000
+@@ -25,6 +25,10 @@
+ 
+ #include <cthreads.h>
+ 
++#include <mach.h>
++#include <mach/i386/mach_i386.h>
++#include <device/device.h>
++
+ #include "driver.h"
+ #include "timer.h"
+ 
+@@ -40,6 +44,9 @@
+ static struct bell_ops generic_speaker_ops;
+ 
+ 
++/* Port for i/o access.  */
++static mach_port_t kd_port;
++
+ /* The speaker port.  */
+ #define SPEAKER			0x61
+ 
+@@ -477,6 +484,18 @@
+     return errno;
+   if (ioperm (PIT_COUNTER_2, PIT_CTRL - PIT_COUNTER_2 + 1, 1) < 0)
+     return errno;
++#else
++  mach_port_t priv;
++  err = get_privileged_ports (NULL, &priv);
++  if (err)
++    return err;
++  err = device_open(priv, D_READ|D_WRITE, "kd", &kd_port);
++  mach_port_deallocate(mach_task_self(), priv);
++  if (err)
++    return err;
++  err = i386_io_port_add(mach_thread_self(), kd_port);
++  if (err)
++    return err;
+ #endif
+ 
+   beep_off ();
+Index: console-client/vga-support.c
+===================================================================
+RCS file: /cvsroot/hurd/hurd/console-client/vga-support.c,v
+retrieving revision 1.4
+diff -u -u -r1.4 vga-support.c
+--- console-client/vga-support.c	18 Nov 2002 07:35:47 -0000	1.4
++++ console-client/vga-support.c	2 Jan 2006 22:47:54 -0000
+@@ -27,10 +27,17 @@
+ #include <sys/types.h>
+ #include <string.h>
+ 
++#include <mach.h>
++#include <mach/i386/mach_i386.h>
++#include <device/device.h>
++
+ #include "vga-hw.h"
+ #include "vga-support.h"
+ 
+ 
++/* Port for i/o access.  */
++static mach_port_t kd_port;
++
+ /* The base of the video memory mapping.  */
+ char *vga_videomem;
+ 
+@@ -78,6 +85,7 @@
+   error_t err;
+   int fd;
+ 
++#ifdef OSKIT_MACH
+   /* Acquire I/O port access.  */
+   if (ioperm (VGA_MIN_REG, VGA_MAX_REG - VGA_MIN_REG + 1, 1) < 0)
+     {
+@@ -90,6 +98,19 @@
+ 	  return errno;
+ 	}
+     }
++#else
++  mach_port_t priv;
++  err = get_privileged_ports (NULL, &priv);
++  if (err)
++    return err;
++  err = device_open(priv, D_READ|D_WRITE, "kd", &kd_port);
++  mach_port_deallocate(mach_task_self(), priv);
++  if (err)
++    return err;
++  err = i386_io_port_add(mach_thread_self(), kd_port);
++  if (err)
++    return err;
++#endif
+ 
+   fd = open ("/dev/mem", O_RDWR);
+   if (fd >= 0)
+@@ -229,7 +250,12 @@
+   outb (VGA_CRT_CURSOR_LOW, VGA_CRT_ADDR_REG);
+   outb (vga_state->crt_cursor_low, VGA_CRT_DATA_REG);
+ 
+-  ioperm (VGA_MIN_REG, VGA_MAX_REG, 0);
++#ifdef OSKIT_MACH
++  ioperm (VGA_MIN_REG, VGA_MAX_REG - VGA_MIN_REG + 1, 0);
++#else
++  i386_io_port_remove(mach_thread_self(), kd_port);
++  mach_port_deallocate(mach_task_self(), kd_port);
++#endif
+   munmap (vga_videomem, VGA_VIDEO_MEM_LENGTH);
+ }
+ 
