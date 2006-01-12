@@ -1,0 +1,27 @@
+--- hurd/Makeconf.orig	2006-01-12 15:02:57.000000000 +0100
++++ hurd/Makeconf	2006-01-12 15:31:25.000000000 +0100
+@@ -576,16 +576,18 @@
+ # Here is how to build those dependency files
+ 
+ # Dependencies for fooServer.c files.
++migs_d_SCRIPT = 'set -e; $(CPP) $(CPPFLAGS) $(MIGSFLAGS) $($*-MIGSFLAGS) \
++		-DSERVERPREFIX=S_ -M -MG $< | \
++	sed -e \'s/\.defs\.o:/Server\.c $@:/\' > $@)'
+ %.migs_d: %.defs
+-	(set -e; $(CPP) $(CPPFLAGS) $(MIGSFLAGS) $($*-MIGSFLAGS) \
+-		 -DSERVERPREFIX=S_ -M -MG $< | \
+-	sed -e 's/\.defs\.o:/Server\.c $@:/' > $@)
++	$(migs_d_SCRIPT)
+ 
+ # Dependencies for fooUser.c files.
+-%.migu_d: %.defs
+-	(set -e; $(CPP) $(CPPFLAGS) $(MIGUFLAGS) $($*-MIGUFLAGS) \
++migu_d_SCRIPT = 'set -e; $(CPP) $(CPPFLAGS) $(MIGUFLAGS) $($*-MIGUFLAGS) \
+ 		-M -MG $< | \
+-	sed -e 's/\.defs\.o:/User\.c $@:/' > $@)
++	sed -e \'s/\.defs\.o:/User\.c $@:/\' > $@)'
++%.migu_d: %.defs
++	$(migu_d_SCRIPT)
+ 
+ # The associated .h files are build by the same CCP, so a simple massaging
+ # of the previous two will work.
