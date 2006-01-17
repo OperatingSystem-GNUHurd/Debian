@@ -1,10 +1,10 @@
-hurd (20050513-5+SVN) unreleased; urgency=low
+hurd (20050513-6) unstable; urgency=low
 
   * debian/patches/console_ioperms.patch: New patch by Samuel Thibault.
-  * debian/control: Add Depends/Conflicts on gnumach version 20050801-3.
+  * debian/control (hurd): Add versioned Depends on gnumach 1:20050801-3.
   * debian/patches/beta_make.patch: New patch, support newer make.
 
- -- Michael Banck <mbanck@debian.org>  Fri, 23 Dec 2005 12:28:46 +0100
+ -- Michael Banck <mbanck@debian.org>  Thu, 12 Jan 2006 02:42:36 +0100
 
 hurd (20050513-5) unstable; urgency=low
 
