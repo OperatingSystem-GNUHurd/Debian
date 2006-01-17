@@ -1,3 +1,9 @@
+hurd (20050513-6+SVN) unreleased; urgency=low
+
+  * 
+
+ -- Michael Banck <mbanck@debian.org>  Tue, 17 Jan 2006 22:16:33 +0100
+
 hurd (20050513-6) unstable; urgency=low
 
   * debian/patches/console_ioperms.patch: New patch by Samuel Thibault.
