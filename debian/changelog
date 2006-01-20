@@ -1,6 +1,9 @@
 hurd (20050513-6+SVN) unreleased; urgency=low
 
-  * 
+  * debian/patches/diskfs_no_inherit_dir_group.patch: New patch,
+    enabling SysV style behaviour (i.e. adopt the user's gid, not the
+    one from the parent directory) for group permissions of newly
+    created files by default.
 
  -- Michael Banck <mbanck@debian.org>  Tue, 17 Jan 2006 22:16:33 +0100
 

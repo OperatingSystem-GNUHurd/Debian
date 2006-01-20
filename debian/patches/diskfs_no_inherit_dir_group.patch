@@ -1,0 +1,11 @@
+--- hurd/libdiskfs/node-create.c.orig	2006-01-20 01:45:49.000000000 +0100
++++ hurd/libdiskfs/node-create.c	2006-01-20 01:46:42.000000000 +0100
+@@ -20,7 +20,7 @@
+ /* This enables SysV style group behaviour.  New nodes inherit the GID
+    of the user creating them unless the SGID bit is set of the parent
+    directory.  */
+-int _diskfs_no_inherit_dir_group;
++int _diskfs_no_inherit_dir_group = 1;
+ 
+ /* Create a new node. Give it MODE; if that includes IFDIR, also
+    initialize `.' and `..' in the new directory.  Return the node in NPP.
