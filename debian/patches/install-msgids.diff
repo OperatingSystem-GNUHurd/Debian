@@ -1,0 +1,37 @@
+2005-08-25  Alfred M. Szmidt  <ams@gnu.org>
+        
+	* Makefile (MSGIDS): New variable.
+	(all, install-msgids, $(datadir)/msgids): New targets.
+	(install): Specify install-header and install-msgids as
+	prerequisites.
+
+===================================================================
+RCS file: /var/lib/cvs/sources/hurd/hurd/hurd/Makefile,v
+retrieving revision 1.28
+retrieving revision 1.28.2.1
+diff -u -r1.28 -r1.28.2.1
+--- hurd/hurd/hurd/Makefile	2002/08/22 21:25:04	1.28
++++ hurd/hurd/hurd/Makefile	2005/08/26 07:39:28	1.28.2.1
+@@ -22,15 +22,20 @@
+ 
+ INSTHDRS = hurd_types.h version.h ioctl_types.h paths.h shared.h console.h \
+ 	$(notdir $(wildcard $(srcdir)/*.defs))
++MSGIDS := hurd.msgids $(patsubst %.defs,%.msgids,$(filter %.defs,$(INSTHDRS)))
+ 
+ include ../Makeconf
+ 
+-install-headers install: $(includedir)/hurd \
++all: $(MSGIDS)
++
++install: install-msgids install-headers
++install-headers: $(includedir)/hurd \
+ 	$(addprefix $(includedir)/hurd/,$(INSTHDRS))
++install-msgids: $(MSGIDS) $(datadir)/msgids; $(INSTALL_DATA) $^
+ 
+ $(includedir)/hurd/%: $(srcdir)/%; $(INSTALL_DATA) $< $@
+ 
+-$(includedir)/hurd:;mkdir -p $@
++$(datadir)/msgids $(includedir)/hurd:;mkdir -p $@
+ 
+ %.msgids: $(srcdir)/%.defs
+ 	if grep -q '^subsystem' $<; \

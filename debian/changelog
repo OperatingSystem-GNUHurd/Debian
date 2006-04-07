@@ -5,6 +5,8 @@ hurd (20050513-6+SVN) unreleased; urgency=low
     one from the parent directory) for group permissions of newly
     created files by default.
   * debian/rules (install/hurd::): Install motd.UTF8 into /etc.
+  * debian/patches/install-msgids.diff: New patch, install RPC message
+    IDs in $(datadir)/msgids, by Alfred M. Szmidt.
 
  -- Michael Banck <mbanck@debian.org>  Tue, 17 Jan 2006 22:16:33 +0100
 
