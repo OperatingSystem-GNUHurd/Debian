@@ -7,6 +7,8 @@ hurd (20050513-6+SVN) unreleased; urgency=low
   * debian/rules (install/hurd::): Install motd.UTF8 into /etc.
   * debian/patches/install-msgids.diff: New patch, install RPC message
     IDs in $(datadir)/msgids, by Alfred M. Szmidt.
+  * debian/hurd.postinst: Create symlinks for /dev/kbd and /dev/mouse to
+    /dev/cons/{kbd,mouse} if not present already. (Closes: #355002)
 
  -- Michael Banck <mbanck@debian.org>  Tue, 17 Jan 2006 22:16:33 +0100
 
