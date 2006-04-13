@@ -24,3 +24,8 @@ fi
 if [ ! -h /dev/kbd ]; then
   ln -s /dev/cons/kbd /dev/kbd
 fi
+
+if [ ! -e /dev/shm ]; then
+  mkdir /dev/shm
+  chmod 1777 /dev/shm
+fi

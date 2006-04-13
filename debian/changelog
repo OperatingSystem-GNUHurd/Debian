@@ -11,6 +11,8 @@ hurd (20050513-6+SVN) unreleased; urgency=low
     /dev/cons/{kbd,mouse} if not present already. (Closes: #355002)
   * debian/patches/no_shm_makedev.diff: New patch, skip /dev/shm device 
     when generating the standard devices.
+  * debian/hurd.postinst: Create /dev/shm directory if not present
+    already.
 
  -- Michael Banck <mbanck@debian.org>  Tue, 17 Jan 2006 22:16:33 +0100
 
