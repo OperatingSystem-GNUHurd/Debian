@@ -17,10 +17,10 @@ for i in vcs tty1 tty2 tty3 tty4 tty5 tty6; do
 	fi
 done
 
-if [ ! -e /dev/mouse ]; then
+if [ ! -h /dev/mouse ]; then
   ln -s /dev/cons/mouse /dev/mouse
 fi
 
-if [ ! -e /dev/kbd ]; then
+if [ ! -h /dev/kbd ]; then
   ln -s /dev/cons/kbd /dev/kbd
 fi
