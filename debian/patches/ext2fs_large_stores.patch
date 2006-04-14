@@ -1968,15 +1968,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libdiskfs/diskfs-pager.h h
     Written by Roland McGrath.
  
     This program is free software; you can redistribute it and/or
-@@ -19,7 +19,7 @@
- #ifndef _HURD_DISKFS_PAGER_H
- #define _HURD_DISKFS_PAGER_H 1
- 
--#include <hurd/pager.h>
-+#include "../libpager/pager.h"
- #include <hurd/ports.h>
- #include <setjmp.h>
- #include <cthreads.h>
 @@ -33,7 +33,8 @@
     mapped is returned in IMAGE.  INFO, PAGER_BUCKET, & MAY_CACHE are passed
     to `pager_create'.  */
@@ -2403,3 +2394,15 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ufs/pager.c hurd/ufs/pager
  	if (upi->p == 0)
  	  {
  	    diskfs_nrele_light (np);
+--- hurd/libdiskfs/Makefile  2006-04-14 16:29:02.000000000 +0200
++++ hurd/libdiskfs/Makefileorig      2006-04-14 16:27:55.000000000 +0200
+@@ -61,7 +61,7 @@
+        startup_notifyServer.o
+ OBJS = $(sort $(SRCS:.c=.o) $(MIGSTUBS))
+
+-HURDLIBS = fshelp iohelp store threads ports shouldbeinlibc
++HURDLIBS = fshelp iohelp store threads ports shouldbeinlibc pager
+
+ fsys-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h -DREPLY_PORTS
+ fs-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h
+
