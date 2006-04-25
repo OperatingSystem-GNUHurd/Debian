@@ -16,6 +16,9 @@ hurd (20050513-6+SVN) unreleased; urgency=low
   * debian/patches/ext2fs_large_stores.patch: Include <hurd/pager.h>
     rather than "../libpager/pager.h" and add pager.h to libdiskfs'
     HURDLIBS.
+  * local/soundcard.h: New file by Samuel Thibault.
+  * debian/rules (install/hurd-dev::) New rule, install soundcard.h
+    in /usr/include/sys.
 
  -- Michael Banck <mbanck@debian.org>  Tue, 17 Jan 2006 22:16:33 +0100
 
