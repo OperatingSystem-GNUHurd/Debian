@@ -18,7 +18,7 @@ hurd (20050513-6+SVN) unreleased; urgency=low
     HURDLIBS.
   * local/soundcard.h: New file by Samuel Thibault.
   * debian/rules (install/hurd-dev::) New rule, install soundcard.h
-    in /usr/include/sys.
+    in debian/tmp/include/sys.
 
  -- Michael Banck <mbanck@debian.org>  Tue, 17 Jan 2006 22:16:33 +0100
 

@@ -46,7 +46,7 @@ install/hurd::
 	install -m664 build-tree/hurd/console/motd.UTF8 debian/hurd/etc/
 
 install/hurd-dev::
-	install -m644 debian/local/soundcard.h debian/hurd-dev/usr/include/sys
+	install -m644 debian/local/soundcard.h debian/tmp/include/sys
 
 SUID_PROGRAMS = /bin/ids /bin/login /bin/ps /bin/w
 
