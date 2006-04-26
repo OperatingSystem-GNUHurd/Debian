@@ -1,4 +1,4 @@
-hurd (20050513-6+SVN) unreleased; urgency=low
+hurd (20050513-7) unstable; urgency=low
 
   * debian/patches/diskfs_no_inherit_dir_group.patch: New patch,
     enabling SysV style behaviour (i.e. adopt the user's gid, not the
@@ -20,7 +20,7 @@ hurd (20050513-6+SVN) unreleased; urgency=low
   * debian/rules (install/hurd-dev::) New rule, install soundcard.h
     in debian/tmp/include/sys.
 
- -- Michael Banck <mbanck@debian.org>  Tue, 17 Jan 2006 22:16:33 +0100
+ -- Michael Banck <mbanck@debian.org>  Tue, 25 Apr 2006 19:30:33 +0200
 
 hurd (20050513-6) unstable; urgency=low
 
