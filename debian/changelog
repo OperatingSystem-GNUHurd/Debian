@@ -21,7 +21,7 @@ hurd (20050513-7) unstable; urgency=low
   * debian/hurd.postinst: Create /dev/shm directory if not present
     already.
   * debian/patches/ext2fs_large_stores.patch: Include <hurd/pager.h>
-    rather than "../libpager/pager.h" and add pager.h to libdiskfs'
+    rather than "../libpager/pager.h" and add pager to libdiskfs'
     HURDLIBS.
   * local/soundcard.h: New file by Samuel Thibault.
   * debian/rules (install/hurd-dev::) New rule, install soundcard.h
