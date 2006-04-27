@@ -1,3 +1,9 @@
+hurd (20050513-7+SVN) unreleased; urgency=low
+
+  * 
+
+ -- Michael Banck <mbanck@debian.org>  Thu, 27 Apr 2006 12:17:47 +0200
+
 hurd (20050513-7) unstable; urgency=low
 
   * debian/patches/diskfs_no_inherit_dir_group.patch: New patch,
