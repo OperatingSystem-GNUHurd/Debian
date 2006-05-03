@@ -62,3 +62,4 @@ debian/tmp/etc/login/.profile
 debian/tmp/etc/login/README
 debian/tmp/etc/ttys
 debian/tmp/dev/MAKEDEV
+debian/tmp/share/hurd.msgids usr/share/msgids
