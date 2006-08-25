@@ -1,3 +1,9 @@
+hurd (20050513-8+SVN) unreleased; urgency=low
+
+  * 
+
+ -- Michael Banck <mbanck@debian.org>  Fri, 25 Aug 2006 16:53:48 +0200
+
 hurd (20050513-8) unstable; urgency=low
 
   * debian/patches/pfinet_packet_filter: New patch, adding support for
