@@ -1,0 +1,15 @@
+2006-08-26  Michael Banck  <mbanck@debian.org>
+
+        * console.c (DEFAULT_ENCODING): Set to UTF-8.
+
+--- hurd/console/console.c.orig	2006-08-26 00:48:56.000000000 +0200
++++ hurd/console/console.c	2006-08-26 00:49:19.000000000 +0200
+@@ -55,7 +55,7 @@
+ /* Handy source of time.  */
+ volatile struct mapped_time_value *console_maptime;
+ 
+-#define DEFAULT_ENCODING "ISO-8859-1"
++#define DEFAULT_ENCODING "UTF-8"
+ #define DEFAULT_INTENSITY CONS_ATTR_INTENSITY_NORMAL
+ #define DEFAULT_UNDERLINED 0
+ #define DEFAULT_BLINKING 0

@@ -16,6 +16,8 @@ hurd (20060825-0+SVN) unreleased; urgency=low
   * debian/rules (DEB_INSTALL_CHANGELOGS_ALL): New variable, install it.
   * debian/patches/no_shm_makedev.diff: Renamed to ... 
   * debian/patches/makedev.diff: ... this.
+  * debian/patches/console_utf-8.patch: New patch, setting the Hurd
+    console to UTF-8 by default. (Closes: #348260)
 
  -- Michael Banck <mbanck@debian.org>  Fri, 25 Aug 2006 16:53:48 +0200
 
