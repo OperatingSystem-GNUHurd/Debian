@@ -14,6 +14,8 @@ hurd (20060825-0+SVN) unreleased; urgency=low
   * debian/rules (build/hurd::): Assemble all upstream ChangeLogs to one
     big ChangeLog.
   * debian/rules (DEB_INSTALL_CHANGELOGS_ALL): New variable, install it.
+  * debian/patches/no_shm_makedev.diff: Renamed to ... 
+  * debian/patches/makedev.diff: ... this.
 
  -- Michael Banck <mbanck@debian.org>  Fri, 25 Aug 2006 16:53:48 +0200
 
