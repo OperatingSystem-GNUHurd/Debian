@@ -29,9 +29,13 @@ DEB_CONFIGURE_LIBEXECDIR ="\$${prefix}/libexec"
 DEB_CONFIGURE_USER_FLAGS := --disable-profile --enable-static-progs='ext2fs,ufs,iso9660fs'
 DEB_MAKE_INSTALL_TARGET = install prefix=$(DEB_DESTDIR) sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var
 DEB_DH_STRIP_ARGS := --dbg-package=hurd
+DEB_INSTALL_CHANGELOGS_ALL := $(CURDIR)/debian/ChangeLog
 
 build/hurd::
 	cd $(DEB_BUILDDIR)/doc && texi2html -split chapter ../../doc/hurd.texi
+
+	# assemble all ChangeLogs to one big file
+	cd build-tree; for i in `find hurd/ -name "ChangeLog"`; do echo $$i:; cat $$i; echo;  done > $(CURDIR)/debian/ChangeLog
 
 install/hurd::
 	# runsystem is managed by update-alternatives
