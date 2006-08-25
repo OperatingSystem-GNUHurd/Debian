@@ -1,6 +1,16 @@
-hurd (20050513-8+SVN) unreleased; urgency=low
+hurd (20060825-0+SVN) unreleased; urgency=low
 
-  * 
+  * New snapshot from CVS.
+  * debian/patches/beta_make.patch: Removed, fixed upstream.
+  * debian/patches/ext2fs_large_stores.patch: Resynced.
+  * debian/patches/pfinet_dhcp.patch: Likewise.
+  * debian/patches/ftpfs_fix.patch: Removed, applied upstream.
+  * debian/patches/gcc-4.0_fixes.patch: Likewise.
+  * debian/patches/libpthread_need_clockid_t.patch: Likewise.
+  * debian/patches/libstore_attribute.patch: Likewise.
+  * debian/patches/magic_port_leak.patch: Likewise.
+  * debian/patches/pfinet_packet_filter.diff: Likewise. 
+  * debian/patches/semaphore_restrict_fix.patch: Likewise.
 
  -- Michael Banck <mbanck@debian.org>  Fri, 25 Aug 2006 16:53:48 +0200
 
