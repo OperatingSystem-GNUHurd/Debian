@@ -1,4 +1,4 @@
-hurd (20060825-0+SVN) unreleased; urgency=low
+hurd (20060825-1) unstable; urgency=low
 
   * New snapshot from CVS.
   * debian/patches/beta_make.patch: Removed, fixed upstream.
@@ -19,7 +19,7 @@ hurd (20060825-0+SVN) unreleased; urgency=low
   * debian/patches/console_utf-8.patch: New patch, setting the Hurd
     console to UTF-8 by default. (Closes: #348260)
 
- -- Michael Banck <mbanck@debian.org>  Fri, 25 Aug 2006 16:53:48 +0200
+ -- Michael Banck <mbanck@debian.org>  Sat, 26 Aug 2006 01:00:41 +0200
 
 hurd (20050513-8) unstable; urgency=low
 
