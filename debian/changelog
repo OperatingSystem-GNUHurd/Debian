@@ -1,6 +1,8 @@
 hurd (20060825-1+SVN) unreleased urgency=low
 
-  * 
+  * Rebuilt against gnumach_1:20060826.dfsg.1-1.
+  * debian/control (hurd/Depends): Bump versioned dependency of gnumach 
+    to 1:20060826.dfsg.1-1.
 
  -- Michael Banck <mbanck@debian.org>  Sun, 27 Aug 2006 16:18:30 +0200
 
