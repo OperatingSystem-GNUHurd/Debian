@@ -93,28 +93,28 @@
 #define	_SIOWR		_IOWR
 #endif  /* !_SIOWR */
 
-#define SNDCTL_SEQ_RESET		_SIO  ('Q', 0)
-#define SNDCTL_SEQ_SYNC			_SIO  ('Q', 1)
-#define SNDCTL_SYNTH_INFO		_SIOWR('Q', 2, struct synth_info)
-#define SNDCTL_SEQ_CTRLRATE		_SIOWR('Q', 3, int)	/* Set/get timer resolution (HZ) */
-#define SNDCTL_SEQ_GETOUTCOUNT		_SIOR ('Q', 4, int)
-#define SNDCTL_SEQ_GETINCOUNT		_SIOR ('Q', 5, int)
-#define SNDCTL_SEQ_PERCMODE		_SIOW ('Q', 6, int)
-#define SNDCTL_FM_LOAD_INSTR		_SIOW ('Q', 7, struct sbi_instrument)	/* Obsolete. Don't use!!!!!! */
-#define SNDCTL_SEQ_TESTMIDI		_SIOW ('Q', 8, int)
-#define SNDCTL_SEQ_RESETSAMPLES		_SIOW ('Q', 9, int)
-#define SNDCTL_SEQ_NRSYNTHS		_SIOR ('Q',10, int)
-#define SNDCTL_SEQ_NRMIDIS		_SIOR ('Q',11, int)
-#define SNDCTL_MIDI_INFO		_SIOWR('Q',12, struct midi_info)
-#define SNDCTL_SEQ_THRESHOLD		_SIOW ('Q',13, int)
-#define SNDCTL_SYNTH_MEMAVL		_SIOWR('Q',14, int)	/* in=dev#, out=memsize */
-#define SNDCTL_FM_4OP_ENABLE		_SIOW ('Q',15, int)	/* in=dev# */
-#define SNDCTL_SEQ_PANIC		_SIO  ('Q',17)
-#define SNDCTL_SEQ_OUTOFBAND		_SIOW ('Q',18, struct seq_event_rec)
-#define SNDCTL_SEQ_GETTIME		_SIOR ('Q',19, int)
-#define SNDCTL_SYNTH_ID			_SIOWR('Q',20, struct synth_info)
-#define SNDCTL_SYNTH_CONTROL		_SIOWR('Q',21, struct synth_control)
-#define SNDCTL_SYNTH_REMOVESAMPLE	_SIOWR('Q',22, struct remove_sample)
+#define SNDCTL_SEQ_RESET		_SIO  ('q', 0)
+#define SNDCTL_SEQ_SYNC			_SIO  ('q', 1)
+#define SNDCTL_SYNTH_INFO		_SIOWR('q', 2, struct synth_info)
+#define SNDCTL_SEQ_CTRLRATE		_SIOWR('q', 3, int)	/* Set/get timer resolution (HZ) */
+#define SNDCTL_SEQ_GETOUTCOUNT		_SIOR ('q', 4, int)
+#define SNDCTL_SEQ_GETINCOUNT		_SIOR ('q', 5, int)
+#define SNDCTL_SEQ_PERCMODE		_SIOW ('q', 6, int)
+#define SNDCTL_FM_LOAD_INSTR		_SIOW ('q', 7, struct sbi_instrument)	/* Obsolete. Don't use!!!!!! */
+#define SNDCTL_SEQ_TESTMIDI		_SIOW ('q', 8, int)
+#define SNDCTL_SEQ_RESETSAMPLES		_SIOW ('q', 9, int)
+#define SNDCTL_SEQ_NRSYNTHS		_SIOR ('q',10, int)
+#define SNDCTL_SEQ_NRMIDIS		_SIOR ('q',11, int)
+#define SNDCTL_MIDI_INFO		_SIOWR('q',12, struct midi_info)
+#define SNDCTL_SEQ_THRESHOLD		_SIOW ('q',13, int)
+#define SNDCTL_SYNTH_MEMAVL		_SIOWR('q',14, int)	/* in=dev#, out=memsize */
+#define SNDCTL_FM_4OP_ENABLE		_SIOW ('q',15, int)	/* in=dev# */
+#define SNDCTL_SEQ_PANIC		_SIO  ('q',17)
+#define SNDCTL_SEQ_OUTOFBAND		_SIOW ('q',18, struct seq_event_rec)
+#define SNDCTL_SEQ_GETTIME		_SIOR ('q',19, int)
+#define SNDCTL_SYNTH_ID			_SIOWR('q',20, struct synth_info)
+#define SNDCTL_SYNTH_CONTROL		_SIOWR('q',21, struct synth_control)
+#define SNDCTL_SYNTH_REMOVESAMPLE	_SIOWR('q',22, struct remove_sample)
 
 typedef struct synth_control
 {
@@ -137,20 +137,20 @@ typedef struct seq_event_rec {
 } seq_event_rec;
 #define _IOT_seq_event_rec _IOT (_IOTS (char), 8, 0, 0, 0, 0)
 
-#define SNDCTL_TMR_TIMEBASE		_SIOWR('T', 1, int)
-#define SNDCTL_TMR_START		_SIO  ('T', 2)
-#define SNDCTL_TMR_STOP			_SIO  ('T', 3)
-#define SNDCTL_TMR_CONTINUE		_SIO  ('T', 4)
-#define SNDCTL_TMR_TEMPO		_SIOWR('T', 5, int)
-#define SNDCTL_TMR_SOURCE		_SIOWR('T', 6, int)
+#define SNDCTL_TMR_TIMEBASE		_SIOWR('t', 1, int)
+#define SNDCTL_TMR_START		_SIO  ('t', 2)
+#define SNDCTL_TMR_STOP			_SIO  ('t', 3)
+#define SNDCTL_TMR_CONTINUE		_SIO  ('t', 4)
+#define SNDCTL_TMR_TEMPO		_SIOWR('t', 5, int)
+#define SNDCTL_TMR_SOURCE		_SIOWR('t', 6, int)
 #	define TMR_INTERNAL		0x00000001
 #	define TMR_EXTERNAL		0x00000002
 #		define TMR_MODE_MIDI	0x00000010
 #		define TMR_MODE_FSK	0x00000020
 #		define TMR_MODE_CLS	0x00000040
 #		define TMR_MODE_SMPTE	0x00000080
-#define SNDCTL_TMR_METRONOME		_SIOW ('T', 7, int)
-#define SNDCTL_TMR_SELECT		_SIOW ('T', 8, int)
+#define SNDCTL_TMR_METRONOME		_SIOW ('t', 7, int)
+#define SNDCTL_TMR_SELECT		_SIOW ('t', 8, int)
 
 /*
  * Some big endian/little endian handling macros
@@ -509,22 +509,22 @@ typedef struct {
  * IOCTL commands for /dev/dsp and /dev/audio
  */
 
-#define SNDCTL_DSP_RESET		_SIO  ('P', 0)
-#define SNDCTL_DSP_SYNC			_SIO  ('P', 1)
-#define SNDCTL_DSP_SPEED		_SIOWR('P', 2, int)
-#define SNDCTL_DSP_STEREO		_SIOWR('P', 3, int)
-#define SNDCTL_DSP_GETBLKSIZE		_SIOWR('P', 4, int)
+#define SNDCTL_DSP_RESET		_SIO  ('p', 0)
+#define SNDCTL_DSP_SYNC			_SIO  ('p', 1)
+#define SNDCTL_DSP_SPEED		_SIOWR('p', 2, int)
+#define SNDCTL_DSP_STEREO		_SIOWR('p', 3, int)
+#define SNDCTL_DSP_GETBLKSIZE		_SIOWR('p', 4, int)
 #define SNDCTL_DSP_SAMPLESIZE		SNDCTL_DSP_SETFMT
-#define SNDCTL_DSP_CHANNELS		_SIOWR('P', 6, int)
+#define SNDCTL_DSP_CHANNELS		_SIOWR('p', 6, int)
 #define SOUND_PCM_WRITE_CHANNELS	SNDCTL_DSP_CHANNELS
-#define SOUND_PCM_WRITE_FILTER		_SIOWR('P', 7, int)
-#define SNDCTL_DSP_POST			_SIO  ('P', 8)
-#define SNDCTL_DSP_SUBDIVIDE		_SIOWR('P', 9, int)
-#define SNDCTL_DSP_SETFRAGMENT		_SIOWR('P',10, int)
+#define SOUND_PCM_WRITE_FILTER		_SIOWR('p', 7, int)
+#define SNDCTL_DSP_POST			_SIO  ('p', 8)
+#define SNDCTL_DSP_SUBDIVIDE		_SIOWR('p', 9, int)
+#define SNDCTL_DSP_SETFRAGMENT		_SIOWR('p',10, int)
 
 /*	Audio data formats (Note! U8=8 and S16_LE=16 for compatibility) */
-#define SNDCTL_DSP_GETFMTS		_SIOR ('P',11, int) /* Returns a mask */
-#define SNDCTL_DSP_SETFMT		_SIOWR('P',5, int) /* Selects ONE fmt*/
+#define SNDCTL_DSP_GETFMTS		_SIOR ('p',11, int) /* Returns a mask */
+#define SNDCTL_DSP_SETFMT		_SIOWR('p',5, int) /* Selects ONE fmt*/
 #	define AFMT_QUERY		0x00000000	/* Return current fmt */
 #	define AFMT_MU_LAW		0x00000001
 #	define AFMT_A_LAW		0x00000002
@@ -551,10 +551,10 @@ typedef struct audio_buf_info {
 		} audio_buf_info;
 #define _IOT__IOTBASE_audio_buf_info _IOT (_IOTS (int), 4, 0, 0, 0, 0)
 
-#define SNDCTL_DSP_GETOSPACE		_SIOR ('P',12, audio_buf_info)
-#define SNDCTL_DSP_GETISPACE		_SIOR ('P',13, audio_buf_info)
-#define SNDCTL_DSP_NONBLOCK		_SIO  ('P',14)
-#define SNDCTL_DSP_GETCAPS		_SIOR ('P',15, int)
+#define SNDCTL_DSP_GETOSPACE		_SIOR ('p',12, audio_buf_info)
+#define SNDCTL_DSP_GETISPACE		_SIOR ('p',13, audio_buf_info)
+#define SNDCTL_DSP_NONBLOCK		_SIO  ('p',14)
+#define SNDCTL_DSP_GETCAPS		_SIOR ('p',15, int)
 #	define DSP_CAP_REVISION		0x000000ff	/* Bits for revision level (0 to 255) */
 #	define DSP_CAP_DUPLEX		0x00000100	/* Full duplex record/playback */
 #	define DSP_CAP_REALTIME		0x00000200	/* Real time capability */
@@ -571,8 +571,8 @@ typedef struct audio_buf_info {
 #	define DSP_CAP_BIND		0x00008000	/* channel binding to front/rear/cneter/lfe */
 
 
-#define SNDCTL_DSP_GETTRIGGER		_SIOR ('P',16, int)
-#define SNDCTL_DSP_SETTRIGGER		_SIOW ('P',16, int)
+#define SNDCTL_DSP_GETTRIGGER		_SIOR ('p',16, int)
+#define SNDCTL_DSP_SETTRIGGER		_SIOW ('p',16, int)
 #	define PCM_ENABLE_INPUT		0x00000001
 #	define PCM_ENABLE_OUTPUT		0x00000002
 
@@ -583,22 +583,22 @@ typedef struct count_info {
 	} count_info;
 #define _IOT__IOTBASE_count_info _IOT (_IOTS (int), 3, 0, 0, 0, 0)
 
-#define SNDCTL_DSP_GETIPTR		_SIOR ('P',17, count_info)
-#define SNDCTL_DSP_GETOPTR		_SIOR ('P',18, count_info)
+#define SNDCTL_DSP_GETIPTR		_SIOR ('p',17, count_info)
+#define SNDCTL_DSP_GETOPTR		_SIOR ('p',18, count_info)
 
 typedef struct buffmem_desc {
 		unsigned *buffer;
 		int size;
 	} buffmem_desc;
 /* XXX */
-#define SNDCTL_DSP_MAPINBUF		_SIOR ('P', 19, buffmem_desc)
-#define SNDCTL_DSP_MAPOUTBUF		_SIOR ('P', 20, buffmem_desc)
-#define SNDCTL_DSP_SETSYNCRO		_SIO  ('P', 21)
-#define SNDCTL_DSP_SETDUPLEX		_SIO  ('P', 22)
-#define SNDCTL_DSP_GETODELAY		_SIOR ('P', 23, int)
+/* #define SNDCTL_DSP_MAPINBUF		_SIOR ('p', 19, buffmem_desc) */
+/* #define SNDCTL_DSP_MAPOUTBUF		_SIOR ('p', 20, buffmem_desc) */
+#define SNDCTL_DSP_SETSYNCRO		_SIO  ('p', 21)
+#define SNDCTL_DSP_SETDUPLEX		_SIO  ('p', 22)
+#define SNDCTL_DSP_GETODELAY		_SIOR ('p', 23, int)
 
-#define SNDCTL_DSP_GETCHANNELMASK		_SIOWR('P', 64, int)
-#define SNDCTL_DSP_BIND_CHANNEL		_SIOWR('P', 65, int)
+#define SNDCTL_DSP_GETCHANNELMASK		_SIOWR('p', 64, int)
+#define SNDCTL_DSP_BIND_CHANNEL		_SIOWR('p', 65, int)
 #	define DSP_BIND_QUERY		0x00000000
 #	define DSP_BIND_FRONT		0x00000001
 #	define DSP_BIND_SURR		0x00000002
@@ -610,8 +610,8 @@ typedef struct buffmem_desc {
 #	define DSP_BIND_I2S		0x00000080
 #	define DSP_BIND_SPDIF		0x00000100
 
-#define SNDCTL_DSP_SETSPDIF		_SIOW ('P', 66, int)
-#define SNDCTL_DSP_GETSPDIF		_SIOR ('P', 67, int)
+#define SNDCTL_DSP_SETSPDIF		_SIOW ('p', 66, int)
+#define SNDCTL_DSP_GETSPDIF		_SIOR ('p', 67, int)
 #	define SPDIF_PRO	0x0001
 #	define SPDIF_N_AUD	0x0002
 #	define SPDIF_COPY	0x0004
@@ -632,15 +632,15 @@ typedef struct buffmem_desc {
  *	disabled which saves CPU time but also let's the previous buffer content to
  *	be played during the "pause" after the underrun.
  */
-#define SNDCTL_DSP_PROFILE		_SIOW ('P', 23, int)
+#define SNDCTL_DSP_PROFILE		_SIOW ('p', 23, int)
 #define	  APF_NORMAL	0	/* Normal applications */
 #define	  APF_NETWORK	1	/* Underruns probably caused by an "external" delay */
 #define   APF_CPUINTENS 2	/* Underruns probably caused by "overheating" the CPU */
 
-#define SOUND_PCM_READ_RATE		_SIOR ('P', 2, int)
-#define SOUND_PCM_READ_CHANNELS		_SIOR ('P', 6, int)
-#define SOUND_PCM_READ_BITS		_SIOR ('P', 5, int)
-#define SOUND_PCM_READ_FILTER		_SIOR ('P', 7, int)
+#define SOUND_PCM_READ_RATE		_SIOR ('p', 2, int)
+#define SOUND_PCM_READ_CHANNELS		_SIOR ('p', 6, int)
+#define SOUND_PCM_READ_BITS		_SIOR ('p', 5, int)
+#define SOUND_PCM_READ_FILTER		_SIOR ('p', 7, int)
 
 /* Some alias names */
 #define SOUND_PCM_WRITE_BITS		SNDCTL_DSP_SETFMT
@@ -699,16 +699,16 @@ typedef struct copr_msg {
 /* XXX */
 #define _IOT__IOTBASE_copr_msg _IOT (_IOTS (int), 1, _IOTS (char), 31, _IOTS (char), 3)
 
-#define SNDCTL_COPR_RESET             _SIO  ('C',  0)
-#define SNDCTL_COPR_LOAD	      _SIOWR('C',  1, copr_buffer)
-#define SNDCTL_COPR_RDATA	      _SIOWR('C',  2, copr_debug_buf)
-#define SNDCTL_COPR_RCODE	      _SIOWR('C',  3, copr_debug_buf)
-#define SNDCTL_COPR_WDATA	      _SIOW ('C',  4, copr_debug_buf)
-#define SNDCTL_COPR_WCODE	      _SIOW ('C',  5, copr_debug_buf)
-#define SNDCTL_COPR_RUN		      _SIOWR('C',  6, copr_debug_buf)
-#define SNDCTL_COPR_HALT	      _SIOWR('C',  7, copr_debug_buf)
-#define SNDCTL_COPR_SENDMSG	      _SIOWR('C',  8, copr_msg)
-#define SNDCTL_COPR_RCVMSG	      _SIOR ('C',  9, copr_msg)
+#define SNDCTL_COPR_RESET             _SIO  ('o',  0)
+#define SNDCTL_COPR_LOAD	      _SIOWR('o',  1, copr_buffer)
+#define SNDCTL_COPR_RDATA	      _SIOWR('o',  2, copr_debug_buf)
+#define SNDCTL_COPR_RCODE	      _SIOWR('o',  3, copr_debug_buf)
+#define SNDCTL_COPR_WDATA	      _SIOW ('o',  4, copr_debug_buf)
+#define SNDCTL_COPR_WCODE	      _SIOW ('o',  5, copr_debug_buf)
+#define SNDCTL_COPR_RUN		      _SIOWR('o',  6, copr_debug_buf)
+#define SNDCTL_COPR_HALT	      _SIOWR('o',  7, copr_debug_buf)
+#define SNDCTL_COPR_SENDMSG	      _SIOWR('o',  8, copr_msg)
+#define SNDCTL_COPR_RCVMSG	      _SIOR ('o',  9, copr_msg)
 
 /*********************************************
  * IOCTL commands for /dev/mixer
@@ -827,7 +827,7 @@ typedef struct copr_msg {
 #define SOUND_MASK_ENHANCE	(1 << SOUND_MIXER_ENHANCE)
 #define SOUND_MASK_LOUD		(1 << SOUND_MIXER_LOUD)
 
-#define MIXER_READ(dev)		_SIOR('M', dev, int)
+#define MIXER_READ(dev)		_SIOR('r', dev, int)
 #define SOUND_MIXER_READ_VOLUME		MIXER_READ(SOUND_MIXER_VOLUME)
 #define SOUND_MIXER_READ_BASS		MIXER_READ(SOUND_MIXER_BASS)
 #define SOUND_MIXER_READ_TREBLE		MIXER_READ(SOUND_MIXER_TREBLE)
@@ -857,7 +857,7 @@ typedef struct copr_msg {
 #define SOUND_MIXER_READ_STEREODEVS	MIXER_READ(SOUND_MIXER_STEREODEVS)
 #define SOUND_MIXER_READ_CAPS		MIXER_READ(SOUND_MIXER_CAPS)
 
-#define MIXER_WRITE(dev)		_SIOWR('M', dev, int)
+#define MIXER_WRITE(dev)		_SIOWR('r', dev, int)
 #define SOUND_MIXER_WRITE_VOLUME	MIXER_WRITE(SOUND_MIXER_VOLUME)
 #define SOUND_MIXER_WRITE_BASS		MIXER_WRITE(SOUND_MIXER_BASS)
 #define SOUND_MIXER_WRITE_TREBLE	MIXER_WRITE(SOUND_MIXER_TREBLE)
@@ -900,8 +900,8 @@ typedef struct _old_mixer_info /* Obsolete */
 } _old_mixer_info;
 #define  _IOT__IOTBASE__old_mixer_info _IOT (_IOTS (char), 17, _IOTS (char), 31, 0, 0)
 
-#define SOUND_MIXER_INFO		_SIOR ('M', 101, mixer_info)
-#define SOUND_OLD_MIXER_INFO		_SIOR ('M', 101, _old_mixer_info)
+#define SOUND_MIXER_INFO		_SIOR ('r', 101, mixer_info)
+#define SOUND_OLD_MIXER_INFO		_SIOR ('r', 101, _old_mixer_info)
 
 /*
  * A mechanism for accessing "proprietary" mixer features. This method
@@ -913,23 +913,23 @@ typedef unsigned char mixer_record[128];
 /* XXX */
 #define _IOT__IOTBASE_mixer_record _IOT (_IOTS (char), 31, _IOTS (char), 31, _IOTS (char), 3)
 
-#define SOUND_MIXER_ACCESS		_SIOWR('M', 102, mixer_record)
+#define SOUND_MIXER_ACCESS		_SIOWR('r', 102, mixer_record)
 
 /*
  * Two ioctls for special souncard function
  */
-#define SOUND_MIXER_AGC  _SIOWR('M', 103, int)
-#define SOUND_MIXER_3DSE  _SIOWR('M', 104, int)
+#define SOUND_MIXER_AGC  _SIOWR('r', 103, int)
+#define SOUND_MIXER_3DSE  _SIOWR('r', 104, int)
 
 /*
  * The SOUND_MIXER_PRIVATE# commands can be redefined by low level drivers.
  * These features can be used when accessing device specific features.
  */
-#define SOUND_MIXER_PRIVATE1		_SIOWR('M', 111, int)
-#define SOUND_MIXER_PRIVATE2		_SIOWR('M', 112, int)
-#define SOUND_MIXER_PRIVATE3		_SIOWR('M', 113, int)
-#define SOUND_MIXER_PRIVATE4		_SIOWR('M', 114, int)
-#define SOUND_MIXER_PRIVATE5		_SIOWR('M', 115, int)
+#define SOUND_MIXER_PRIVATE1		_SIOWR('r', 111, int)
+#define SOUND_MIXER_PRIVATE2		_SIOWR('r', 112, int)
+#define SOUND_MIXER_PRIVATE3		_SIOWR('r', 113, int)
+#define SOUND_MIXER_PRIVATE4		_SIOWR('r', 114, int)
+#define SOUND_MIXER_PRIVATE5		_SIOWR('r', 115, int)
 
 /*
  * SOUND_MIXER_GETLEVELS and SOUND_MIXER_SETLEVELS calls can be used
@@ -946,8 +946,8 @@ typedef struct mixer_vol_table {
 } mixer_vol_table;
 #define _IOT__IOTBASE_mixer_vol_table _IOT (_IOTS (char), 31, _IOTS (int), 31, _IOTS (int), 2)
 
-#define SOUND_MIXER_GETLEVELS		_SIOWR('M', 116, mixer_vol_table)
-#define SOUND_MIXER_SETLEVELS		_SIOWR('M', 117, mixer_vol_table)
+#define SOUND_MIXER_GETLEVELS		_SIOWR('r', 116, mixer_vol_table)
+#define SOUND_MIXER_SETLEVELS		_SIOWR('r', 117, mixer_vol_table)
 
 /* 
  * An ioctl for identifying the driver version. It will return value
@@ -955,7 +955,7 @@ typedef struct mixer_vol_table {
  * This call was introduced in OSS version 3.6 and it will not work
  * with earlier versions (returns EINVAL).
  */
-#define OSS_GETVERSION			_SIOR ('M', 118, int)
+#define OSS_GETVERSION			_SIOR ('r', 118, int)
 
 /*
  * Level 2 event types for /dev/sequencer
