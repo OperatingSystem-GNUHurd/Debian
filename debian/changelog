@@ -1,6 +1,8 @@
 hurd (20060825-2+SVN) unreleased; urgency=low
 
   * debian/local/soundcard.h: Updated by Samuel Thibault.
+  * debian/patches/pthread_mutex_strong_alias.patch: New patch by 
+    Samuel Thibault.
 
  -- Michael Banck <mbanck@debian.org>  Sat,  7 Oct 2006 14:31:57 +0200
 
