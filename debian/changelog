@@ -4,6 +4,8 @@ hurd (20060825-2+SVN) unreleased; urgency=low
   * debian/patches/pthread_mutex_strong_alias.patch: New patch by 
     Samuel Thibault. (Closes: #407208)
   * debian/control (Build-Depends): Added libc0.3 (>= 2.5-5).
+  * debian/copyright: Clarify that the package is maintained by the
+    Debian GNU Hurd maintainers and no longer by upstream.
 
  -- Michael Banck <mbanck@debian.org>  Sat,  7 Oct 2006 14:31:57 +0200
 
