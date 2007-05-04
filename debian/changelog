@@ -3,6 +3,7 @@ hurd (20060825-2+SVN) unreleased; urgency=low
   * debian/local/soundcard.h: Updated by Samuel Thibault.
   * debian/patches/pthread_mutex_strong_alias.patch: New patch by 
     Samuel Thibault. (Closes: #407208)
+  * debian/control (Build-Depends): Added libc0.3 (>= 2.5-5).
 
  -- Michael Banck <mbanck@debian.org>  Sat,  7 Oct 2006 14:31:57 +0200
 
