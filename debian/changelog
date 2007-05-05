@@ -8,6 +8,8 @@ hurd (20060825-2+SVN) unreleased; urgency=low
     Debian GNU Hurd maintainers and no longer by upstream.
   * debian/patches/glibc_stat_updates.patch: New patch, updates for 
     stat changes in glibc, by Thomas Schwinge.
+  * debian/patches/convert_nano_to_microseconds_fix.patch: New patch,
+    fix conversion from nanoseconds to microseconds, taken from CVS.
 
  -- Michael Banck <mbanck@debian.org>  Sat,  7 Oct 2006 14:31:57 +0200
 
