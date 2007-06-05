@@ -1,15 +1,14 @@
-hurd (20060825-2+SVN) unreleased; urgency=low
+hurd (20070605-0+SVN) unreleased; urgency=low
 
+  * New snapshot from CVS.
+    + Includes a patch to make pthread_* function aliases strong.
+    (Closes: #407208)
+    +  debian/patches/console_ioperms.patch: Removed, fixed upstream.
+    +  debian/patches/no-debian-dir.patch: Removed, applied upstream.
   * debian/local/soundcard.h: Updated by Samuel Thibault.
-  * debian/patches/pthread_mutex_strong_alias.patch: New patch by 
-    Samuel Thibault. (Closes: #407208)
   * debian/control (Build-Depends): Added libc0.3-dev (>= 2.5-5).
   * debian/copyright: Clarify that the package is maintained by the
     Debian GNU Hurd maintainers and no longer by upstream.
-  * debian/patches/glibc_stat_updates.patch: New patch, updates for 
-    stat changes in glibc, by Thomas Schwinge.
-  * debian/patches/convert_nano_to_microseconds_fix.patch: New patch,
-    fix conversion from nanoseconds to microseconds, taken from CVS.
 
  -- Michael Banck <mbanck@debian.org>  Sat,  7 Oct 2006 14:31:57 +0200
 
