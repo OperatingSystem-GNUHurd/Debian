@@ -1,4 +1,4 @@
-hurd (20070605-0+SVN) unreleased; urgency=low
+hurd (20070606-0+SVN) unreleased; urgency=low
 
   * New snapshot from CVS.
     + Includes a patch to make pthread_* function aliases strong.
