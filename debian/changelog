@@ -2,9 +2,9 @@ hurd (20070606-0+SVN) unreleased; urgency=low
 
   * New snapshot from CVS.
     + Includes a patch to make pthread_* function aliases strong.
-    (Closes: #407208)
-    +  debian/patches/console_ioperms.patch: Removed, fixed upstream.
-    +  debian/patches/no-debian-dir.patch: Removed, applied upstream.
+      (Closes: #407208)
+    + debian/patches/console_ioperms.patch: Removed, fixed upstream.
+    + debian/patches/no-debian-dir.patch: Removed, applied upstream.
   * debian/local/soundcard.h: Updated by Samuel Thibault.
   * debian/control (Build-Depends): Added libc0.3-dev (>= 2.5-5).
   * debian/copyright: Clarify that the package is maintained by the
