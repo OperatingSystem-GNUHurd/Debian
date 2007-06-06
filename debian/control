@@ -10,7 +10,7 @@ Package: hurd
 Priority: required
 Section: base
 Essential: yes
-Depends: gnumach (>= 1:20060826.dfsg.1-1), sysv-rc, ${shlibs:Depends}
+Depends: gnumach (>= 2:1.3.99.dfsg.cvs20070526-1), sysv-rc, ${shlibs:Depends}
 Suggests: hurd-doc
 Provides: makedev, login
 Replaces: makedev, login

@@ -11,6 +11,8 @@ hurd (20070605-0+SVN) unreleased; urgency=low
     Debian GNU Hurd maintainers and no longer by upstream.
   * debian/control (Build-Depends): Bumped gnumach-dev version to
     2:1.3.99.dfsg.cvs20070526-1.
+  * debian/control (hurd/Depends): Bumped gnumach version to
+    2:1.3.99.dfsg.cvs20070526-1.
 
  -- Michael Banck <mbanck@debian.org>  Sat,  7 Oct 2006 14:31:57 +0200
 
