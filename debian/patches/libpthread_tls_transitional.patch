@@ -263,19 +263,7 @@ retrieving revision 1.17
 diff -u -p -r1.17 cprocs.c
 --- libthreads/cprocs.c	29 May 2002 00:01:24 -0000	1.17
 +++ libthreads/cprocs.c	8 Jul 2007 22:51:00 -0000
-@@ -434,6 +434,11 @@ cproc_init(void)
- {
- 	kern_return_t r;
- 
-+	if (__libc_setup_tls) {
-+		__libc_setup_tls (sizeof(tcbhead_t), __alignof__(tcbhead_t));
-+		asm volatile ("");
-+	}
-+
- 	cproc_t p = cproc_alloc();
- 
- 	cthread_kernel_threads = 1;
-@@ -725,15 +730,22 @@ cproc_create(void)
+@@ -725,15 +725,22 @@ cproc_create(void)
  	extern void cproc_prepare();
  	extern void cthread_body();
  	thread_t n;
