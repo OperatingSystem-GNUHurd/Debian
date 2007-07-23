@@ -1,10 +1,10 @@
-hurd (20070606-1+SVN) UNRELEASED; urgency=low
+hurd (20070606-2) unstable; urgency=low
 
-  * debian/patches/libpthread_tls_transitional.patch: New patch, 
+  * debian/patches/libpthread_tls_transitional.patch: New patch,
     implements TLS for libpthread, by Samuel Thibault.
   * debian/patches/libpthread_weak_inline.patch: Removed.
 
- -- Michael Banck <mbanck@debian.org>  Sun, 10 Jun 2007 20:08:21 +0200
+ -- Michael Banck <mbanck@debian.org>  Sun, 22 Jul 2007 23:45:39 +0200
 
 hurd (20070606-1) unstable; urgency=low
 
