@@ -1,6 +1,7 @@
 hurd (20070606-2+SVN) UNRELEASED; urgency=low
 
-  *
+  * debian/patches/patches/servers.boot-update.patch: New patch, updates
+    the servers.boot script to use the currently used Grub module lines.
 
  -- Michael Banck <mbanck@debian.org>  Thu, 26 Jul 2007 15:15:02 +0200
 
