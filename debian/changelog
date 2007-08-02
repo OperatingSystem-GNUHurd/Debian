@@ -6,6 +6,8 @@ hurd (20070606-2+SVN) UNRELEASED; urgency=low
   * debian/patches/pfinet_-fno-strict-aliasing.patch: New patch, adding
     -fno-strict-aliasing to pfinet's CFLAGS to fix compilation with gcc-4.2,
     taken from CVS.
+  * debian/patches/patches/libpthread_no-inline.patch: New patch, removes
+    extern inlines to fix g++ and gettext FTBFS, by Samuel Thibault.
 
  -- Michael Banck <mbanck@debian.org>  Thu, 26 Jul 2007 15:15:02 +0200
 
