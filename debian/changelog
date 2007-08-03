@@ -1,11 +1,14 @@
 hurd (20070606-2+SVN) UNRELEASED; urgency=low
 
+  [ Michael Banck ]
   * debian/patches/patches/servers.boot-update.patch: New patch, updates
     the servers.boot script to use the currently used Grub module lines.
   * debian/hurd.install: Install release/servers.boot into /boot.
   * debian/patches/pfinet_-fno-strict-aliasing.patch: New patch, adding
     -fno-strict-aliasing to pfinet's CFLAGS to fix compilation with gcc-4.2,
     taken from CVS.
+
+  [ Samuel Thibault ]
   * debian/patches/patches/libpthread_no-inline.patch: New patch, removes
     extern inlines to fix g++ and gettext FTBFS, by Samuel Thibault.
 
