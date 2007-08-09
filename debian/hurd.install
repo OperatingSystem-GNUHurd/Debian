@@ -63,4 +63,3 @@ debian/tmp/etc/login/README
 debian/tmp/etc/ttys
 debian/tmp/dev/MAKEDEV
 debian/tmp/share/msgids/hurd.msgids usr/share/msgids
-release/servers.boot boot

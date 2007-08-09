@@ -48,6 +48,7 @@ install/hurd::
 	install -m664 debian/hurd-console.default debian/hurd/etc/default/hurd-console
 
 	install -m664 build-tree/hurd/console/motd.UTF8 debian/hurd/etc/
+	install -m664 build-tree/hurd/release/servers.boot debian/hurd/boot/
 
 install/hurd-dev::
 	install -m644 debian/local/soundcard.h debian/tmp/include/sys
