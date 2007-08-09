@@ -7,6 +7,7 @@ hurd (20070606-2+SVN) UNRELEASED; urgency=low
   * debian/patches/pfinet_-fno-strict-aliasing.patch: New patch, adding
     -fno-strict-aliasing to pfinet's CFLAGS to fix compilation with gcc-4.2,
     taken from CVS.
+  * debian/hurd.dirs: Added /boot.
 
   [ Samuel Thibault ]
   * debian/patches/patches/libpthread_no-inline.patch: New patch, removes
