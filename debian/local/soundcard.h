@@ -158,8 +158,10 @@ typedef struct seq_event_rec {
 
 #if defined(__BYTE_ORDER)
 #  if __BYTE_ORDER == __BIG_ENDIAN
+#    define _PATCHKEY(id) (0xfd00|id)
 #    define AFMT_S16_NE AFMT_S16_BE
 #  elif __BYTE_ORDER == __LITTLE_ENDIAN
+#    define _PATCHKEY(id) ((id<<8)|0x00fd)
 #    define AFMT_S16_NE AFMT_S16_LE
 #  else
 #    error "could not determine byte order"
