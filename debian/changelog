@@ -2,6 +2,10 @@ hurd (20070606-4) UNRELEASED; urgency=low
 
   [ Samuel Thibault ]
   * debian/local/soundcard.h: Add _PATCHKEY definition.
+  * debian/patches/patches/libpthread_tls.patch: New patch, replaces
+    debian/patches/libpthread_tls_transitional.patch.
+  * debian/patches/libpthread_inline.patch: New patch to fix extern inlines
+    with gcc 4.3.
 
  -- Michael Banck <mbanck@debian.org>  Thu, 16 Aug 2007 16:55:53 +0200
 

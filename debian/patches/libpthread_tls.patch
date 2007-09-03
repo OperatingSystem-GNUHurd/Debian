@@ -4,29 +4,24 @@ RCS file: /cvsroot/hurd/hurd/libpthread/pthread/pt-create.c,v
 retrieving revision 1.4
 diff -u -p -r1.4 pt-create.c
 --- libpthread/pthread/pt-create.c	4 May 2005 16:04:06 -0000	1.4
-+++ libpthread/pthread/pt-create.c	13 Jul 2007 01:43:42 -0000
-@@ -127,6 +127,15 @@
++++ libpthread/pthread/pt-create.c	12 Aug 2007 11:34:11 -0000
+@@ -127,6 +127,11 @@
    if (err)
      goto failed_thread_alloc;
  
-+  if (_dl_allocate_tls) {
-+    pthread->tcb = _dl_allocate_tls (NULL);
-+    if (!pthread->tcb)
-+      goto failed_thread_tls_alloc;
-+    pthread->tcb->tcb = pthread->tcb;
-+  } else {
-+    pthread->tcb = NULL;
-+  }
++  pthread->tcb = _dl_allocate_tls (NULL);
++  if (!pthread->tcb)
++    goto failed_thread_tls_alloc;
++  pthread->tcb->tcb = pthread->tcb;
 +
    /* And initialize the rest of the machine context.  This may include
       additional machine- and system-specific initializations that
       prove convenient.  */
-@@ -192,6 +201,9 @@
+@@ -192,6 +197,8 @@
   failed_sigstate:
    __pthread_sigstate_destroy (pthread);
   failed_setup:
-+  if (_dl_deallocate_tls && pthread->tcb)
-+    _dl_deallocate_tls (pthread->tcb, 1);
++  _dl_deallocate_tls (pthread->tcb, 1);
 + failed_thread_tls_alloc:
    __pthread_thread_dealloc (pthread);
    __pthread_thread_halt (pthread, 0);
@@ -36,44 +31,23 @@ Index: libpthread/pthread/pt-exit.c
 RCS file: /cvsroot/hurd/hurd/libpthread/pthread/pt-exit.c,v
 retrieving revision 1.2
 --- libpthread/pthread/pt-exit.c	4 May 2005 16:04:06 -0000	1.2
-+++ libpthread/pthread/pt-exit.c	13 Jul 2007 01:43:42 -0000
++++ libpthread/pthread/pt-exit.c	12 Aug 2007 11:34:11 -0000
 @@ -70,6 +70,8 @@
    if (self->cancel_state == PTHREAD_CANCEL_ENABLE && self->cancel_pending)
      status = PTHREAD_CANCELED;
  
-+  if (_dl_deallocate_tls && self->tcb)
++  if (self->tcb)
 +    _dl_deallocate_tls (self->tcb, 1);
    __pthread_thread_dealloc (self);
  
    switch (self->state)
-Index: libpthread/pthread/pt-initialize.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/pthread/pt-initialize.c,v
-retrieving revision 1.1
---- libpthread/pthread/pt-initialize.c	10 Oct 2002 23:05:06 -0000	1.1
-+++ libpthread/pthread/pt-initialize.c	13 Jul 2007 01:43:42 -0000
-@@ -31,3 +31,15 @@
- {
-   RUN_HOOK (__pthread_init, ());
- }
-+
-+void
-+__pthread_initialize_minimal (void)
-+{
-+#ifndef PIC
-+  if (__libc_setup_tls) {
-+    __libc_setup_tls (sizeof(tcbhead_t), __alignof__(tcbhead_t));
-+  
-+    asm volatile ("");
-+  }
-+#endif
-+}
 Index: libpthread/pthread/pt-internal.h
 ===================================================================
 RCS file: /cvsroot/hurd/hurd/libpthread/pthread/pt-internal.h,v
 retrieving revision 1.4
+diff -u -p -r1.4 pt-internal.h
 --- libpthread/pthread/pt-internal.h	4 Mar 2007 00:05:21 -0000	1.4
-+++ libpthread/pthread/pt-internal.h	13 Jul 2007 01:43:42 -0000
++++ libpthread/pthread/pt-internal.h	12 Aug 2007 11:34:11 -0000
 @@ -50,6 +50,14 @@
  # define PTHREAD_SYSDEP_MEMBERS
  #endif
@@ -98,26 +72,18 @@ retrieving revision 1.4
    struct __pthread *next, **prevp;
  };
  
-@@ -272,4 +282,21 @@
+@@ -272,4 +282,13 @@
  /* Default condition attributes.  */
  const struct __pthread_condattr __pthread_default_condattr;
  
 +
 +/* From glibc.  */
-+#ifdef __i386__
-+#define libc_internal_function __attribute__ ((regparm (3), stdcall))
-+#else
-+#define libc_internal_function
-+#endif
 +
 +/* Dynamic linker TLS allocation.  */
-+extern void *_dl_allocate_tls(void *) libc_internal_function __attribute__((weak));
++extern void *_dl_allocate_tls(void *);
 +
 +/* Dynamic linker TLS deallocation.  */
-+extern void _dl_deallocate_tls(void *, int) libc_internal_function __attribute__((weak));
-+
-+/* Static TLS setup.  */
-+extern void __libc_setup_tls(size_t, size_t) __attribute__((weak));
++extern void _dl_deallocate_tls(void *, int);
 +
  #endif /* pt-internal.h */
 Index: libpthread/sysdeps/mach/hurd/pt-docancel.c
@@ -125,7 +91,7 @@ Index: libpthread/sysdeps/mach/hurd/pt-docancel.c
 RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/mach/hurd/pt-docancel.c,v
 retrieving revision 1.2
 --- libpthread/sysdeps/mach/hurd/pt-docancel.c	18 Nov 2002 22:20:58 -0000	1.2
-+++ libpthread/sysdeps/mach/hurd/pt-docancel.c	13 Jul 2007 01:43:43 -0000
++++ libpthread/sysdeps/mach/hurd/pt-docancel.c	12 Aug 2007 11:34:11 -0000
 @@ -52,8 +52,8 @@
        err = __thread_abort (p->kernel_thread);
        assert_perror (err);
@@ -142,7 +108,7 @@ Index: libpthread/sysdeps/mach/hurd/pt-sysdep.h
 RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/mach/hurd/pt-sysdep.h,v
 retrieving revision 1.3
 --- libpthread/sysdeps/mach/hurd/pt-sysdep.h	18 Jan 2005 10:08:52 -0000	1.3
-+++ libpthread/sysdeps/mach/hurd/pt-sysdep.h	13 Jul 2007 01:43:43 -0000
++++ libpthread/sysdeps/mach/hurd/pt-sysdep.h	12 Aug 2007 11:34:11 -0000
 @@ -59,11 +59,13 @@
    __vm_deallocate (__mach_task_self (), (vm_offset_t) stackaddr, stacksize);
  }
@@ -166,7 +132,7 @@ Index: libpthread/sysdeps/mach/hurd/i386/pt-machdep.c
 RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/mach/hurd/i386/pt-machdep.c,v
 retrieving revision 1.1
 --- libpthread/sysdeps/mach/hurd/i386/pt-machdep.c	10 Oct 2002 23:05:05 -0000	1.1
-+++ libpthread/sysdeps/mach/hurd/i386/pt-machdep.c	13 Jul 2007 01:43:43 -0000
++++ libpthread/sysdeps/mach/hurd/i386/pt-machdep.c	12 Aug 2007 11:34:11 -0000
 @@ -21,12 +21,28 @@
  
  #include <mach.h>
@@ -235,13 +201,12 @@ Index: libpthread/sysdeps/mach/hurd/i386/pt-setup.c
 RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/mach/hurd/i386/pt-setup.c,v
 retrieving revision 1.4
 --- libpthread/sysdeps/mach/hurd/i386/pt-setup.c	12 May 2005 20:55:37 -0000	1.4
-+++ libpthread/sysdeps/mach/hurd/i386/pt-setup.c	13 Jul 2007 01:43:43 -0000
-@@ -89,12 +89,16 @@
++++ libpthread/sysdeps/mach/hurd/i386/pt-setup.c	12 Aug 2007 11:34:11 -0000
+@@ -89,12 +89,15 @@
    thread->mcontext.pc = entry_point;
    thread->mcontext.sp = stack_setup (thread, start_routine, arg);
  
-+  if (thread->tcb)
-+    thread->tcb->self = thread->kernel_thread;
++  thread->tcb->self = thread->kernel_thread;
 +
    ktid = __mach_thread_self ();
    if (thread->kernel_thread != ktid)
@@ -260,21 +225,12 @@ Index: libthreads/cprocs.c
 RCS file: /cvsroot/hurd/hurd/libthreads/cprocs.c,v
 retrieving revision 1.17
 --- libthreads/cprocs.c	29 May 2002 00:01:24 -0000	1.17
-+++ libthreads/cprocs.c	13 Jul 2007 01:43:43 -0000
-@@ -725,15 +725,20 @@
- 	extern void cproc_prepare();
- 	extern void cthread_body();
- 	thread_t n;
-+	tcbhead_t *tcb;
- 
-       	alloc_stack(child);
-+	if (_dl_allocate_tls)
-+		tcb = _dl_allocate_tls(NULL);
-+	else
-+		tcb = NULL;
++++ libthreads/cprocs.c	12 Aug 2007 11:34:10 -0000
+@@ -730,10 +730,11 @@
  	spin_lock(&n_kern_lock);
  	if (cthread_max_kernel_threads == 0 ||
  	    cthread_kernel_threads < cthread_max_kernel_threads) {
++		tcbhead_t *tcb = _dl_allocate_tls(NULL);
  		cthread_kernel_threads++;
  		spin_unlock(&n_kern_lock);
  		MACH_CALL(thread_create(mach_task_self(), &n), r);
@@ -288,7 +244,7 @@ Index: libthreads/cthread_internals.h
 RCS file: /cvsroot/hurd/hurd/libthreads/cthread_internals.h,v
 retrieving revision 1.7
 --- libthreads/cthread_internals.h	14 Jun 2007 17:24:13 -0000	1.7
-+++ libthreads/cthread_internals.h	13 Jul 2007 01:43:43 -0000
++++ libthreads/cthread_internals.h	12 Aug 2007 11:34:10 -0000
 @@ -166,6 +166,14 @@
  # endif
  #endif
@@ -304,7 +260,7 @@ retrieving revision 1.7
  /*
   * Low-level thread implementation.
   * This structure must agree with struct ur_cthread in cthreads.h
-@@ -312,4 +320,18 @@
+@@ -312,4 +320,10 @@
  				      void (*cthread_body_pc)());
  
  extern void		cproc_setup(cproc_t _child, thread_t _mach_thread,
@@ -313,24 +269,15 @@ retrieving revision 1.7
 +
 +
 +/* From glibc.  */
-+#ifdef __i386__
-+#define libc_internal_function __attribute__ ((regparm (3), stdcall))
-+#else
-+#define libc_internal_function
-+#endif
 +
 +/* Dynamic linker TLS allocation.  */
-+extern void *_dl_allocate_tls(void *) libc_internal_function __attribute__((weak));
-+
-+/* Dynamic linker TLS deallocation.  */
-+extern void _dl_deallocate_tls(void *, int) libc_internal_function __attribute__((weak));
++extern void *_dl_allocate_tls(void *);
 Index: libthreads/alpha/thread.c
 ===================================================================
 RCS file: /cvsroot/hurd/hurd/libthreads/alpha/thread.c,v
 retrieving revision 1.2
-diff -u -p -r1.2 thread.c
 --- libthreads/alpha/thread.c	27 May 2002 02:50:13 -0000	1.2
-+++ libthreads/alpha/thread.c	13 Jul 2007 01:43:43 -0000
++++ libthreads/alpha/thread.c	12 Aug 2007 11:34:10 -0000
 @@ -74,6 +74,7 @@
  cproc_setup(
  	register cproc_t child,
@@ -344,7 +291,7 @@ Index: libthreads/i386/thread.c
 RCS file: /cvsroot/hurd/hurd/libthreads/i386/thread.c,v
 retrieving revision 1.7
 --- libthreads/i386/thread.c	27 May 2002 02:50:10 -0000	1.7
-+++ libthreads/i386/thread.c	13 Jul 2007 01:43:43 -0000
++++ libthreads/i386/thread.c	12 Aug 2007 11:34:10 -0000
 @@ -75,6 +75,21 @@
  #include <cthreads.h>
  #include "cthread_internals.h"
@@ -376,7 +323,15 @@ retrieving revision 1.7
  {
  	extern unsigned int __hurd_threadvar_max; /* GNU */
  	register int *top = (int *)
-@@ -101,7 +116,7 @@
+@@ -95,13 +110,15 @@
+ 	register struct i386_thread_state *ts = &state;
+ 	kern_return_t r;
+ 	unsigned int count;
++	HURD_TLS_DESC_DECL(desc, tcb);
++	int sel;
+ 
+ 	/*
+ 	 * Set up i386 call frame and registers.
  	 * Read registers first to get correct segment values.
  	 */
  	count = i386_THREAD_STATE_COUNT;
@@ -385,24 +340,19 @@ retrieving revision 1.7
  
  	ts->eip = (int) routine;
  	*--top = (int) child;	/* argument to function */
-@@ -109,7 +124,21 @@
+@@ -109,7 +126,16 @@
  	ts->uesp = (int) top;	/* set stack pointer */
  	ts->ebp = 0;		/* clear frame pointer */
  
 -	MACH_CALL(thread_set_state(thread,i386_THREAD_STATE,(thread_state_t) &state,i386_THREAD_STATE_COUNT),r);
-+	if (tcb) {
-+		HURD_TLS_DESC_DECL(desc, tcb);
-+		int sel;
-+
-+		asm ("mov %%gs, %w0" : "=q" (sel) : "0" (0));
-+		tcb->tcb = tcb;
-+		tcb->self = thread;
-+		if (__builtin_expect (sel, 0x48) & 4) /* LDT selector */
-+		  __i386_set_ldt (thread, sel, &desc, 1);
-+		else
-+		  __i386_set_gdt (thread, &sel, desc);
-+		ts->gs = sel;
-+	}
++	asm ("mov %%gs, %w0" : "=q" (sel) : "0" (0));
++	tcb->tcb = tcb;
++	tcb->self = thread;
++	if (__builtin_expect (sel, 0x48) & 4) /* LDT selector */
++	  __i386_set_ldt (thread, sel, &desc, 1);
++	else
++	  __i386_set_gdt (thread, &sel, desc);
++	ts->gs = sel;
 +
 +	MACH_CALL(thread_set_state(thread,i386_REGS_SEGS_STATE,(thread_state_t) &state,i386_THREAD_STATE_COUNT),r);
  }
