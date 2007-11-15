@@ -1,4 +1,5 @@
 servers
+servers/socket
 etc/default
 usr/share/msgids
 boot

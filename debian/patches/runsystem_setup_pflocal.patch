@@ -1,0 +1,15 @@
+--- daemons/runsystem.sh	2007-11-15 19:41:12.000000000 +0100
++++ deamons/runsystem.sh	2007-11-15 19:43:39.000000000 +0100
+@@ -53,6 +53,12 @@
+ }
+ 
+ 
++# See whether pflocal is setup already, and do so if not (install case)
++
++if ! test -e /servers/socket/1 && which settrans >/dev/null ; then
++  settrans -c /servers/socket/1 /hurd/pflocal
++fi
++
+ # We expect to be started by console-run, which gives us no arguments and
+ # puts FALLBACK_CONSOLE=file-name in the environment if our console is
+ # other than a normal /dev/console.

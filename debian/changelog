@@ -7,6 +7,12 @@ hurd (20070606-4) UNRELEASED; urgency=low
   * debian/patches/libpthread_inline.patch: New patch to fix extern inlines
     with gcc 4.3.
 
+  [ Michael Banck ]
+  * debian/patches/runsystem_setup_pflocal.patch: New patch, sets up
+    pflocal during bootup if this has not been done before (in the install
+    case).
+  * debian/hurd.dirs: Added servers/socket.
+
  -- Michael Banck <mbanck@debian.org>  Thu, 16 Aug 2007 16:55:53 +0200
 
 hurd (20070606-3) unstable; urgency=low
