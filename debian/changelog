@@ -2,6 +2,7 @@ hurd (20071119-1) UNRELEASED; urgency=low
 
   * New snapshot from CVS.
     + Includes a port of Linux' IPv6 support by Stefan Siegl.
+      (Closes: #274156)
     + debian/patches/glibc_stat_updates.patch: Removed, applied upstream.
     + debian/patches/libpthread_no-inline.patch: Likewise.
     + debian/patches/pfinet_-fno-strict-aliasing.patch: Likewise.
