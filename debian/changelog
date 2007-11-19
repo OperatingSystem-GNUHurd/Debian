@@ -1,4 +1,6 @@
-hurd (20070606-4) UNRELEASED; urgency=low
+hurd (20071119-1) UNRELEASED; urgency=low
+
+  * New snapshot from CVS.
 
   [ Samuel Thibault ]
   * debian/local/soundcard.h: Add _PATCHKEY definition.
