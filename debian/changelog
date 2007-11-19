@@ -1,7 +1,7 @@
 hurd (20071119-1) UNRELEASED; urgency=low
 
   * New snapshot from CVS.
-    + Includes a port of Linux' IPv6 support by Stefan Siegl.
+    + Includes a port of Linux' IPv6 support by Stefan Siegl. 
       (Closes: #274156)
     + debian/patches/glibc_stat_updates.patch: Removed, applied upstream.
     + debian/patches/libpthread_no-inline.patch: Likewise.
@@ -23,6 +23,11 @@ hurd (20071119-1) UNRELEASED; urgency=low
     pflocal during bootup if this has not been done before (in the install
     case).
   * debian/hurd.dirs: Added servers/socket.
+  * debian/patches/init_try_runsystem.gnu.patch: New patch, try
+    /libexec/runsystem.gnu as well if /libexec/runsystem is not
+    available.
+  * debian/patches/tmp_exec_startup.patch: New patch, try to attach the
+    exec server to /tmp/exec if /servers/exec is not yet available.
   * debian/patches/diskfs_no_inherit_dir_group.patch: Update with better 
     patch by Thomas Schwinge.
   * debian/patches/pfinet_dhcp.patch: Updated with new patch by Christian

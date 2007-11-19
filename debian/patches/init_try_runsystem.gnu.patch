@@ -1,0 +1,69 @@
+--- init/init.c	4 Feb 2006 18:39:33 -0000	1.131
++++ init/init.c	19 Nov 2007 21:14:40 -0000
+@@ -1082,10 +1082,12 @@
+ static void
+ launch_something (const char *why)
+ {
++  file_t something;
+   static unsigned int try;
+   static const char *const tries[] =
+   {
+     "/libexec/runsystem",
++    "/libexec/runsystem.gnu",
+     _PATH_BSHELL,
+     "/bin/shd",			/* XXX */
+   };
+@@ -1093,12 +1095,26 @@
+   if (why)
+     error (0, 0, "%s %s", tries[try - 1], why);
+ 
+-  if (try == 0 && start_child (tries[try++], &global_argv[1]) == 0)
+-      return;
++  something = file_name_lookup (tries[try], O_EXEC, 0);
++  if (something != MACH_PORT_NULL)
++    {
++      mach_port_deallocate (mach_task_self (), something);
++      if (try == 0 && start_child (tries[try++], &global_argv[1]) == 0)
++        return;
++    }
++  else
++    try++;
+ 
+   while (try < sizeof tries / sizeof tries[0])
+-    if (start_child (tries[try++], NULL) == 0)
+-      return;
++    {
++      something = file_name_lookup (tries[try], O_EXEC, 0);
++      if (something != MACH_PORT_NULL)
++	{
++	  mach_port_deallocate (mach_task_self (), something);
++	  if (start_child (tries[try++], NULL) == 0)
++	    return;
++	}
++    }
+ 
+   crash_system ();
+ }
+--- daemons/console-run.c	26 Mar 2002 18:59:31 -0000	1.5
++++ daemons/console-run.c	19 Nov 2007 20:16:15 -0000
+@@ -49,6 +49,7 @@
+ main (int argc, char **argv)
+ {
+   mach_port_t consdev = get_console ();
++  mach_port_t runsystem;
+   char *consname;
+ 
+   if (consdev == MACH_PORT_NULL)
+@@ -62,6 +63,12 @@
+   if (argc < 2)
+     error (1, 0, "Usage: %s PROGRAM [ARG...]", program_invocation_short_name);
+ 
++  /* Check whether runsystem exists before opening a console for it.  */
++  runsystem = file_name_lookup (argv[1], O_RDONLY, 0);
++  if (runsystem == MACH_PORT_NULL)
++    error (127, errno, "cannot open file `%s' for execution", argv[1]);
++  mach_port_deallocate (mach_task_self (), runsystem);
++
+   if (open_console (&consname))
+     setenv ("FALLBACK_CONSOLE", consname, 1);
+ 
