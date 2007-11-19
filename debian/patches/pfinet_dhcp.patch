@@ -11,40 +11,35 @@
 	fail when the address is `0.0.0.0'.
 
 
-Index: pfinet/options.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/pfinet/options.c,v
-retrieving revision 1.11
-diff -u -p -r1.11 options.c
---- pfinet/options.c	18 Jul 2001 16:56:57 -0000	1.11
-+++ pfinet/options.c	6 Jan 2005 18:52:30 -0000
-@@ -60,6 +60,7 @@ static const struct argp_option options[
-   {"netmask",   'm', "MASK",    0, "Set the netmask"},
-   {"peer",      'p', "ADDRESS", 0, "Set the peer address"},
-   {"gateway",   'g', "ADDRESS", 0, "Set the default gateway"},
-+  {"dhcp",	'd', 0	      , 0, "Prepare pfinet for dhcp"},
+--- pfinet/options.c.orig	2007-11-19 15:11:07.000000000 +0100
++++ pfinet/options.c	2007-11-19 15:53:11.000000000 +0100
+@@ -76,6 +76,7 @@
+   {"address6",  'A', "ADDR/LEN",0, "Set the global IPv6 address"},
+   {"gateway6",  'G', "ADDRESS", 0, "Set the IPv6 default gateway"},
+ #endif
++  {"dhcp",    'd', 0        , 0, "Prepare pfinet for dhcp"},
    {"shutdown",  's', 0,         0, "Shut it down"},
    {0}
  };
-@@ -76,6 +77,9 @@ struct parse_interface
- 
-   /* New values to apply to it.  */
+@@ -93,6 +94,9 @@
+   /* New values to apply to it. (IPv4) */
    uint32_t address, netmask, peer, gateway;
-+
+ 
 +  /* Set to one if the interface is configured for DHCP.  */
 +  int dhcp;
- };
- 
- /* Used to hold data during argument parsing.  */
-@@ -108,6 +112,7 @@ parse_hook_add_interface (struct parse_h
++
+ #ifdef CONFIG_IPV6
+   /* New IPv6 configuration to apply. */
+   struct inet6_ifaddr address6;
+@@ -130,6 +134,7 @@
    h->curint->netmask = INADDR_NONE;
    h->curint->peer = INADDR_NONE;
    h->curint->gateway = INADDR_NONE;
 +  h->curint->dhcp = 0;
-   return 0;
- }
- 
-@@ -189,6 +194,11 @@ parse_opt (int opt, char *arg, struct ar
+ 
+ #ifdef CONFIG_IPV6
+   memset (&h->curint->address6, 0, sizeof (struct inet6_ifaddr));
+@@ -234,6 +239,11 @@
  		  "%s: Illegal or undefined network address", arg);
  	}
        break;
@@ -56,9 +51,9 @@ diff -u -p -r1.11 options.c
      case 'm':
        h->curint->netmask = ADDR (arg, "netmask"); break;
      case 'p':
-@@ -315,6 +325,55 @@ parse_opt (int opt, char *arg, struct ar
- 	  }
-       }
+@@ -474,6 +484,55 @@
+ 	}
+ #endif       
  
 +      /*  Setup the routing required for DHCP. */
 +      for (in = h->interfaces; in < h->interfaces + h->num_interfaces; in++)
@@ -112,10 +107,6 @@ diff -u -p -r1.11 options.c
        __mutex_unlock (&global_lock);
  
        /* Fall through to free hook.  */
-Index: pfinet/linux-src/net/ipv4/devinet.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/pfinet/linux-src/net/ipv4/devinet.c,v
-retrieving revision 1.8
 diff -u -p -r1.8 devinet.c
 --- pfinet/linux-src/net/ipv4/devinet.c	18 Jul 2001 17:37:13 -0000	1.8
 +++ pfinet/linux-src/net/ipv4/devinet.c	6 Jan 2005 18:52:32 -0000
@@ -134,8 +125,3 @@ diff -u -p -r1.8 devinet.c
  	last_primary = &in_dev->ifa_list;
 
 
-
-_______________________________________________
-Bug-hurd mailing list
-Bug-hurd@gnu.org
-http://lists.gnu.org/mailman/listinfo/bug-hurd

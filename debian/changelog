@@ -1,6 +1,13 @@
 hurd (20071119-1) UNRELEASED; urgency=low
 
   * New snapshot from CVS.
+    + debian/patches/glibc_stat_updates.patch: Removed, applied upstream.
+    + debian/patches/libpthread_no-inline.patch: Likewise.
+    + debian/patches/pfinet_-fno-strict-aliasing.patch: Likewise.
+    + debian/patches/servers.boot-update.patch: Likewise.
+    + debian/patches/siocgifhwaddr.patch: Likewise.
+    + debian/patches/pfinet_dhcp.patch: Rediffed.
+    + debian/patches/pflocal.patch: Likewise.
 
   [ Samuel Thibault ]
   * debian/local/soundcard.h: Add _PATCHKEY definition.
