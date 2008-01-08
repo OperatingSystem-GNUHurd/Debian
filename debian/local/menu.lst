@@ -1,0 +1,14 @@
+timeout 5
+
+default 0
+
+title  Debian GNU/Hurd
+root   (hd0,0)
+kernel /boot/gnumach.gz root=device:hd0s1
+module /hurd/ext2fs.static --multiboot-command-line=${kernel-command-line} --host-priv-port=${host-port} --device-master-port=${device-port} --exec-server-task=${exec-task} -T typed ${root} $(task-create) $(task-resume)
+module /lib/ld.so.1 /hurd/exec $(exec-task=task-create)
+
+title  Debian GNU/Hurd (single user mode)
+kernel /boot/gnumach.gz -s root=device:hd0s1
+module /hurd/ext2fs.static --multiboot-command-line=${kernel-command-line} --host-priv-port=${host-port} --device-master-port=${device-port} --exec-server-task=${exec-task} -T typed ${root} $(task-create) $(task-resume)
+module /lib/ld.so.1 /hurd/exec $(exec-task=task-create)
