@@ -1,7 +1,7 @@
-hurd (20071119-1) UNRELEASED; urgency=low
+hurd (20071119-1) unstable; urgency=low
 
   * New snapshot from CVS.
-    + Includes a port of Linux' IPv6 support by Stefan Siegl. 
+    + Includes a port of Linux' IPv6 support by Stefan Siegl.
       (Closes: #274156)
     + debian/patches/glibc_stat_updates.patch: Removed, applied upstream.
     + debian/patches/libpthread_no-inline.patch: Likewise.
@@ -28,14 +28,14 @@ hurd (20071119-1) UNRELEASED; urgency=low
     available.
   * debian/patches/tmp_exec_startup.patch: New patch, try to attach the
     exec server to /tmp/exec if /servers/exec is not yet available.
-  * debian/patches/diskfs_no_inherit_dir_group.patch: Update with better 
+  * debian/patches/diskfs_no_inherit_dir_group.patch: Update with better
     patch by Thomas Schwinge.
   * debian/patches/pfinet_dhcp.patch: Updated with new patch by Christian
     Dietrich and Stefan Siegl.
   * debian/local/menu.lst: New file.
   * debian/hurd.examples: Ship it.
 
- -- Michael Banck <mbanck@debian.org>  Thu, 16 Aug 2007 16:55:53 +0200
+ -- Michael Banck <mbanck@debian.org>  Tue, 08 Jan 2008 01:10:07 +0100
 
 hurd (20070606-3) unstable; urgency=low
 
