@@ -1,3 +1,7 @@
+# Example GRUB configuration to boot Debian GNU/Hurd off the first partition.
+# Adjust the partition setting for GRUB's root command and the gnumach.gz 
+# root device.
+
 timeout 5
 
 default 0
@@ -9,6 +13,7 @@ module /hurd/ext2fs.static --multiboot-command-line=${kernel-command-line} --hos
 module /lib/ld.so.1 /hurd/exec $(exec-task=task-create)
 
 title  Debian GNU/Hurd (single user mode)
+root   (hd0,0)  
 kernel /boot/gnumach.gz -s root=device:hd0s1
 module /hurd/ext2fs.static --multiboot-command-line=${kernel-command-line} --host-priv-port=${host-port} --device-master-port=${device-port} --exec-server-task=${exec-task} -T typed ${root} $(task-create) $(task-resume)
 module /lib/ld.so.1 /hurd/exec $(exec-task=task-create)
