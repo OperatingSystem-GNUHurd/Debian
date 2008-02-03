@@ -35,7 +35,7 @@ Package: hurd-dbg
 Priority: extra
 Section: libdevel
 Architecture: hurd-i386
-Depends: hurd (= ${Source-Version})
+Depends: hurd (= ${binary:Version})
 Description: The GNU Hurd (debugging files)
  This package includes the unstripped binaries and libraries.
 
@@ -43,7 +43,7 @@ Package: hurd-doc
 Priority: optional
 Section: doc
 Architecture: all
-Suggests: hurd (= ${Source-Version})
+Suggests: hurd (>= ${source:Version})
 Description: The GNU Hurd manual
  This package includes the manual in info and HTML format.
 
