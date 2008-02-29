@@ -1,0 +1,46 @@
+2008-02-29  Samuel Thibault  <samuel.thibault@ens-lyon.org
+
+	* sysdeps/l4/hurd/i386/pt-setup.c (stack_setup): Align stack on 0x10
+	for MMX operations.
+	* sysdeps/mach/hurd/i386/pt-setup.c (stack_setup): Likewise.
+
+Index: sysdeps/l4/hurd/i386/pt-setup.c
+===================================================================
+RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/l4/hurd/i386/pt-setup.c,v
+retrieving revision 1.1
+diff -u -p -r1.1 pt-setup.c
+--- hurd/libpthread/sysdeps/l4/hurd/i386/pt-setup.c	10 Oct 2002 23:05:05 -0000	1.1
++++ hurd/libpthread/sysdeps/l4/hurd/i386/pt-setup.c	29 Feb 2008 01:30:29 -0000
+@@ -47,8 +47,10 @@ stack_setup (struct __pthread *thread,
+   if (start_routine)
+     {
+       /* Set up call frame.  */
+-      *--top = (L4_Word_t) arg;	/* Argument to START_ROUTINE.  */
+-      *--top = (L4_Word_t) start_routine;
++      top -= 2*sizeof(L4_Word_t);
++      top = (unsigned long) top & ~0xf;
++      top[1] = (L4_Word_t) arg;	/* Argument to START_ROUTINE.  */
++      top[0] = (L4_Word_t) start_routine;
+       *--top = 0;		/* Fake return address.  */
+     }
+ 
+Index: sysdeps/mach/hurd/i386/pt-setup.c
+===================================================================
+RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/mach/hurd/i386/pt-setup.c,v
+retrieving revision 1.4
+diff -u -p -r1.4 pt-setup.c
+--- hurd/libpthread/sysdeps/mach/hurd/i386/pt-setup.c	12 May 2005 20:55:37 -0000	1.4
++++ hurd/libpthread/sysdeps/mach/hurd/i386/pt-setup.c	29 Feb 2008 01:30:29 -0000
+@@ -63,8 +63,10 @@ stack_setup (struct __pthread *thread,
+   if (start_routine)
+     {
+       /* And then the call frame.  */
+-      *--top = (uintptr_t) arg;	/* Argument to START_ROUTINE.  */
+-      *--top = (uintptr_t) start_routine;
++      top -= 2*sizeof(uintptr_t);
++      top = (uintptr_t) top & ~0xf;
++      top[1] = (uintptr_t) arg;	/* Argument to START_ROUTINE.  */
++      top[0] = (uintptr_t) start_routine;
+       *--top = 0;		/* Fake return address.  */
+     }
+ 
