@@ -1,3 +1,7 @@
+Avoid creating too many threads by limiting them to 250.
+Work around a problem in ext2 where this would case a deadlock since we would
+sometimes not create the thread needed for reading the superblock...
+
 --- libports/manage-multithread.c.orig	2005-08-10 13:38:18.000000000 +0200
 +++ libports/manage-multithread.c	2005-08-10 13:34:30.000000000 +0200
 @@ -23,6 +23,19 @@
@@ -96,3 +100,64 @@
  	{
  	  spin_lock (&lock);
  	  if (totalthreads != 1)
+--- ext2fs/hyper.c	2008-03-10 01:14:16.643969000 +0000
++++ ext2fs/hyper.c	2008-03-01 23:41:53.227511000 +0000
+@@ -55,17 +55,22 @@
+ 
+ static int ext2fs_clean;	/* fs clean before we started writing? */
+ 
++struct ext2_super_block *__sblock = NULL;
+ void
+ get_hypermetadata (void)
+ {
+   error_t err;
+   size_t read;
++  static struct ext2_super_block _sblock;
+ 
+   assert (! sblock);
+   err = store_read (store, SBLOCK_OFFS >> store->log2_block_size,
+-		    SBLOCK_SIZE, (void **)&sblock, &read);
++		    SBLOCK_SIZE, (void **)&__sblock, &read);
+   if (err || read != SBLOCK_SIZE)
+     ext2_panic ("Cannot read hypermetadata");
++
++  sblock = &_sblock;
++  *sblock = *__sblock;
+   
+   if (sblock->s_magic != EXT2_SUPER_MAGIC
+ #ifdef EXT2FS_PRE_02B_COMPAT
+@@ -159,18 +164,18 @@
+   if (zeroblock == 0)
+     zeroblock = (vm_address_t) mmap (0, block_size, PROT_READ, MAP_ANON, 0, 0);
+ 
+-  munmap (sblock, SBLOCK_SIZE);
+-  sblock = NULL;
++  munmap (__sblock, SBLOCK_SIZE);
++  __sblock = NULL;
+ }
+ 
+ void
+ map_hypermetadata (void)
+ {
+-  sblock = (struct ext2_super_block *) boffs_ptr (SBLOCK_OFFS);
++  __sblock = (struct ext2_super_block *) boffs_ptr (SBLOCK_OFFS);
+ 
+   /* Cache a convenient pointer to the block group descriptors for allocation.
+      These are stored in the filesystem blocks following the superblock.  */
+-  group_desc_image = (struct ext2_group_desc *) bptr (bptr_block (sblock) + 1);
++  group_desc_image = (struct ext2_group_desc *) bptr (bptr_block (__sblock) + 1);
+ }
+ 
+ error_t
+@@ -193,8 +198,9 @@
+  if (sblock_dirty)
+    {
+      sblock_dirty = 0;
+-     disk_cache_block_ref_ptr (sblock);
+-     record_global_poke (sblock);
++     *__sblock = *sblock;
++     disk_cache_block_ref_ptr (__sblock);
++     record_global_poke (__sblock);
+    }
+ 
+   sync_global (wait);
