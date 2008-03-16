@@ -16,6 +16,8 @@ hurd (20071119-2) UNRELEASED; urgency=low
     threads.
   * debian/thread-throttle.patch: Add a fix for ext2fs to keep the superblock
     in memory so as to avoid a thread creation dead lock.
+  * debian/libpthread_stubs.diff: Add generation of <gnu/stubs-pthread.h> to
+    advertise libpthread stubs.
 
  -- Michael Banck <mbanck@debian.org>  Tue, 08 Jan 2008 15:54:52 +0100
 
