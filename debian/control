@@ -9,7 +9,7 @@ Build-Depends: mig (>= 1.3-2), gnumach-dev (>= 2:1.3.99.dfsg.cvs20070526-1),
 Uploaders: Jeff Bailey <jbailey@raspberryginger.com>,
  Marcus Brinkmann <brinkmd@debian.org>, Neal H. Walfield <neal@debian.org>,
  Michael Banck <mbanck@debian.org>
-Homepage: http://www.gnu.org/software/hurd/
+Homepage: http://www.gnu.org/software/hurd/hurd.html
 
 Package: hurd
 Priority: required
