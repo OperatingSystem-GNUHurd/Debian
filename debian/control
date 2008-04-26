@@ -10,6 +10,8 @@ Uploaders: Jeff Bailey <jbailey@raspberryginger.com>,
  Marcus Brinkmann <brinkmd@debian.org>, Neal H. Walfield <neal@debian.org>,
  Michael Banck <mbanck@debian.org>
 Homepage: http://www.gnu.org/software/hurd/hurd.html
+Vcs-Browser: http://svn.debian.org/wsvn/pkg-hurd/hurd/
+Vcs-Svn: svn://svn.debian.org/pkg-hurd/hurd/trunk/
 
 Package: hurd
 Priority: required
