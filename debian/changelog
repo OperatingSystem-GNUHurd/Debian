@@ -11,6 +11,7 @@ hurd (20071119-2) UNRELEASED; urgency=low
   * debian/control: Line-wrap Build-Depends and Uploaders fields.
   * debian/control: Now using Standards-Version 3.7.3 (no changes needed).
   * debian/control: Move packages from base Section to admin.
+  * debian/control: Add Homepage field.
 
   [ Samuel Thibault]
   * debian/patches/mmx.patch: New patch to align the stack of created
