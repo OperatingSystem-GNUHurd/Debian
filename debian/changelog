@@ -2,6 +2,8 @@ hurd (20071119-2) UNRELEASED; urgency=low
 
   [ Michael Banck ]
   * debian/local/menu.lst: Add some comments.
+  * debian/patches/libpthread_getattr.patch: New patch, implements
+    pthread_getattr_np, taken from CVS.
 
   [ Guillem Jover ]
   * debian/copyright: Update FSF address.
