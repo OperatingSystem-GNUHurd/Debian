@@ -58,14 +58,6 @@ retrieving revision 1.1
 diff -u -p -r1.1 libc-symbols.h
 --- libpthread/include/libc-symbols.h	10 Oct 2002 23:05:06 -0000	1.1
 +++ libpthread/include/libc-symbols.h	1 Jan 2008 15:21:50 -0000
-@@ -60,6 +60,7 @@
- #define HAVE_ELF
- #define HAVE_SECTION_QUOTES
- #define HAVE_VISIBILITY_ATTRIBUTE
-+#define HAVE_ASM_PREVIOUS_DIRECTIVE
- // #define SHARED
- 
- /* The symbols in all the user (non-_) macros are C symbols.
 @@ -250,6 +251,7 @@
  
  /* A canned warning for sysdeps/stub functions.  */

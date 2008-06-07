@@ -5,6 +5,9 @@ hurd (20080607-1) UNRELEASED; urgency=low
       changes.
     + debian/patches/libpthread_getattr.patch: Removed, applied upstream.
     + debian/patches/libpthread_inline.patch: Likewise.
+    + debian/patches/mmx.patch: Likewise.
+    + debian/patches/libpthread_stubs.patch: Updated, one hunk got applied
+      upstream.
 
  -- Michael Banck <mbanck@debian.org>  Mon, 19 May 2008 01:19:24 +0200
 
