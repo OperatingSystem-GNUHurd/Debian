@@ -4,6 +4,7 @@ hurd (20080607-1) UNRELEASED; urgency=low
     + debian/patches/ext2fs_large_stores.patch: Removed copyright year
       changes.
     + debian/patches/libpthread_getattr.patch: Removed, applied upstream.
+    + debian/patches/libpthread_inline.patch: Likewise.
 
  -- Michael Banck <mbanck@debian.org>  Mon, 19 May 2008 01:19:24 +0200
 
