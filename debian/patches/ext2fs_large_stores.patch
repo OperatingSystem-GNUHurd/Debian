@@ -1,13 +1,6 @@
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/console/pager.c hurd/console/pager.c
 --- ../cvs/hurd/console/pager.c	2002-09-22 04:28:35.000000000 +0300
 +++ hurd/console/pager.c	2004-11-11 18:16:15.000000000 +0200
-@@ -1,5 +1,5 @@
- /* pager.c - The pager for the display component of a virtual console.
--   Copyright (C) 2002 Free Software Foundation, Inc.
-+   Copyright (C) 2002, 2004 Free Software Foundation, Inc.
-    Written by Marcus Brinkmann.
- 
-    This file is part of the GNU Hurd.
 @@ -94,6 +94,14 @@ pager_unlock_page (struct user_pager_inf
  }
  
@@ -35,14 +28,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/console/pager.c hurd/conso
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/balloc.c hurd/ext2fs/balloc.c
 --- ../cvs/hurd/ext2fs/balloc.c	2000-03-10 06:54:55.000000000 +0200
 +++ hurd/ext2fs/balloc.c	2004-11-11 18:29:43.000000000 +0200
-@@ -1,6 +1,6 @@
- /* Block allocation routines
- 
--   Copyright (C) 1995,99,2000 Free Software Foundation, Inc.
-+   Copyright (C) 1995, 1999, 2000, 2004 Free Software Foundation, Inc.
- 
-    Converted to work under the hurd by Miles Bader <miles@gnu.org>
- 
 @@ -92,7 +92,7 @@ ext2_free_blocks (block_t block, unsigne
  		      block, count);
  	}
@@ -251,14 +236,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/ext2_fs.h hurd/ext2
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/ext2fs.c hurd/ext2fs/ext2fs.c
 --- ../cvs/hurd/ext2fs/ext2fs.c	2002-06-03 00:40:56.000000000 +0300
 +++ hurd/ext2fs/ext2fs.c	2004-11-11 18:16:15.000000000 +0200
-@@ -1,6 +1,6 @@
- /* Main entry point for the ext2 file system translator
- 
--   Copyright (C) 1994,95,96,97,98,99,2002 Free Software Foundation, Inc.
-+   Copyright (C) 1994,95,96,97,98,99,2002,04 Free Software Foundation, Inc.
- 
-    Converted for ext2fs by Miles Bader <miles@gnu.ai.mit.edu>
- 
 @@ -106,7 +106,7 @@ parse_opt (int key, char *arg, struct ar
        if (values == 0)
  	return ENOMEM;
@@ -605,14 +582,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/getblk.c hurd/ext2f
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/hyper.c hurd/ext2fs/hyper.c
 --- ../cvs/hurd/ext2fs/hyper.c	2002-06-03 00:40:59.000000000 +0300
 +++ hurd/ext2fs/hyper.c	2004-11-11 18:16:16.000000000 +0200
-@@ -1,6 +1,6 @@
- /* Fetching and storing the hypermetadata (superblock and bg summary info)
- 
--   Copyright (C) 1994,95,96,99,2001,02 Free Software Foundation, Inc.
-+   Copyright (C) 1994,95,96,99,2001,02,04 Free Software Foundation, Inc.
-    Written by Miles Bader <miles@gnu.org>
- 
-    This program is free software; you can redistribute it and/or
 @@ -58,12 +58,15 @@ static int ext2fs_clean;	/* fs clean bef
  void
  get_hypermetadata (void)
@@ -683,14 +652,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/hyper.c hurd/ext2fs
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/ialloc.c hurd/ext2fs/ialloc.c
 --- ../cvs/hurd/ext2fs/ialloc.c	2002-10-09 02:10:09.000000000 +0300
 +++ hurd/ext2fs/ialloc.c	2004-11-11 18:16:16.000000000 +0200
-@@ -1,6 +1,6 @@
- /* Inode allocation routines.
- 
--   Copyright (C) 1995,96,99,2000,02 Free Software Foundation, Inc.
-+   Copyright (C) 1995,96,99,2000,02,04 Free Software Foundation, Inc.
- 
-    Converted to work under the hurd by Miles Bader <miles@gnu.org>
- 
 @@ -60,7 +60,7 @@ diskfs_free_node (struct node *np, mode_
  
    assert (!diskfs_readonly);
@@ -831,14 +792,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/ialloc.c hurd/ext2f
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/inode.c hurd/ext2fs/inode.c
 --- ../cvs/hurd/ext2fs/inode.c	2002-10-09 02:10:09.000000000 +0300
 +++ hurd/ext2fs/inode.c	2004-11-11 18:16:16.000000000 +0200
-@@ -1,6 +1,6 @@
- /* Inode management routines
- 
--   Copyright (C) 1994,95,96,97,98,99,2000,01,02 Free Software Foundation, Inc.
-+   Copyright (C) 1994,95,96,97,98,99,2000,01,02,04 Free Software Foundation, Inc.
- 
-    Converted for ext2fs by Miles Bader <miles@gnu.org>
- 
 @@ -91,7 +91,7 @@ diskfs_cached_lookup (ino_t inum, struct
    dn->dir_idx = 0;
    dn->pager = 0;
@@ -1028,14 +981,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/inode.c hurd/ext2fs
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/pager.c hurd/ext2fs/pager.c
 --- ../cvs/hurd/ext2fs/pager.c	2002-06-12 00:38:01.000000000 +0300
 +++ hurd/ext2fs/pager.c	2004-11-11 18:16:16.000000000 +0200
-@@ -1,6 +1,6 @@
- /* Pager for ext2fs
- 
--   Copyright (C) 1994,95,96,97,98,99,2000,02 Free Software Foundation, Inc.
-+   Copyright (C) 1994,95,96,97,98,99,2000,02,04 Free Software Foundation, Inc.
- 
-    Converted for ext2fs by Miles Bader <miles@gnu.org>
- 
 @@ -18,17 +18,18 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
@@ -1723,14 +1668,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/pager.c hurd/ext2fs
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/pokel.c hurd/ext2fs/pokel.c
 --- ../cvs/hurd/ext2fs/pokel.c	1996-01-16 00:28:56.000000000 +0200
 +++ hurd/ext2fs/pokel.c	2004-11-11 18:16:16.000000000 +0200
-@@ -1,6 +1,6 @@
- /* A data structure to remember modifications to a memory region
- 
--   Copyright (C) 1995 Free Software Foundation, Inc.
-+   Copyright (C) 1995, 1996, 2004 Free Software Foundation, Inc.
- 
-    Written by Miles Bader <miles@gnu.ai.mit.edu>
- 
 @@ -67,12 +67,27 @@ pokel_add (struct pokel *pokel, void *lo
        vm_offset_t p_offs = pl->offset;
        vm_size_t p_end = p_offs + pl->length;
@@ -1799,14 +1736,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/pokel.c hurd/ext2fs
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/truncate.c hurd/ext2fs/truncate.c
 --- ../cvs/hurd/ext2fs/truncate.c	2000-12-03 06:41:37.000000000 +0200
 +++ hurd/ext2fs/truncate.c	2004-11-11 18:16:16.000000000 +0200
-@@ -1,6 +1,6 @@
- /* File truncation
- 
--   Copyright (C) 1995,96,97,99,2000 Free Software Foundation, Inc.
-+   Copyright (C) 1995,96,97,99,2000,04 Free Software Foundation, Inc.
- 
-    Written by Miles Bader <miles@gnu.org>
- 
 @@ -124,7 +124,7 @@ trunc_indirect (struct node *node, block
      {
        unsigned index;
@@ -1846,13 +1775,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/truncate.c hurd/ext
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/fatfs/pager.c hurd/fatfs/pager.c
 --- ../cvs/hurd/fatfs/pager.c	2003-07-29 01:42:26.000000000 +0300
 +++ hurd/fatfs/pager.c	2004-11-11 18:16:16.000000000 +0200
-@@ -1,5 +1,5 @@
- /* pager.c - Pager for fatfs.
--   Copyright (C) 1997, 1999, 2002, 2003 Free Software Foundation, Inc.
-+   Copyright (C) 1997, 1999, 2002, 2003, 2004 Free Software Foundation, Inc.
-    Written by Thomas Bushnell, n/BSG and Marcus Brinkmann.
- 
-    This file is part of the GNU Hurd.
 @@ -596,6 +596,13 @@ pager_unlock_page (struct user_pager_inf
    return 0;
  }
@@ -1888,13 +1810,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/fatfs/pager.c hurd/fatfs/p
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/isofs/pager.c hurd/isofs/pager.c
 --- ../cvs/hurd/isofs/pager.c	2001-01-07 19:06:26.000000000 +0200
 +++ hurd/isofs/pager.c	2004-11-11 18:16:16.000000000 +0200
-@@ -1,5 +1,5 @@
- /* 
--   Copyright (C) 1997, 1999 Free Software Foundation, Inc.
-+   Copyright (C) 1997, 1999, 2004 Free Software Foundation, Inc.
-    Written by Thomas Bushnell, n/BSG.
- 
-    This file is part of the GNU Hurd.
 @@ -94,6 +94,13 @@ pager_unlock_page (struct user_pager_inf
    return EROFS;
  }
@@ -1931,13 +1846,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/isofs/pager.c hurd/isofs/p
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libdiskfs/disk-pager.c hurd/libdiskfs/disk-pager.c
 --- ../cvs/hurd/libdiskfs/disk-pager.c	2002-05-08 12:56:56.000000000 +0300
 +++ hurd/libdiskfs/disk-pager.c	2004-11-11 18:16:17.000000000 +0200
-@@ -1,5 +1,5 @@
- /* Map the disk image and handle faults accessing it.
--   Copyright (C) 1996,97,99,2001,02 Free Software Foundation, Inc.
-+   Copyright (C) 1996,97,99,2001,02,04 Free Software Foundation, Inc.
-    Written by Roland McGrath.
- 
-    This program is free software; you can redistribute it and/or
 @@ -46,7 +46,8 @@ service_paging_requests (any_t arg)
  
  void
@@ -1961,13 +1869,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libdiskfs/disk-pager.c hur
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libdiskfs/diskfs-pager.h hurd/libdiskfs/diskfs-pager.h
 --- ../cvs/hurd/libdiskfs/diskfs-pager.h	1997-02-05 18:39:19.000000000 +0200
 +++ hurd/libdiskfs/diskfs-pager.h	2004-11-11 18:16:17.000000000 +0200
-@@ -1,5 +1,5 @@
- /* Map the disk image and handle faults accessing it.
--   Copyright (C) 1996, 1997 Free Software Foundation, Inc.
-+   Copyright (C) 1996, 1997, 2004 Free Software Foundation, Inc.
-    Written by Roland McGrath.
- 
-    This program is free software; you can redistribute it and/or
 @@ -33,7 +33,8 @@
     mapped is returned in IMAGE.  INFO, PAGER_BUCKET, & MAY_CACHE are passed
     to `pager_create'.  */
@@ -1981,13 +1882,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libdiskfs/diskfs-pager.h h
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/data-request.c hurd/libpager/data-request.c
 --- ../cvs/hurd/libpager/data-request.c	2002-05-08 12:22:14.000000000 +0300
 +++ hurd/libpager/data-request.c	2004-11-11 19:43:24.000000000 +0200
-@@ -1,5 +1,5 @@
- /* Implementation of memory_object_data_request for pager library
--   Copyright (C) 1994,95,96,97,2000,02 Free Software Foundation
-+   Copyright (C) 1994,95,96,97,2000,02,04 Free Software Foundation, Inc.
- 
-    This program is free software; you can redistribute it and/or
-    modify it under the terms of the GNU General Public License as
 @@ -40,11 +40,11 @@ _pager_seqnos_memory_object_data_request
    if (!p)
      return EOPNOTSUPP;
@@ -2036,13 +1930,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/data-request.c hu
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/data-return.c hurd/libpager/data-return.c
 --- ../cvs/hurd/libpager/data-return.c	2002-05-08 12:22:14.000000000 +0300
 +++ hurd/libpager/data-return.c	2004-11-11 20:08:53.000000000 +0200
-@@ -1,5 +1,5 @@
- /* Implementation of memory_object_data_return for pager library
--   Copyright (C) 1994,95,96,99,2000,02 Free Software Foundation, Inc.
-+   Copyright (C) 1994,95,96,99,2000,02,04 Free Software Foundation, Inc.
- 
-    This program is free software; you can redistribute it and/or
-    modify it under the terms of the GNU General Public License as
 @@ -39,6 +39,7 @@ _pager_do_write_request (mach_port_t obj
    struct pager *p;
    short *pm_entries;
@@ -2184,13 +2071,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/data-return.c hur
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/pager-create.c hurd/libpager/pager-create.c
 --- ../cvs/hurd/libpager/pager-create.c	1996-05-09 19:47:42.000000000 +0300
 +++ hurd/libpager/pager-create.c	2004-11-11 18:16:17.000000000 +0200
-@@ -1,5 +1,5 @@
- /* Pager creation
--   Copyright (C) 1994, 1995, 1996 Free Software Foundation
-+   Copyright (C) 1994, 1995, 1996, 2004 Free Software Foundation, Inc.
- 
-    This program is free software; you can redistribute it and/or
-    modify it under the terms of the GNU General Public License as
 @@ -22,7 +22,8 @@ struct pager *
  pager_create (struct user_pager_info *upi,
  	      struct port_bucket *bucket,
@@ -2212,13 +2092,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/pager-create.c hu
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/pager.h hurd/libpager/pager.h
 --- ../cvs/hurd/libpager/pager.h	1999-07-04 02:51:02.000000000 +0300
 +++ hurd/libpager/pager.h	2004-11-11 18:16:17.000000000 +0200
-@@ -1,5 +1,5 @@
- /* Definitions for multi-threaded pager library
--   Copyright (C) 1994, 1995, 1996, 1997, 1999 Free Software Foundation, Inc.
-+   Copyright (C) 1994,1995,1996,1997,1999,2004 Free Software Foundation, Inc.
- 
-    This program is free software; you can redistribute it and/or
-    modify it under the terms of the GNU General Public License as
 @@ -32,18 +32,21 @@ int pager_demuxer (mach_msg_header_t *in
  		   mach_msg_header_t *outp);
  
@@ -2278,13 +2151,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/pager.h hurd/libp
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/priv.h hurd/libpager/priv.h
 --- ../cvs/hurd/libpager/priv.h	2000-07-25 22:40:27.000000000 +0300
 +++ hurd/libpager/priv.h	2004-11-11 19:42:20.000000000 +0200
-@@ -1,5 +1,5 @@
- /* Private data for pager library.
--   Copyright (C) 1994,95,96,97,99, 2000 Free Software Foundation, Inc.
-+   Copyright (C) 1994,95,96,97,99,2000,04 Free Software Foundation, Inc.
- 
-    This program is free software; you can redistribute it and/or
-    modify it under the terms of the GNU General Public License as
 @@ -45,6 +45,7 @@ struct pager
  
    boolean_t may_cache;
@@ -2296,14 +2162,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/priv.h hurd/libpa
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/storeio/pager.c hurd/storeio/pager.c
 --- ../cvs/hurd/storeio/pager.c	2002-05-08 13:17:41.000000000 +0300
 +++ hurd/storeio/pager.c	2004-11-11 18:16:18.000000000 +0200
-@@ -1,6 +1,6 @@
- /* Paging interface for storeio devices
- 
--   Copyright (C) 1995,96,97,99,2002 Free Software Foundation, Inc.
-+   Copyright (C) 1995,96,97,99,2002,04 Free Software Foundation, Inc.
- 
-    Written by Miles Bader <miles@gnu.ai.mit.edu>
- 
 @@ -109,6 +109,13 @@ pager_unlock_page (struct user_pager_inf
      return 0;
  }
@@ -2330,13 +2188,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/storeio/pager.c hurd/store
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/tmpfs/pager-stubs.c hurd/tmpfs/pager-stubs.c
 --- ../cvs/hurd/tmpfs/pager-stubs.c	2001-02-26 06:13:58.000000000 +0200
 +++ hurd/tmpfs/pager-stubs.c	2004-11-11 18:16:18.000000000 +0200
-@@ -1,5 +1,5 @@
- /* stupid stub functions never called, needed because libdiskfs uses libpager
--   Copyright (C) 2001 Free Software Foundation, Inc.
-+   Copyright (C) 2001, 2004 Free Software Foundation, Inc.
- 
- This file is part of the GNU Hurd.
- 
 @@ -57,6 +57,14 @@ pager_unlock_page (struct user_pager_inf
    return EIEIO;
  }
@@ -2355,13 +2206,6 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/tmpfs/pager-stubs.c hurd/t
 diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ufs/pager.c hurd/ufs/pager.c
 --- ../cvs/hurd/ufs/pager.c	1999-09-13 09:35:07.000000000 +0300
 +++ hurd/ufs/pager.c	2004-11-11 18:16:18.000000000 +0200
-@@ -1,5 +1,5 @@
- /* Pager for ufs
--   Copyright (C) 1994, 1995, 1996, 1997, 1999 Free Software Foundation
-+   Copyright (C) 1994,1995,1996,1997,1999,2004 Free Software Foundation Inc.
- 
-    This program is free software; you can redistribute it and/or
-    modify it under the terms of the GNU General Public License as
 @@ -425,6 +425,13 @@ pager_unlock_page (struct user_pager_inf
    return err;
  }
