@@ -1,6 +1,6 @@
-hurd (20071119-3) UNRELEASED; urgency=low
+hurd (20080607-1) UNRELEASED; urgency=low
 
-  * 
+  * New snapshot from CVS.
 
  -- Michael Banck <mbanck@debian.org>  Mon, 19 May 2008 01:19:24 +0200
 
