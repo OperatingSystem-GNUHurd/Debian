@@ -9,6 +9,7 @@ hurd (20080607-1) UNRELEASED; urgency=low
     + debian/patches/libpthread_stubs.patch: Updated, one hunk got applied
       upstream.
   * debian/rules (CC): New variable, set to gcc-4.2.
+  * debian/control (Build-Depends): Added gcc-4.2.
 
  -- Michael Banck <mbanck@debian.org>  Mon, 19 May 2008 01:19:24 +0200
 
