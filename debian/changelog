@@ -1,8 +1,10 @@
 hurd (20080607-2) UNRELEASED; urgency=low
 
+  [Samuel Thibault]
   * debian/patches/libpthread_pthreadtypes_h.patch: New patch to get pthread
     types into <pthread/pthreadtypes.h>, which <bits/pthreadtypes.h> will be
     able to include.
+  * debian/patches/libpthread_stubs.patch: Fix build.
 
  -- Michael Banck <mbanck@debian.org>  Wed, 11 Jun 2008 15:40:16 +0200
 
