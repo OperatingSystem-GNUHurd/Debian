@@ -3,8 +3,8 @@ Index: include/pthread/pthread.h
 RCS file: /cvsroot/hurd/hurd/libpthread/include/pthread/pthread.h,v
 retrieving revision 1.11
 diff -u -p -r1.11 pthread.h
---- include/pthread/pthread.h	17 May 2008 20:07:56 -0000	1.11
-+++ include/pthread/pthread.h	28 Jun 2008 00:06:23 -0000
+--- libpthread/include/pthread/pthread.h	17 May 2008 20:07:56 -0000	1.11
++++ libpthread/include/pthread/pthread.h	28 Jun 2008 00:06:23 -0000
 @@ -26,66 +26,34 @@
  #include <features.h>
  
@@ -263,7 +263,7 @@ Index: include/pthread/pthreadtypes.h
 RCS file: include/pthread/pthreadtypes.h
 diff -N include/pthread/pthreadtypes.h
 --- /dev/null	1 Jan 1970 00:00:00 -0000
-+++ include/pthread/pthreadtypes.h	28 Jun 2008 00:06:23 -0000
++++ libpthread/include/pthread/pthreadtypes.h	28 Jun 2008 00:06:23 -0000
 @@ -0,0 +1,136 @@
 +/* Copyright (C) 2000, 2002, 2005 Free Software Foundation, Inc.
 +   This file is part of the GNU C Library.
@@ -406,8 +406,8 @@ Index: sysdeps/generic/bits/barrier-attr.h
 RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/bits/barrier-attr.h,v
 retrieving revision 1.1
 diff -u -p -r1.1 barrier-attr.h
---- sysdeps/generic/bits/barrier-attr.h	10 Oct 2002 23:05:05 -0000	1.1
-+++ sysdeps/generic/bits/barrier-attr.h	28 Jun 2008 00:06:23 -0000
+--- libpthread/sysdeps/generic/bits/barrier-attr.h	10 Oct 2002 23:05:05 -0000	1.1
++++ libpthread/sysdeps/generic/bits/barrier-attr.h	28 Jun 2008 00:06:23 -0000
 @@ -20,6 +20,8 @@
  #ifndef _BITS_BARRIER_ATTR_H
  #define _BITS_BARRIER_ATTR_H	1
@@ -422,8 +422,8 @@ Index: sysdeps/generic/bits/cancelation.h
 RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/bits/cancelation.h,v
 retrieving revision 1.1
 diff -u -p -r1.1 cancelation.h
---- sysdeps/generic/bits/cancelation.h	10 Oct 2002 23:05:05 -0000	1.1
-+++ sysdeps/generic/bits/cancelation.h	28 Jun 2008 00:06:23 -0000
+--- libpthread/sysdeps/generic/bits/cancelation.h	10 Oct 2002 23:05:05 -0000	1.1
++++ libpthread/sysdeps/generic/bits/cancelation.h	28 Jun 2008 00:06:23 -0000
 @@ -32,7 +32,7 @@ struct __pthread_cancelation_handler
  /* Returns the thread local location of the cleanup handler stack.  */
  struct __pthread_cancelation_handler **__pthread_get_cleanup_stack (void);
@@ -447,8 +447,8 @@ Index: sysdeps/generic/bits/condition-attr.h
 RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/bits/condition-attr.h,v
 retrieving revision 1.1
 diff -u -p -r1.1 condition-attr.h
---- sysdeps/generic/bits/condition-attr.h	10 Oct 2002 23:05:05 -0000	1.1
-+++ sysdeps/generic/bits/condition-attr.h	28 Jun 2008 00:06:23 -0000
+--- libpthread/sysdeps/generic/bits/condition-attr.h	10 Oct 2002 23:05:05 -0000	1.1
++++ libpthread/sysdeps/generic/bits/condition-attr.h	28 Jun 2008 00:06:23 -0000
 @@ -22,6 +22,8 @@
  
  #include <time.h>
@@ -463,8 +463,8 @@ Index: sysdeps/generic/bits/mutex-attr.h
 RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/bits/mutex-attr.h,v
 retrieving revision 1.1
 diff -u -p -r1.1 mutex-attr.h
---- sysdeps/generic/bits/mutex-attr.h	10 Oct 2002 23:05:05 -0000	1.1
-+++ sysdeps/generic/bits/mutex-attr.h	28 Jun 2008 00:06:23 -0000
+--- libpthread/sysdeps/generic/bits/mutex-attr.h	10 Oct 2002 23:05:05 -0000	1.1
++++ libpthread/sysdeps/generic/bits/mutex-attr.h	28 Jun 2008 00:06:23 -0000
 @@ -20,6 +20,10 @@
  #ifndef _BITS_MUTEX_ATTR_H
  #define _BITS_MUTEX_ATTR_H	1
@@ -481,8 +481,8 @@ Index: sysdeps/generic/bits/pthread.h
 RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/bits/pthread.h,v
 retrieving revision 1.3
 diff -u -p -r1.3 pthread.h
---- sysdeps/generic/bits/pthread.h	1 Jan 2008 04:07:14 -0000	1.3
-+++ sysdeps/generic/bits/pthread.h	28 Jun 2008 00:06:23 -0000
+--- libpthread/sysdeps/generic/bits/pthread.h	1 Jan 2008 04:07:14 -0000	1.3
++++ libpthread/sysdeps/generic/bits/pthread.h	28 Jun 2008 00:06:23 -0000
 @@ -20,16 +20,16 @@
  #ifndef _BITS_PTHREAD_H
  #define _BITS_PTHREAD_H	1
@@ -508,8 +508,8 @@ Index: sysdeps/generic/bits/rwlock-attr.h
 RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/bits/rwlock-attr.h,v
 retrieving revision 1.1
 diff -u -p -r1.1 rwlock-attr.h
---- sysdeps/generic/bits/rwlock-attr.h	10 Oct 2002 23:05:05 -0000	1.1
-+++ sysdeps/generic/bits/rwlock-attr.h	28 Jun 2008 00:06:23 -0000
+--- libpthread/sysdeps/generic/bits/rwlock-attr.h	10 Oct 2002 23:05:05 -0000	1.1
++++ libpthread/sysdeps/generic/bits/rwlock-attr.h	28 Jun 2008 00:06:23 -0000
 @@ -20,6 +20,8 @@
  #ifndef _BITS_RWLOCK_ATTR_H
  #define _BITS_RWLOCK_ATTR_H	1
@@ -524,8 +524,8 @@ Index: sysdeps/generic/bits/thread-attr.h
 RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/bits/thread-attr.h,v
 retrieving revision 1.1
 diff -u -p -r1.1 thread-attr.h
---- sysdeps/generic/bits/thread-attr.h	10 Oct 2002 23:05:05 -0000	1.1
-+++ sysdeps/generic/bits/thread-attr.h	28 Jun 2008 00:06:23 -0000
+--- libpthread/sysdeps/generic/bits/thread-attr.h	10 Oct 2002 23:05:05 -0000	1.1
++++ libpthread/sysdeps/generic/bits/thread-attr.h	28 Jun 2008 00:06:23 -0000
 @@ -22,6 +22,10 @@
  
  #include <sched.h>
