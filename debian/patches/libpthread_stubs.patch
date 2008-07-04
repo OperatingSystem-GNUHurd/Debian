@@ -20,21 +20,15 @@ retrieving revision 1.7
 diff -u -p -r1.7 Makefile
 --- libpthread/Makefile	19 Nov 2007 17:37:02 -0000	1.7
 +++ libpthread/Makefile	31 Dec 2007 21:22:21 -0000
-@@ -180,12 +180,12 @@ CPPFLAGS += \
+@@ -180,7 +180,7 @@ CPPFLAGS += \
  	  -imacros $(srcdir)/not-in-libc.h
  
  
 -install: install-headers $(libdir)/libpthread2.a $(libdir)/libpthread2_pic.a
-+install: install-headers $(libdir)/libpthread2.a $(libdir)/libpthread2_pic.a $(includedir)/gnu/stubs-pthread.h
++install: install-headers $(libdir)/libpthread2.a $(libdir)/libpthread2_pic.a install-stubs-pthread
  install-headers: $(addprefix $(includedir)/, $(sysdeps_headers))
  
  # XXX: If $(libdir)/libpthread2.a is installed and
- # $(libdir)/libpthread is not, we can have some issues.
--.PHONY: $(libdir)/libpthread.a $(libdir)/libpthread_pic.a
-+.PHONY: $(libdir)/libpthread.a $(libdir)/libpthread_pic.a $(includedir)/gnu/stubs-pthread.h
- 
- # XXX: These rules are a hack.  But it is better than messing with
- # ../Makeconf at the moment.  Note that the linker scripts
 @@ -199,6 +199,18 @@ $(libdir)/libpthread2_pic.a: $(libdir)/l
  	mv $< $@
  	$(INSTALL_DATA) $(srcdir)/libpthread_pic.a $<
