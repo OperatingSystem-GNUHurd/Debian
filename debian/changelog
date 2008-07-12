@@ -1,10 +1,10 @@
-hurd (20080607-3) UNRELEASED; urgency=low
+hurd (20080607-3) unstable; urgency=low
 
   [Samuel Thibault]
   * debian/patches/libpthread_pthreadtypes_h.patch: fix patch into really
     installing <pthread/pthreadtypes.h>.
 
- -- Michael Banck <mbanck@debian.org>  Sat, 12 Jul 2008 01:55:20 +0200
+ -- Michael Banck <mbanck@debian.org>  Sat, 12 Jul 2008 02:23:21 +0200
 
 hurd (20080607-2) unstable; urgency=low
 
