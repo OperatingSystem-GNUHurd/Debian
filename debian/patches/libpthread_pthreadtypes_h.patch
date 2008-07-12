@@ -537,3 +537,18 @@ diff -u -p -r1.1 thread-attr.h
  /* This structure describes the attributes of a POSIX thread.  Note
     that not all of them are supported on all systems.  */
  struct __pthread_attr
+Index: libpthread/Makefile
+===================================================================
+RCS file: /cvsroot/hurd/hurd/libpthread/Makefile,v
+retrieving revision 1.9
+diff -u -p -r1.9 Makefile
+--- libpthread/Makefile	1 Jul 2008 11:43:14 -0000	1.9
++++ libpthread/Makefile	12 Jul 2008 00:11:58 -0000
+@@ -137,6 +137,7 @@ libname = libpthread
+ sysdeps_headers =				\
+               pthread.h				\
+               pthread/pthread.h			\
++	      pthread/pthreadtypes.h		\
+ 	      semaphore.h			\
+ 						\
+               bits/pthread.h			\

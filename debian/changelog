@@ -1,6 +1,8 @@
 hurd (20080607-3) UNRELEASED; urgency=low
 
-  * 
+  [Samuel Thibault]
+  * debian/patches/libpthread_pthreadtypes_h.patch: fix patch into really
+    installing <pthread/pthreadtypes.h>.
 
  -- Michael Banck <mbanck@debian.org>  Sat, 12 Jul 2008 01:55:20 +0200
 
