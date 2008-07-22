@@ -34,3 +34,15 @@ diff -u -p -r1.24 socket.c
  
    return 0;
  }
+@@ -323,7 +324,10 @@ S_socket_send (struct sock_user *user, s
+ 			   source_addr, data, data_len,
+ 			   control, control_len, ports, num_ports,
+ 			   amount);
+-	  pipe_release_writer (pipe);
++	  if (dest_sock)
++	    pipe_release_reader (pipe);
++	  else
++	    pipe_release_writer (pipe);
+ 	}
+ 
+       if (err)
