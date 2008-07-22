@@ -1,6 +1,8 @@
 hurd (20080607-4) UNRELEASED; urgency=low
 
-  * 
+  [Samuel Thibault]
+  * debian/patches/pflocal-port-leak.patch: New patch to fix a port leak in
+    pflocal which was making tcl-related builds hang.
 
  -- Michael Banck <mbanck@debian.org>  Sat, 12 Jul 2008 16:45:36 +0200
 
