@@ -1,0 +1,65 @@
+Index: libpthread/sysdeps/i386/bits/memory.h
+===================================================================
+RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/i386/bits/memory.h,v
+retrieving revision 1.3
+diff -u -p -r1.3 memory.h
+--- libpthread/sysdeps/i386/bits/memory.h	1 Jul 2008 11:43:17 -0000	1.3
++++ libpthread/sysdeps/i386/bits/memory.h	2 Aug 2008 20:38:31 -0000
+@@ -28,7 +28,7 @@ __memory_barrier (void)
+ 
+   /* Any lock'ed instruction will do.  We just do a simple
+      increment.  */
+-  __asm__ __volatile ("lock; incl %0" : "=m" (i) : "m" (i));
++  __asm__ __volatile ("lock; incl %0" : "=m" (i) : "m" (i) : "memory");
+ }
+ 
+ /* Prevent read reordering across this function.  */
+Index: libpthread/sysdeps/i386/bits/spin-lock.h
+===================================================================
+RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/i386/bits/spin-lock.h,v
+retrieving revision 1.5
+diff -u -p -r1.5 spin-lock.h
+--- libpthread/sysdeps/i386/bits/spin-lock.h	1 Jul 2008 11:43:17 -0000	1.5
++++ libpthread/sysdeps/i386/bits/spin-lock.h	2 Aug 2008 20:38:31 -0000
+@@ -70,7 +70,7 @@ __pthread_spin_trylock (__pthread_spinlo
+ {
+   int __locked;
+   __asm__ __volatile ("xchgl %0, %1"
+-		      : "=&r" (__locked), "=m" (*__lock) : "0" (1));
++		      : "=&r" (__locked), "=m" (*__lock) : "0" (1) : "memory");
+   return __locked ? __EBUSY : 0;
+ }
+ 
+@@ -92,7 +92,7 @@ __pthread_spin_unlock (__pthread_spinloc
+ {
+   int __unlocked;
+   __asm__ __volatile ("xchgl %0, %1"
+-		      : "=&r" (__unlocked), "=m" (*__lock) : "0" (0));
++		      : "=&r" (__unlocked), "=m" (*__lock) : "0" (0) : "memory");
+   return 0;
+ }
+ 
+Index: libthreads/i386/cthreads.h
+===================================================================
+RCS file: /cvsroot/hurd/hurd/libthreads/i386/cthreads.h,v
+retrieving revision 1.3
+diff -u -p -r1.3 cthreads.h
+--- libthreads/i386/cthreads.h	3 Mar 2007 23:57:37 -0000	1.3
++++ libthreads/i386/cthreads.h	2 Aug 2008 20:38:32 -0000
+@@ -98,14 +98,14 @@ typedef volatile int spin_lock_t;
+ 	({  register int _u__ ; \
+ 	    __asm__ volatile("xorl %0, %0; \n\
+ 			  xchgl %0, %1" \
+-			: "=&r" (_u__), "=m" (*(p)) ); \
++			: "=&r" (_u__), "=m" (*(p)) :: "memory" ); \
+ 	    0; })
+ 
+ #define	spin_try_lock(p)\
+ 	(!({  boolean_t _r__; \
+ 	    __asm__ volatile("movl $1, %0; \n\
+ 			  xchgl %0, %1" \
+-			: "=&r" (_r__), "=m" (*(p)) ); \
++			: "=&r" (_r__), "=m" (*(p)) :: "memory" ); \
+ 	    _r__; }))
+ 
+ #define	cthread_sp() \
