@@ -1,0 +1,396 @@
+Index: libpthread/Makefile
+===================================================================
+RCS file: /cvsroot/hurd/hurd/libpthread/Makefile,v
+retrieving revision 1.10
+diff -u -p -r1.10 Makefile
+--- libpthread/Makefile	18 Jul 2008 14:31:06 -0000	1.10
++++ libpthread/Makefile	3 Aug 2008 12:15:28 -0000
+@@ -145,6 +145,7 @@ sysdeps_headers =				\
+               bits/condition.h			\
+               bits/condition-attr.h		\
+               bits/spin-lock.h			\
++              bits/spin-lock-inline.h		\
+               bits/cancelation.h		\
+               bits/thread-attr.h		\
+               bits/barrier-attr.h		\
+@@ -158,10 +159,10 @@ sysdeps_headers =				\
+ 
+ SYSDEP_PATH = $(srcdir)/sysdeps/$(MICROKERNEL)/hurd/i386	\
+ 	 $(srcdir)/sysdeps/$(MICROKERNEL)/i386			\
++	 $(srcdir)/sysdeps/i386					\
+ 	 $(srcdir)/sysdeps/$(MICROKERNEL)/hurd			\
+ 	 $(srcdir)/sysdeps/$(MICROKERNEL)			\
+ 	 $(srcdir)/sysdeps/hurd					\
+-	 $(srcdir)/sysdeps/i386					\
+ 	 $(srcdir)/sysdeps/generic				\
+ 	 $(srcdir)/sysdeps/posix				\
+ 	 $(srcdir)/pthread					\
+Index: libpthread/include/pthread/pthread.h
+===================================================================
+RCS file: /cvsroot/hurd/hurd/libpthread/include/pthread/pthread.h,v
+retrieving revision 1.13
+diff -u -p -r1.13 pthread.h
+--- libpthread/include/pthread/pthread.h	1 Jul 2008 11:43:14 -0000	1.13
++++ libpthread/include/pthread/pthread.h	2 Aug 2008 21:40:24 -0000
+@@ -423,6 +423,8 @@ extern int pthread_spin_unlock (pthread_
+ 
+ # ifdef __USE_EXTERN_INLINES
+ 
++# include <bits/spin-lock-inline.h>
++
+ __extern_inline int
+ pthread_spin_destroy (pthread_spinlock_t *__lock)
+ {
+Index: sysdeps/i386/bits/spin-lock-inline.h
+===================================================================
+RCS file: sysdeps/i386/bits/spin-lock-inline.h
+diff -N sysdeps/i386/bits/spin-lock-inline.h
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ libpthread/sysdeps/i386/bits/spin-lock-inline.h	2 Aug 2008 21:40:24 -0000
+@@ -0,0 +1,98 @@
++/* Machine-specific definitions for spin locks.  i386 version.
++   Copyright (C) 2000, 2005, 2008 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Library General Public License as
++   published by the Free Software Foundation; either version 2 of the
++   License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Library General Public License for more details.
++
++   You should have received a copy of the GNU Library General Public
++   License along with the GNU C Library; see the file COPYING.LIB.  If not,
++   write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.  */
++
++/*
++ * Never include this file directly; use <pthread.h> or <cthreads.h> instead.
++ */
++
++#ifndef _BITS_SPIN_LOCK_INLINE_H
++#define _BITS_SPIN_LOCK_INLINE_H	1
++
++#include <features.h>
++#include <bits/spin-lock.h>
++
++__BEGIN_DECLS
++
++#if defined __USE_EXTERN_INLINES || defined _FORCE_INLINES
++
++# ifndef __EBUSY
++#  include <errno.h>
++#  define __EBUSY EBUSY
++# endif
++
++# ifndef __PT_SPIN_INLINE
++#  define __PT_SPIN_INLINE __extern_inline
++# endif
++
++__PT_SPIN_INLINE int __pthread_spin_destroy (__pthread_spinlock_t *__lock);
++
++__PT_SPIN_INLINE int
++__pthread_spin_destroy (__pthread_spinlock_t *__lock)
++{
++  return 0;
++}
++
++__PT_SPIN_INLINE int __pthread_spin_init (__pthread_spinlock_t *__lock,
++					  int __pshared);
++
++__PT_SPIN_INLINE int
++__pthread_spin_init (__pthread_spinlock_t *__lock, int __pshared)
++{
++  *__lock = __SPIN_LOCK_INITIALIZER;
++  return 0;
++}
++
++__PT_SPIN_INLINE int __pthread_spin_trylock (__pthread_spinlock_t *__lock);
++
++__PT_SPIN_INLINE int
++__pthread_spin_trylock (__pthread_spinlock_t *__lock)
++{
++  int __locked;
++  __asm__ __volatile ("xchgl %0, %1"
++		      : "=&r" (__locked), "=m" (*__lock) : "0" (1) : "memory");
++  return __locked ? __EBUSY : 0;
++}
++
++__extern_inline int __pthread_spin_lock (__pthread_spinlock_t *__lock);
++extern int _pthread_spin_lock (__pthread_spinlock_t *__lock);
++
++__extern_inline int
++__pthread_spin_lock (__pthread_spinlock_t *__lock)
++{
++  if (__pthread_spin_trylock (__lock))
++    return _pthread_spin_lock (__lock);
++  return 0;
++}
++
++__PT_SPIN_INLINE int __pthread_spin_unlock (__pthread_spinlock_t *__lock);
++
++__PT_SPIN_INLINE int
++__pthread_spin_unlock (__pthread_spinlock_t *__lock)
++{
++  int __unlocked;
++  __asm__ __volatile ("xchgl %0, %1"
++		      : "=&r" (__unlocked), "=m" (*__lock) : "0" (0) : "memory");
++  return 0;
++}
++
++#endif /* Use extern inlines or force inlines.  */
++
++__END_DECLS
++
++#endif /* bits/spin-lock.h */
+Index: sysdeps/i386/bits/spin-lock.h
+===================================================================
+RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/i386/bits/spin-lock.h,v
+retrieving revision 1.6
+diff -u -p -r1.6 spin-lock.h
+--- libpthread/sysdeps/i386/bits/spin-lock.h	2 Aug 2008 20:40:14 -0000	1.6
++++ libpthread/sysdeps/i386/bits/spin-lock.h	2 Aug 2008 21:40:24 -0000
+@@ -34,70 +34,6 @@ typedef __volatile int __pthread_spinloc
+ /* Initializer for a spin lock object.  */
+ # define __SPIN_LOCK_INITIALIZER (0)
+ 
+-#if defined __USE_EXTERN_INLINES || defined _FORCE_INLINES
+-
+-# ifndef __EBUSY
+-#  include <errno.h>
+-#  define __EBUSY EBUSY
+-# endif
+-
+-# ifndef __PT_SPIN_INLINE
+-#  define __PT_SPIN_INLINE __extern_inline
+-# endif
+-
+-__PT_SPIN_INLINE int __pthread_spin_destroy (__pthread_spinlock_t *__lock);
+-
+-__PT_SPIN_INLINE int
+-__pthread_spin_destroy (__pthread_spinlock_t *__lock)
+-{
+-  return 0;
+-}
+-
+-__PT_SPIN_INLINE int __pthread_spin_init (__pthread_spinlock_t *__lock,
+-					  int __pshared);
+-
+-__PT_SPIN_INLINE int
+-__pthread_spin_init (__pthread_spinlock_t *__lock, int __pshared)
+-{
+-  *__lock = __SPIN_LOCK_INITIALIZER;
+-  return 0;
+-}
+-
+-__PT_SPIN_INLINE int __pthread_spin_trylock (__pthread_spinlock_t *__lock);
+-
+-__PT_SPIN_INLINE int
+-__pthread_spin_trylock (__pthread_spinlock_t *__lock)
+-{
+-  int __locked;
+-  __asm__ __volatile ("xchgl %0, %1"
+-		      : "=&r" (__locked), "=m" (*__lock) : "0" (1));
+-  return __locked ? __EBUSY : 0;
+-}
+-
+-__extern_inline int __pthread_spin_lock (__pthread_spinlock_t *__lock);
+-extern int _pthread_spin_lock (__pthread_spinlock_t *__lock);
+-
+-__extern_inline int
+-__pthread_spin_lock (__pthread_spinlock_t *__lock)
+-{
+-  if (__pthread_spin_trylock (__lock))
+-    return _pthread_spin_lock (__lock);
+-  return 0;
+-}
+-
+-__PT_SPIN_INLINE int __pthread_spin_unlock (__pthread_spinlock_t *__lock);
+-
+-__PT_SPIN_INLINE int
+-__pthread_spin_unlock (__pthread_spinlock_t *__lock)
+-{
+-  int __unlocked;
+-  __asm__ __volatile ("xchgl %0, %1"
+-		      : "=&r" (__unlocked), "=m" (*__lock) : "0" (0));
+-  return 0;
+-}
+-
+-#endif /* Use extern inlines or force inlines.  */
+-
+ __END_DECLS
+ 
+ #endif /* bits/spin-lock.h */
+Index: sysdeps/mach/bits/spin-lock-inline.h
+===================================================================
+RCS file: sysdeps/mach/bits/spin-lock-inline.h
+diff -N sysdeps/mach/bits/spin-lock-inline.h
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ libpthread/sysdeps/mach/bits/spin-lock-inline.h	2 Aug 2008 21:40:24 -0000
+@@ -0,0 +1,90 @@
++/* Definitions of user-visible names for spin locks.
++   Copyright (C) 1994, 1997, 2002, 2008 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, write to the Free
++   Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
++   02111-1307 USA.  */
++
++#ifndef _BITS_SPIN_LOCK_INLINE_H
++#define _BITS_SPIN_LOCK_INLINE_H	1
++
++#include <features.h>
++#include <bits/spin-lock.h>
++#include <machine-lock.h>	/* This does all the work.  */
++
++__BEGIN_DECLS
++
++#if defined __USE_EXTERN_INLINES || defined _FORCE_INLINES
++
++# ifndef __EBUSY
++#  include <errno.h>
++#  define __EBUSY EBUSY
++# endif
++
++# ifndef __PT_SPIN_INLINE
++#  define __PT_SPIN_INLINE __extern_inline
++# endif
++
++__PT_SPIN_INLINE int __pthread_spin_destroy (__pthread_spinlock_t *__lock);
++
++__PT_SPIN_INLINE int
++__pthread_spin_destroy (__pthread_spinlock_t *__lock)
++{
++  return 0;
++}
++
++__PT_SPIN_INLINE int __pthread_spin_init (__pthread_spinlock_t *__lock,
++					  int __pshared);
++
++__PT_SPIN_INLINE int
++__pthread_spin_init (__pthread_spinlock_t *__lock, int __pshared)
++{
++  *__lock = __SPIN_LOCK_INITIALIZER;
++  return 0;
++}
++
++__PT_SPIN_INLINE int __pthread_spin_trylock (__pthread_spinlock_t *__lock);
++
++__PT_SPIN_INLINE int
++__pthread_spin_trylock (__pthread_spinlock_t *__lock)
++{
++  return __spin_try_lock (__lock) ? 0 : __EBUSY;
++}
++
++__extern_inline int __pthread_spin_lock (__pthread_spinlock_t *__lock);
++extern int _pthread_spin_lock (__pthread_spinlock_t *__lock);
++
++__extern_inline int
++__pthread_spin_lock (__pthread_spinlock_t *__lock)
++{
++  if (__pthread_spin_trylock (__lock))
++    return _pthread_spin_lock (__lock);
++  return 0;
++}
++
++__PT_SPIN_INLINE int __pthread_spin_unlock (__pthread_spinlock_t *__lock);
++
++__PT_SPIN_INLINE int
++__pthread_spin_unlock (__pthread_spinlock_t *__lock)
++{
++  __spin_unlock (__lock);
++  return 0;
++}
++
++#endif /* Use extern inlines or force inlines.  */
++
++__END_DECLS
++
++#endif /* bits/spin-lock.h */
+Index: sysdeps/mach/bits/spin-lock.h
+===================================================================
+RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/mach/bits/spin-lock.h,v
+retrieving revision 1.4
+diff -u -p -r1.4 spin-lock.h
+--- libpthread/sysdeps/mach/bits/spin-lock.h	1 Jul 2008 11:43:18 -0000	1.4
++++ libpthread/sysdeps/mach/bits/spin-lock.h	2 Aug 2008 21:40:24 -0000
+@@ -33,65 +33,6 @@ typedef __spin_lock_t __pthread_spinlock
+ #error __SPIN_LOCK_INITIALIZER undefined: should be defined by <lock-intern.h>.
+ #endif
+ 
+-#if defined __USE_EXTERN_INLINES || defined _FORCE_INLINES
+-
+-# ifndef __EBUSY
+-#  include <errno.h>
+-#  define __EBUSY EBUSY
+-# endif
+-
+-# ifndef __PT_SPIN_INLINE
+-#  define __PT_SPIN_INLINE __extern_inline
+-# endif
+-
+-__PT_SPIN_INLINE int __pthread_spin_destroy (__pthread_spinlock_t *__lock);
+-
+-__PT_SPIN_INLINE int
+-__pthread_spin_destroy (__pthread_spinlock_t *__lock)
+-{
+-  return 0;
+-}
+-
+-__PT_SPIN_INLINE int __pthread_spin_init (__pthread_spinlock_t *__lock,
+-					  int __pshared);
+-
+-__PT_SPIN_INLINE int
+-__pthread_spin_init (__pthread_spinlock_t *__lock, int __pshared)
+-{
+-  *__lock = __SPIN_LOCK_INITIALIZER;
+-  return 0;
+-}
+-
+-__PT_SPIN_INLINE int __pthread_spin_trylock (__pthread_spinlock_t *__lock);
+-
+-__PT_SPIN_INLINE int
+-__pthread_spin_trylock (__pthread_spinlock_t *__lock)
+-{
+-  return __spin_try_lock (__lock) ? 0 : __EBUSY;
+-}
+-
+-__extern_inline int __pthread_spin_lock (__pthread_spinlock_t *__lock);
+-extern int _pthread_spin_lock (__pthread_spinlock_t *__lock);
+-
+-__extern_inline int
+-__pthread_spin_lock (__pthread_spinlock_t *__lock)
+-{
+-  if (__pthread_spin_trylock (__lock))
+-    return _pthread_spin_lock (__lock);
+-  return 0;
+-}
+-
+-__PT_SPIN_INLINE int __pthread_spin_unlock (__pthread_spinlock_t *__lock);
+-
+-__PT_SPIN_INLINE int
+-__pthread_spin_unlock (__pthread_spinlock_t *__lock)
+-{
+-  __spin_unlock (__lock);
+-  return 0;
+-}
+-
+-#endif /* Use extern inlines or force inlines.  */
+-
+ __END_DECLS
+ 
+ #endif /* bits/spin-lock.h */

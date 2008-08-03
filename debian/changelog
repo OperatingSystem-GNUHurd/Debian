@@ -4,6 +4,11 @@ hurd (20080607-4) UNRELEASED; urgency=low
   * debian/patches/pflocal-port-leak.patch: New patch to fix port leaks in
     pflocal which was making tcl-related builds hang.
   * debian/patches/lock-memory-clobber.patch: New patch to fix lock safety.
+  * debian/ patches/libpthread_mutex-no-include.patch: New patch to drop
+    useless (and problematic) inclusion from mutex.h.
+  * debian/patches/libpthread_spin-lock-inline.patch: New patch to split off
+    inlines from spin-lock.h into spin-lock-inline.h to avoid including too
+    many headers from pthreadtypes.h (fixes glibc 2.7-13 compilation).
 
  -- Michael Banck <mbanck@debian.org>  Sat, 12 Jul 2008 16:45:36 +0200
 

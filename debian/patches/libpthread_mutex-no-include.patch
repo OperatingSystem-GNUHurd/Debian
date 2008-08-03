@@ -1,0 +1,20 @@
+Index: libpthread/sysdeps/generic/bits/mutex.h
+===================================================================
+RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/bits/mutex.h,v
+retrieving revision 1.6
+retrieving revision 1.7
+diff -u -p -r1.6 -r1.7
+--- libpthread/sysdeps/generic/bits/mutex.h	1 Jul 2008 11:43:16 -0000	1.6
++++ libpthread/sysdeps/generic/bits/mutex.h	2 Aug 2008 20:21:20 -0000	1.7
+@@ -57,11 +57,4 @@ struct __pthread_mutex
+ # endif
+ #endif /* Not __pthread_mutex_defined.  */
+ 
+-#ifdef _BITS_MUTEX_H
+-
+-#include <errno.h>
+-#include <stddef.h>
+-
+-#endif
+-
+ #endif /* bits/mutex.h */
