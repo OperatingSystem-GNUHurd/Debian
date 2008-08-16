@@ -1,6 +1,8 @@
 As documented in pthread_exit(), the joiner has to make sure the thread really
 is dead before freeing its stack.
 
+Note: Neal fixed it another way on 2008-08-16, drop this patch then.
+
 Index: libpthread/pthread/pt-detach.c
 ===================================================================
 RCS file: /cvsroot/hurd/hurd/libpthread/pthread/pt-detach.c,v
