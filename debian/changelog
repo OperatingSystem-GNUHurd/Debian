@@ -4,7 +4,7 @@ hurd (20080607-4) UNRELEASED; urgency=low
   * debian/patches/pflocal-port-leak.patch: New patch to fix port leaks in
     pflocal which was making tcl-related builds hang.
   * debian/patches/lock-memory-clobber.patch: New patch to fix lock safety.
-  * debian/ patches/libpthread_mutex-no-include.patch: New patch to drop
+  * debian/patches/libpthread_mutex-no-include.patch: New patch to drop
     useless (and problematic) inclusion from mutex.h.
   * debian/patches/libpthread_spin-lock-inline.patch: New patch to split off
     inlines from spin-lock.h into spin-lock-inline.h to avoid including too
@@ -29,7 +29,7 @@ hurd (20080607-2) unstable; urgency=low
     types into <pthread/pthreadtypes.h>, which <bits/pthreadtypes.h> will be
     able to include.
   * debian/patches/libpthread_stubs.patch: Fix build.
-  * debian/ patches/libpthread_pthreadexit-safety.patch: New patch to fix a
+  * debian/patches/libpthread_pthreadexit-safety.patch: New patch to fix a
     race during thread exit.  Fixes e.g. libatomic-ops' testsuite, and
     probably also a lot of others'.
 
