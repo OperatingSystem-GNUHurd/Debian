@@ -1,6 +1,6 @@
 hurd (20080607-4) UNRELEASED; urgency=low
 
-  [Samuel Thibault]
+  [ Samuel Thibault ]
   * debian/patches/pflocal-port-leak.patch: New patch to fix port leaks in
     pflocal which was making tcl-related builds hang.
   * debian/patches/lock-memory-clobber.patch: New patch to fix lock safety.
@@ -14,7 +14,7 @@ hurd (20080607-4) UNRELEASED; urgency=low
   * debian/patches/diskfs_lookup_error_fix.patch: New patch to fix deadlock in
     lookup error conditions.
 
-  [Michael Banck]
+  [ Michael Banck ]
   * debian/patches/procfs.patch: New patch, implements a /proc translator, by
     Madhusudan C.S., taken from a CVS branch.
 
@@ -22,7 +22,7 @@ hurd (20080607-4) UNRELEASED; urgency=low
 
 hurd (20080607-3) unstable; urgency=low
 
-  [Samuel Thibault]
+  [ Samuel Thibault ]
   * debian/patches/libpthread_pthreadtypes_h.patch: fix patch into really
     installing <pthread/pthreadtypes.h>.
 
@@ -30,7 +30,7 @@ hurd (20080607-3) unstable; urgency=low
 
 hurd (20080607-2) unstable; urgency=low
 
-  [Samuel Thibault]
+  [ Samuel Thibault ]
   * debian/patches/libpthread_pthreadtypes_h.patch: New patch to get pthread
     types into <pthread/pthreadtypes.h>, which <bits/pthreadtypes.h> will be
     able to include.
