@@ -1,4 +1,4 @@
-hurd (20080607-4) UNRELEASED; urgency=low
+hurd (20080607-4) unstable; urgency=low
 
   [ Samuel Thibault ]
   * debian/patches/pflocal-port-leak.patch: New patch to fix port leaks in
@@ -14,7 +14,7 @@ hurd (20080607-4) UNRELEASED; urgency=low
   * debian/patches/diskfs_lookup_error_fix.patch: New patch to fix deadlock in
     lookup error conditions.
 
- -- Michael Banck <mbanck@debian.org>  Sat, 12 Jul 2008 16:45:36 +0200
+ -- Michael Banck <mbanck@debian.org>  Fri, 29 Aug 2008 22:53:20 +0200
 
 hurd (20080607-3) unstable; urgency=low
 
