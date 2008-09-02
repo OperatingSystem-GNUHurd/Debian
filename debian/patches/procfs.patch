@@ -3200,3 +3200,14 @@ diff --exclude=CVS -Naur foo/procfs_pid_files.c procfs/procfs_pid_files.c
 +      
 +  return err;
 +}
+--- Makefile.orig	2008-09-02 02:14:58.000000000 +0200
++++ Makefile	2008-08-29 15:23:04.000000000 +0200
+@@ -41,7 +41,7 @@
+ 	       login daemons nfsd boot console \
+ 	       hostmux usermux ftpfs trans \
+ 	       console-client utils sutils ufs-fsck ufs-utils \
+-	       benchmarks fstests
++	       benchmarks fstests procfs
+ 
+ # Other directories
+ other-subdirs = hurd doc config release include
