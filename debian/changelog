@@ -1,3 +1,9 @@
+hurd (20080607-6) UNRELEASED; urgency=low
+
+  * 
+
+ -- Michael Banck <mbanck@debian.org>  Wed, 03 Sep 2008 17:47:22 +0200
+
 hurd (20080607-5) unstable; urgency=low
 
   * debian/patches/procfs.patch: New patch, implements a /proc translator, by
