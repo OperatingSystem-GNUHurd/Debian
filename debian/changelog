@@ -4,6 +4,7 @@ hurd (20080607-6) UNRELEASED; urgency=low
     to have them handled by update-alternatives.
   * debian/hurd.postinst: Run update-alternatives for ps, uptime, vmstat and
     w.
+  * debian/hurd.postinst: Setup /proc if it hasn't been already.
 
  -- Michael Banck <mbanck@debian.org>  Wed, 03 Sep 2008 17:47:22 +0200
 
