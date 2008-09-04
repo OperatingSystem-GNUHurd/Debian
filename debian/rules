@@ -43,9 +43,13 @@ install/hurd::
 	# runsystem is managed by update-alternatives
 	mv debian/tmp/libexec/runsystem debian/tmp/libexec/runsystem.gnu
 
-	# move away fakeroot to not conflict with the one from the 
-	# fakeroot package
+	# move away fakeroot, ps, uptime, vmstat and w to not conflict with the
+	# ones  from other packages
 	mv debian/tmp/bin/fakeroot debian/tmp/bin/fakeroot-hurd
+	mv debian/tmp/bin/ps debian/tmp/bin/ps-hurd
+	mv debian/tmp/bin/uptime debian/tmp/bin/uptime-hurd
+	mv debian/tmp/bin/vmstat debian/tmp/bin/vmstat-hurd
+	mv debian/tmp/bin/w debian/tmp/bin/w-hurd
 
 	install -m664 debian/hurd-console.default debian/hurd/etc/default/hurd-console
 

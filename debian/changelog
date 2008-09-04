@@ -1,6 +1,9 @@
 hurd (20080607-6) UNRELEASED; urgency=low
 
-  * 
+  * debian/rules (install/hurd): Move away ps, uptime, vmstat and w in order
+    to have them handled by update-alternatives.
+  * debian/hurd.postinst: Run update-alternatives for ps, uptime, vmstat and
+    w.
 
  -- Michael Banck <mbanck@debian.org>  Wed, 03 Sep 2008 17:47:22 +0200
 

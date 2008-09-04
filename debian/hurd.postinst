@@ -8,6 +8,18 @@ update-alternatives --quiet \
 update-alternatives \
 	--install /usr/bin/fakeroot fakeroot /bin/fakeroot-hurd 30
 
+update-alternatives \
+	--install /usr/bin/ps ps /bin/ps-hurd 60
+
+update-alternatives \
+	--install /usr/bin/uptime uptime /bin/uptime-hurd 30
+
+update-alternatives \
+	--install /usr/bin/vmstat vmstat /bin/vmstat-hurd 60
+
+update-alternatives \
+	--install /usr/bin/w w /bin/w-hurd 60
+
 #DEBHELPER#
 
 for i in vcs tty1 tty2 tty3 tty4 tty5 tty6; do
