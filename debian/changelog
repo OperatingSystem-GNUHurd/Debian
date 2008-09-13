@@ -1,3 +1,9 @@
+hurd (20080607-7) UNRELEASED; urgency=low
+
+  * 
+
+ -- Michael Banck <mbanck@debian.org>  Sat, 13 Sep 2008 23:43:27 +0200
+
 hurd (20080607-6) unstable; urgency=low
 
   * debian/rules (install/hurd): Move away ps, uptime, vmstat and w in order
