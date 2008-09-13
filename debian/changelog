@@ -1,4 +1,4 @@
-hurd (20080607-6) UNRELEASED; urgency=low
+hurd (20080607-6) unstable; urgency=low
 
   * debian/rules (install/hurd): Move away ps, uptime, vmstat and w in order
     to have them handled by update-alternatives.
@@ -9,7 +9,7 @@ hurd (20080607-6) UNRELEASED; urgency=low
     w.
   * debian/hurd.postinst: Setup /proc if it hasn't been already.
 
- -- Michael Banck <mbanck@debian.org>  Wed, 03 Sep 2008 17:47:22 +0200
+ -- Michael Banck <mbanck@debian.org>  Fri, 12 Sep 2008 22:58:08 +0200
 
 hurd (20080607-5) unstable; urgency=low
 
