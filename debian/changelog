@@ -7,6 +7,8 @@ hurd (20080921-1) UNRELEASED; urgency=low
     + debian/patches/libpthread_spin-lock-inline.patch: Likewise.
     + debian/patches/lock-memory-clobber.patch: Likewise.
     + debian/patches/pflocal-port-leak.patch: Likewise.
+    + debian/patches/libpthread_pthreadexit-safety.patch: Removed, no longer   
+      needed.
   * debian/hurd.postinst: Install w and ps alternatives links in /bin, not
     /usr/bin.
 
