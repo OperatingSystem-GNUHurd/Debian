@@ -1,6 +1,6 @@
 hurd (20080921-1) UNRELEASED; urgency=low
 
-  * New upstream development snapshot.
+  * New snapshot from CVS.
   * debian/hurd.postinst: Install w and ps alternatives links in /bin, not
     /usr/bin.
 
