@@ -9,6 +9,8 @@ hurd (20080921-1) UNRELEASED; urgency=low
     + debian/patches/pflocal-port-leak.patch: Likewise.
     + debian/patches/libpthread_pthreadexit-safety.patch: Removed, no longer   
       needed.
+  * Change packaging to no tarball-in-tarball and quilt.
+    + debian/control (Build-Depends): Added quilt. 
   * debian/hurd.postinst: Install w and ps alternatives links in /bin, not
     /usr/bin.
 
