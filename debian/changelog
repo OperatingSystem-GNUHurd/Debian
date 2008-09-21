@@ -2,6 +2,7 @@ hurd (20080921-1) UNRELEASED; urgency=low
 
   * New snapshot from CVS.
     + debian/patches/diskfs_lookup_error_fix.patch: Removed, applies upstream.
+    + debian/patches/libpthread_mutex-no-include.patch: Likewise.
   * debian/hurd.postinst: Install w and ps alternatives links in /bin, not
     /usr/bin.
 
