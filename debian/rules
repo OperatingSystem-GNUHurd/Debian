@@ -35,7 +35,7 @@ build/hurd::
 	cd $(DEB_BUILDDIR)/doc && texi2html -split chapter ../../doc/hurd.texi
 
 	# assemble all ChangeLogs to one big file
-	cd build-tree; for i in `find hurd/ -name "ChangeLog"`; do echo $$i:; cat $$i; echo;  done > $(CURDIR)/debian/ChangeLog
+	cd $(DEB_SRCDIR); for i in `find hurd/ -name "ChangeLog"`; do echo $$i:; cat $$i; echo;  done > $(CURDIR)/debian/ChangeLog
 
 install/hurd::
 	# runsystem is managed by update-alternatives

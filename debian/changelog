@@ -16,6 +16,7 @@ hurd (20080921-1) UNRELEASED; urgency=low
     + debian/rules (simple-patchsys.mk) Replaced with ...
     + debian/rules (patchsys-quilt.mk) ... this.
     + debian/patches/series: New file.
+    + debian/rules (build/hurd): Replace build-tree with $(DEB_SRCDIR).
   * debian/hurd.postinst: Install w and ps alternatives links in /bin, not
     /usr/bin.
 
