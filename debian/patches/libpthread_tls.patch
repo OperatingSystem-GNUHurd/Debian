@@ -32,15 +32,16 @@ RCS file: /cvsroot/hurd/hurd/libpthread/pthread/pt-exit.c,v
 retrieving revision 1.2
 --- libpthread/pthread/pt-exit.c	4 May 2005 16:04:06 -0000	1.2
 +++ libpthread/pthread/pt-exit.c	12 Aug 2007 11:34:11 -0000
-@@ -70,6 +70,8 @@
+@@ -70,6 +70,9 @@
    if (self->cancel_state == PTHREAD_CANCEL_ENABLE && self->cancel_pending)
      status = PTHREAD_CANCELED;
  
 +  if (self->tcb)
 +    _dl_deallocate_tls (self->tcb, 1);
-   __pthread_thread_dealloc (self);
- 
++  
    switch (self->state)
+     {
+     default:
 Index: libpthread/pthread/pt-internal.h
 ===================================================================
 RCS file: /cvsroot/hurd/hurd/libpthread/pthread/pt-internal.h,v
