@@ -17,13 +17,11 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 # 02111-1307 USA.
 
-DEB_TAR_SRCDIR := hurd
 DEB_BUILDDIR = $(DEB_SRCDIR)/build
 
 CC=gcc-4.2
 
-include /usr/share/cdbs/1/rules/tarball.mk
-include /usr/share/cdbs/1/rules/simple-patchsys.mk
+include /usr/share/cdbs/1/rules/patchsys-quilt.mk
 include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/autotools.mk
 

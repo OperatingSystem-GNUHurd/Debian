@@ -11,6 +11,11 @@ hurd (20080921-1) UNRELEASED; urgency=low
       needed.
   * Change packaging to no tarball-in-tarball and quilt.
     + debian/control (Build-Depends): Added quilt. 
+    + debian/rules (DEB_TAR_SRCDIR): Removed.
+    + debian/rules (tarball.mk) No longer include it.
+    + debian/rules (simple-patchsys.mk) Replaced with ...
+    + debian/rules (patchsys-quilt.mk) ... this.
+    + debian/patches/series: New file.
   * debian/hurd.postinst: Install w and ps alternatives links in /bin, not
     /usr/bin.
 
