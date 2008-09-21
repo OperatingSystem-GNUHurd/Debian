@@ -18,6 +18,7 @@ hurd (20080921-1) UNRELEASED; urgency=low
     + debian/patches/series: New file.
     + debian/rules (build/hurd): Replace build-tree with $(DEB_SRCDIR).
     + debian/rules (install/hurd): Likewise.
+    + debian/hurd-doc.docs: Adjust paths.
   * debian/hurd.postinst: Install w and ps alternatives links in /bin, not
     /usr/bin.
 
