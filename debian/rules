@@ -45,8 +45,8 @@ install/hurd::
 	# ones  from other packages
 	mv debian/tmp/bin/fakeroot debian/tmp/bin/fakeroot-hurd
 	mv debian/tmp/bin/ps debian/tmp/bin/ps-hurd
-	mv debian/tmp/bin/uptime debian/tmp/bin/uptime-hurd
-	mv debian/tmp/bin/vmstat debian/tmp/bin/vmstat-hurd
+	mv debian/tmp/bin/uptime debian/tmp/usr/bin/uptime-hurd
+	mv debian/tmp/bin/vmstat debian/tmp/usr/bin/vmstat-hurd
 	mv debian/tmp/bin/w debian/tmp/usr/bin/w-hurd
 
 	install -m664 debian/hurd-console.default debian/hurd/etc/default/hurd-console

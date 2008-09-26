@@ -12,13 +12,13 @@ update-alternatives \
 	--install /bin/ps ps /bin/ps-hurd 60
 
 update-alternatives \
-	--install /usr/bin/uptime uptime /bin/uptime-hurd 30
+	--install /usr/bin/uptime uptime /usr/bin/uptime-hurd 30
 
 update-alternatives \
-	--install /usr/bin/vmstat vmstat /bin/vmstat-hurd 60
+	--install /usr/bin/vmstat vmstat /usr/bin/vmstat-hurd 60
 
 update-alternatives \
-	--install /bin/w w /bin/w-hurd 60
+	--install /usr/bin/w w /usr/bin/w-hurd 60
 
 #DEBHELPER#
 
