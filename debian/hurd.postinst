@@ -6,7 +6,7 @@ update-alternatives --quiet \
 	--install /libexec/runsystem runsystem /libexec/runsystem.gnu 20
 
 update-alternatives \
-	--install /usr/bin/fakeroot fakeroot /bin/fakeroot-hurd 30
+	--install /usr/bin/fakeroot fakeroot /usr/bin/fakeroot-hurd 30
 
 update-alternatives \
 	--install /bin/ps ps /bin/ps-hurd 60

@@ -43,7 +43,7 @@ install/hurd::
 
 	# move away fakeroot, ps, uptime, vmstat and w to not conflict with the
 	# ones  from other packages
-	mv debian/tmp/bin/fakeroot debian/tmp/bin/fakeroot-hurd
+	mv debian/tmp/bin/fakeroot debian/tmp/usr/bin/fakeroot-hurd
 	mv debian/tmp/bin/ps debian/tmp/bin/ps-hurd
 	mv debian/tmp/bin/uptime debian/tmp/usr/bin/uptime-hurd
 	mv debian/tmp/bin/vmstat debian/tmp/usr/bin/vmstat-hurd
