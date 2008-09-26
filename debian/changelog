@@ -21,6 +21,7 @@ hurd (20080921-1) UNRELEASED; urgency=low
     + debian/hurd-doc.docs: Adjust paths.
   * debian/hurd.postinst: Install w and ps alternatives links in /bin, not
     /usr/bin.
+  * debian/hurd.postinst: Install /proc as passive translator only.
 
  -- Michael Banck <mbanck@debian.org>  Sat, 13 Sep 2008 23:43:27 +0200
 

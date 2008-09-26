@@ -44,5 +44,5 @@ fi
 
 if [ ! -e /proc ]; then
   mkdir /proc
-  settrans -afgp /proc /hurd/procfs
+  settrans -c /proc /hurd/procfs
 fi
