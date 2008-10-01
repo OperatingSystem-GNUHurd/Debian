@@ -43,6 +43,7 @@ install/hurd::
 
 	# move away fakeroot, ps, uptime, vmstat and w to not conflict with the
 	# ones  from other packages
+	mkdir -p debian/tmp/usr/bin
 	mv debian/tmp/bin/fakeroot debian/tmp/usr/bin/fakeroot-hurd
 	mv debian/tmp/bin/ps debian/tmp/bin/ps-hurd
 	mv debian/tmp/bin/uptime debian/tmp/usr/bin/uptime-hurd
@@ -57,7 +58,7 @@ install/hurd::
 install/hurd-dev::
 	install -m644 debian/local/soundcard.h debian/tmp/include/sys
 
-SUID_PROGRAMS = /bin/ids /bin/login /bin/ps-hurd /bin/w-hurd
+SUID_PROGRAMS = /bin/ids /bin/login /bin/ps-hurd /usr/bin/w-hurd
 
 binary-predeb/hurd::
 	chmod u+s $(patsubst %, $(CURDIR)/debian/$(cdbs_curpkg)%, $(SUID_PROGRAMS))

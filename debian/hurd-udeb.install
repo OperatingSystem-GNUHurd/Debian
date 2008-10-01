@@ -22,12 +22,12 @@ debian/tmp/bin/syncfs
 debian/tmp/bin/fsysopts
 debian/tmp/bin/storeinfo
 debian/tmp/bin/login
-debian/tmp/bin/w-hurd
-debian/tmp/bin/uptime-hurd
+debian/tmp/usr/bin/w-hurd
+debian/tmp/usr/bin/uptime-hurd
 debian/tmp/bin/ids
 debian/tmp/bin/loginpr
 debian/tmp/bin/sush
-debian/tmp/bin/vmstat-hurd
+debian/tmp/usr/bin/vmstat-hurd
 debian/tmp/bin/portinfo
 debian/tmp/bin/devprobe
 debian/tmp/bin/vminfo

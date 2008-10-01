@@ -26,6 +26,10 @@ hurd (20080921-1) UNRELEASED; urgency=low
   * debian/patches/uptime_w_path_fix.patch: New patch, run /usr/bin/w instead
     of /bin/w.
   * debian/rules: Install fakeroot, uptime and vmstat into /usr/bin, not /bin.
+  * debian/rules (binary-predeb/hurd): Adjust paths.
+  * debian/hurd.install: Likewise.
+  * debian/hurd-udeb.install: Likewise.
+  * debian/hurd.dirs: Added /usr/bin.
   * debian/hurd.postinst: Update accordingly.
   * debian/patches/libpthread_mutex_owner.patch: New patch, fix a hang in
     libpthread, by Neal Walfield.
