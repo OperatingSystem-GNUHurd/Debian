@@ -27,6 +27,8 @@ hurd (20080921-1) UNRELEASED; urgency=low
     of /bin/w.
   * debian/rules: Install fakeroot, uptime and vmstat into /usr/bin, not /bin.
   * debian/hurd.postinst: Update accordingly.
+  * debian/patches/libpthread_mutex_owner.patch: New patch, fix a hang in
+    libpthread, by Neal Walfield.
 
  -- Michael Banck <mbanck@debian.org>  Sat, 13 Sep 2008 23:43:27 +0200
 
