@@ -6,6 +6,7 @@ init_try_runsystem.gnu.patch -p0
 install-msgids.diff -p2
 libpager_update_seqno.patch -p0
 libpthread_mutex_owner.patch -p0
+libpthread_rwlock_initializer.patch -p0
 libpthread_stubs.patch -p0
 libpthread_tls.patch -p0
 makedev.diff -p0
