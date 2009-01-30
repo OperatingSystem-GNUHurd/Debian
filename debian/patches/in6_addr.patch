@@ -1,0 +1,52 @@
+--- hurd/pfinet/linux-src/net/ipv6/addrconf.c.orig	2009-01-30 22:07:40.725250000 +0000
++++ hurd/pfinet/linux-src/net/ipv6/addrconf.c	2009-01-30 22:07:44.705616000 +0000
+@@ -192,7 +192,7 @@
+ 
+ 	if ((addr->s6_addr32[0] | addr->s6_addr32[1]) == 0) {
+ 		if (addr->s6_addr32[2] == 0) {
+-			if (addr->in6_u.u6_addr32[3] == 0)
++			if (addr->__in6_u.__u6_addr32[3] == 0)
+ 				return IPV6_ADDR_ANY;
+ 
+ 			if (addr->s6_addr32[3] == __constant_htonl(0x00000001))
+--- hurd/pfinet/linux-src/net/ipv6/icmpv6.c.orig	2009-01-30 22:15:23.522525000 +0000
++++ hurd/pfinet/linux-src/net/ipv6/icmpv6.c	2009-01-30 22:15:27.000000000 +0000
+@@ -479,22 +479,22 @@
+ 		if (csum_ipv6_magic(saddr, daddr, len, IPPROTO_ICMPV6, 
+ 				    skb->csum)) {
+ 			printk(KERN_DEBUG "ICMPv6 checksum failed [%04x:%04x:%04x:%04x:%04x:%04x:%04x:%04x > %04x:%04x:%04x:%04x:%04x:%04x:%04x:%04x]\n",
+-				ntohs(saddr->in6_u.u6_addr16[0]),
+-				ntohs(saddr->in6_u.u6_addr16[1]),
+-				ntohs(saddr->in6_u.u6_addr16[2]),
+-				ntohs(saddr->in6_u.u6_addr16[3]),
+-				ntohs(saddr->in6_u.u6_addr16[4]),
+-				ntohs(saddr->in6_u.u6_addr16[5]),
+-				ntohs(saddr->in6_u.u6_addr16[6]),
+-				ntohs(saddr->in6_u.u6_addr16[7]),
+-				ntohs(daddr->in6_u.u6_addr16[0]),
+-				ntohs(daddr->in6_u.u6_addr16[1]),
+-				ntohs(daddr->in6_u.u6_addr16[2]),
+-				ntohs(daddr->in6_u.u6_addr16[3]),
+-				ntohs(daddr->in6_u.u6_addr16[4]),
+-				ntohs(daddr->in6_u.u6_addr16[5]),
+-				ntohs(daddr->in6_u.u6_addr16[6]),
+-				ntohs(daddr->in6_u.u6_addr16[7]));
++				ntohs(saddr->__in6_u.__u6_addr16[0]),
++				ntohs(saddr->__in6_u.__u6_addr16[1]),
++				ntohs(saddr->__in6_u.__u6_addr16[2]),
++				ntohs(saddr->__in6_u.__u6_addr16[3]),
++				ntohs(saddr->__in6_u.__u6_addr16[4]),
++				ntohs(saddr->__in6_u.__u6_addr16[5]),
++				ntohs(saddr->__in6_u.__u6_addr16[6]),
++				ntohs(saddr->__in6_u.__u6_addr16[7]),
++				ntohs(daddr->__in6_u.__u6_addr16[0]),
++				ntohs(daddr->__in6_u.__u6_addr16[1]),
++				ntohs(daddr->__in6_u.__u6_addr16[2]),
++				ntohs(daddr->__in6_u.__u6_addr16[3]),
++				ntohs(daddr->__in6_u.__u6_addr16[4]),
++				ntohs(daddr->__in6_u.__u6_addr16[5]),
++				ntohs(daddr->__in6_u.__u6_addr16[6]),
++				ntohs(daddr->__in6_u.__u6_addr16[7]));
+ 			goto discard_it;
+ 		}
+ 	default:
