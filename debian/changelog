@@ -38,6 +38,7 @@ hurd (20080921-1) UNRELEASED; urgency=low
   [ Samuel Thibault ]
   * debian/patches/libpthread_rwlock_initializer.patch: New patch, add missing
     PTHREAD_RWLOCK_INITIALIZER.
+  * debian/patches/stat-fix.patch: New patch, fixes some timestamp issues.
 
  -- Michael Banck <mbanck@debian.org>  Sat, 13 Sep 2008 23:43:27 +0200
 

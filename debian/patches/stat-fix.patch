@@ -1,0 +1,163 @@
+Index: libftpconn/unix.c
+===================================================================
+RCS file: /cvsroot/hurd/hurd/libftpconn/unix.c,v
+retrieving revision 1.12
+diff -u -p -r1.12 unix.c
+--- libftpconn/unix.c	19 Oct 2002 20:11:14 -0000	1.12
++++ libftpconn/unix.c	2 Feb 2009 01:36:56 -0000
+@@ -510,12 +510,13 @@ drwxrwxrwt   7 34       archive       51
+   else
+     tm.tm_year = PARSE_INT () - 1900;
+ 
+-  stat->st_mtime = mktime (&tm);
+-  if (stat->st_mtime == (time_t)-1)
++  stat->st_mtim.tv_sec = mktime (&tm);
++  if (stat->st_mtim.tv_sec == (time_t)-1)
+     return EGRATUITOUS;
+ 
+   /* atime and ctime are the same as mtime.  */
+-  stat->st_atime = stat->st_ctime = stat->st_mtime;
++  stat->st_atim.tv_sec  = stat->st_ctim.tv_sec  = stat->st_mtim.tv_sec;
++  stat->st_atim.tv_nsec = stat->st_ctim.tv_nsec = stat->st_mtim.tv_nsec = 0;
+ 
+   /* Update *LINE to point to the filename.  */
+   SKIP_WS ();
+Index: tmpfs/tmpfs.c
+===================================================================
+RCS file: /cvsroot/hurd/hurd/tmpfs/tmpfs.c,v
+retrieving revision 1.16
+diff -u -p -r1.16 tmpfs.c
+--- tmpfs/tmpfs.c	20 Mar 2005 02:21:31 -0000	1.16
++++ tmpfs/tmpfs.c	2 Feb 2009 01:36:56 -0000
+@@ -355,9 +355,9 @@ main (int argc, char **argv)
+       diskfs_root_node->dn_stat.st_uid = st.st_uid;
+       diskfs_root_node->dn_stat.st_author = st.st_author;
+       diskfs_root_node->dn_stat.st_gid = st.st_gid;
+-      diskfs_root_node->dn_stat.st_atime = st.st_atime;
+-      diskfs_root_node->dn_stat.st_mtime = st.st_mtime;
+-      diskfs_root_node->dn_stat.st_ctime = st.st_ctime;
++      diskfs_root_node->dn_stat.st_atim = st.st_atim;
++      diskfs_root_node->dn_stat.st_mtim = st.st_mtim;
++      diskfs_root_node->dn_stat.st_ctim = st.st_ctim;
+       diskfs_root_node->dn_stat.st_flags = st.st_flags;
+     }
+   diskfs_root_node->dn_stat.st_mode &= ~S_ITRANS;
+Index: tmpfs/tmpfs.h
+===================================================================
+RCS file: /cvsroot/hurd/hurd/tmpfs/tmpfs.h,v
+retrieving revision 1.2
+diff -u -p -r1.2 tmpfs.h
+--- tmpfs/tmpfs.h	30 Dec 2000 19:11:29 -0000	1.2
++++ tmpfs/tmpfs.h	2 Feb 2009 01:36:56 -0000
+@@ -35,7 +35,7 @@ struct disknode
+   nlink_t nlink;
+   uid_t uid, author;
+   gid_t gid;
+-  time_t atime, mtime, ctime;
++  struct timespec atime, mtime, ctime;
+   unsigned int flags;
+ 
+   char *trans;
+Index: tmpfs/node.c
+===================================================================
+RCS file: /cvsroot/hurd/hurd/tmpfs/node.c,v
+retrieving revision 1.12
+diff -u -p -r1.12 node.c
+--- tmpfs/node.c	11 Jun 2002 21:40:50 -0000	1.12
++++ tmpfs/node.c	2 Feb 2009 01:36:56 -0000
+@@ -96,9 +96,9 @@ diskfs_node_norefs (struct node *np)
+       np->dn->uid = np->dn_stat.st_uid;
+       np->dn->author = np->dn_stat.st_author;
+       np->dn->gid = np->dn_stat.st_gid;
+-      np->dn->atime = np->dn_stat.st_atime;
+-      np->dn->mtime = np->dn_stat.st_mtime;
+-      np->dn->ctime = np->dn_stat.st_ctime;
++      np->dn->atime = np->dn_stat.st_atim;
++      np->dn->mtime = np->dn_stat.st_mtim;
++      np->dn->ctime = np->dn_stat.st_ctim;
+       np->dn->flags = np->dn_stat.st_flags;
+ 
+       switch (np->dn->type)
+@@ -200,9 +200,9 @@ diskfs_cached_lookup (ino_t inum, struct
+       st->st_uid = dn->uid;
+       st->st_author = dn->author;
+       st->st_gid = dn->gid;
+-      st->st_atime = dn->atime;
+-      st->st_mtime = dn->mtime;
+-      st->st_ctime = dn->ctime;
++      st->st_atim = dn->atime;
++      st->st_mtim = dn->mtime;
++      st->st_ctim = dn->ctime;
+       st->st_flags = dn->flags;
+ 
+       st->st_rdev = 0;
+Index: ftpfs/dir.c
+===================================================================
+RCS file: /cvsroot/hurd/hurd/ftpfs/dir.c,v
+retrieving revision 1.14
+diff -u -p -r1.14 dir.c
+--- ftpfs/dir.c	23 Oct 2002 02:36:53 -0000	1.14
++++ ftpfs/dir.c	2 Feb 2009 01:36:56 -0000
+@@ -532,7 +532,9 @@ ftpfs_refresh_node (struct node *node)
+ 	    }
+ 	}
+ 
+-      if ((entry->stat.st_mtime < node->nn_stat.st_mtime
++      if ((entry->stat.st_mtim.tv_sec < node->nn_stat.st_mtim.tv_sec
++           || (entry->stat.st_mtim.tv_sec == node->nn_stat.st_mtim.tv_sec
++               && entry->stat.st_mtim.tv_nsec < node->nn_stat.st_mtim.tv_nsec)
+ 	   || entry->stat.st_size != node->nn_stat.st_size)
+ 	  && nn && nn->contents)
+ 	/* The file has changed.  */
+Index: login/utmp.c
+===================================================================
+RCS file: /cvsroot/hurd/hurd/login/utmp.c,v
+retrieving revision 1.4
+diff -u -p -r1.4 utmp.c
+--- login/utmp.c	11 Jul 1999 05:31:04 -0000	1.4
++++ login/utmp.c	2 Feb 2009 01:36:56 -0000
+@@ -326,12 +326,12 @@ S_login_get_idle_time(file_t utmp, time_
+ 	{
+ 	  struct stat stat;
+ 	  if (stat(dev, &state) == 0
+-	      && (stat.st_atime < tv->seconds
+-		  || (stat.st_atime == tv->seconds
+-		      && stat.st_atime_usec < tv->microseconds)))
++	      && (stat.st_atim.tv_sec < tv->seconds
++		  || (stat.st_atim.tv_sec == tv->seconds
++		      && stat.st_atim.tv_nsec / 1000 < tv->microseconds)))
+ 	    {
+-	      tv->seconds = stat.st_atime;
+-	      tv->microseconds = stat.st_atime_usec;
++	      tv->seconds = stat.st_atim.tv_sc;
++	      tv->microseconds = stat.st_atim.tv_nsec / 1000;
+ 	    }
+ 	}
+     }
+Index: libdiskfs/file-utimes.c
+===================================================================
+RCS file: /cvsroot/hurd/hurd/libdiskfs/file-utimes.c,v
+retrieving revision 1.8
+diff -u -p -r1.8 file-utimes.c
+--- libdiskfs/file-utimes.c	31 Jan 1999 23:49:27 -0000	1.8
++++ libdiskfs/file-utimes.c	2 Feb 2009 01:36:56 -0000
+@@ -32,7 +32,8 @@ diskfs_S_file_utimes (struct protid *cre
+ 			   np->dn_set_atime = 1;
+ 			 else
+ 			   {
+-			     np->dn_stat.st_atime = atime.seconds;
++			     np->dn_stat.st_atim.tv_sec = atime.seconds;
++			     np->dn_stat.st_atim.tv_nsec = atime.microseconds * 1000;
+ 			     np->dn_set_atime = 0;
+ 			   }
+ 			 
+@@ -40,7 +41,8 @@ diskfs_S_file_utimes (struct protid *cre
+ 			   np->dn_set_mtime = 1;
+ 			 else
+ 			   {
+-			     np->dn_stat.st_mtime = mtime.seconds;
++			     np->dn_stat.st_mtim.tv_sec = mtime.seconds;
++			     np->dn_stat.st_mtim.tv_nsec = mtime.microseconds * 1000;
+ 			     np->dn_set_mtime = 0;
+ 			   }
+ 			 
