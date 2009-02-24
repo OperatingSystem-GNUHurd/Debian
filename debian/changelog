@@ -39,6 +39,9 @@ hurd (20080921-1) UNRELEASED; urgency=low
   * debian/patches/libpthread_rwlock_initializer.patch: New patch, add missing
     PTHREAD_RWLOCK_INITIALIZER.
   * debian/patches/stat-fix.patch: New patch, fixes some timestamp issues.
+  * debian/patches/in6_addr.patch: New patch to fix compilation under libc
+    2.9.
+  * debian/control (Build-Depends): Bump libc0.3-dev to (>= 2.9).
 
  -- Michael Banck <mbanck@debian.org>  Sat, 13 Sep 2008 23:43:27 +0200
 

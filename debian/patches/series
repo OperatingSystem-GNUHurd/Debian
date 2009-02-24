@@ -21,3 +21,4 @@ tmp_exec_startup.patch -p0
 ttys.patch -p1
 uptime_w_path_fix.patch -p1
 stat-fix.patch -p0
+in6_addr.patch -p1
