@@ -42,6 +42,8 @@ hurd (20080921-1) UNRELEASED; urgency=low
   * debian/patches/in6_addr.patch: New patch to fix compilation under libc
     2.9.
   * debian/control (Build-Depends): Bump libc0.3-dev to (>= 2.9).
+  * debian/patches/stat_round.patch: New temporary patch, fixes symlink issues
+  with tar.
 
  -- Michael Banck <mbanck@debian.org>  Sat, 13 Sep 2008 23:43:27 +0200
 
