@@ -44,6 +44,7 @@ hurd (20080921-1) UNRELEASED; urgency=low
   * debian/control (Build-Depends): Bump libc0.3-dev to (>= 2.9).
   * debian/patches/stat_round.patch: New temporary patch, fixes symlink issues
   with tar.
+  * debian/patches/dir_acces_fix.patch: New patch, fixes ext2fs crashes.
 
  -- Michael Banck <mbanck@debian.org>  Sat, 13 Sep 2008 23:43:27 +0200
 
