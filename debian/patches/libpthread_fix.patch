@@ -1,0 +1,43 @@
+Temporary patch from Thomas Schwinge to fix libpthread bugs.
+
+diff --git libpthread/sysdeps/mach/pt-thread-dealloc.c b/sysdeps/mach/pt-thread-dealloc.c
+index 55d8c4d..0c4a4fc 100644
+--- libpthread/sysdeps/mach/pt-thread-dealloc.c
++++ libpthread/sysdeps/mach/pt-thread-dealloc.c
+@@ -38,4 +38,6 @@ __pthread_thread_dealloc (struct __pthread *thread)
+      assert.  */
+   __mach_port_destroy (__mach_task_self (),
+ 		       thread->wakeupmsg.msgh_remote_port);
++
++  thread->have_kernel_resources = 0;
+ }
+diff --git libpthread/sysdeps/mach/pt-thread-halt.c b/sysdeps/mach/pt-thread-halt.c
+index 973cde1..a9c3858 100644
+--- libpthread/sysdeps/mach/pt-thread-halt.c
++++ libpthread/sysdeps/mach/pt-thread-halt.c
+@@ -32,6 +32,21 @@
+ void
+ __pthread_thread_halt (struct __pthread *thread)
+ {
+-  error_t err = __thread_terminate (thread->kernel_thread);
+-  assert_perror (err);
++  if (thread->have_kernel_resources)
++    {
++      if (thread == _pthread_self ())
++	{
++	  while (1)
++	    {
++	      error_t err = __thread_suspend (thread->kernel_thread);
++	      assert_perror (err);
++	      assert (! "Failed to suspend self.");
++	    }
++	}
++      else
++	{
++	  error_t err = __thread_terminate (thread->kernel_thread);
++	  assert_perror (err);
++	}
++    }
+ }
+
+

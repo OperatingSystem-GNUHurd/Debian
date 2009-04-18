@@ -1,0 +1,14 @@
+Ideally we should be able to time out and see translators go away automatically,
+however it makes all threads often wake at the same time and overload Mach.
+
+--- libports/manage-multithread.c	29 Dec 2008 18:38:02 -0000	1.20
++++ libports/manage-multithread.c	20 Aug 1997 20:41:57 -0000	1.19
+@@ -157,6 +157,8 @@
+       return 0;
+     }
+ 
++  thread_timeout = global_timeout = 0; /* XXX */
++
+   nreqthreads = 1;
+   totalthreads = 1;
+   thread_function (1);

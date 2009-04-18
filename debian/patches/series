@@ -24,3 +24,5 @@ stat-fix.patch -p0
 in6_addr.patch -p1
 stat_round.patch -p0
 dir_acces_fix.patch -p0
+libports_stability.patch -p0
+libpthread_fix.patch -p0

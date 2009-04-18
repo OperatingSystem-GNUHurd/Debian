@@ -45,6 +45,10 @@ hurd (20080921-1) UNRELEASED; urgency=low
   * debian/patches/stat_round.patch: New temporary patch, fixes symlink issues
   with tar.
   * debian/patches/dir_acces_fix.patch: New patch, fixes ext2fs crashes.
+  * debian/patches/libports_stability.patch: New patch to keep the old
+    behavior of libports.
+  * debian/patches/libpthread_fix.patch New patch from Thomas Schwinge to fix
+    libpthread.
 
  -- Michael Banck <mbanck@debian.org>  Sat, 13 Sep 2008 23:43:27 +0200
 
