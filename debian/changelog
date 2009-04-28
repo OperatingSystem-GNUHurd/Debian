@@ -53,6 +53,9 @@ hurd (20080921-1) UNRELEASED; urgency=low
     libpthread.
   * debian/patches/libpthread_setcancel.patch: New patch to fix configuration
     of octave3.0.
+  * debian/patches/libpthread_rwlock_initializer.patch: Disable patch for now:
+    our initializer does not work when the application does not link against
+    libpthread.
 
  -- Michael Banck <mbanck@debian.org>  Sat, 13 Sep 2008 23:43:27 +0200
 
