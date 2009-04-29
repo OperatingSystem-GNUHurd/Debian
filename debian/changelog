@@ -39,13 +39,13 @@ hurd (20080921-1) UNRELEASED; urgency=low
   * debian/patches/thread-throttle.patch: Remove patch, makes ext2fs hang on
     big syncs.
   * debian/patches/libpthread_rwlock_initializer.patch: New patch, add missing
-    PTHREAD_RWLOCK_INITIALIZER.
+    PTHREAD_RWLOCK_INITIALIZER, disabled for now.
   * debian/patches/stat-fix.patch: New patch, fixes some timestamp issues.
   * debian/patches/in6_addr.patch: New patch to fix compilation under libc
     2.9.
   * debian/control (Build-Depends): Bump libc0.3-dev to (>= 2.9).
   * debian/patches/stat_round.patch: New temporary patch, fixes symlink issues
-  with tar.
+    with tar.
   * debian/patches/dir_acces_fix.patch: New patch, fixes ext2fs crashes.
   * debian/patches/libports_stability.patch: New patch to keep the old
     behavior of libports.
@@ -53,9 +53,6 @@ hurd (20080921-1) UNRELEASED; urgency=low
     libpthread.
   * debian/patches/libpthread_setcancel.patch: New patch to fix configuration
     of octave3.0.
-  * debian/patches/libpthread_rwlock_initializer.patch: Disable patch for now:
-    our initializer does not work when the application does not link against
-    libpthread.
 
  -- Michael Banck <mbanck@debian.org>  Sat, 13 Sep 2008 23:43:27 +0200
 
