@@ -133,3 +133,26 @@ diff -u -p -r1.5 pt-mutex-unlock.c
  #endif
  
    /* We do not unlock MUTEX->held: we are transferring the ownership
+Index: libpthread/sysdeps/generic/pt-mutex-trylock.c
+===================================================================
+RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/pt-mutex-trylock.c,v
+retrieving revision 1.7
+diff -u -p -r1.7 pt-mutex-trylock.c
+--- libpthread/sysdeps/generic/pt-mutex-trylock.c	12 Aug 2008 15:07:49 -0000	1.7
++++ libpthread/sysdeps/generic/pt-mutex-trylock.c	29 Apr 2009 08:20:19 -0000
+@@ -34,6 +34,7 @@ __pthread_mutex_trylock (struct __pthrea
+   if (__pthread_spin_trylock (&mutex->__held) == 0)
+     /* Acquired the lock.  */
+     {
++#if defined(ALWAYS_TRACK_MUTEX_OWNER)
+ #ifndef NDEBUG
+       self = _pthread_self ();
+       if (self)
+@@ -45,6 +46,7 @@ __pthread_mutex_trylock (struct __pthrea
+ 	  mutex->owner = _pthread_self ();
+ 	}
+ #endif
++#endif
+ 
+       if (mutex->attr)
+ 	switch (mutex->attr->mutex_type)
