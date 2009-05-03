@@ -1,0 +1,1 @@
+setauth.prof: parse_p.o pids_p.o nonsugid_p.o frobauth_p.o frobauth-mod_p.o ../libshouldbeinlibc/libshouldbeinlibc.a setauth_p.o

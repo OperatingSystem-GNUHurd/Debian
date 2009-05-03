@@ -1,0 +1,1 @@
+ifsock.prof: ifsockServer_p.o ../libtrivfs/libtrivfs.a ../libfshelp/libfshelp.a ../libthreads/libthreads.a ../libports/libports.a ../libihash/libihash.a ../libshouldbeinlibc/libshouldbeinlibc.a ifsock_p.o

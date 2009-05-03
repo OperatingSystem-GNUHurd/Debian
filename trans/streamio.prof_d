@@ -1,0 +1,1 @@
+streamio.prof: device_replyServer_p.o ../libthreads/libthreads.a ../libports/libports.a ../libtrivfs/libtrivfs.a ../libthreads/libthreads.a ../libfshelp/libfshelp.a ../libshouldbeinlibc/libshouldbeinlibc.a streamio_p.o

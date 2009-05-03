@@ -1,0 +1,1 @@
+eth-multiplexer.prof: ethernet_p.o vdev_p.o multiplexer_p.o bpf_impl_p.o queue_p.o dev_stat_p.o netfs_impl_p.o notify_impl_p.o device_impl_p.o demuxer_p.o ourdeviceServer_p.o notifyServer_p.o ../libports/libports_p.a ../libfshelp/libfshelp_p.a ../libshouldbeinlibc/libshouldbeinlibc_p.a ../libnetfs/libnetfs_p.a

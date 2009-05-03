@@ -1,0 +1,1 @@
+mount.prof: ../libshouldbeinlibc/libshouldbeinlibc.a mount_p.o ../sutils/fstab_p.o ../sutils/clookup_p.o ../libfshelp/libfshelp.a ../libports/libports.a

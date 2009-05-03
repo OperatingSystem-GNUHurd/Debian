@@ -1,0 +1,1 @@
+serverboot.prof: bootstrap_p.o ffs_compat_p.o load_p.o wiring_p.o ffs_file_io_p.o minix_ffs_compat_p.o file_io_p.o minix_file_io_p.o ext2_file_io_p.o strfcns_p.o exec_p.o panic_p.o elf-load_p.o gunzip_p.o bunzip2_p.o boot_script_p.o userland-boot_p.o unzip_p.o inflate_p.o util_p.o do-bunzip2_p.o ../libthreads/libthreads_p.a

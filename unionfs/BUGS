@@ -1,0 +1,5 @@
+Known bugs:
+
+ * unionfs hangs when looking up recursive links, which point into the
+   unionfs
+ * emacs hangs when trying to save files in unionfs

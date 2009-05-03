@@ -1,0 +1,1 @@
+fwd.prof: ../libfshelp/libfshelp.a ../libports/libports.a ../libshouldbeinlibc/libshouldbeinlibc.a fwd_p.o

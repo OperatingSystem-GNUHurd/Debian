@@ -1,0 +1,1 @@
+vminfo.prof: ../libshouldbeinlibc/libshouldbeinlibc.a vminfo_p.o

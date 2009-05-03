@@ -1,0 +1,34 @@
+diff --git a/boot/Makefile b/boot/Makefile
+index f8d15bb..33c475f 100644
+--- a/boot/Makefile
++++ b/boot/Makefile
+@@ -19,13 +19,13 @@ dir := boot
+ makemode := utility
+ 
+ SRCS = mach-crt0.c boot.c ux.c sigvec.S syscall.S \
+-       boot_script.c userland-boot.c
++       boot_script.c userland-boot.c list.c mach_proxy.c
+ COMMON-OBJS = notifyServer.o ourdeviceServer.o \
+        ioServer.o io_replyUser.o device_replyUser.o \
+        termServer.o bootstrapServer.o boot_script.o userland-boot.o	\
+-       ourmach_hostServer.o ourmachServer.o mach_portServer.o excServer.o
++       ourmach_hostServer.o ourmachServer.o ourmach_portServer.o excServer.o
+ OBJS = boot.o mach_host_impl.o mach_impl.o mach_port_impl.o \
+-       exc_impl.o $(COMMON-OBJS)
++       exc_impl.o list.o mach_proxy.o $(COMMON-OBJS)
+ UX-OBJS = mach-crt0.o uxboot.o sigvec.o syscall.o ux.o $(COMMON-OBJS)
+ LCLHDRS = boot_script.h ux.h util.h
+ target = boot
+@@ -45,12 +45,6 @@ all: boot # uxboot
+ ourdevice.defs: device.defs
+ 	$(CPP) $(CPPFLAGS) -x c $< | sed -e '/out[ 	]*device[ 	]*:[ 	]*device_t/s/device_t/mach_port_send_t/' > $@
+ 
+-ourmach.defs: mach.defs
+-	$(CPP) $(CPPFLAGS) -x c $< | sed -e '/inout default_manager : mach_port_make_send_t/s/mach_port_make_send_t/mach_port_copy_send_t/' | sed -e '/out[ 	]*special_port[ 	]*:[ 	]*mach_port_t/s/mach_port_t/mach_port_send_t/' | sed -e '/out[ 	]*child_task[ 	]*:[ 	]*task_t/s/task_t/mach_port_send_t/' | sed -e '/out[ 	]*child_thread[ 	]*:[ 	]*thread_t/s/thread_t/mach_port_send_t/' | sed -e '/subsystem/iserverprefix S_;' > $@
+-
+-ourmach_host.defs: mach_host.defs
+-	$(CPP) $(CPPFLAGS) -x c $< | sed -e '/out[ 	]*set[ 	]*:[ 	]*processor_set_t/s/processor_set_t/mach_port_send_t/' | sed -e '/subsystem/iserverprefix S_;' > $@
+-
+ uxboot.o: boot.c
+ 	$(COMPILE.c) -DUX $< -o $@
+ 

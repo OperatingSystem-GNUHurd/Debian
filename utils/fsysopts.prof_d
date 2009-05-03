@@ -1,0 +1,1 @@
+fsysopts.prof: ../libshouldbeinlibc/libshouldbeinlibc.a fsysopts_p.o

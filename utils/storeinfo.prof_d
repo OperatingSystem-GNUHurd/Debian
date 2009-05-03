@@ -1,0 +1,1 @@
+storeinfo.prof: ../libstore/libstore.a ../libshouldbeinlibc/libshouldbeinlibc.a storeinfo_p.o

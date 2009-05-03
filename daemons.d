@@ -1,0 +1,1 @@
+daemons: libhurdbugaddr libshouldbeinlibc

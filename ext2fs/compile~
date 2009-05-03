@@ -1,0 +1,8 @@
+#!/bin/sh
+
+cd ../libthreads
+make
+cd ../libdiskfs
+make
+cd ../ext2fs
+make

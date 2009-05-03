@@ -1,0 +1,1 @@
+addauth.prof: parse_p.o pids_p.o nonsugid_p.o frobauth_p.o ../libshouldbeinlibc/libshouldbeinlibc.a addauth_p.o

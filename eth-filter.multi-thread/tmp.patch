@@ -1,0 +1,207 @@
+? .Makefile.swp
+? .filter.c.swp
+? .filter.h.swp
+? .msg_queue.c.swp
+? .msg_queue.h.swp
+? bpf_impl.d
+? device.defs
+? device_reply.defs
+? filter.d
+? filter.h
+? msg_queue.c
+? msg_queue.h
+? notify.defs
+? notify.sdefs.d
+? notifyServer.c
+? notifyServer.d
+? notify_S.h
+? ourdevice.defs
+? ourdevice.sdefs.d
+? ourdeviceServer.c
+? ourdeviceServer.d
+? ourdevice_S.h
+? pcap_filter.d
+? queue.d
+? tmp.patch
+Index: Makefile
+===================================================================
+RCS file: /sources/hurd/hurd/eth-filter/Attic/Makefile,v
+retrieving revision 1.1.2.1
+diff -r1.1.2.1 Makefile
+21,23c21,23
+< SRCS = bpf_impl.c filter.c queue.c pcap_filter.c
+< LCLHDRS = bpf_impl.h queue.h util.h
+< DIST_FILES = ourdevice.defs notify.defs
+---
+> SRCS = bpf_impl.c filter.c queue.c pcap_filter.c #msg_queue.c
+> LCLHDRS = bpf_impl.h queue.h util.h #filter.h msg_queue.h
+> DIST_FILES = ourdevice.defs notify.defs #device_reply.defs
+26c26
+< MIGSTUBS = ourdeviceServer.o notifyServer.o
+---
+> MIGSTUBS = ourdeviceServer.o notifyServer.o #device_replyUser.o
+Index: filter.c
+===================================================================
+RCS file: /sources/hurd/hurd/eth-filter/Attic/filter.c,v
+retrieving revision 1.1.2.8
+diff -r1.1.2.8 filter.c
+34a35
+> #include <cthread.h>
+44,66c45,46
+< 
+< struct proxy_user
+< {
+<   struct port_info pi;
+<   struct proxy *proxy;
+< };
+< 
+< struct proxy_device
+< {
+<   struct port_info pi;
+<   struct proxy *proxy;
+< };
+< 
+< struct proxy
+< {
+<   struct proxy_device *device;
+<   mach_port_t deliver_port;
+<   hurd_ihash_locp_t p_deliverport_hashloc;
+<   mach_port_t device_port;
+< };
+< 
+< int deliver_msg (struct net_rcv_msg *msg, queue_head_t *port_list, 
+< 		 mach_port_t dest);
+---
+> //#include "filter.h"
+> //#include "msg_queue.h"
+129a110,152
+> /* Write the data from the client to the device. */
+> int 
+> filter_device_write (struct filter_msg *msg)
+> {
+>   int ret_count = 0;
+>   int has_filter = 0;
+>   net_hash_entry_t entp, *hash_headp;
+>   net_rcv_port_t infp, nextfp;
+>   int bytes_written;
+> 
+>   /* The packet can be sent as long as it passes one filter,
+>    * even thought there is usually only one filter in the list. */
+>   FILTER_ITERATE (&snd_port_list, infp, nextfp, &infp->chain) 
+>     {
+>       has_filter = 1;
+>       ret_count = mach_bpf_do_filter (infp,
+> 				      data + sizeof (struct ethhdr),
+> 				      datalen - sizeof (struct ethhdr),
+> 				      data, sizeof (struct ethhdr),
+> 				      &hash_headp, &entp);
+>       if (ret_count)
+> 	break;
+>     }
+>   FILTER_ITERATE_END
+> 
+>     if (ret_count || !has_filter) 
+>       {
+> 	error_t err;
+> 	err = device_write (proxy->device_port, mode , recnum ,
+> 			    data, datalen, &bytes_written);
+>       }
+>   ds_device_write_reply (msg->reply_port, msg->reply_type, err, bytes_written);
+>   return 0;
+> }
+> 
+> /* Deliver the data from the device to the client. */
+> int
+> filter_deliver (struct filter_msg *msg)
+> {
+>   deliver_msg (msg, &rcv_port_list, proxy->deliver_port);
+>   return 0;
+> }
+> 
+213c236,237
+<   device = ports_lookup_port (port_bucket, inp->msgh_local_port, device_portclass);
+---
+>   device = ports_lookup_port (port_bucket, inp->msgh_local_port,
+> 			      device_portclass);
+215a240
+> 
+220c245,246
+<     deliver_msg (msg, &rcv_port_list, proxy->deliver_port);
+---
+>     queue_deliver (msg, proxy);
+> //    deliver_msg (msg, &rcv_port_list, proxy->deliver_port);
+359,362d384
+<   int ret_count = 0;
+<   int has_filter = 0;
+<   net_hash_entry_t entp, *hash_headp;
+<   net_rcv_port_t infp, nextfp;
+369a392
+>   queue_write (data, datalen, reply_port, reply_type, mode, recnum, proxy);
+372,399c395
+<   /* The packet can be sent as long as it passes one filter,
+<    * even thought there is usually only one filter in the list. */
+<   FILTER_ITERATE (&snd_port_list, infp, nextfp, &infp->chain) 
+<     {
+<       has_filter = 1;
+<       ret_count = mach_bpf_do_filter (infp,
+< 				      data + sizeof (struct ethhdr),
+< 				      datalen - sizeof (struct ethhdr),
+< 				      data, sizeof (struct ethhdr),
+< 				      &hash_headp, &entp);
+<       if (ret_count)
+< 	break;
+<     }
+<   FILTER_ITERATE_END
+< 
+<     if (ret_count || !has_filter) 
+<       {
+< 	error_t err;
+< 	print_pack (data, datalen);
+< 	err = device_write (proxy->device_port, mode , recnum ,
+< 			    data, datalen, bytes_written);
+< 	return err;
+<       }
+<     else 
+<       {
+< 	*bytes_written = datalen;
+< 	return 0;
+<       }
+---
+>   return MIG_NO_REPLY;
+691a688,704
+> void *send_thread_func (void *)
+> {
+>   struct filter_msg *msg;
+>   
+>   while (1)
+>     {
+>       msg = dequeue_msg ();
+>       if (msg == NULL)
+> 	{
+> 	  cthread_suspend (send_thread);
+> 	  continue;
+> 	}
+>       msg->write (msg);
+>     }
+>   return NULL;
+> }
+> 
+750a764,768
+>   send_thread = cthread_fork (send_thread_func, NULL);
+>   /* TODO if the main thread exits,
+>    * does the created thread exit if cthread_detach is called */
+> //  cthread_detach (send_thread);
+> 
+789c807,809
+< 	  err = mach_msg ((mach_msg_header_t *)msg, MACH_SEND_MSG,
+---
+> 	  debug ("before delivering the packet\n");
+> 	  err = mach_msg ((mach_msg_header_t *)msg,
+> 			  MACH_SEND_MSG,
+794,795c814
+< 	      fprintf (stderr, "deliver msg: mach_msg: %s\n",
+< 		       strerror (err));
+---
+> 	      error (0, err, "mach_msg");
+797a817
+> 	  debug ("after delivering the packet\n");

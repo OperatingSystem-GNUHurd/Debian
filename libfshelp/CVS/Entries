@@ -1,0 +1,25 @@
+/ChangeLog/1.38/Mon Jul 14 22:38:13 2008//Tzhengda-soc2008-virt-branch
+/Makefile/1.33/Wed Jun 28 15:56:10 2006//Tzhengda-soc2008-virt-branch
+/delegate.c/1.8/Wed May  8 09:20:55 2002//Tzhengda-soc2008-virt-branch
+/drop-transbox.c/1.1/Wed Jun 14 17:37:33 1995//Tzhengda-soc2008-virt-branch
+/exec-reauth.c/1.6/Tue May 28 23:58:56 2002//Tzhengda-soc2008-virt-branch
+/fetch-control.c/1.3/Tue Jun 20 00:10:40 1995//Tzhengda-soc2008-virt-branch
+/fetch-root.c/1.28/Wed May  8 09:20:55 2002//Tzhengda-soc2008-virt-branch
+/fshelp.h/1.50/Tue Jun 11 21:38:48 2002//Tzhengda-soc2008-virt-branch
+/get-identity.c/1.6/Sun Feb 28 20:49:39 1999//Tzhengda-soc2008-virt-branch
+/lock-acquire.c/1.6/Wed Jun 26 16:09:30 2002//Tzhengda-soc2008-virt-branch
+/lock-init.c/1.2/Fri Feb 11 18:52:27 1994//Tzhengda-soc2008-virt-branch
+/locks.h/1.2/Fri Feb 11 18:55:36 1994//Tzhengda-soc2008-virt-branch
+/perms-access.c/1.2/Mon Jul 14 22:38:13 2008//Tzhengda-soc2008-virt-branch
+/perms-checkdirmod.c/1.1/Thu Jul  1 21:04:26 1999//Tzhengda-soc2008-virt-branch
+/perms-iscontroller.c/1.3/Tue Jul  1 11:43:13 2008//Tzhengda-soc2008-virt-branch
+/perms-isowner.c/1.1/Thu Jul  1 21:04:26 1999//Tzhengda-soc2008-virt-branch
+/set-active.c/1.6/Wed Feb 21 22:17:09 1996//Tzhengda-soc2008-virt-branch
+/set-options.c/1.4/Sun Jul 11 08:05:28 1999//Tzhengda-soc2008-virt-branch
+/start-translator-long.c/1.17/Wed Feb 11 07:54:23 2004//Tzhengda-soc2008-virt-branch
+/start-translator.c/1.5/Tue Jan 30 23:45:32 2001//Tzhengda-soc2008-virt-branch
+/touch.c/1.2/Tue Nov 13 23:15:42 2007//Tzhengda-soc2008-virt-branch
+/trans.h/1.1/Thu Jul 18 04:31:36 1996//Tzhengda-soc2008-virt-branch
+/transbox-init.c/1.3/Fri Sep 29 22:46:04 1995//Tzhengda-soc2008-virt-branch
+/translated.c/1.1/Thu Jul  1 21:04:27 1999//Tzhengda-soc2008-virt-branch
+D

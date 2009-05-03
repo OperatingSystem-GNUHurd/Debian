@@ -1,0 +1,1 @@
+init.prof: init_p.o stubs_p.o startupServer_p.o notifyServer_p.o startup_replyUser_p.o msgServer_p.o startup_notifyUser_p.o ../libshouldbeinlibc/libshouldbeinlibc_p.a

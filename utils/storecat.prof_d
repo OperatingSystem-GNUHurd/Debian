@@ -1,0 +1,1 @@
+storecat.prof: ../libstore/libstore.a ../libshouldbeinlibc/libshouldbeinlibc.a storecat_p.o

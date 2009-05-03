@@ -1,0 +1,4 @@
+
+routine vm_set_default_memory_manager(
+		host_priv	: host_priv_t;
+	inout	default_manager	: mach_port_make_send_t);

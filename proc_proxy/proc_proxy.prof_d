@@ -1,0 +1,1 @@
+proc_proxy.prof: proc_proxy_p.o process_ops_p.o processServer_p.o ../libthreads/libthreads_p.a ../libports/libports_p.a

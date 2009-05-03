@@ -1,0 +1,1 @@
+w.prof: psout_p.o ../libps/libps.a ../libihash/libihash.a ../libshouldbeinlibc/libshouldbeinlibc.a w_p.o

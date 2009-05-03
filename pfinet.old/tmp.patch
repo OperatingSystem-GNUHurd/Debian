@@ -1,0 +1,49 @@
+Index: ethernet.c
+===================================================================
+RCS file: /sources/hurd/hurd/pfinet/ethernet.c,v
+retrieving revision 1.32
+diff -r1.32 ethernet.c
+28a29,30
+> #define _HACK_ERRNO_H
+> #include <errno.h>
+33a36
+> #include <device/bpf.h>
+71c74,75
+< static short ether_filter[] =
+---
+> /* The BPF instruction allows IP and ARP packets */
+> static struct bpf_insn ether_filter[] =
+73,79c77,82
+< #ifdef NETF_IN
+<   /* We have to tell the packet filtering code that we're interested in
+<      incoming packets.  */
+<   NETF_IN, /* Header.  */
+< #endif
+<   NETF_PUSHLIT | NETF_NOP,
+<   1
+---
+>     {NETF_IN|NETF_BPF, /* Header. */ 0, 0, 0},
+>     {40, 0, 0, 12},
+>     {21, 1, 0, 2054},
+>     {21, 0, 1, 2048},
+>     {6, 0, 0, 1500},
+>     {6, 0, 0, 0}
+98a102
+>   static int count = 0;
+118a123,125
+> //  fprintf (stderr, "pfinet receives the %dst packet.\n", ++count);
+> //  fflush (stderr);
+> 
+169,171c176,179
+<   err = get_privileged_ports (0, &master_device);
+<   if (err)
+<     error (2, err, "cannot get device master port");
+---
+>   /* The device name here is the path of a device file.  */
+>   master_device = file_name_lookup (dev->name, 0, 0);
+>   if (master_device == MACH_PORT_NULL)
+>     error (2, errno, "file_name_lookup %s", dev->name);
+173c181
+<   err = device_open (master_device, D_WRITE | D_READ, dev->name, &edev->ether_port);
+---
+>   err = device_open (master_device, D_WRITE | D_READ, "eth", &edev->ether_port);

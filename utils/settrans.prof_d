@@ -1,0 +1,1 @@
+settrans.prof: ../libfshelp/libfshelp.a ../libports/libports.a ../libthreads/libthreads.a ../libshouldbeinlibc/libshouldbeinlibc.a settrans_p.o

@@ -1,0 +1,1 @@
+storeio: libhurdbugaddr libtrivfs libpager libfshelp libiohelp libstore libthreads libports libihash libshouldbeinlibc

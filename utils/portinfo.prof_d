@@ -1,0 +1,1 @@
+portinfo.prof: ../libshouldbeinlibc/libshouldbeinlibc.a portinfo_p.o

@@ -1,0 +1,1 @@
+ftpfs.prof: ftpfs_p.o fs_p.o host_p.o netfs_p.o dir_p.o conn_p.o ccache_p.o node_p.o ncache_p.o ../libnetfs/libnetfs_p.a ../libfshelp/libfshelp_p.a ../libiohelp/libiohelp_p.a ../libthreads/libthreads_p.a ../libports/libports_p.a ../libihash/libihash_p.a ../libftpconn/libftpconn_p.a ../libshouldbeinlibc/libshouldbeinlibc_p.a

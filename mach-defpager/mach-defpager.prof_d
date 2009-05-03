@@ -1,0 +1,1 @@
+mach-defpager.prof: default_pager_p.o kalloc_p.o wiring_p.o main_p.o setup_p.o memory_objectServer_p.o default_pagerServer_p.o memory_object_defaultServer_p.o excServer_p.o default_pager_replyUser_p.o ../libthreads/libthreads_p.a

@@ -1,0 +1,1 @@
+hello.prof: ../libtrivfs/libtrivfs.a ../libfshelp/libfshelp.a ../libports/libports.a ../libihash/libihash.a ../libshouldbeinlibc/libshouldbeinlibc.a hello_p.o

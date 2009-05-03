@@ -1,0 +1,1 @@
+fsck.prof: fstab_p.o clookup_p.o fsck_p.o ../libshouldbeinlibc/libshouldbeinlibc.a

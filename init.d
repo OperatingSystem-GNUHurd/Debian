@@ -1,0 +1,1 @@
+init: libhurdbugaddr libshouldbeinlibc

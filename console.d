@@ -1,0 +1,1 @@
+console: libhurdbugaddr libnetfs libfshelp libiohelp libpager libthreads libports libihash libshouldbeinlibc

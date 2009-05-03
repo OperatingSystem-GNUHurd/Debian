@@ -1,0 +1,1 @@
+hello-mt.prof: ../libtrivfs/libtrivfs.a ../libfshelp/libfshelp.a ../libthreads/libthreads.a ../libports/libports.a ../libihash/libihash.a ../libshouldbeinlibc/libshouldbeinlibc.a hello-mt_p.o
