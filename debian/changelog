@@ -53,6 +53,8 @@ hurd (20080921-1) UNRELEASED; urgency=low
     libpthread.
   * debian/patches/libpthread_setcancel.patch: New patch to fix configuration
     of octave3.0.
+  * debian/patches/libpthread_no_recursive_mutex_initializer.patch: New patch
+    to drop undefined references to __pthread_recursive_mutexattr.
 
  -- Michael Banck <mbanck@debian.org>  Sat, 13 Sep 2008 23:43:27 +0200
 

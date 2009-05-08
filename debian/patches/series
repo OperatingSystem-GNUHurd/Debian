@@ -26,3 +26,4 @@ dir_acces_fix.patch -p0
 libports_stability.patch -p0
 libpthread_fix.patch -p0
 libpthread_setcancel.patch -p0
+libpthread_no_recursive_mutex_initializer.patch -p0
