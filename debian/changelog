@@ -39,7 +39,7 @@ hurd (20080921-1) UNRELEASED; urgency=low
   * debian/patches/thread-throttle.patch: Remove patch, makes ext2fs hang on
     big syncs.
   * debian/patches/libpthread_rwlock_initializer.patch: New patch, add missing
-    PTHREAD_RWLOCK_INITIALIZER, disabled for now.
+    PTHREAD_RWLOCK_INITIALIZER.
   * debian/patches/stat-fix.patch: New patch, fixes some timestamp issues.
   * debian/patches/in6_addr.patch: New patch to fix compilation under libc
     2.9.
