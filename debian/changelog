@@ -57,6 +57,7 @@ hurd (20080921-1) UNRELEASED; urgency=low
     to drop undefined references to __pthread_recursive_mutexattr.
   * debian/patches/extern_inline_fix.patch: New patch from Marc DequÃ¨ne to
     fix extern inline declarations.
+  * debian/patches/exec_fix.patch: New patch to fix random hang of exec.
 
  -- Michael Banck <mbanck@debian.org>  Sat, 13 Sep 2008 23:43:27 +0200
 
