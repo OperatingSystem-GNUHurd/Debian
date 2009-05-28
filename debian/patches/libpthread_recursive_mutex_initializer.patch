@@ -1,0 +1,303 @@
+Index: libpthread/include/pthread/pthread.h
+===================================================================
+--- libpthread/include/pthread/pthread.h.orig	2009-05-27 23:53:05.000000000 +0000
++++ libpthread/include/pthread/pthread.h	2009-05-27 23:53:40.000000000 +0000
+@@ -313,6 +313,8 @@
+ /* Static initializer for recursive mutexes.  */
+ 
+ #ifdef __USE_GNU
++# define PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP \
++  __PTHREAD_ERRORCHECK_MUTEX_INITIALIZER
+ # define PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP \
+   __PTHREAD_RECURSIVE_MUTEX_INITIALIZER
+ #endif
+Index: libpthread/sysdeps/generic/pt-mutex-destroy.c
+===================================================================
+--- libpthread/sysdeps/generic/pt-mutex-destroy.c.orig	2008-08-12 15:07:49.000000000 +0000
++++ libpthread/sysdeps/generic/pt-mutex-destroy.c	2009-05-27 23:53:40.000000000 +0000
+@@ -26,7 +26,8 @@
+ int
+ _pthread_mutex_destroy (pthread_mutex_t *mutex)
+ {
+-  if (mutex->attr == &__pthread_recursive_mutexattr)
++  if (mutex->attr == __PTHREAD_ERRORCHECK_MUTEXATTR
++   || mutex->attr == __PTHREAD_RECURSIVE_MUTEXATTR)
+     /* Static attributes.  */
+     ;
+   else
+Index: libpthread/sysdeps/generic/pt-mutex-init.c
+===================================================================
+--- libpthread/sysdeps/generic/pt-mutex-init.c.orig	2008-08-12 15:07:49.000000000 +0000
++++ libpthread/sysdeps/generic/pt-mutex-init.c	2009-05-27 23:53:40.000000000 +0000
+@@ -35,14 +35,11 @@
+     /* The default attributes.  */
+     return 0;
+ 
+-  if (attr == &__pthread_recursive_mutexattr)
+-    /* Non-default but known attributes.  */
+-    {
+-      mutex->attr = attr;
+-      return 0;
+-    }
++  if (! mutex->attr
++      || mutex->attr == __PTHREAD_ERRORCHECK_MUTEXATTR
++      || mutex->attr == __PTHREAD_RECURSIVE_MUTEXATTR)
++    mutex->attr = malloc (sizeof *attr);
+ 
+-  mutex->attr = malloc (sizeof *attr);
+   if (! mutex->attr)
+     return ENOMEM;
+ 
+Index: libpthread/sysdeps/generic/pt-mutex-timedlock.c
+===================================================================
+--- libpthread/sysdeps/generic/pt-mutex-timedlock.c.orig	2008-10-02 12:00:42.000000000 +0000
++++ libpthread/sysdeps/generic/pt-mutex-timedlock.c	2009-05-27 23:53:40.000000000 +0000
+@@ -31,6 +31,12 @@
+ 				    const struct timespec *abstime)
+ {
+   struct __pthread *self;
++  const struct __pthread_mutexattr *attr = mutex->attr;
++
++  if (attr == __PTHREAD_ERRORCHECK_MUTEXATTR)
++    attr = &__pthread_errorcheck_mutexattr;
++  if (attr == __PTHREAD_RECURSIVE_MUTEXATTR)
++    attr = &__pthread_recursive_mutexattr;
+ 
+   __pthread_spin_lock (&mutex->__lock);
+   if (__pthread_spin_trylock (&mutex->__held) == 0)
+@@ -50,8 +56,8 @@
+ #endif
+ #endif
+ 
+-      if (mutex->attr)
+-	switch (mutex->attr->mutex_type)
++      if (attr)
++	switch (attr->mutex_type)
+ 	  {
+ 	  case PTHREAD_MUTEX_NORMAL:
+ 	    break;
+@@ -75,7 +81,7 @@
+   self = _pthread_self ();
+   assert (self);
+ 
+-  if (! mutex->attr || mutex->attr->mutex_type == PTHREAD_MUTEX_NORMAL)
++  if (! attr || attr->mutex_type == PTHREAD_MUTEX_NORMAL)
+     {
+ #if defined(ALWAYS_TRACK_MUTEX_OWNER)
+       assert (mutex->owner != self);
+@@ -83,7 +89,7 @@
+     }
+   else
+     {
+-      switch (mutex->attr->mutex_type)
++      switch (attr->mutex_type)
+ 	{
+ 	case PTHREAD_MUTEX_ERRORCHECK:
+ 	  if (mutex->owner == self)
+@@ -108,7 +114,7 @@
+     }
+ 
+ #if !defined(ALWAYS_TRACK_MUTEX_OWNER)
+-  if (mutex->attr && mutex->attr->mutex_type != PTHREAD_MUTEX_NORMAL)
++  if (attr && attr->mutex_type != PTHREAD_MUTEX_NORMAL)
+ #endif
+     assert (mutex->owner);
+ 
+@@ -147,14 +153,14 @@
+     __pthread_block (self);
+ 
+ #if !defined(ALWAYS_TRACK_MUTEX_OWNER)
+-  if (mutex->attr && mutex->attr->mutex_type != PTHREAD_MUTEX_NORMAL)
++  if (attr && attr->mutex_type != PTHREAD_MUTEX_NORMAL)
+ #endif
+     {
+       assert (mutex->owner == self);
+     }
+ 
+-  if (mutex->attr)
+-    switch (mutex->attr->mutex_type)
++  if (attr)
++    switch (attr->mutex_type)
+       {
+       case PTHREAD_MUTEX_NORMAL:
+ 	break;
+Index: libpthread/sysdeps/generic/pt-mutex-transfer-np.c
+===================================================================
+--- libpthread/sysdeps/generic/pt-mutex-transfer-np.c.orig	2008-10-02 12:00:40.000000000 +0000
++++ libpthread/sysdeps/generic/pt-mutex-transfer-np.c	2009-05-27 23:53:40.000000000 +0000
+@@ -29,13 +29,20 @@
+   assert (mutex->owner == _pthread_self ());
+ 
+   struct __pthread *thread = __pthread_getid (tid);
++  const struct __pthread_mutexattr *attr = mutex->attr;
++
+   if (! thread)
+     return ESRCH;
+ 
+   if (thread == _pthread_self ())
+     return 0;
+ 
+-  if (mutex->attr && mutex->attr->mutex_type == PTHREAD_MUTEX_ERRORCHECK)
++  if (attr == __PTHREAD_ERRORCHECK_MUTEXATTR)
++    attr = &__pthread_errorcheck_mutexattr;
++  if (attr == __PTHREAD_RECURSIVE_MUTEXATTR)
++    attr = &__pthread_recursive_mutexattr;
++
++  if (attr && attr->mutex_type == PTHREAD_MUTEX_ERRORCHECK)
+     {
+ 
+       if (mutex->owner != _pthread_self ())
+@@ -46,7 +53,7 @@
+ 
+ #ifndef NDEBUG
+ # if !defined(ALWAYS_TRACK_MUTEX_OWNER)
+-  if (mutex->attr && mutex->attr->mutex_type != PTHREAD_MUTEX_NORMAL)
++  if (attr && attr->mutex_type != PTHREAD_MUTEX_NORMAL)
+ # endif
+     {
+       mutex->owner = thread;
+Index: libpthread/sysdeps/generic/pt-mutex-trylock.c
+===================================================================
+--- libpthread/sysdeps/generic/pt-mutex-trylock.c.orig	2009-05-27 23:53:39.000000000 +0000
++++ libpthread/sysdeps/generic/pt-mutex-trylock.c	2009-05-27 23:53:40.000000000 +0000
+@@ -29,6 +29,12 @@
+ {
+   int err;
+   struct __pthread *self;
++  const struct __pthread_mutexattr *attr = mutex->attr;
++
++  if (attr == __PTHREAD_ERRORCHECK_MUTEXATTR)
++    attr = &__pthread_errorcheck_mutexattr;
++  if (attr == __PTHREAD_RECURSIVE_MUTEXATTR)
++    attr = &__pthread_recursive_mutexattr;
+ 
+   __pthread_spin_lock (&mutex->__lock);
+   if (__pthread_spin_trylock (&mutex->__held) == 0)
+@@ -48,8 +54,8 @@
+ #endif
+ #endif
+ 
+-      if (mutex->attr)
+-	switch (mutex->attr->mutex_type)
++      if (attr)
++	switch (attr->mutex_type)
+ 	  {
+ 	  case PTHREAD_MUTEX_NORMAL:
+ 	    break;
+@@ -70,10 +76,10 @@
+ 
+   err = EBUSY;
+ 
+-  if (mutex->attr)
++  if (attr)
+     {
+       self = _pthread_self ();
+-      switch (mutex->attr->mutex_type)
++      switch (attr->mutex_type)
+ 	{
+ 	case PTHREAD_MUTEX_NORMAL:
+ 	  break;
+Index: libpthread/sysdeps/generic/pt-mutex-unlock.c
+===================================================================
+--- libpthread/sysdeps/generic/pt-mutex-unlock.c.orig	2008-10-02 12:00:37.000000000 +0000
++++ libpthread/sysdeps/generic/pt-mutex-unlock.c	2009-05-27 23:53:40.000000000 +0000
+@@ -28,10 +28,16 @@
+ __pthread_mutex_unlock (pthread_mutex_t *mutex)
+ {
+   struct __pthread *wakeup;
+-  
++  const struct __pthread_mutexattr *attr = mutex->attr;
++
++  if (attr == __PTHREAD_ERRORCHECK_MUTEXATTR)
++    attr = &__pthread_errorcheck_mutexattr;
++  if (attr == __PTHREAD_RECURSIVE_MUTEXATTR)
++    attr = &__pthread_recursive_mutexattr;
++
+   __pthread_spin_lock (&mutex->__lock);
+ 
+-  if (! mutex->attr || mutex->attr->mutex_type == PTHREAD_MUTEX_NORMAL)
++  if (! attr || attr->mutex_type == PTHREAD_MUTEX_NORMAL)
+     {
+ #if defined(ALWAYS_TRACK_MUTEX_OWNER)
+ # ifndef NDEBUG
+@@ -45,7 +51,7 @@
+ #endif
+     }
+   else
+-    switch (mutex->attr->mutex_type)
++    switch (attr->mutex_type)
+       {
+       case PTHREAD_MUTEX_ERRORCHECK:
+       case PTHREAD_MUTEX_RECURSIVE:
+@@ -55,7 +61,7 @@
+ 	    return EPERM;
+ 	  }
+ 
+-	if (mutex->attr->mutex_type == PTHREAD_MUTEX_RECURSIVE)
++	if (attr->mutex_type == PTHREAD_MUTEX_RECURSIVE)
+ 	  if (--mutex->locks > 0)
+ 	    {
+ 	      __pthread_spin_unlock (&mutex->__lock);
+@@ -82,7 +88,7 @@
+ 
+ #ifndef NDEBUG
+ # if !defined (ALWAYS_TRACK_MUTEX_OWNER)
+-  if (mutex->attr && mutex->attr->mutex_type != PTHREAD_MUTEX_NORMAL)
++  if (attr && attr->mutex_type != PTHREAD_MUTEX_NORMAL)
+ # endif
+     {
+       mutex->owner = wakeup;
+Index: libpthread/sysdeps/generic/pt-mutexattr.c
+===================================================================
+--- libpthread/sysdeps/generic/pt-mutexattr.c.orig	2008-08-12 15:07:49.000000000 +0000
++++ libpthread/sysdeps/generic/pt-mutexattr.c	2009-05-27 23:53:40.000000000 +0000
+@@ -28,6 +28,14 @@
+   mutex_type: PTHREAD_MUTEX_DEFAULT
+ };
+ 
++const struct __pthread_mutexattr __pthread_errorcheck_mutexattr =
++{
++  prioceiling: 0,
++  protocol: PTHREAD_PRIO_NONE,
++  pshared: PTHREAD_PROCESS_PRIVATE,
++  mutex_type: PTHREAD_MUTEX_ERRORCHECK
++};
++
+ const struct __pthread_mutexattr __pthread_recursive_mutexattr =
+ {
+   prioceiling: 0,
+Index: libpthread/sysdeps/generic/bits/mutex.h
+===================================================================
+--- libpthread/sysdeps/generic/bits/mutex.h.orig	2009-01-10 13:22:27.000000000 +0000
++++ libpthread/sysdeps/generic/bits/mutex.h	2009-05-27 23:53:40.000000000 +0000
+@@ -57,9 +57,17 @@
+ #  define __PTHREAD_MUTEX_INITIALIZER \
+     { __PTHREAD_SPIN_LOCK_INITIALIZER, __PTHREAD_SPIN_LOCK_INITIALIZER, 0, 0, 0, 0, 0, 0 }
+ 
++#  define __PTHREAD_ERRORCHECK_MUTEXATTR ((struct __pthread_mutexattr *) ((unsigned long) __PTHREAD_MUTEX_ERRORCHECK + 1))
++
++#  define __PTHREAD_ERRORCHECK_MUTEX_INITIALIZER \
++    { __PTHREAD_SPIN_LOCK_INITIALIZER, __PTHREAD_SPIN_LOCK_INITIALIZER, 0, 0,	\
++	__PTHREAD_ERRORCHECK_MUTEXATTR, 0, 0, 0 }
++
++#  define __PTHREAD_RECURSIVE_MUTEXATTR ((struct __pthread_mutexattr *) ((unsigned long) __PTHREAD_MUTEX_RECURSIVE + 1))
++
+ #  define __PTHREAD_RECURSIVE_MUTEX_INITIALIZER \
+     { __PTHREAD_SPIN_LOCK_INITIALIZER, __PTHREAD_SPIN_LOCK_INITIALIZER, 0, 0,	\
+-	(struct __pthread_mutexattr *) &__pthread_recursive_mutexattr, 0, 0, 0 }
++	__PTHREAD_RECURSIVE_MUTEXATTR, 0, 0, 0 }
+ 
+ # endif
+ #endif /* Not __pthread_mutex_defined.  */
+Index: libpthread/sysdeps/generic/bits/mutex-attr.h
+===================================================================
+--- libpthread/sysdeps/generic/bits/mutex-attr.h.orig	2009-05-27 23:59:37.000000000 +0000
++++ libpthread/sysdeps/generic/bits/mutex-attr.h	2009-05-27 23:59:44.000000000 +0000
+@@ -35,6 +35,7 @@
+ };
+ 
+ /* Attributes for a recursive mutex.  */
++extern const struct __pthread_mutexattr __pthread_errorcheck_mutexattr;
+ extern const struct __pthread_mutexattr __pthread_recursive_mutexattr;
+ 
+ #endif /* bits/mutex-attr.h */
