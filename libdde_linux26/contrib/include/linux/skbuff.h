@@ -142,6 +142,9 @@ struct skb_shared_info {
 	atomic_t	dataref;
 	unsigned short	nr_frags;
 	unsigned short	gso_size;
+#ifdef CONFIG_HAS_DMA
+	dma_addr_t	dma_head;
+#endif
 	/* Warning: this field is not always filled in (UFO)! */
 	unsigned short	gso_segs;
 	unsigned short  gso_type;
@@ -152,7 +155,7 @@ struct skb_shared_info {
 	struct sk_buff	*frag_list;
 	skb_frag_t	frags[MAX_SKB_FRAGS];
 #ifdef CONFIG_HAS_DMA
-	dma_addr_t	dma_maps[MAX_SKB_FRAGS + 1];
+	dma_addr_t	dma_maps[MAX_SKB_FRAGS];
 #endif
 };
 
