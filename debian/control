@@ -40,7 +40,7 @@ Description: The GNU Hurd (development files)
 
 Package: hurd-dbg
 Priority: extra
-Section: libdevel
+Section: debug
 Architecture: hurd-i386
 Depends: hurd (= ${binary:Version})
 Description: The GNU Hurd (debugging files)
