@@ -1,4 +1,4 @@
-hurd (20080921-1) UNRELEASED; urgency=low
+hurd (20090404-1) unstable; urgency=low
 
   [ Michael Banck ]
   * New snapshot from CVS.
@@ -38,11 +38,6 @@ hurd (20080921-1) UNRELEASED; urgency=low
   [ Samuel Thibault ]
   * debian/patches/thread-throttle.patch: Remove patch, makes ext2fs hang on
     big syncs.
-  * debian/patches/libpthread_rwlock_initializer.patch: New patch, add missing
-    PTHREAD_RWLOCK_INITIALIZER.
-  * debian/patches/stat-fix.patch: New patch, fixes some timestamp issues.
-  * debian/patches/in6_addr.patch: New patch to fix compilation under libc
-    2.9.
   * debian/control (Build-Depends): Bump libc0.3-dev to (>= 2.9).
   * debian/patches/stat_round.patch: New temporary patch, fixes symlink issues
     with tar.
@@ -59,11 +54,13 @@ hurd (20080921-1) UNRELEASED; urgency=low
   * debian/patches/libpthread_recursive_mutex_initializer.patch: New patch
     to fix the recursive mutex initializers usage in libraries not linking
     against libpthread.
+  * debian/control: Now using Standards-Version 3.8.2 (no changes needed).
+  * debian/control: Add myself to uploaders.
 
   [ Guillem Jover ]
   * Change hurd-dbg section to debug.
 
- -- Michael Banck <mbanck@debian.org>  Sat, 13 Sep 2008 23:43:27 +0200
+ -- Samuel Thibault <sthibault@debian.org>  Sun, 28 Jun 2009 22:19:07 +0000
 
 hurd (20080607-6) unstable; urgency=low
 

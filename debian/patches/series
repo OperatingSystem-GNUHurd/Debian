@@ -6,7 +6,6 @@ init_try_runsystem.gnu.patch -p0
 install-msgids.diff -p2
 libpager_update_seqno.patch -p0
 libpthread_mutex_owner.patch -p0
-libpthread_rwlock_initializer.patch -p0
 libpthread_stubs.patch -p0
 libpthread_tls.patch -p0
 makedev.diff -p0
@@ -19,8 +18,6 @@ startup-usr-support.patch -p0
 tmp_exec_startup.patch -p0
 ttys.patch -p1
 uptime_w_path_fix.patch -p1
-stat-fix.patch -p0
-in6_addr.patch -p1
 stat_round.patch -p0
 dir_acces_fix.patch -p0
 libports_stability.patch -p0
