@@ -1980,10 +1980,10 @@ diff --exclude=CVS -Naur foo/procfs_dir.c procfs/procfs_dir.c
 +
 +                  procfs_dir_create (dir->fs, node, 
 +                                      dir_name_pid, &new_dir);
-+                  free(dir_name_pid);
-+                  _proc_stat_free (ps);
 +                }
++              _proc_stat_free (ps);
 +            }
++          free(dir_name_pid);
 +	}
 +    }
 +
@@ -2433,7 +2433,7 @@ diff --exclude=CVS -Naur foo/procfs_nonpid_files.c procfs/procfs_nonpid_files.c
 +         mem_size, (PAGES_TO_BYTES(vmstats.free_count)) / 1024 , 0, 0, 0, 
 +         (PAGES_TO_BYTES(vmstats.active_count)) / 1024, 
 +         (PAGES_TO_BYTES(vmstats.inactive_count)) / 1024, 0, 0, 0, 0, 
-+         get_swap_size (), get_swap_free ()) == -1)
++         get_swap_size () / 1024, get_swap_free () / 1024) == -1)
 +      return errno;
 +
 +  memcpy (data, meminfo_data, strlen(meminfo_data));
@@ -2673,10 +2673,10 @@ diff --exclude=CVS -Naur foo/procfs_pid_files.c procfs/procfs_pid_files.c
 +                          const char *symlink_target)
 +{
 +  struct procfs_dir_entry *dir_entry;
-+  struct stat *stat = (struct stat *) malloc (sizeof (struct stat));
-+  stat->st_mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
++  struct stat stat = {};
++  stat.st_mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
 +
-+  dir_entry = update_entries_list (dir, name, stat, 
++  dir_entry = update_entries_list (dir, name, &stat, 
 +                                 timestamp, symlink_target);
 +
 +  return dir_entry;
