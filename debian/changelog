@@ -4,6 +4,7 @@ hurd (20090404-2) unreleased; urgency=low
     unused patch.
   * debian/patches/procfs.patch: Fix a couple of memory leaks, fix swap size
     report.
+  * debian/control: Add missing comma in Build-Depends.
 
  -- Samuel Thibault <sthibault@debian.org>  Sun, 23 Aug 2009 19:35:58 +0200
 
