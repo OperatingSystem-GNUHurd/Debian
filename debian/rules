@@ -30,6 +30,7 @@ DEB_CONFIGURE_USER_FLAGS := --disable-profile --enable-static-progs='ext2fs,ufs,
 DEB_MAKE_INSTALL_TARGET = install prefix=$(DEB_DESTDIR) sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var
 DEB_DH_STRIP_ARGS := --dbg-package=hurd
 DEB_INSTALL_CHANGELOGS_ALL := $(CURDIR)/debian/ChangeLog
+DEB_DH_MAKESHLIBS_ARGS_hurd := --add-udeb="hurd-udeb"
 
 build/hurd::
 	cd $(DEB_BUILDDIR)/doc && texi2html -split chapter ../../doc/hurd.texi

@@ -59,6 +59,7 @@ XC-Package-Type: udeb
 Priority: optional
 Section: debian-installer
 Architecture: hurd-i386
+Provides: hurd
 Description: The GNU Hurd - udeb
  This is the GNU Hurd udeb package. It contains essential system software and
  libraries.
