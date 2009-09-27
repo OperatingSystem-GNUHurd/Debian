@@ -1,0 +1,18 @@
+commit 4d2e9c98b5b886d80fb7396aef89ca50b0d5fcfe
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Sun Sep 27 23:33:29 2009 +0200
+
+    Use #!/bin/bash instead of #!/bin/sh
+    
+    The script makes big use of bashisms.
+
+diff --git a/sutils/MAKEDEV.sh b/sutils/MAKEDEV.sh
+index c9bd209..260e93b 100644
+--- a/sutils/MAKEDEV.sh
++++ b/sutils/MAKEDEV.sh
+@@ -1,4 +1,4 @@
+-#!/bin/sh
++#!/bin/bash
+ #
+ # Make standard devices
+ #
