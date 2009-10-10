@@ -15,7 +15,7 @@ index 747c666..d0e5b60 100644
      return EXDEV;
  
 +  if (!strcmp (fromname, ".") || !strcmp (fromname, "..")
-+   || !strcmp (toname,   ".") || !strcmp (toname,   "..")
++   || !strcmp (toname,   ".") || !strcmp (toname,   ".."))
 +    return EINVAL;
 +
    if (tocred->po->shadow_root != fromcred->po->shadow_root)
