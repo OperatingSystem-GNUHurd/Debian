@@ -1,4 +1,4 @@
-hurd (20090404-2) unreleased; urgency=low
+hurd (20090404-2) unstable; urgency=low
 
   * debian/patches/libpthread_no_recursive_mutex_initializer.patch: Remove
     unused patch.
