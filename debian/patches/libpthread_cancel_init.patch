@@ -10,8 +10,8 @@ Date:   Tue Oct 13 20:15:08 2009 +0200
 
 diff --git a/sysdeps/generic/bits/cancelation.h b/sysdeps/generic/bits/cancelation.h
 index f446d59..db9169a 100644
---- a/sysdeps/generic/bits/cancelation.h
-+++ b/sysdeps/generic/bits/cancelation.h
+--- a/libpthread/sysdeps/generic/bits/cancelation.h
++++ b/libpthread/sysdeps/generic/bits/cancelation.h
 @@ -38,9 +38,9 @@ struct __pthread_cancelation_handler **__pthread_get_cleanup_stack (void);
  	    = __pthread_get_cleanup_stack (); \
  	  struct __pthread_cancelation_handler __handler = \
