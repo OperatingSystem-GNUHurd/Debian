@@ -17,7 +17,7 @@ Package: hurd
 Priority: required
 Section: admin
 Essential: yes
-Depends: gnumach (>= 2:1.3.99.dfsg.cvs20070526-1), sysv-rc, util-linux, ${shlibs:Depends}
+Depends: gnumach (>= 2:1.3.99.dfsg.cvs20070526-1), sysv-rc, ${shlibs:Depends}
 Suggests: hurd-doc
 Provides: makedev, login
 Replaces: makedev, login

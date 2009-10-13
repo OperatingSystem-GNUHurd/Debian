@@ -1,7 +1,6 @@
 hurd (20090404-3) unreleased; urgency=low
 
   * debian/rules: Really put debugging symbols into the hurd-dbg package.
-  * debian/control: Make hurd depend on util-linux for /sbin/fsck.
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 13 Oct 2009 01:20:44 +0200
 
