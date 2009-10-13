@@ -29,3 +29,4 @@ libpthread_recursive_mutex_initializer.patch -p0
 pfinet-gcc-4.3-fix.patch -p1
 MAKEDEV.patch -p1
 libdiskfs-rename.patch -p1
+libpthread_cancel_init.patch -p1

@@ -1,0 +1,27 @@
+commit d69e38ee77536912308212945cfb0b6abe93cef0
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Tue Oct 13 20:15:08 2009 +0200
+
+    Fix pthread_cleanup_push old-gcc-style initializer
+    
+    sysdeps/generic/bits/cancelation.h (__pthread_cleanup_push): For better
+    portability to various compilation flags, use standard initializer for
+    struct __pthread_cancelation_handler __handler instead of old-gcc-style.
+
+diff --git a/sysdeps/generic/bits/cancelation.h b/sysdeps/generic/bits/cancelation.h
+index f446d59..db9169a 100644
+--- a/sysdeps/generic/bits/cancelation.h
++++ b/sysdeps/generic/bits/cancelation.h
+@@ -38,9 +38,9 @@ struct __pthread_cancelation_handler **__pthread_get_cleanup_stack (void);
+ 	    = __pthread_get_cleanup_stack (); \
+ 	  struct __pthread_cancelation_handler __handler = \
+ 	    { \
+-	      handler: (rt), \
+-	      arg: (rtarg), \
+-	      next: *__handlers \
++	      (rt), \
++	      (rtarg), \
++	      *__handlers \
+ 	    }; \
+ 	  *__handlers = &__handler;
+ 	  
