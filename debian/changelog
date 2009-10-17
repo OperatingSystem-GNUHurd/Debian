@@ -3,6 +3,8 @@ hurd (20090404-3) unreleased; urgency=low
   * debian/rules: Really put debugging symbols into the hurd-dbg package.
   * debian/patches/libpthread_cancel_init.patch: New patch to fix portability
     of pthread.h
+  * debian/patches/libpthread_kill_0.patch: New patch to fix pthread_kill(th,
+    0);
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 13 Oct 2009 01:20:44 +0200
 
