@@ -31,3 +31,4 @@ MAKEDEV.patch -p1
 libdiskfs-rename.patch -p1
 libpthread_cancel_init.patch -p1
 libpthread_kill_0.patch -p1
+console_current_vcs.patch -p1

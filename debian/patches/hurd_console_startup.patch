@@ -19,7 +19,7 @@
 +  fi
 +  if [ "$ENABLE" = "true" ]; then
 +    console ${DISPLAY} ${KBD} ${KBD_REPEAT} \
-+            ${SPEAKER} ${MOUSE} ${MOUSE_REPEAT} -c /dev/vcs
++            ${SPEAKER} ${MOUSE} ${MOUSE_REPEAT} -d current_vcs -c /dev/vcs
 +  fi
 +
    # Wait for runttys to die, meanwhile handling trapped signals.
