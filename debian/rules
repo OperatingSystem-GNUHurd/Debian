@@ -21,7 +21,6 @@ DEB_BUILDDIR = $(DEB_SRCDIR)/build
 
 CC=gcc-4.3
 
-include /usr/share/cdbs/1/rules/patchsys-quilt.mk
 include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/autotools.mk
 

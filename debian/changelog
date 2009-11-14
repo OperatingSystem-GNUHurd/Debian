@@ -14,6 +14,9 @@ hurd (20090404-3) UNRELEASED; urgency=low
   [ Guillem Jover ]
   * Update make-new-tarball.sh to exclude git instead of CVS paths.
   * Refresh patches with -pab to allow migration to source format 3.0 (quilt).
+  * Switch to source format “3.0 (quilt)”:
+    - Remove quilt from Build-Depends.
+    - Remove patchsys-quilt.mk include from debian/rules.
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 13 Oct 2009 01:20:44 +0200
 
