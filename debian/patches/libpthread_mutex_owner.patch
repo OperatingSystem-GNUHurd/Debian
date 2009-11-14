@@ -1,10 +1,9 @@
-Index: libpthread/sysdeps/generic/pt-mutex-trylock.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/pt-mutex-trylock.c,v
-retrieving revision 1.7
-diff -u -p -r1.7 pt-mutex-trylock.c
---- libpthread/sysdeps/generic/pt-mutex-trylock.c	12 Aug 2008 15:07:49 -0000	1.7
-+++ libpthread/sysdeps/generic/pt-mutex-trylock.c	29 Apr 2009 08:20:19 -0000
+---
+ libpthread/sysdeps/generic/pt-mutex-trylock.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+--- a/libpthread/sysdeps/generic/pt-mutex-trylock.c
++++ b/libpthread/sysdeps/generic/pt-mutex-trylock.c
 @@ -34,6 +34,7 @@ __pthread_mutex_trylock (struct __pthrea
    if (__pthread_spin_trylock (&mutex->__held) == 0)
      /* Acquired the lock.  */

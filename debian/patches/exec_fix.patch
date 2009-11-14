@@ -5,13 +5,12 @@ Fixes long-standing random hang of exec.
 	* exec.c (finish): Set FILE_DATA and MAP_BUFFER members of E to NULL
 	after freeing them.
 
-Index: exec/exec.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/exec/exec.c,v
-retrieving revision 1.93
-diff -u -p -r1.93 exec.c
---- exec/exec.c	2 Apr 2009 23:06:37 -0000	1.93
-+++ exec/exec.c	25 May 2009 09:39:35 -0000
+---
+ exec/exec.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+--- a/exec/exec.c
++++ b/exec/exec.c
 @@ -1008,10 +1008,13 @@ finish (struct execdata *e, int dealloc_
  #ifdef EXECDATA_STREAM
        fclose (&e->stream);

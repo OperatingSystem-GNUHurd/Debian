@@ -1,10 +1,22 @@
-Index: config.make.in
-===================================================================
-RCS file: /cvsroot/hurd/hurd/config.make.in,v
-retrieving revision 1.19
-diff -u -p -r1.19 config.make.in
---- config.make.in	7 Nov 2007 13:07:52 -0000	1.19
-+++ config.make.in	1 Jan 2008 04:07:44 -0000
+---
+ config.make.in                                           |    1 +
+ libpthread/Makefile                                      |   14 +++++++++++++-
+ libpthread/include/libc-symbols.h                        |    1 +
+ libpthread/sysdeps/generic/pt-atfork.c                   |    2 ++
+ libpthread/sysdeps/generic/pt-getcpuclockid.c            |    1 +
+ libpthread/sysdeps/generic/pt-getschedparam.c            |    2 ++
+ libpthread/sysdeps/generic/pt-key-create.c               |    2 ++
+ libpthread/sysdeps/generic/pt-key-delete.c               |    2 ++
+ libpthread/sysdeps/generic/pt-mutex-getprioceiling.c     |    2 ++
+ libpthread/sysdeps/generic/pt-mutex-setprioceiling.c     |    2 ++
+ libpthread/sysdeps/generic/pt-mutexattr-getprioceiling.c |    2 ++
+ libpthread/sysdeps/generic/pt-mutexattr-setprioceiling.c |    2 ++
+ libpthread/sysdeps/generic/pt-setschedparam.c            |    2 ++
+ libpthread/sysdeps/generic/pt-setschedprio.c             |    2 ++
+ 14 files changed, 36 insertions(+), 1 deletion(-)
+
+--- a/config.make.in
++++ b/config.make.in
 @@ -44,6 +44,7 @@ RANLIB = @RANLIB@
  MIG = @MIG@
  MIGCOM = $(MIG) -cc cat - /dev/null
@@ -13,14 +25,9 @@ diff -u -p -r1.19 config.make.in
  
  # Compilation flags.  Append these to the definitions already made by
  # the specific Makefile.
-Index: Makefile
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/Makefile,v
-retrieving revision 1.7
-diff -u -p -r1.7 Makefile
---- libpthread/Makefile	19 Nov 2007 17:37:02 -0000	1.7
-+++ libpthread/Makefile	31 Dec 2007 21:22:21 -0000
-@@ -180,7 +180,7 @@ CPPFLAGS += \
+--- a/libpthread/Makefile
++++ b/libpthread/Makefile
+@@ -186,7 +186,7 @@ CPPFLAGS += \
  	  -imacros $(srcdir)/not-in-libc.h
  
  
@@ -29,7 +36,7 @@ diff -u -p -r1.7 Makefile
  install-headers: $(addprefix $(includedir)/, $(sysdeps_headers))
  
  # XXX: If $(libdir)/libpthread2.a is installed and
-@@ -199,6 +199,18 @@ $(libdir)/libpthread2_pic.a: $(libdir)/l
+@@ -205,6 +205,18 @@ $(libdir)/libpthread2_pic.a: $(libdir)/l
  	mv $< $@
  	$(INSTALL_DATA) $(srcdir)/libpthread_pic.a $<
  
@@ -48,14 +55,9 @@ diff -u -p -r1.7 Makefile
  .PHONY: $(addprefix $(includedir)/, $(sysdeps_headers))
  
  $(addprefix $(includedir)/, $(sysdeps_headers)):
-Index: include/libc-symbols.h
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/include/libc-symbols.h,v
-retrieving revision 1.1
-diff -u -p -r1.1 libc-symbols.h
---- libpthread/include/libc-symbols.h	10 Oct 2002 23:05:06 -0000	1.1
-+++ libpthread/include/libc-symbols.h	1 Jan 2008 15:21:50 -0000
-@@ -250,6 +251,7 @@
+--- a/libpthread/include/libc-symbols.h
++++ b/libpthread/include/libc-symbols.h
+@@ -252,6 +252,7 @@
  
  /* A canned warning for sysdeps/stub functions.  */
  #define	stub_warning(name) \
@@ -63,26 +65,16 @@ diff -u -p -r1.1 libc-symbols.h
    link_warning (name, \
  		"warning: " #name " is not implemented and will always fail")
  
-Index: sysdeps/generic/pt-atfork.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/pt-atfork.c,v
-retrieving revision 1.1
-diff -u -p -r1.1 pt-atfork.c
---- libpthread/sysdeps/generic/pt-atfork.c	10 Oct 2002 23:05:06 -0000	1.1
-+++ libpthread/sysdeps/generic/pt-atfork.c	31 Dec 2007 21:22:22 -0000
+--- a/libpthread/sysdeps/generic/pt-atfork.c
++++ b/libpthread/sysdeps/generic/pt-atfork.c
 @@ -27,3 +27,5 @@ pthread_atfork (void (*prepare) (void),
  {
    return ENOSYS;
  }
 +
 +stub_warning (pthread_atfork)
-Index: sysdeps/generic/pt-getcpuclockid.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/pt-getcpuclockid.c,v
-retrieving revision 1.1
-diff -u -p -r1.1 pt-getcpuclockid.c
---- libpthread/sysdeps/generic/pt-getcpuclockid.c	10 Oct 2002 23:05:06 -0000	1.1
-+++ libpthread/sysdeps/generic/pt-getcpuclockid.c	31 Dec 2007 21:22:22 -0000
+--- a/libpthread/sysdeps/generic/pt-getcpuclockid.c
++++ b/libpthread/sysdeps/generic/pt-getcpuclockid.c
 @@ -30,5 +30,6 @@ pthread_getcpuclockid (pthread_t thread,
    return 0;
  #else
@@ -90,117 +82,72 @@ diff -u -p -r1.1 pt-getcpuclockid.c
 +stub_warning (pthread_getcpuclockid)
  #endif
  }
-Index: sysdeps/generic/pt-getschedparam.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/pt-getschedparam.c,v
-retrieving revision 1.1
-diff -u -p -r1.1 pt-getschedparam.c
---- libpthread/sysdeps/generic/pt-getschedparam.c	10 Oct 2002 23:05:06 -0000	1.1
-+++ libpthread/sysdeps/generic/pt-getschedparam.c	31 Dec 2007 21:22:22 -0000
+--- a/libpthread/sysdeps/generic/pt-getschedparam.c
++++ b/libpthread/sysdeps/generic/pt-getschedparam.c
 @@ -26,3 +26,5 @@ pthread_getschedparam (pthread_t thread,
  {
    return ENOSYS;
  }
 +
 +stub_warning (pthread_getschedparam)
-Index: sysdeps/generic/pt-key-create.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/pt-key-create.c,v
-retrieving revision 1.1
-diff -u -p -r1.1 pt-key-create.c
---- libpthread/sysdeps/generic/pt-key-create.c	10 Oct 2002 23:05:06 -0000	1.1
-+++ libpthread/sysdeps/generic/pt-key-create.c	31 Dec 2007 21:22:22 -0000
+--- a/libpthread/sysdeps/generic/pt-key-create.c
++++ b/libpthread/sysdeps/generic/pt-key-create.c
 @@ -25,3 +25,5 @@ pthread_key_create (pthread_key_t *key, 
  {
    return ENOSYS;
  }
 +
 +stub_warning (pthread_key_create)
-Index: sysdeps/generic/pt-key-delete.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/pt-key-delete.c,v
-retrieving revision 1.2
-diff -u -p -r1.2 pt-key-delete.c
---- libpthread/sysdeps/generic/pt-key-delete.c	2 Nov 2002 23:41:51 -0000	1.2
-+++ libpthread/sysdeps/generic/pt-key-delete.c	31 Dec 2007 21:22:22 -0000
+--- a/libpthread/sysdeps/generic/pt-key-delete.c
++++ b/libpthread/sysdeps/generic/pt-key-delete.c
 @@ -25,3 +25,5 @@ pthread_key_delete (pthread_key_t key)
  {
    return ENOSYS;
  }
 +
 +stub_warning (pthread_key_delete)
-Index: sysdeps/generic/pt-mutex-getprioceiling.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/pt-mutex-getprioceiling.c,v
-retrieving revision 1.1
-diff -u -p -r1.1 pt-mutex-getprioceiling.c
---- libpthread/sysdeps/generic/pt-mutex-getprioceiling.c	10 Oct 2002 23:05:06 -0000	1.1
-+++ libpthread/sysdeps/generic/pt-mutex-getprioceiling.c	31 Dec 2007 21:22:22 -0000
+--- a/libpthread/sysdeps/generic/pt-mutex-getprioceiling.c
++++ b/libpthread/sysdeps/generic/pt-mutex-getprioceiling.c
 @@ -26,3 +26,5 @@ pthread_mutex_getprioceiling (const pthr
  {
    return ENOSYS;
  }
 +
 +stub_warning (pthread_mutex_getprioceiling)
-Index: sysdeps/generic/pt-mutex-setprioceiling.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/pt-mutex-setprioceiling.c,v
-retrieving revision 1.1
-diff -u -p -r1.1 pt-mutex-setprioceiling.c
---- libpthread/sysdeps/generic/pt-mutex-setprioceiling.c	10 Oct 2002 23:05:06 -0000	1.1
-+++ libpthread/sysdeps/generic/pt-mutex-setprioceiling.c	31 Dec 2007 21:22:22 -0000
+--- a/libpthread/sysdeps/generic/pt-mutex-setprioceiling.c
++++ b/libpthread/sysdeps/generic/pt-mutex-setprioceiling.c
 @@ -26,3 +26,5 @@ pthread_mutex_setprioceiling (pthread_mu
  {
    return ENOSYS;
  }
 +
 +stub_warning (pthread_mutex_setprioceiling)
-Index: sysdeps/generic/pt-mutexattr-getprioceiling.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/pt-mutexattr-getprioceiling.c,v
-retrieving revision 1.1
-diff -u -p -r1.1 pt-mutexattr-getprioceiling.c
---- libpthread/sysdeps/generic/pt-mutexattr-getprioceiling.c	10 Oct 2002 23:05:06 -0000	1.1
-+++ libpthread/sysdeps/generic/pt-mutexattr-getprioceiling.c	31 Dec 2007 21:22:22 -0000
+--- a/libpthread/sysdeps/generic/pt-mutexattr-getprioceiling.c
++++ b/libpthread/sysdeps/generic/pt-mutexattr-getprioceiling.c
 @@ -26,3 +26,5 @@ pthread_mutexattr_getprioceiling (const 
  {
    return ENOSYS;
  }
 +
 +stub_warning (pthread_mutexattr_getprioceiling)
-Index: sysdeps/generic/pt-mutexattr-setprioceiling.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/pt-mutexattr-setprioceiling.c,v
-retrieving revision 1.1
-diff -u -p -r1.1 pt-mutexattr-setprioceiling.c
---- libpthread/sysdeps/generic/pt-mutexattr-setprioceiling.c	10 Oct 2002 23:05:06 -0000	1.1
-+++ libpthread/sysdeps/generic/pt-mutexattr-setprioceiling.c	31 Dec 2007 21:22:22 -0000
+--- a/libpthread/sysdeps/generic/pt-mutexattr-setprioceiling.c
++++ b/libpthread/sysdeps/generic/pt-mutexattr-setprioceiling.c
 @@ -26,3 +26,5 @@ pthread_mutexattr_setprioceiling (pthrea
  {
    return ENOSYS;
  }
 +
 +stub_warning (pthread_mutexattr_setprioceiling)
-Index: sysdeps/generic/pt-setschedparam.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/pt-setschedparam.c,v
-retrieving revision 1.2
-diff -u -p -r1.2 pt-setschedparam.c
---- libpthread/sysdeps/generic/pt-setschedparam.c	20 Apr 2005 15:26:52 -0000	1.2
-+++ libpthread/sysdeps/generic/pt-setschedparam.c	31 Dec 2007 21:22:22 -0000
+--- a/libpthread/sysdeps/generic/pt-setschedparam.c
++++ b/libpthread/sysdeps/generic/pt-setschedparam.c
 @@ -26,3 +26,5 @@ pthread_setschedparam (pthread_t thread,
  {
    return ENOSYS;
  }
 +
 +stub_warning (pthread_setschedparam)
-Index: sysdeps/generic/pt-setschedprio.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/generic/pt-setschedprio.c,v
-retrieving revision 1.1
-diff -u -p -r1.1 pt-setschedprio.c
---- libpthread/sysdeps/generic/pt-setschedprio.c	10 Oct 2002 23:05:06 -0000	1.1
-+++ libpthread/sysdeps/generic/pt-setschedprio.c	31 Dec 2007 21:22:22 -0000
+--- a/libpthread/sysdeps/generic/pt-setschedprio.c
++++ b/libpthread/sysdeps/generic/pt-setschedprio.c
 @@ -25,3 +25,5 @@ pthread_setschedprio (pthread_t thread, 
  {
    return ENOSYS;

@@ -1,5 +1,9 @@
---- hurd-20040301.orig/config/ttys
-+++ hurd-20040301/config/ttys
+---
+ config/ttys |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+--- a/config/ttys
++++ b/config/ttys
 @@ -5,4 +5,10 @@
  # name	program				type		status	comments
  

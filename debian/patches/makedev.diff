@@ -1,6 +1,10 @@
---- sutils/MAKEDEV.sh.orig	2006-04-12 15:05:12.000000000 +0000
-+++ sutils/MAKEDEV.sh	2006-04-12 15:05:23.000000000 +0000
-@@ -86,7 +86,7 @@
+---
+ sutils/MAKEDEV.sh |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/sutils/MAKEDEV.sh
++++ b/sutils/MAKEDEV.sh
+@@ -86,7 +86,7 @@ function mkdev {
  	;;
  
        std)

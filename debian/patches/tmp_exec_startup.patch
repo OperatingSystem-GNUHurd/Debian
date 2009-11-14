@@ -1,6 +1,10 @@
---- libdiskfs/boot-start.c	26 Mar 2002 14:59:52 -0000	1.60
-+++ libdiskfs/boot-start.c	19 Nov 2007 21:22:57 -0000
-@@ -126,8 +126,13 @@
+---
+ libdiskfs/boot-start.c |   24 ++++++++++++++++++++----
+ 1 file changed, 20 insertions(+), 4 deletions(-)
+
+--- a/libdiskfs/boot-start.c
++++ b/libdiskfs/boot-start.c
+@@ -126,8 +126,13 @@ diskfs_start_bootstrap ()
        assert (_hurd_ports);
        assert (_hurd_ports[INIT_PORT_CRDIR].port != MACH_PORT_NULL);
        diskfs_exec = file_name_lookup (_SERVERS_EXEC, 0, 0);
@@ -16,7 +20,7 @@
        else
  	{
  #ifndef NDEBUG
-@@ -177,8 +182,15 @@
+@@ -177,8 +182,15 @@ diskfs_start_bootstrap ()
  			&retry, pathbuf, &execnode);
        if (err)
  	{
@@ -34,7 +38,7 @@
  	}
        else
  	{
-@@ -393,6 +405,10 @@
+@@ -393,6 +405,10 @@ diskfs_execboot_fsys_startup (mach_port_
  
    err = dir_lookup (rootport, _SERVERS_EXEC, flags|O_NOTRANS, 0,
  		    &retry, pathbuf, real);

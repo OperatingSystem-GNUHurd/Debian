@@ -1,34 +1,34 @@
-console_utf-8.patch -p1
-diskfs_no_inherit_dir_group.patch -p1
-ext2fs_large_stores.patch -p1
-hurd_console_startup.patch -p0
-init_try_runsystem.gnu.patch -p0
-install-msgids.diff -p2
-libpager_update_seqno.patch -p0
-libpthread_mutex_owner.patch -p0
-libpthread_stubs.patch -p0
-libpthread_tls.patch -p0
-makedev.diff -p0
-pfinet_dhcp.patch -p0
-pflocal.patch -p0
-procfs.patch -p0
-rc.patch -p1
-runsystem_setup_pflocal.patch -p0
-startup-usr-support.patch -p0
-tmp_exec_startup.patch -p0
-ttys.patch -p1
-uptime_w_path_fix.patch -p1
-stat_round.patch -p0
-dir_acces_fix.patch -p0
-libports_stability.patch -p0
-libpthread_fix.patch -p0
-libpthread_setcancel.patch -p0
-extern_inline_fix.patch -p1
-exec_fix.patch -p0
-libpthread_recursive_mutex_initializer.patch -p0
-pfinet-gcc-4.3-fix.patch -p1
-MAKEDEV.patch -p1
-libdiskfs-rename.patch -p1
-libpthread_cancel_init.patch -p1
-libpthread_kill_0.patch -p1
-console_current_vcs.patch -p1
+console_utf-8.patch
+diskfs_no_inherit_dir_group.patch
+ext2fs_large_stores.patch
+hurd_console_startup.patch
+init_try_runsystem.gnu.patch
+install-msgids.diff
+libpager_update_seqno.patch
+libpthread_mutex_owner.patch
+libpthread_stubs.patch
+libpthread_tls.patch
+makedev.diff
+pfinet_dhcp.patch
+pflocal.patch
+procfs.patch
+rc.patch
+runsystem_setup_pflocal.patch
+startup-usr-support.patch
+tmp_exec_startup.patch
+ttys.patch
+uptime_w_path_fix.patch
+stat_round.patch
+dir_acces_fix.patch
+libports_stability.patch
+libpthread_fix.patch
+libpthread_setcancel.patch
+extern_inline_fix.patch
+exec_fix.patch
+libpthread_recursive_mutex_initializer.patch
+pfinet-gcc-4.3-fix.patch
+MAKEDEV.patch
+libdiskfs-rename.patch
+libpthread_cancel_init.patch
+libpthread_kill_0.patch
+console_current_vcs.patch

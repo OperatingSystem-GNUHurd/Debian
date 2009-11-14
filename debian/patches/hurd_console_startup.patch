@@ -1,6 +1,10 @@
---- daemons/runsystem.sh.orig	2001-12-20 18:29:33.000000000 +0100
-+++ daemons/runsystem.sh	2005-06-18 01:05:30.398035896 +0200
-@@ -127,10 +127,24 @@
+---
+ daemons/runsystem.sh |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+--- a/daemons/runsystem.sh
++++ b/daemons/runsystem.sh
+@@ -127,10 +127,24 @@ while : ; do
      trap "kill -$sig \${runttys_pid}" $sig
    done
  

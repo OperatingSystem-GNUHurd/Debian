@@ -1,6 +1,16 @@
-diff -Nur hurd_orig/libdiskfs/diskfs.h hurd/libdiskfs/diskfs.h
---- hurd_orig/libdiskfs/diskfs.h	2009-02-16 17:05:59.000000000 +0100
-+++ hurd/libdiskfs/diskfs.h	2009-05-24 13:05:23.000000000 +0200
+---
+ libdiskfs/diskfs.h          |   17 ++++++----
+ libpipe/pipe.h              |   74 ++++++++++++++++++++++++++++++++------------
+ libpipe/pq.h                |   57 ++++++++++++++++++++++++++-------
+ libshouldbeinlibc/idvec.h   |   29 ++++++++++++-----
+ libshouldbeinlibc/maptime.h |   13 ++++---
+ libshouldbeinlibc/ugids.h   |   25 ++++++++++----
+ libstore/store.h            |   13 ++++---
+ libthreads/rwlock.h         |   27 +++++++++++-----
+ 8 files changed, 184 insertions(+), 71 deletions(-)
+
+--- a/libdiskfs/diskfs.h
++++ b/libdiskfs/diskfs.h
 @@ -27,10 +27,7 @@
  #include <hurd/fshelp.h>
  #include <hurd/iohelp.h>
@@ -13,7 +23,7 @@ diff -Nur hurd_orig/libdiskfs/diskfs.h hurd/libdiskfs/diskfs.h
  
  /* Each user port referring to a file points to one of these
     (with the aid of the ports library).  */
-@@ -781,10 +778,16 @@
+@@ -781,10 +778,16 @@ error_t diskfs_start_protid (struct pero
     the user to install is USER.  */
  void diskfs_finish_protid (struct protid *cred, struct iouser *user);
  
@@ -31,7 +41,7 @@ diff -Nur hurd_orig/libdiskfs/diskfs.h hurd/libdiskfs/diskfs.h
  diskfs_begin_using_protid_port (file_t port)
  {
    return ports_lookup_port (diskfs_port_bucket, port, diskfs_protid_class);
-@@ -793,13 +796,15 @@
+@@ -793,13 +796,15 @@ diskfs_begin_using_protid_port (file_t p
  /* Called by MiG after server routines have been run; this
     balances begin_using_protid_port, and is arranged for the io
     and fs interfaces by fsmutations.h. */
@@ -48,9 +58,8 @@ diff -Nur hurd_orig/libdiskfs/diskfs.h hurd/libdiskfs/diskfs.h
  /* Called when a protid CRED has no more references.  (Because references\
     to protids are maintained by the port management library, this is
     installed in the clean routines list.)  The ports library will
-diff -Nur hurd_orig/libpipe/pipe.h hurd/libpipe/pipe.h
---- hurd_orig/libpipe/pipe.h	1996-10-24 21:27:08.000000000 +0200
-+++ hurd/libpipe/pipe.h	2009-05-24 13:13:37.000000000 +0200
+--- a/libpipe/pipe.h
++++ b/libpipe/pipe.h
 @@ -24,13 +24,10 @@
  #define EWOULDBLOCK EAGAIN /* XXX */
  
@@ -66,7 +75,7 @@ diff -Nur hurd_orig/libpipe/pipe.h hurd/libpipe/pipe.h
  
  /* A description of a class of pipes and how to operate on them.  */
  struct pipe_class
-@@ -107,9 +104,24 @@
+@@ -107,9 +104,24 @@ struct pipe
  /* Pipe flags.  */
  #define PIPE_BROKEN	0x1	/* This pipe isn't connected.  */
  
@@ -92,7 +101,7 @@ diff -Nur hurd_orig/libpipe/pipe.h hurd/libpipe/pipe.h
  pipe_readable (struct pipe *pipe, int data_only)
  {
    size_t readable = 0;
-@@ -128,7 +140,7 @@
+@@ -128,7 +140,7 @@ pipe_readable (struct pipe *pipe, int da
     then `control' packets are ignored.  Note that this is different than
     (pipe_readable (PIPE) > 0) in the case where a control packet containing
     only ports is present.  */
@@ -101,7 +110,7 @@ diff -Nur hurd_orig/libpipe/pipe.h hurd/libpipe/pipe.h
  pipe_is_readable (struct pipe *pipe, int data_only)
  {
    struct pq *pq = pipe->queue;
-@@ -143,7 +155,7 @@
+@@ -143,7 +155,7 @@ pipe_is_readable (struct pipe *pipe, int
     this operation will return EWOULDBLOCK instead of blocking when no data is
     immediately available.  If DATA_ONLY is true, then `control' packets are
     ignored.  */
@@ -110,7 +119,7 @@ diff -Nur hurd_orig/libpipe/pipe.h hurd/libpipe/pipe.h
  pipe_wait_readable (struct pipe *pipe, int noblock, int data_only)
  {
    while (! pipe_is_readable (pipe, data_only) && ! (pipe->flags & PIPE_BROKEN))
-@@ -160,7 +172,7 @@
+@@ -160,7 +172,7 @@ pipe_wait_readable (struct pipe *pipe, i
     returns once threads waiting using pipe_wait_readable have been woken and
     given a chance to read, and if there is still data available thereafter.
     If DATA_ONLY is true, then `control' packets are ignored.  */
@@ -119,7 +128,7 @@ diff -Nur hurd_orig/libpipe/pipe.h hurd/libpipe/pipe.h
  pipe_select_readable (struct pipe *pipe, int data_only)
  {
    while (! pipe_is_readable (pipe, data_only) && ! (pipe->flags & PIPE_BROKEN))
-@@ -172,7 +184,7 @@
+@@ -172,7 +184,7 @@ pipe_select_readable (struct pipe *pipe,
  /* Block until data can be written to PIPE.  If NOBLOCK is true, then
     EWOULDBLOCK is returned instead of blocking if this can't be done
     immediately.  */
@@ -128,7 +137,7 @@ diff -Nur hurd_orig/libpipe/pipe.h hurd/libpipe/pipe.h
  pipe_wait_writable (struct pipe *pipe, int noblock)
  {
    size_t limit = pipe->write_limit;
-@@ -193,7 +205,7 @@
+@@ -193,7 +205,7 @@ pipe_wait_writable (struct pipe *pipe, i
  /* Block until some data can be written to PIPE.  This call only returns once
     threads waiting using pipe_wait_writable have been woken and given a
     chance to write, and if there is still space available thereafter.  */
@@ -137,7 +146,7 @@ diff -Nur hurd_orig/libpipe/pipe.h hurd/libpipe/pipe.h
  pipe_select_writable (struct pipe *pipe)
  {
    size_t limit = pipe->write_limit;
-@@ -203,6 +215,8 @@
+@@ -203,6 +215,8 @@ pipe_select_writable (struct pipe *pipe)
    return 0;
  }
  
@@ -146,7 +155,7 @@ diff -Nur hurd_orig/libpipe/pipe.h hurd/libpipe/pipe.h
  /* Creates a new pipe of class CLASS and returns it in RESULT.  */
  error_t pipe_create (struct pipe_class *class, struct pipe **pipe);
  
-@@ -223,8 +237,28 @@
+@@ -223,8 +237,28 @@ void _pipe_no_readers (struct pipe *pipe
     should be locked.  */
  void _pipe_no_writers (struct pipe *pipe);
  
@@ -176,7 +185,7 @@ diff -Nur hurd_orig/libpipe/pipe.h hurd/libpipe/pipe.h
  pipe_acquire_reader (struct pipe *pipe)
  {
    mutex_lock (&pipe->lock);
-@@ -233,7 +267,7 @@
+@@ -233,7 +267,7 @@ pipe_acquire_reader (struct pipe *pipe)
  }
  
  /* Lock PIPE and increment its writers count.  */
@@ -185,7 +194,7 @@ diff -Nur hurd_orig/libpipe/pipe.h hurd/libpipe/pipe.h
  pipe_acquire_writer (struct pipe *pipe)
  {
    mutex_lock (&pipe->lock);
-@@ -243,7 +277,7 @@
+@@ -243,7 +277,7 @@ pipe_acquire_writer (struct pipe *pipe)
  
  /* Decrement PIPE's (which should be locked) reader count and unlock it.  If
     there are no more refs to PIPE, it will be destroyed.  */
@@ -194,7 +203,7 @@ diff -Nur hurd_orig/libpipe/pipe.h hurd/libpipe/pipe.h
  pipe_release_reader (struct pipe *pipe)
  {
    if (--pipe->readers == 0)
-@@ -254,7 +288,7 @@
+@@ -254,7 +288,7 @@ pipe_release_reader (struct pipe *pipe)
  
  /* Decrement PIPE's (which should be locked) writer count and unlock it.  If
     there are no more refs to PIPE, it will be destroyed.  */
@@ -203,7 +212,7 @@ diff -Nur hurd_orig/libpipe/pipe.h hurd/libpipe/pipe.h
  pipe_release_writer (struct pipe *pipe)
  {
    if (--pipe->writers == 0)
-@@ -264,7 +298,7 @@
+@@ -264,7 +298,7 @@ pipe_release_writer (struct pipe *pipe)
  }
  
  /* Increment PIPE's reader count.  PIPE should be unlocked.  */
@@ -212,7 +221,7 @@ diff -Nur hurd_orig/libpipe/pipe.h hurd/libpipe/pipe.h
  pipe_add_reader (struct pipe *pipe)
  {
    pipe_acquire_reader (pipe);
-@@ -272,7 +306,7 @@
+@@ -272,7 +306,7 @@ pipe_add_reader (struct pipe *pipe)
  }
  
  /* Increment PIPE's writer count.  PIPE should be unlocked.  */
@@ -221,7 +230,7 @@ diff -Nur hurd_orig/libpipe/pipe.h hurd/libpipe/pipe.h
  pipe_add_writer (struct pipe *pipe)
  {
    pipe_acquire_writer (pipe);
-@@ -281,7 +315,7 @@
+@@ -281,7 +315,7 @@ pipe_add_writer (struct pipe *pipe)
  
  /* Decrement PIPE's (which should be unlocked) reader count and unlock it.  If
     there are no more refs to PIPE, it will be destroyed.  */
@@ -230,7 +239,7 @@ diff -Nur hurd_orig/libpipe/pipe.h hurd/libpipe/pipe.h
  pipe_remove_reader (struct pipe *pipe)
  {
    mutex_lock (&pipe->lock);
-@@ -290,7 +324,7 @@
+@@ -290,7 +324,7 @@ pipe_remove_reader (struct pipe *pipe)
  
  /* Decrement PIPE's (which should be unlocked) writer count and unlock it.  If
     there are no more refs to PIPE, it will be destroyed.  */
@@ -239,7 +248,7 @@ diff -Nur hurd_orig/libpipe/pipe.h hurd/libpipe/pipe.h
  pipe_remove_writer (struct pipe *pipe)
  {
    mutex_lock (&pipe->lock);
-@@ -298,12 +332,14 @@
+@@ -298,12 +332,14 @@ pipe_remove_writer (struct pipe *pipe)
  }
  
  /* Empty out PIPE of any data.  PIPE should be locked.  */
@@ -255,9 +264,8 @@ diff -Nur hurd_orig/libpipe/pipe.h hurd/libpipe/pipe.h
  /* Writes up to LEN bytes of DATA, to PIPE, which should be locked, and
     returns the amount written in AMOUNT.  If present, the information in
     CONTROL & PORTS is written in a preceding control packet.  If an error is
-diff -Nur hurd_orig/libpipe/pq.h hurd/libpipe/pq.h
---- hurd_orig/libpipe/pq.h	2006-07-25 16:06:14.000000000 +0200
-+++ hurd/libpipe/pq.h	2009-05-24 13:17:15.000000000 +0200
+--- a/libpipe/pq.h
++++ b/libpipe/pq.h
 @@ -25,10 +25,7 @@
  #include <stddef.h>		/* for size_t */
  #include <string.h>
@@ -270,7 +278,7 @@ diff -Nur hurd_orig/libpipe/pq.h hurd/libpipe/pq.h
  
  
  struct packet
-@@ -70,13 +67,19 @@
+@@ -70,13 +67,19 @@ error_t packet_set_ports (struct packet 
  /* If PACKET has any ports, deallocates them.  */
  void packet_dealloc_ports (struct packet *packet);
  
@@ -291,7 +299,7 @@ diff -Nur hurd_orig/libpipe/pq.h hurd/libpipe/pq.h
  /* Append the bytes in DATA, of length DATA_LEN, to what's already in PACKET,
     and return the amount appended in AMOUNT if that's not the null pointer.  */
  error_t packet_write (struct packet *packet,
-@@ -94,14 +97,20 @@
+@@ -94,14 +97,20 @@ error_t packet_read (struct packet *pack
  error_t packet_read_ports (struct packet *packet,
  			   mach_port_t **ports, size_t *num_ports);
  
@@ -313,7 +321,7 @@ diff -Nur hurd_orig/libpipe/pq.h hurd/libpipe/pq.h
  
  /* The packet size above which we start to do things differently to avoid
     copying around data.  */
-@@ -125,9 +134,17 @@
+@@ -125,9 +134,17 @@ int packet_extend (struct packet *packet
     returned.  */
  error_t packet_realloc (struct packet *packet, size_t new_len);
  
@@ -332,7 +340,7 @@ diff -Nur hurd_orig/libpipe/pq.h hurd/libpipe/pq.h
  packet_fit (struct packet *packet, size_t amount)
  {
    char *buf = packet->buf, *end = packet->buf_end;
-@@ -159,7 +176,7 @@
+@@ -159,7 +176,7 @@ packet_fit (struct packet *packet, size_
  
  /* Make sure that PACKET has room for at least AMOUNT more bytes, or return
     the reason why not.  */
@@ -341,7 +349,7 @@ diff -Nur hurd_orig/libpipe/pq.h hurd/libpipe/pq.h
  packet_ensure (struct packet *packet, size_t amount)
  {
    if (! packet_fit (packet, amount))
-@@ -176,7 +193,7 @@
+@@ -176,7 +193,7 @@ packet_ensure (struct packet *packet, si
     it can be done efficiently, e.g., the packet can be grown in place, rather
     than moving the contents (or there is little enough data so that copying
     it is OK).  True is returned if room was made, false otherwise.  */
@@ -350,7 +358,7 @@ diff -Nur hurd_orig/libpipe/pq.h hurd/libpipe/pq.h
  packet_ensure_efficiently (struct packet *packet, size_t amount)
  {
    if (! packet_fit (packet, amount))
-@@ -189,6 +206,8 @@
+@@ -189,6 +206,8 @@ packet_ensure_efficiently (struct packet
      }
    return 0;
  }
@@ -359,7 +367,7 @@ diff -Nur hurd_orig/libpipe/pq.h hurd/libpipe/pq.h
  
  struct pq
  {
-@@ -201,10 +220,14 @@
+@@ -201,10 +220,14 @@ struct pq
     the packet, or deallocated by calling pipe_dealloc_addr.  */
  struct packet *pq_queue (struct pq *pq, unsigned type, void *source);
  
@@ -375,7 +383,7 @@ diff -Nur hurd_orig/libpipe/pq.h hurd/libpipe/pq.h
  pq_tail (struct pq *pq, unsigned type, void *source)
  {
    struct packet *tail = pq->tail;
-@@ -214,16 +237,24 @@
+@@ -214,16 +237,24 @@ pq_tail (struct pq *pq, unsigned type, v
    return tail;
  }
  
@@ -401,7 +409,7 @@ diff -Nur hurd_orig/libpipe/pq.h hurd/libpipe/pq.h
  pq_head (struct pq *pq, unsigned type, void *source)
  {
    struct packet *head = pq->head;
-@@ -237,7 +268,7 @@
+@@ -237,7 +268,7 @@ pq_head (struct pq *pq, unsigned type, v
  }
  
  /* The same as pq_head, but first discards the head of the queue.  */
@@ -410,7 +418,7 @@ diff -Nur hurd_orig/libpipe/pq.h hurd/libpipe/pq.h
  pq_next (struct pq *pq, unsigned type, void *source)
  {
    if (!pq->head)
-@@ -246,6 +277,8 @@
+@@ -246,6 +277,8 @@ pq_next (struct pq *pq, unsigned type, v
    return pq_head (pq, type, source);
  }
  
@@ -419,9 +427,8 @@ diff -Nur hurd_orig/libpipe/pq.h hurd/libpipe/pq.h
  /* Dequeues all packets in PQ.  */
  void pq_drain (struct pq *pq);
  
-diff -Nur hurd_orig/libshouldbeinlibc/idvec.h hurd/libshouldbeinlibc/idvec.h
---- hurd_orig/libshouldbeinlibc/idvec.h	2001-02-26 05:15:22.000000000 +0100
-+++ hurd/libshouldbeinlibc/idvec.h	2009-05-24 13:20:47.000000000 +0200
+--- a/libshouldbeinlibc/idvec.h
++++ b/libshouldbeinlibc/idvec.h
 @@ -24,10 +24,7 @@
  #include <hurd/hurd_types.h>
  #include <errno.h>
@@ -434,7 +441,7 @@ diff -Nur hurd_orig/libshouldbeinlibc/idvec.h hurd/libshouldbeinlibc/idvec.h
  
  struct idvec
  {
-@@ -50,22 +47,30 @@
+@@ -50,22 +47,30 @@ void idvec_free_wrapper (struct idvec *i
  /* Free IDVEC and any storage associated with it.  */
  void idvec_free (struct idvec *idvec);
  
@@ -468,7 +475,7 @@ diff -Nur hurd_orig/libshouldbeinlibc/idvec.h hurd/libshouldbeinlibc/idvec.h
  idvec_equal (const struct idvec *idvec1, const struct idvec *idvec2)
  {
    size_t num = idvec1->num;
-@@ -74,6 +79,8 @@
+@@ -74,6 +79,8 @@ idvec_equal (const struct idvec *idvec1,
  	|| memcmp (idvec1->ids, idvec2->ids, num * sizeof *idvec1->ids) == 0);
  }
  
@@ -477,7 +484,7 @@ diff -Nur hurd_orig/libshouldbeinlibc/idvec.h hurd/libshouldbeinlibc/idvec.h
  /* Ensure that IDVEC has enough spaced allocated to hold NUM ids, thus
     ensuring that any subsequent ids added won't return a memory allocation
     error unless it would result in more ids that NUM.  ENOMEM is returned if
-@@ -87,13 +94,19 @@
+@@ -87,13 +94,19 @@ error_t idvec_grow (struct idvec *idvec,
  /* Returns true if IDVEC contains ID, at or after position POS.  */
  int idvec_tail_contains (const struct idvec *idvec, unsigned pos, uid_t id);
  
@@ -498,9 +505,8 @@ diff -Nur hurd_orig/libshouldbeinlibc/idvec.h hurd/libshouldbeinlibc/idvec.h
  /* Insert ID into IDVEC at position POS, returning ENOMEM if there wasn't
     enough memory, or 0.  */
  error_t idvec_insert (struct idvec *idvec, unsigned pos, uid_t id);
-diff -Nur hurd_orig/libshouldbeinlibc/maptime.h hurd/libshouldbeinlibc/maptime.h
---- hurd_orig/libshouldbeinlibc/maptime.h	2007-02-04 16:06:27.000000000 +0100
-+++ hurd/libshouldbeinlibc/maptime.h	2009-05-24 13:21:39.000000000 +0200
+--- a/libshouldbeinlibc/maptime.h
++++ b/libshouldbeinlibc/maptime.h
 @@ -21,13 +21,10 @@
  #ifndef __MAPTIME_H__
  #define __MAPTIME_H__
@@ -530,16 +536,15 @@ diff -Nur hurd_orig/libshouldbeinlibc/maptime.h hurd/libshouldbeinlibc/maptime.h
  maptime_read (volatile struct mapped_time_value *mtime, struct timeval *tv)
  {
    do
-@@ -49,4 +50,6 @@
+@@ -49,4 +50,6 @@ maptime_read (volatile struct mapped_tim
    while (tv->tv_sec != mtime->check_seconds);
  }
  
 +# endif /* Use extern inlines.  */
 +
  #endif /* __MAPTIME_H__ */
-diff -Nur hurd_orig/libshouldbeinlibc/ugids.h hurd/libshouldbeinlibc/ugids.h
---- hurd_orig/libshouldbeinlibc/ugids.h	2001-04-01 01:01:43.000000000 +0200
-+++ hurd/libshouldbeinlibc/ugids.h	2009-05-24 13:25:12.000000000 +0200
+--- a/libshouldbeinlibc/ugids.h
++++ b/libshouldbeinlibc/ugids.h
 @@ -23,10 +23,7 @@
  
  #include <stdlib.h>		/* For inline function stuff.  */
@@ -552,7 +557,7 @@ diff -Nur hurd_orig/libshouldbeinlibc/ugids.h hurd/libshouldbeinlibc/ugids.h
  
  /* A structure holding a set of the common various types of ids.  */
  struct ugids
-@@ -47,8 +44,18 @@
+@@ -47,8 +44,18 @@ struct ugids
  /* Return a new ugids structure, or 0 if an allocation error occurs.  */
  struct ugids *make_ugids ();
  
@@ -572,7 +577,7 @@ diff -Nur hurd_orig/libshouldbeinlibc/ugids.h hurd/libshouldbeinlibc/ugids.h
  ugids_fini (struct ugids *ugids)
  {
    idvec_fini (&ugids->eff_uids);
-@@ -60,7 +67,7 @@
+@@ -60,7 +67,7 @@ ugids_fini (struct ugids *ugids)
  }
  
  /* Free all resources used by UGIDS.  */
@@ -581,7 +586,7 @@ diff -Nur hurd_orig/libshouldbeinlibc/ugids.h hurd/libshouldbeinlibc/ugids.h
  ugids_free (struct ugids *ugids)
  {
    ugids_fini (ugids);
-@@ -68,7 +75,7 @@
+@@ -68,7 +75,7 @@ ugids_free (struct ugids *ugids)
  }
  
  /* Return true if UGIDS contains no ids.  */
@@ -590,7 +595,7 @@ diff -Nur hurd_orig/libshouldbeinlibc/ugids.h hurd/libshouldbeinlibc/ugids.h
  ugids_is_empty (const struct ugids *ugids)
  {
    /* We needn't test the imp_*_gids vectors because they are subsets of the
-@@ -81,7 +88,7 @@
+@@ -81,7 +88,7 @@ ugids_is_empty (const struct ugids *ugid
  }
  
  /* Free all resources used by UGIDS except UGIDS itself.  */
@@ -599,7 +604,7 @@ diff -Nur hurd_orig/libshouldbeinlibc/ugids.h hurd/libshouldbeinlibc/ugids.h
  ugids_equal (const struct ugids *ugids1, const struct ugids *ugids2)
  {
    return
-@@ -93,6 +100,8 @@
+@@ -93,6 +100,8 @@ ugids_equal (const struct ugids *ugids1,
      && idvec_equal (&ugids1->imp_avail_gids, &ugids2->imp_avail_gids);
  }
  
@@ -608,9 +613,8 @@ diff -Nur hurd_orig/libshouldbeinlibc/ugids.h hurd/libshouldbeinlibc/ugids.h
  /* Add all ids in NEW to UGIDS.  */
  error_t ugids_merge (struct ugids *ugids, const struct ugids *new);
  
-diff -Nur hurd_orig/libstore/store.h hurd/libstore/store.h
---- hurd_orig/libstore/store.h	2005-09-25 02:38:07.000000000 +0200
-+++ hurd/libstore/store.h	2009-05-24 13:18:35.000000000 +0200
+--- a/libstore/store.h
++++ b/libstore/store.h
 @@ -33,10 +33,7 @@
  #include <mach.h>
  #include <device/device.h>
@@ -623,7 +627,7 @@ diff -Nur hurd_orig/libstore/store.h hurd/libstore/store.h
  
  
  /* Type for addresses inside the store.  */
-@@ -270,9 +267,13 @@
+@@ -270,9 +267,13 @@ error_t store_set_child_flags (struct st
     STORE's flags.  */
  error_t store_clear_child_flags (struct store *store, int flags);
  
@@ -638,7 +642,7 @@ diff -Nur hurd_orig/libstore/store.h hurd/libstore/store.h
  store_is_securely_returnable (struct store *store, int open_flags)
  {
    int flags = store->flags;
-@@ -283,6 +284,8 @@
+@@ -283,6 +284,8 @@ store_is_securely_returnable (struct sto
  	    || (flags & STORE_HARD_READONLY)));
  }
  
@@ -647,9 +651,8 @@ diff -Nur hurd_orig/libstore/store.h hurd/libstore/store.h
  /* Fills in the values of the various fields in STORE that are derivable from
     the set of runs & the block size.  */
  void _store_derive (struct store *store);
-diff -Nur hurd_orig/libthreads/rwlock.h hurd/libthreads/rwlock.h
---- hurd_orig/libthreads/rwlock.h	1996-10-24 21:29:49.000000000 +0200
-+++ hurd/libthreads/rwlock.h	2009-05-24 13:23:33.000000000 +0200
+--- a/libthreads/rwlock.h
++++ b/libthreads/rwlock.h
 @@ -21,6 +21,7 @@
  
  #include <cthreads.h>
@@ -658,7 +661,7 @@ diff -Nur hurd_orig/libthreads/rwlock.h hurd/libthreads/rwlock.h
  
  struct rwlock
  {
-@@ -31,12 +32,20 @@
+@@ -31,12 +32,20 @@ struct rwlock
    int readers_waiting;
  };
  
@@ -683,7 +686,7 @@ diff -Nur hurd_orig/libthreads/rwlock.h hurd/libthreads/rwlock.h
  rwlock_reader_lock (struct rwlock *lock)
  {
    mutex_lock (&lock->master);
-@@ -53,7 +62,7 @@
+@@ -53,7 +62,7 @@ rwlock_reader_lock (struct rwlock *lock)
  }
  
  /* Get a writer lock on reader-writer lock LOCK for disknode DN */
@@ -692,7 +695,7 @@ diff -Nur hurd_orig/libthreads/rwlock.h hurd/libthreads/rwlock.h
  rwlock_writer_lock (struct rwlock *lock)
  {
    mutex_lock (&lock->master);
-@@ -70,7 +79,7 @@
+@@ -70,7 +79,7 @@ rwlock_writer_lock (struct rwlock *lock)
  }
  
  /* Release a reader lock on reader-writer lock LOCK for disknode DN */
@@ -701,7 +704,7 @@ diff -Nur hurd_orig/libthreads/rwlock.h hurd/libthreads/rwlock.h
  rwlock_reader_unlock (struct rwlock *lock)
  {
    mutex_lock (&lock->master);
-@@ -82,7 +91,7 @@
+@@ -82,7 +91,7 @@ rwlock_reader_unlock (struct rwlock *loc
  }
  
  /* Release a writer lock on reader-writer lock LOCK for disknode DN */
@@ -710,7 +713,7 @@ diff -Nur hurd_orig/libthreads/rwlock.h hurd/libthreads/rwlock.h
  rwlock_writer_unlock (struct rwlock *lock)
  {
    mutex_lock (&lock->master);
-@@ -94,7 +103,7 @@
+@@ -94,7 +103,7 @@ rwlock_writer_unlock (struct rwlock *loc
  }
  
  /* Initialize reader-writer lock LOCK */
@@ -719,7 +722,7 @@ diff -Nur hurd_orig/libthreads/rwlock.h hurd/libthreads/rwlock.h
  rwlock_init (struct rwlock *lock)
  {
    mutex_init (&lock->master);
-@@ -104,6 +113,8 @@
+@@ -104,6 +113,8 @@ rwlock_init (struct rwlock *lock)
    lock->writers_waiting = 0;
  }
  

@@ -6,8 +6,10 @@ Date:   Sun Sep 27 23:33:29 2009 +0200
     
     The script makes big use of bashisms.
 
-diff --git a/sutils/MAKEDEV.sh b/sutils/MAKEDEV.sh
-index c9bd209..260e93b 100644
+---
+ sutils/MAKEDEV.sh |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
 --- a/sutils/MAKEDEV.sh
 +++ b/sutils/MAKEDEV.sh
 @@ -1,4 +1,4 @@

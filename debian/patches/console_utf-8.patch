@@ -2,9 +2,13 @@
 
         * console.c (DEFAULT_ENCODING): Set to UTF-8.
 
---- hurd/console/console.c.orig	2006-08-26 00:48:56.000000000 +0200
-+++ hurd/console/console.c	2006-08-26 00:49:19.000000000 +0200
-@@ -55,7 +55,7 @@
+---
+ console/console.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/console/console.c
++++ b/console/console.c
+@@ -58,7 +58,7 @@ int netfs_maxsymlinks = 16;	/* Arbitrary
  /* Handy source of time.  */
  volatile struct mapped_time_value *console_maptime;
  

@@ -8,11 +8,13 @@ Date:   Sat Sep 26 21:29:00 2009 +0200
     	Add memory clobber to assembly snippet.
     	(csum_ipv6_magic): Likewise.
 
-diff --git a/pfinet/linux-src/include/asm-i386/checksum.h b/pfinet/linux-src/include/asm-i386/checksum.h
-index ed02317..add8959 100644
+---
+ pfinet/linux-src/include/asm-i386/checksum.h |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
 --- a/pfinet/linux-src/include/asm-i386/checksum.h
 +++ b/pfinet/linux-src/include/asm-i386/checksum.h
-@@ -109,7 +109,8 @@ static inline unsigned short ip_fast_csum(unsigned char * iph,
+@@ -109,7 +109,8 @@ static inline unsigned short ip_fast_csu
  	   are modified, we must also specify them as outputs, or gcc
  	   will assume they contain their original values. */
  	: "=r" (sum), "=r" (iph), "=r" (ihl)
@@ -22,7 +24,7 @@ index ed02317..add8959 100644
  	return(sum);
  }
  
-@@ -185,7 +186,8 @@ static __inline__ unsigned short int csum_ipv6_magic(struct in6_addr *saddr,
+@@ -185,7 +186,8 @@ static __inline__ unsigned short int csu
  		"adcl $0, %0\n"
  		: "=&r" (sum)
  		: "r" (saddr), "r" (daddr), 

@@ -1,6 +1,10 @@
---- hurd/daemons/rc.sh.orig	2004-09-27 11:54:22.000000000 +0200
-+++ hurd/daemons/rc.sh	2004-09-27 11:54:27.000000000 +0200
-@@ -19,14 +19,17 @@
+---
+ daemons/rc.sh |   43 ++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 32 insertions(+), 11 deletions(-)
+
+--- a/daemons/rc.sh
++++ b/daemons/rc.sh
+@@ -19,14 +19,17 @@ then
  	echo Automatic boot in progress...
  	date
  
@@ -19,7 +23,7 @@
  		;;
  	# Fsck couldn't fix it.
  	4 | 8)
-@@ -85,7 +88,15 @@
+@@ -85,7 +88,15 @@ if test -d /tmp; then
  
  fi
  if test -d /var/run; then
@@ -36,7 +40,7 @@
  fi
  echo done
  
-@@ -104,15 +115,25 @@
+@@ -104,15 +115,25 @@ touch /var/run/mtab
  
  chmod 664 /etc/motd
  

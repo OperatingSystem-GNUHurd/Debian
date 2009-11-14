@@ -1,6 +1,20 @@
-diff --exclude=CVS -Naur foo/ChangeLog procfs/ChangeLog
---- /dev/null		1970-01-01 01:00:00.000000000 +0100
-+++ procfs/ChangeLog	2008-09-01 23:47:03.000000000 +0200
+---
+ Makefile                     |    2 
+ procfs/ChangeLog             |  161 ++++++++++
+ procfs/Makefile              |   30 +
+ procfs/bootstrap.c           |   95 ++++++
+ procfs/netfs.c               |  466 ++++++++++++++++++++++++++++++
+ procfs/node.c                |  195 ++++++++++++
+ procfs/procfs.c              |  149 +++++++++
+ procfs/procfs.h              |  220 ++++++++++++++
+ procfs/procfs_dir.c          |  664 +++++++++++++++++++++++++++++++++++++++++++
+ procfs/procfs_nonpid_files.c |  514 +++++++++++++++++++++++++++++++++
+ procfs/procfs_pid.h          |   88 +++++
+ procfs/procfs_pid_files.c    |  576 +++++++++++++++++++++++++++++++++++++
+ 12 files changed, 3159 insertions(+), 1 deletion(-)
+
+--- /dev/null
++++ b/procfs/ChangeLog
 @@ -0,0 +1,161 @@
 +2008-08-30  Madhusudan.C.S  <madhusudancs@gmail.com>
 +
@@ -163,9 +177,8 @@ diff --exclude=CVS -Naur foo/ChangeLog procfs/ChangeLog
 +2008-05-13  Madhusudan.C.S  <madhusudancs@gmail.com>
 +
 +	* /sources/hurd/procfs: New directory added to the repository.
-diff --exclude=CVS -Naur foo/Makefile procfs/Makefile
---- /dev/null		1970-01-01 01:00:00.000000000 +0100
-+++ procfs/Makefile	2008-08-29 19:28:42.000000000 +0200
+--- /dev/null
++++ b/procfs/Makefile
 @@ -0,0 +1,30 @@
 +#   Makefile - for procfs
 +# 
@@ -197,9 +210,8 @@ diff --exclude=CVS -Naur foo/Makefile procfs/Makefile
 +HURDLIBS = netfs fshelp iohelp threads ports ihash ps shouldbeinlibc
 +	
 +include ../Makeconf
-diff --exclude=CVS -Naur foo/bootstrap.c procfs/bootstrap.c
---- /dev/null		1970-01-01 01:00:00.000000000 +0100
-+++ procfs/bootstrap.c	2008-08-14 15:24:49.000000000 +0200
+--- /dev/null
++++ b/procfs/bootstrap.c
 @@ -0,0 +1,95 @@
 +/* procfs -- a translator for providing GNU/Linux compatible 
 +             proc pseudo-filesystem
@@ -296,9 +308,8 @@ diff --exclude=CVS -Naur foo/bootstrap.c procfs/bootstrap.c
 +  return err;
 +}
 +
-diff --exclude=CVS -Naur foo/netfs.c procfs/netfs.c
---- /dev/null		1970-01-01 01:00:00.000000000 +0100
-+++ procfs/netfs.c	2008-09-02 00:16:23.000000000 +0200
+--- /dev/null
++++ b/procfs/netfs.c
 @@ -0,0 +1,466 @@
 +/* procfs -- a translator for providing GNU/Linux compatible 
 +             proc pseudo-filesystem
@@ -766,9 +777,8 @@ diff --exclude=CVS -Naur foo/netfs.c procfs/netfs.c
 +	procfs_remove_node (np);
 +}
 +
-diff --exclude=CVS -Naur foo/node.c procfs/node.c
---- /dev/null		1970-01-01 01:00:00.000000000 +0100
-+++ procfs/node.c	2008-08-14 15:24:49.000000000 +0200
+--- /dev/null
++++ b/procfs/node.c
 @@ -0,0 +1,195 @@
 +/* procfs -- a translator for providing GNU/Linux compatible 
 +             proc pseudo-filesystem
@@ -965,9 +975,8 @@ diff --exclude=CVS -Naur foo/node.c procfs/node.c
 +    
 +  return 0;    
 +}
-diff --exclude=CVS -Naur foo/procfs.c procfs/procfs.c
---- /dev/null		1970-01-01 01:00:00.000000000 +0100
-+++ procfs/procfs.c	2008-08-14 15:24:50.000000000 +0200
+--- /dev/null
++++ b/procfs/procfs.c
 @@ -0,0 +1,149 @@
 +/* procfs -- a translator for providing GNU/Linux compatible 
 +             proc pseudo-filesystem
@@ -1118,9 +1127,8 @@ diff --exclude=CVS -Naur foo/procfs.c procfs/procfs.c
 +    netfs_server_loop ();
 +  return 1;
 +}
-diff --exclude=CVS -Naur foo/procfs.h procfs/procfs.h
---- /dev/null		1970-01-01 01:00:00.000000000 +0100
-+++ procfs/procfs.h	2008-08-18 17:15:33.000000000 +0200
+--- /dev/null
++++ b/procfs/procfs.h
 @@ -0,0 +1,220 @@
 +/* procfs -- a translator for providing GNU/Linux compatible 
 +             proc pseudo-filesystem
@@ -1342,9 +1350,8 @@ diff --exclude=CVS -Naur foo/procfs.h procfs/procfs.h
 +			  struct node **node);
 +
 +#endif /* __PROCFS_H__ */
-diff --exclude=CVS -Naur foo/procfs_dir.c procfs/procfs_dir.c
---- /dev/null		1970-01-01 01:00:00.000000000 +0100
-+++ procfs/procfs_dir.c	2008-09-01 23:47:03.000000000 +0200
+--- /dev/null
++++ b/procfs/procfs_dir.c
 @@ -0,0 +1,664 @@
 +/* procfs -- a translator for providing GNU/Linux compatible 
 +             proc pseudo-filesystem
@@ -2010,9 +2017,8 @@ diff --exclude=CVS -Naur foo/procfs_dir.c procfs/procfs_dir.c
 +  /* STUB */
 +  return 0;
 +}
-diff --exclude=CVS -Naur foo/procfs_nonpid_files.c procfs/procfs_nonpid_files.c
---- /dev/null				1970-01-01 01:00:00.000000000 +0100
-+++ procfs/procfs_nonpid_files.c	2008-08-18 20:26:23.000000000 +0200
+--- /dev/null
++++ b/procfs/procfs_nonpid_files.c
 @@ -0,0 +1,514 @@
 +/* procfs -- a translator for providing GNU/Linux compatible 
 +             proc pseudo-filesystem
@@ -2528,9 +2534,8 @@ diff --exclude=CVS -Naur foo/procfs_nonpid_files.c procfs/procfs_nonpid_files.c
 +  free (version_data);
 +  return err;
 +}
-diff --exclude=CVS -Naur foo/procfs_pid.h procfs/procfs_pid.h
---- /dev/null		1970-01-01 01:00:00.000000000 +0100
-+++ procfs/procfs_pid.h	2008-08-18 17:15:33.000000000 +0200
+--- /dev/null
++++ b/procfs/procfs_pid.h
 @@ -0,0 +1,88 @@
 +/* procfs -- a translator for providing GNU/Linux compatible 
 +             proc pseudo-filesystem
@@ -2620,9 +2625,8 @@ diff --exclude=CVS -Naur foo/procfs_pid.h procfs/procfs_pid.h
 +};
 +
 +#endif
-diff --exclude=CVS -Naur foo/procfs_pid_files.c procfs/procfs_pid_files.c
---- /dev/null			1970-01-01 01:00:00.000000000 +0100
-+++ procfs/procfs_pid_files.c	2008-09-01 23:47:03.000000000 +0200
+--- /dev/null
++++ b/procfs/procfs_pid_files.c
 @@ -0,0 +1,576 @@
 +/* procfs -- a translator for providing GNU/Linux compatible 
 +             proc pseudo-filesystem
@@ -3200,9 +3204,9 @@ diff --exclude=CVS -Naur foo/procfs_pid_files.c procfs/procfs_pid_files.c
 +      
 +  return err;
 +}
---- Makefile.orig	2008-09-02 02:14:58.000000000 +0200
-+++ Makefile	2008-08-29 15:23:04.000000000 +0200
-@@ -41,7 +41,7 @@
+--- a/Makefile
++++ b/Makefile
+@@ -41,7 +41,7 @@ prog-subdirs = auth proc exec init term 
  	       login daemons nfsd boot console \
  	       hostmux usermux ftpfs trans \
  	       console-client utils sutils ufs-fsck ufs-utils \

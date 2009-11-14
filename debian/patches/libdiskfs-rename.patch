@@ -1,5 +1,7 @@
-diff --git a/libdiskfs/dir-rename.c b/libdiskfs/dir-rename.c
-index 747c666..d0e5b60 100644
+---
+ libdiskfs/dir-rename.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
 --- a/libdiskfs/dir-rename.c
 +++ b/libdiskfs/dir-rename.c
 @@ -19,6 +19,7 @@
@@ -10,7 +12,7 @@ index 747c666..d0e5b60 100644
  
  /* To avoid races in checkpath, and to prevent a directory from being
     simultaneously renamed by two processes, we serialize all renames of
-@@ -44,6 +45,10 @@ diskfs_S_dir_rename (struct protid *fromcred,
+@@ -44,6 +45,10 @@ diskfs_S_dir_rename (struct protid *from
    if (! tocred)
      return EXDEV;
  

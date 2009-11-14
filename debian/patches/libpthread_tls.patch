@@ -1,11 +1,20 @@
-Index: libpthread/pthread/pt-create.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/pthread/pt-create.c,v
-retrieving revision 1.4
-diff -u -p -r1.4 pt-create.c
---- libpthread/pthread/pt-create.c	4 May 2005 16:04:06 -0000	1.4
-+++ libpthread/pthread/pt-create.c	12 Aug 2007 11:34:11 -0000
-@@ -127,6 +127,11 @@
+---
+ libpthread/pthread/pt-create.c                 |    7 ++++
+ libpthread/pthread/pt-exit.c                   |    3 ++
+ libpthread/pthread/pt-internal.h               |   19 ++++++++++++
+ libpthread/sysdeps/mach/hurd/i386/pt-machdep.c |   37 ++++++++++++++++++++++---
+ libpthread/sysdeps/mach/hurd/i386/pt-setup.c   |    7 +++-
+ libpthread/sysdeps/mach/hurd/pt-docancel.c     |    4 +-
+ libpthread/sysdeps/mach/hurd/pt-sysdep.h       |   10 ++++--
+ libthreads/alpha/thread.c                      |    1 
+ libthreads/cprocs.c                            |    3 +-
+ libthreads/cthread_internals.h                 |   16 ++++++++++
+ libthreads/i386/thread.c                       |   32 +++++++++++++++++++--
+ 11 files changed, 122 insertions(+), 17 deletions(-)
+
+--- a/libpthread/pthread/pt-create.c
++++ b/libpthread/pthread/pt-create.c
+@@ -129,6 +129,11 @@ __pthread_create_internal (struct __pthr
    if (err)
      goto failed_thread_alloc;
  
@@ -17,22 +26,18 @@ diff -u -p -r1.4 pt-create.c
    /* And initialize the rest of the machine context.  This may include
       additional machine- and system-specific initializations that
       prove convenient.  */
-@@ -192,6 +197,8 @@
+@@ -194,6 +199,8 @@ __pthread_create_internal (struct __pthr
   failed_sigstate:
    __pthread_sigstate_destroy (pthread);
   failed_setup:
 +  _dl_deallocate_tls (pthread->tcb, 1);
 + failed_thread_tls_alloc:
    __pthread_thread_dealloc (pthread);
-   __pthread_thread_halt (pthread, 0);
+   __pthread_thread_halt (pthread);
   failed_thread_alloc:
-Index: libpthread/pthread/pt-exit.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/pthread/pt-exit.c,v
-retrieving revision 1.2
---- libpthread/pthread/pt-exit.c	4 May 2005 16:04:06 -0000	1.2
-+++ libpthread/pthread/pt-exit.c	12 Aug 2007 11:34:11 -0000
-@@ -70,6 +70,9 @@
+--- a/libpthread/pthread/pt-exit.c
++++ b/libpthread/pthread/pt-exit.c
+@@ -70,6 +70,9 @@ pthread_exit (void *status)
    if (self->cancel_state == PTHREAD_CANCEL_ENABLE && self->cancel_pending)
      status = PTHREAD_CANCELED;
  
@@ -42,14 +47,9 @@ retrieving revision 1.2
    switch (self->state)
      {
      default:
-Index: libpthread/pthread/pt-internal.h
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/pthread/pt-internal.h,v
-retrieving revision 1.4
-diff -u -p -r1.4 pt-internal.h
---- libpthread/pthread/pt-internal.h	4 Mar 2007 00:05:21 -0000	1.4
-+++ libpthread/pthread/pt-internal.h	12 Aug 2007 11:34:11 -0000
-@@ -50,6 +50,14 @@
+--- a/libpthread/pthread/pt-internal.h
++++ b/libpthread/pthread/pt-internal.h
+@@ -54,6 +54,14 @@ enum pthread_state
  # define PTHREAD_SYSDEP_MEMBERS
  #endif
  
@@ -64,7 +64,7 @@ diff -u -p -r1.4 pt-internal.h
  /* This structure describes a POSIX thread.  */
  struct __pthread
  {
-@@ -85,6 +93,8 @@
+@@ -89,6 +97,8 @@ struct __pthread
  
    PTHREAD_SYSDEP_MEMBERS
  
@@ -73,7 +73,7 @@ diff -u -p -r1.4 pt-internal.h
    struct __pthread *next, **prevp;
  };
  
-@@ -272,4 +282,13 @@
+@@ -287,4 +297,13 @@ const struct __pthread_rwlockattr __pthr
  /* Default condition attributes.  */
  const struct __pthread_condattr __pthread_default_condattr;
  
@@ -87,13 +87,9 @@ diff -u -p -r1.4 pt-internal.h
 +extern void _dl_deallocate_tls(void *, int);
 +
  #endif /* pt-internal.h */
-Index: libpthread/sysdeps/mach/hurd/pt-docancel.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/mach/hurd/pt-docancel.c,v
-retrieving revision 1.2
---- libpthread/sysdeps/mach/hurd/pt-docancel.c	18 Nov 2002 22:20:58 -0000	1.2
-+++ libpthread/sysdeps/mach/hurd/pt-docancel.c	12 Aug 2007 11:34:11 -0000
-@@ -52,8 +52,8 @@
+--- a/libpthread/sysdeps/mach/hurd/pt-docancel.c
++++ b/libpthread/sysdeps/mach/hurd/pt-docancel.c
+@@ -52,8 +52,8 @@ __pthread_do_cancel (struct __pthread *p
        err = __thread_abort (p->kernel_thread);
        assert_perror (err);
  
@@ -104,13 +100,9 @@ retrieving revision 1.2
        assert_perror (err);
  
        err = __thread_resume (p->kernel_thread);
-Index: libpthread/sysdeps/mach/hurd/pt-sysdep.h
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/mach/hurd/pt-sysdep.h,v
-retrieving revision 1.3
---- libpthread/sysdeps/mach/hurd/pt-sysdep.h	18 Jan 2005 10:08:52 -0000	1.3
-+++ libpthread/sysdeps/mach/hurd/pt-sysdep.h	12 Aug 2007 11:34:11 -0000
-@@ -59,11 +59,13 @@
+--- a/libpthread/sysdeps/mach/hurd/pt-sysdep.h
++++ b/libpthread/sysdeps/mach/hurd/pt-sysdep.h
+@@ -60,11 +60,13 @@ __pthread_stack_dealloc (void *stackaddr
    __vm_deallocate (__mach_task_self (), (vm_offset_t) stackaddr, stacksize);
  }
  
@@ -128,12 +120,8 @@ retrieving revision 1.3
  
  
  #endif /* pt-sysdep.h */
-Index: libpthread/sysdeps/mach/hurd/i386/pt-machdep.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/mach/hurd/i386/pt-machdep.c,v
-retrieving revision 1.1
---- libpthread/sysdeps/mach/hurd/i386/pt-machdep.c	10 Oct 2002 23:05:05 -0000	1.1
-+++ libpthread/sysdeps/mach/hurd/i386/pt-machdep.c	12 Aug 2007 11:34:11 -0000
+--- a/libpthread/sysdeps/mach/hurd/i386/pt-machdep.c
++++ b/libpthread/sysdeps/mach/hurd/i386/pt-machdep.c
 @@ -21,12 +21,28 @@
  
  #include <mach.h>
@@ -165,7 +153,7 @@ retrieving revision 1.1
  {
    error_t err;
    struct i386_thread_state state;
-@@ -34,7 +50,7 @@
+@@ -34,7 +50,7 @@ __thread_set_pcsp (thread_t thread,
  
    state_count = i386_THREAD_STATE_COUNT;
  
@@ -174,7 +162,7 @@ retrieving revision 1.1
  			    (thread_state_t) &state, &state_count);
    if (err)
      return err;
-@@ -43,8 +59,21 @@
+@@ -43,8 +59,21 @@ __thread_set_pcsp (thread_t thread,
      state.uesp = (unsigned int) sp;
    if (set_ip)
      state.eip = (unsigned int) ip;
@@ -197,13 +185,9 @@ retrieving revision 1.1
  			    (thread_state_t) &state,
  			    i386_THREAD_STATE_COUNT);
    if (err)
-Index: libpthread/sysdeps/mach/hurd/i386/pt-setup.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/sysdeps/mach/hurd/i386/pt-setup.c,v
-retrieving revision 1.4
---- libpthread/sysdeps/mach/hurd/i386/pt-setup.c	12 May 2005 20:55:37 -0000	1.4
-+++ libpthread/sysdeps/mach/hurd/i386/pt-setup.c	12 Aug 2007 11:34:11 -0000
-@@ -89,12 +89,15 @@
+--- a/libpthread/sysdeps/mach/hurd/i386/pt-setup.c
++++ b/libpthread/sysdeps/mach/hurd/i386/pt-setup.c
+@@ -91,12 +91,15 @@ __pthread_setup (struct __pthread *threa
    thread->mcontext.pc = entry_point;
    thread->mcontext.sp = stack_setup (thread, start_routine, arg);
  
@@ -221,13 +205,9 @@ retrieving revision 1.4
        assert_perror (err);
      }
    __mach_port_deallocate (__mach_task_self (), ktid);
-Index: libthreads/cprocs.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libthreads/cprocs.c,v
-retrieving revision 1.17
---- libthreads/cprocs.c	29 May 2002 00:01:24 -0000	1.17
-+++ libthreads/cprocs.c	12 Aug 2007 11:34:10 -0000
-@@ -730,10 +730,11 @@
+--- a/libthreads/cprocs.c
++++ b/libthreads/cprocs.c
+@@ -730,10 +730,11 @@ cproc_create(void)
  	spin_lock(&n_kern_lock);
  	if (cthread_max_kernel_threads == 0 ||
  	    cthread_kernel_threads < cthread_max_kernel_threads) {
@@ -240,12 +220,8 @@ retrieving revision 1.17
  		MACH_CALL(thread_resume(n), r);
  #ifdef STATISTICS
  		spin_lock(&ready_lock);
-Index: libthreads/cthread_internals.h
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libthreads/cthread_internals.h,v
-retrieving revision 1.7
---- libthreads/cthread_internals.h	14 Jun 2007 17:24:13 -0000	1.7
-+++ libthreads/cthread_internals.h	12 Aug 2007 11:34:10 -0000
+--- a/libthreads/cthread_internals.h
++++ b/libthreads/cthread_internals.h
 @@ -166,6 +166,14 @@
  # endif
  #endif
@@ -261,7 +237,7 @@ retrieving revision 1.7
  /*
   * Low-level thread implementation.
   * This structure must agree with struct ur_cthread in cthreads.h
-@@ -312,4 +320,10 @@
+@@ -312,4 +320,10 @@ extern void		cproc_prepare(cproc_t _chil
  				      void (*cthread_body_pc)());
  
  extern void		cproc_setup(cproc_t _child, thread_t _mach_thread,
@@ -273,13 +249,9 @@ retrieving revision 1.7
 +
 +/* Dynamic linker TLS allocation.  */
 +extern void *_dl_allocate_tls(void *);
-Index: libthreads/alpha/thread.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libthreads/alpha/thread.c,v
-retrieving revision 1.2
---- libthreads/alpha/thread.c	27 May 2002 02:50:13 -0000	1.2
-+++ libthreads/alpha/thread.c	12 Aug 2007 11:34:10 -0000
-@@ -74,6 +74,7 @@
+--- a/libthreads/alpha/thread.c
++++ b/libthreads/alpha/thread.c
+@@ -74,6 +74,7 @@ void
  cproc_setup(
  	register cproc_t child,
  	thread_t	 thread,
@@ -287,13 +259,9 @@ retrieving revision 1.2
  	void 	 	(*routine)(cproc_t))
  {
  	register integer_t			*top;
-Index: libthreads/i386/thread.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libthreads/i386/thread.c,v
-retrieving revision 1.7
---- libthreads/i386/thread.c	27 May 2002 02:50:10 -0000	1.7
-+++ libthreads/i386/thread.c	12 Aug 2007 11:34:10 -0000
-@@ -75,6 +75,21 @@
+--- a/libthreads/i386/thread.c
++++ b/libthreads/i386/thread.c
+@@ -75,6 +75,21 @@ char rcs_id[] = "$Header: /cvsroot/hurd/
  #include <cthreads.h>
  #include "cthread_internals.h"
  #include <mach.h>
@@ -315,7 +283,7 @@ retrieving revision 1.7
  
  /*
   * Set up the initial state of a MACH thread
-@@ -82,7 +97,7 @@
+@@ -82,7 +97,7 @@ char rcs_id[] = "$Header: /cvsroot/hurd/
   * when it is resumed.
   */
  void
@@ -324,7 +292,7 @@ retrieving revision 1.7
  {
  	extern unsigned int __hurd_threadvar_max; /* GNU */
  	register int *top = (int *)
-@@ -95,13 +110,15 @@
+@@ -95,13 +110,15 @@ cproc_setup(register cproc_t child, thre
  	register struct i386_thread_state *ts = &state;
  	kern_return_t r;
  	unsigned int count;
@@ -341,7 +309,7 @@ retrieving revision 1.7
  
  	ts->eip = (int) routine;
  	*--top = (int) child;	/* argument to function */
-@@ -109,7 +126,16 @@
+@@ -109,7 +126,16 @@ cproc_setup(register cproc_t child, thre
  	ts->uesp = (int) top;	/* set stack pointer */
  	ts->ebp = 0;		/* clear frame pointer */
  

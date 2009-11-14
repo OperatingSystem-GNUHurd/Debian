@@ -1,11 +1,11 @@
-Index: libdiskfs/file-utimes.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libdiskfs/file-utimes.c,v
-retrieving revision 1.9
-diff -u -r1.9 file-utimes.c
---- libdiskfs/file-utimes.c	2 Feb 2009 03:04:46 -0000	1.9
-+++ libdiskfs/file-utimes.c	4 Apr 2009 22:47:50 -0000
-@@ -33,7 +33,7 @@
+---
+ libdiskfs/file-utimes.c |    4 ++--
+ libdiskfs/node-times.c  |    6 +++---
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+--- a/libdiskfs/file-utimes.c
++++ b/libdiskfs/file-utimes.c
+@@ -33,7 +33,7 @@ diskfs_S_file_utimes (struct protid *cre
  			 else
  			   {
  			     np->dn_stat.st_atim.tv_sec = atime.seconds;
@@ -14,7 +14,7 @@ diff -u -r1.9 file-utimes.c
  			     np->dn_set_atime = 0;
  			   }
  			 
-@@ -42,7 +42,7 @@
+@@ -42,7 +42,7 @@ diskfs_S_file_utimes (struct protid *cre
  			 else
  			   {
  			     np->dn_stat.st_mtim.tv_sec = mtime.seconds;
@@ -23,14 +23,9 @@ diff -u -r1.9 file-utimes.c
  			     np->dn_set_mtime = 0;
  			   }
  			 
-Index: libdiskfs/node-times.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libdiskfs/node-times.c,v
-retrieving revision 1.15
-diff -u -r1.15 node-times.c
---- libdiskfs/node-times.c	16 Feb 2009 16:06:00 -0000	1.15
-+++ libdiskfs/node-times.c	4 Apr 2009 22:47:51 -0000
-@@ -53,21 +53,21 @@
+--- a/libdiskfs/node-times.c
++++ b/libdiskfs/node-times.c
+@@ -53,21 +53,21 @@ diskfs_set_node_times (struct node *np)
    if (np->dn_set_mtime)
      {
        np->dn_stat.st_mtim.tv_sec = t.tv_sec;

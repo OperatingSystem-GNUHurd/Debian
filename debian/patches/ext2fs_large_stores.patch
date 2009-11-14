@@ -1,6 +1,32 @@
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/console/pager.c hurd/console/pager.c
---- ../cvs/hurd/console/pager.c	2002-09-22 04:28:35.000000000 +0300
-+++ hurd/console/pager.c	2004-11-11 18:16:15.000000000 +0200
+---
+ console/pager.c          |   10 
+ ext2fs/balloc.c          |   57 +++--
+ ext2fs/ext2_fs.h         |    3 
+ ext2fs/ext2fs.c          |    8 
+ ext2fs/ext2fs.h          |  145 +++++++++++--
+ ext2fs/getblk.c          |   31 +-
+ ext2fs/hyper.c           |   34 ++-
+ ext2fs/ialloc.c          |   41 +++
+ ext2fs/inode.c           |   58 +++--
+ ext2fs/pager.c           |  497 +++++++++++++++++++++++++++++++++++++++++++----
+ ext2fs/pokel.c           |   41 +++
+ ext2fs/truncate.c        |   11 -
+ fatfs/pager.c            |   11 -
+ isofs/pager.c            |   12 -
+ libdiskfs/disk-pager.c   |    6 
+ libdiskfs/diskfs-pager.h |    3 
+ libpager/data-request.c  |   17 -
+ libpager/data-return.c   |   78 +++++--
+ libpager/pager-create.c  |    4 
+ libpager/pager.h         |   29 ++
+ libpager/priv.h          |    1 
+ storeio/pager.c          |    9 
+ tmpfs/pager-stubs.c      |    8 
+ ufs/pager.c              |   11 -
+ 24 files changed, 940 insertions(+), 185 deletions(-)
+
+--- a/console/pager.c
++++ b/console/pager.c
 @@ -94,6 +94,14 @@ pager_unlock_page (struct user_pager_inf
  }
  
@@ -25,9 +51,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/console/pager.c hurd/conso
    if (!user_pager->pager)
      {
        free (upi);
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/balloc.c hurd/ext2fs/balloc.c
---- ../cvs/hurd/ext2fs/balloc.c	2000-03-10 06:54:55.000000000 +0200
-+++ hurd/ext2fs/balloc.c	2004-11-11 18:29:43.000000000 +0200
+--- a/ext2fs/balloc.c
++++ b/ext2fs/balloc.c
 @@ -92,7 +92,7 @@ ext2_free_blocks (block_t block, unsigne
  		      block, count);
  	}
@@ -220,9 +245,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/balloc.c hurd/ext2f
        if (gdp->bg_free_blocks_count != x)
  	ext2_error ("wrong free blocks count for group %d,"
  		    " stored = %d, counted = %lu",
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/ext2_fs.h hurd/ext2fs/ext2_fs.h
---- ../cvs/hurd/ext2fs/ext2_fs.h	2000-02-05 13:59:54.000000000 +0200
-+++ hurd/ext2fs/ext2_fs.h	2004-11-11 18:16:38.000000000 +0200
+--- a/ext2fs/ext2_fs.h
++++ b/ext2fs/ext2_fs.h
 @@ -25,7 +25,8 @@
  /*
   * Define EXT2FS_DEBUG to produce debug messages
@@ -233,9 +257,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/ext2_fs.h hurd/ext2
  
  /*
   * Define EXT2_PREALLOCATE to preallocate data blocks for expanding files
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/ext2fs.c hurd/ext2fs/ext2fs.c
---- ../cvs/hurd/ext2fs/ext2fs.c	2002-06-03 00:40:56.000000000 +0300
-+++ hurd/ext2fs/ext2fs.c	2004-11-11 18:16:15.000000000 +0200
+--- a/ext2fs/ext2fs.c
++++ b/ext2fs/ext2fs.c
 @@ -106,7 +106,7 @@ parse_opt (int key, char *arg, struct ar
        if (values == 0)
  	return ENOMEM;
@@ -266,9 +289,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/ext2fs.c hurd/ext2f
 +  map_hypermetadata ();
    return 0;
  }
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/ext2fs.h hurd/ext2fs/ext2fs.h
---- ../cvs/hurd/ext2fs/ext2fs.h	2004-01-11 00:08:58.000000000 +0200
-+++ hurd/ext2fs/ext2fs.h	2004-11-11 18:16:15.000000000 +0200
+--- a/ext2fs/ext2fs.h
++++ b/ext2fs/ext2fs.h
 @@ -23,7 +23,9 @@
  #include <hurd/pager.h>
  #include <hurd/fshelp.h>
@@ -498,9 +520,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/ext2fs.h hurd/ext2f
    pokel_sync (&global_pokel, wait);
  }
  
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/getblk.c hurd/ext2fs/getblk.c
---- ../cvs/hurd/ext2fs/getblk.c	2004-01-11 00:08:58.000000000 +0200
-+++ hurd/ext2fs/getblk.c	2004-11-11 18:16:15.000000000 +0200
+--- a/ext2fs/getblk.c
++++ b/ext2fs/getblk.c
 @@ -52,7 +52,7 @@ ext2_discard_prealloc (struct node *node
    if (node->dn->info.i_prealloc_count)
      {
@@ -579,9 +600,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/getblk.c hurd/ext2f
     */
  
    ext2_debug ("block = %u, next = %u, goal = %u", block,
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/hyper.c hurd/ext2fs/hyper.c
---- ../cvs/hurd/ext2fs/hyper.c	2002-06-03 00:40:59.000000000 +0300
-+++ hurd/ext2fs/hyper.c	2004-11-11 18:16:16.000000000 +0200
+--- a/ext2fs/hyper.c
++++ b/ext2fs/hyper.c
 @@ -58,12 +58,15 @@ static int ext2fs_clean;	/* fs clean bef
  void
  get_hypermetadata (void)
@@ -649,9 +669,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/hyper.c hurd/ext2fs
  
    if (!readonly && !(sblock->s_state & EXT2_VALID_FS))
      ext2_warning ("UNCLEANED FILESYSTEM NOW WRITABLE");
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/ialloc.c hurd/ext2fs/ialloc.c
---- ../cvs/hurd/ext2fs/ialloc.c	2002-10-09 02:10:09.000000000 +0300
-+++ hurd/ext2fs/ialloc.c	2004-11-11 18:16:16.000000000 +0200
+--- a/ext2fs/ialloc.c
++++ b/ext2fs/ialloc.c
 @@ -60,7 +60,7 @@ diskfs_free_node (struct node *np, mode_
  
    assert (!diskfs_readonly);
@@ -789,10 +808,9 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/ialloc.c hurd/ext2f
        if (gdp->bg_free_inodes_count != x)
  	ext2_error ("wrong free inodes count in group %d, "
  		    "stored = %d, counted = %lu",
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/inode.c hurd/ext2fs/inode.c
---- ../cvs/hurd/ext2fs/inode.c	2002-10-09 02:10:09.000000000 +0300
-+++ hurd/ext2fs/inode.c	2004-11-11 18:16:16.000000000 +0200
-@@ -91,7 +91,7 @@ diskfs_cached_lookup (ino_t inum, struct
+--- a/ext2fs/inode.c
++++ b/ext2fs/inode.c
+@@ -92,7 +92,7 @@ diskfs_cached_lookup (ino_t inum, struct
    dn->dir_idx = 0;
    dn->pager = 0;
    rwlock_init (&dn->alloc_lock);
@@ -801,7 +819,7 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/inode.c hurd/ext2fs
  
    /* Create the new node.  */
    np = diskfs_make_node (dn);
-@@ -200,13 +200,17 @@ read_node (struct node *np)
+@@ -201,13 +201,17 @@ read_node (struct node *np)
    error_t err;
    struct stat *st = &np->dn_stat;
    struct disknode *dn = np->dn;
@@ -820,7 +838,7 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/inode.c hurd/ext2fs
    st->st_fstype = FSTYPE_EXT2FS;
    st->st_fsid = getpid ();	/* This call is very cheap.  */
    st->st_ino = np->cache_id;
-@@ -275,7 +279,9 @@ read_node (struct node *np)
+@@ -285,7 +289,9 @@ read_node (struct node *np)
        info->i_high_size = di->i_size_high;
        if (info->i_high_size)	/* XXX */
  	{
@@ -830,7 +848,7 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/inode.c hurd/ext2fs
  	  return EFBIG;
  	}
      }
-@@ -297,20 +303,12 @@ read_node (struct node *np)
+@@ -307,20 +313,12 @@ read_node (struct node *np)
      }
    dn->info_i_translator = di->i_translator;
  
@@ -853,7 +871,7 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/inode.c hurd/ext2fs
    else
      /* Allocsize should be zero for anything except directories, files, and
         long symlinks.  These are the only things allowed to have any blocks
-@@ -398,7 +396,9 @@ write_node (struct node *np)
+@@ -408,7 +406,9 @@ write_node (struct node *np)
  {
    error_t err;
    struct stat *st = &np->dn_stat;
@@ -864,7 +882,7 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/inode.c hurd/ext2fs
  
    if (np->dn->info.i_prealloc_count)
      ext2_discard_prealloc (np);
-@@ -409,12 +409,14 @@ write_node (struct node *np)
+@@ -419,12 +419,14 @@ write_node (struct node *np)
  
        assert (!diskfs_readonly);
  
@@ -880,7 +898,7 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/inode.c hurd/ext2fs
        di->i_generation = st->st_gen;
  
        /* We happen to know that the stat mode bits are the same
-@@ -490,6 +492,7 @@ write_node (struct node *np)
+@@ -505,6 +507,7 @@ write_node (struct node *np)
        diskfs_end_catch_exception ();
        np->dn_stat_dirty = 0;
  
@@ -888,7 +906,7 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/inode.c hurd/ext2fs
        return di;
      }
    else
-@@ -649,7 +652,7 @@ diskfs_set_translator (struct node *np, 
+@@ -664,7 +667,7 @@ diskfs_set_translator (struct node *np, 
    if (err)
      return err;
  
@@ -897,7 +915,7 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/inode.c hurd/ext2fs
    blkno = di->i_translator;
  
    if (namelen && !blkno)
-@@ -662,6 +665,7 @@ diskfs_set_translator (struct node *np, 
+@@ -677,6 +680,7 @@ diskfs_set_translator (struct node *np, 
  			0, 0, 0);
        if (blkno == 0)
  	{
@@ -905,7 +923,7 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/inode.c hurd/ext2fs
  	  diskfs_end_catch_exception ();
  	  return ENOSPC;
  	}
-@@ -685,15 +689,20 @@ diskfs_set_translator (struct node *np, 
+@@ -700,15 +704,20 @@ diskfs_set_translator (struct node *np, 
        np->dn_stat.st_mode &= ~S_IPTRANS;
        np->dn_set_ctime = 1;
      }
@@ -929,7 +947,7 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/inode.c hurd/ext2fs
  
        np->dn_stat.st_mode |= S_IPTRANS;
        np->dn_set_ctime = 1;
-@@ -711,7 +720,7 @@ diskfs_get_translator (struct node *np, 
+@@ -726,7 +735,7 @@ diskfs_get_translator (struct node *np, 
    error_t err = 0;
    daddr_t blkno;
    unsigned datalen;
@@ -938,7 +956,7 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/inode.c hurd/ext2fs
  
    assert (sblock->s_creator_os == EXT2_OS_HURD);
  
-@@ -719,9 +728,11 @@ diskfs_get_translator (struct node *np, 
+@@ -734,9 +743,11 @@ diskfs_get_translator (struct node *np, 
    if (err)
      return err;
  
@@ -952,7 +970,7 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/inode.c hurd/ext2fs
  
    datalen =
      ((unsigned char *)transloc)[0] + (((unsigned char *)transloc)[1] << 8);
-@@ -736,6 +747,7 @@ diskfs_get_translator (struct node *np, 
+@@ -751,6 +762,7 @@ diskfs_get_translator (struct node *np, 
  	memcpy (*namep, transloc + 2, datalen);
      }
  
@@ -960,7 +978,7 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/inode.c hurd/ext2fs
    diskfs_end_catch_exception ();
  
    *namelen = datalen;
-@@ -757,7 +769,7 @@ write_symlink (struct node *node, const 
+@@ -772,7 +784,7 @@ write_symlink (struct node *node, const 
  
    assert (node->dn_stat.st_blocks == 0);
  
@@ -969,7 +987,7 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/inode.c hurd/ext2fs
    node->dn_stat.st_size = len - 1;
    node->dn_set_ctime = 1;
    node->dn_set_mtime = 1;
-@@ -774,7 +786,7 @@ read_symlink (struct node *node, char *t
+@@ -789,7 +801,7 @@ read_symlink (struct node *node, char *t
  
    assert (node->dn_stat.st_size < MAX_INODE_SYMLINK);
  
@@ -978,9 +996,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/inode.c hurd/ext2fs
    return 0;
  }
  
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/pager.c hurd/ext2fs/pager.c
---- ../cvs/hurd/ext2fs/pager.c	2002-06-12 00:38:01.000000000 +0300
-+++ hurd/ext2fs/pager.c	2004-11-11 18:16:16.000000000 +0200
+--- a/ext2fs/pager.c
++++ b/ext2fs/pager.c
 @@ -18,17 +18,18 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
@@ -1665,9 +1682,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/pager.c hurd/ext2fs
  	  if (node->dn->pager == 0)
  	    {
  	      diskfs_nrele_light (node);
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/pokel.c hurd/ext2fs/pokel.c
---- ../cvs/hurd/ext2fs/pokel.c	1996-01-16 00:28:56.000000000 +0200
-+++ hurd/ext2fs/pokel.c	2004-11-11 18:16:16.000000000 +0200
+--- a/ext2fs/pokel.c
++++ b/ext2fs/pokel.c
 @@ -67,12 +67,27 @@ pokel_add (struct pokel *pokel, void *lo
        vm_offset_t p_offs = pl->offset;
        vm_size_t p_end = p_offs + pl->length;
@@ -1733,9 +1749,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/pokel.c hurd/ext2fs
  
    if (last)
      {
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/truncate.c hurd/ext2fs/truncate.c
---- ../cvs/hurd/ext2fs/truncate.c	2000-12-03 06:41:37.000000000 +0200
-+++ hurd/ext2fs/truncate.c	2004-11-11 18:16:16.000000000 +0200
+--- a/ext2fs/truncate.c
++++ b/ext2fs/truncate.c
 @@ -124,7 +124,7 @@ trunc_indirect (struct node *node, block
      {
        unsigned index;
@@ -1772,9 +1787,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ext2fs/truncate.c hurd/ext
  static void
  force_delayed_copies (struct node *node, off_t length)
  {
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/fatfs/pager.c hurd/fatfs/pager.c
---- ../cvs/hurd/fatfs/pager.c	2003-07-29 01:42:26.000000000 +0300
-+++ hurd/fatfs/pager.c	2004-11-11 18:16:16.000000000 +0200
+--- a/fatfs/pager.c
++++ b/fatfs/pager.c
 @@ -596,6 +596,13 @@ pager_unlock_page (struct user_pager_inf
    return 0;
  }
@@ -1807,9 +1821,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/fatfs/pager.c hurd/fatfs/p
            if (node->dn->pager == 0)
              {
                diskfs_nrele_light (node);
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/isofs/pager.c hurd/isofs/pager.c
---- ../cvs/hurd/isofs/pager.c	2001-01-07 19:06:26.000000000 +0200
-+++ hurd/isofs/pager.c	2004-11-11 18:16:16.000000000 +0200
+--- a/isofs/pager.c
++++ b/isofs/pager.c
 @@ -94,6 +94,13 @@ pager_unlock_page (struct user_pager_inf
    return EROFS;
  }
@@ -1843,9 +1856,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/isofs/pager.c hurd/isofs/p
  	if (upi->p == 0)
  	  {
  	    diskfs_nrele_light (np);
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libdiskfs/disk-pager.c hurd/libdiskfs/disk-pager.c
---- ../cvs/hurd/libdiskfs/disk-pager.c	2002-05-08 12:56:56.000000000 +0300
-+++ hurd/libdiskfs/disk-pager.c	2004-11-11 18:16:17.000000000 +0200
+--- a/libdiskfs/disk-pager.c
++++ b/libdiskfs/disk-pager.c
 @@ -46,7 +46,8 @@ service_paging_requests (any_t arg)
  
  void
@@ -1866,9 +1878,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libdiskfs/disk-pager.c hur
    assert (diskfs_disk_pager);
  
    /* Get a port to the disk pager.  */
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libdiskfs/diskfs-pager.h hurd/libdiskfs/diskfs-pager.h
---- ../cvs/hurd/libdiskfs/diskfs-pager.h	1997-02-05 18:39:19.000000000 +0200
-+++ hurd/libdiskfs/diskfs-pager.h	2004-11-11 18:16:17.000000000 +0200
+--- a/libdiskfs/diskfs-pager.h
++++ b/libdiskfs/diskfs-pager.h
 @@ -33,7 +33,8 @@
     mapped is returned in IMAGE.  INFO, PAGER_BUCKET, & MAY_CACHE are passed
     to `pager_create'.  */
@@ -1879,9 +1890,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libdiskfs/diskfs-pager.h h
  				     size_t size, void **image);
  
  extern struct pager *diskfs_disk_pager;
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/data-request.c hurd/libpager/data-request.c
---- ../cvs/hurd/libpager/data-request.c	2002-05-08 12:22:14.000000000 +0300
-+++ hurd/libpager/data-request.c	2004-11-11 19:43:24.000000000 +0200
+--- a/libpager/data-request.c
++++ b/libpager/data-request.c
 @@ -40,11 +40,11 @@ _pager_seqnos_memory_object_data_request
    if (!p)
      return EOPNOTSUPP;
@@ -1927,9 +1937,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/data-request.c hu
  			     MACH_PORT_NULL);
    mutex_lock (&p->interlock);
    _pager_mark_object_error (p, offset, length, 0);
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/data-return.c hurd/libpager/data-return.c
---- ../cvs/hurd/libpager/data-return.c	2002-05-08 12:22:14.000000000 +0300
-+++ hurd/libpager/data-return.c	2004-11-11 20:08:53.000000000 +0200
+--- a/libpager/data-return.c
++++ b/libpager/data-return.c
 @@ -39,6 +39,7 @@ _pager_do_write_request (mach_port_t obj
    struct pager *p;
    short *pm_entries;
@@ -2068,9 +2077,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/data-return.c hur
    ports_port_deref (p);
    return 0;
  
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/pager-create.c hurd/libpager/pager-create.c
---- ../cvs/hurd/libpager/pager-create.c	1996-05-09 19:47:42.000000000 +0300
-+++ hurd/libpager/pager-create.c	2004-11-11 18:16:17.000000000 +0200
+--- a/libpager/pager-create.c
++++ b/libpager/pager-create.c
 @@ -22,7 +22,8 @@ struct pager *
  pager_create (struct user_pager_info *upi,
  	      struct port_bucket *bucket,
@@ -2089,9 +2097,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/pager-create.c hu
    p->memobjcntl = MACH_PORT_NULL;
    p->memobjname = MACH_PORT_NULL;
    p->seqno = -1;
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/pager.h hurd/libpager/pager.h
---- ../cvs/hurd/libpager/pager.h	1999-07-04 02:51:02.000000000 +0300
-+++ hurd/libpager/pager.h	2004-11-11 18:16:17.000000000 +0200
+--- a/libpager/pager.h
++++ b/libpager/pager.h
 @@ -32,18 +32,21 @@ int pager_demuxer (mach_msg_header_t *in
  		   mach_msg_header_t *outp);
  
@@ -2148,9 +2155,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/pager.h hurd/libp
  /* The user must define this function.  It should report back (in
     *OFFSET and *SIZE the minimum valid address the pager will accept
     and the size of the object.   */
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/priv.h hurd/libpager/priv.h
---- ../cvs/hurd/libpager/priv.h	2000-07-25 22:40:27.000000000 +0300
-+++ hurd/libpager/priv.h	2004-11-11 19:42:20.000000000 +0200
+--- a/libpager/priv.h
++++ b/libpager/priv.h
 @@ -45,6 +45,7 @@ struct pager
  
    boolean_t may_cache;
@@ -2159,9 +2165,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/libpager/priv.h hurd/libpa
  
    /* Interface ports */
    memory_object_control_t memobjcntl;
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/storeio/pager.c hurd/storeio/pager.c
---- ../cvs/hurd/storeio/pager.c	2002-05-08 13:17:41.000000000 +0300
-+++ hurd/storeio/pager.c	2004-11-11 18:16:18.000000000 +0200
+--- a/storeio/pager.c
++++ b/storeio/pager.c
 @@ -109,6 +109,13 @@ pager_unlock_page (struct user_pager_inf
      return 0;
  }
@@ -2185,9 +2190,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/storeio/pager.c hurd/store
  	  if (dev->pager == NULL)
  	    {
  	      mutex_unlock (&dev->pager_lock);
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/tmpfs/pager-stubs.c hurd/tmpfs/pager-stubs.c
---- ../cvs/hurd/tmpfs/pager-stubs.c	2001-02-26 06:13:58.000000000 +0200
-+++ hurd/tmpfs/pager-stubs.c	2004-11-11 18:16:18.000000000 +0200
+--- a/tmpfs/pager-stubs.c
++++ b/tmpfs/pager-stubs.c
 @@ -57,6 +57,14 @@ pager_unlock_page (struct user_pager_inf
    return EIEIO;
  }
@@ -2203,9 +2207,8 @@ diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/tmpfs/pager-stubs.c hurd/t
  /* The user must define this function.  It should report back (in
     *OFFSET and *SIZE the minimum valid address the pager will accept
     and the size of the object.   */
-diff -urpN --exclude='*~' --exclude=build ../cvs/hurd/ufs/pager.c hurd/ufs/pager.c
---- ../cvs/hurd/ufs/pager.c	1999-09-13 09:35:07.000000000 +0300
-+++ hurd/ufs/pager.c	2004-11-11 18:16:18.000000000 +0200
+--- a/ufs/pager.c
++++ b/ufs/pager.c
 @@ -425,6 +425,13 @@ pager_unlock_page (struct user_pager_inf
    return err;
  }

@@ -1,9 +1,13 @@
 Ideally we should be able to time out and see translators go away automatically,
 however it makes all threads often wake at the same time and overload Mach.
 
---- libports/manage-multithread.c	29 Dec 2008 18:38:02 -0000	1.20
-+++ libports/manage-multithread.c	20 Aug 1997 20:41:57 -0000	1.19
-@@ -157,6 +157,8 @@
+---
+ libports/manage-multithread.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+--- a/libports/manage-multithread.c
++++ b/libports/manage-multithread.c
+@@ -157,6 +157,8 @@ ports_manage_port_operations_multithread
        return 0;
      }
  

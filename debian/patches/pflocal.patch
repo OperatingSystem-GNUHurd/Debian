@@ -34,13 +34,15 @@
 	* socket.c (S_socket_connect): Create the server socket here...
 	(S_socket_accept): ... not here.
 
-Index: connq.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/pflocal/connq.c,v
-retrieving revision 1.15
-diff -u -p -r1.15 connq.c
---- pflocal/connq.c	22 Dec 2001 21:00:37 -0000	1.15
-+++ pflocal/connq.c	17 May 2005 09:25:47 -0000
+---
+ pflocal/connq.c  |  341 +++++++++++++++++++++++++++++--------------------------
+ pflocal/connq.h  |   39 +++---
+ pflocal/io.c     |    8 -
+ pflocal/socket.c |   72 +++++------
+ 4 files changed, 245 insertions(+), 215 deletions(-)
+
+--- a/pflocal/connq.c
++++ b/pflocal/connq.c
 @@ -26,31 +26,22 @@
  /* A queue for queueing incoming connections.  */
  struct connq
@@ -482,13 +484,8 @@ diff -u -p -r1.15 connq.c
  
    mutex_unlock (&cq->lock);
  
-Index: connq.h
-===================================================================
-RCS file: /cvsroot/hurd/hurd/pflocal/connq.h,v
-retrieving revision 1.6
-diff -u -p -r1.6 connq.h
---- pflocal/connq.h	12 Feb 2001 17:24:36 -0000	1.6
-+++ pflocal/connq.h	17 May 2005 09:25:47 -0000
+--- a/pflocal/connq.h
++++ b/pflocal/connq.h
 @@ -23,9 +23,8 @@
  
  #include <errno.h>
@@ -545,14 +542,9 @@ diff -u -p -r1.6 connq.h
 -error_t connq_connect (struct connq *cq, int noblock, struct sock *sock);
 -
  #endif /* __CONNQ_H__ */
-Index: io.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/pflocal/io.c,v
-retrieving revision 1.39
-diff -u -p -r1.39 io.c
---- pflocal/io.c	11 Jun 2002 21:40:34 -0000	1.39
-+++ pflocal/io.c	17 May 2005 09:25:48 -0000
-@@ -197,16 +197,16 @@ S_io_select (struct sock_user *user,
+--- a/pflocal/io.c
++++ b/pflocal/io.c
+@@ -199,16 +199,16 @@ S_io_select (struct sock_user *user,
  
        if (*select_type & SELECT_READ)
  	{
@@ -573,13 +565,8 @@ diff -u -p -r1.39 io.c
  	    }
  	}
      }
-Index: socket.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/pflocal/socket.c,v
-retrieving revision 1.22
-diff -u -p -r1.22 socket.c
---- pflocal/socket.c	27 Jan 1996 17:37:55 -0000	1.22
-+++ pflocal/socket.c	17 May 2005 09:25:48 -0000
+--- a/pflocal/socket.c
++++ b/pflocal/socket.c
 @@ -110,7 +110,7 @@ S_socket_connect (struct sock_user *user
  	  else if (sock->flags & SOCK_CONNECTED)
  	    /* SOCK_CONNECTED is only set for connection-oriented sockets,

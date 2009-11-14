@@ -1,10 +1,10 @@
-Index: libpthread/pthread/pt-setcancelstate.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/pthread/pt-setcancelstate.c,v
-retrieving revision 1.1
-diff -u -p -r1.1 pt-setcancelstate.c
---- libpthread/pthread/pt-setcancelstate.c	10 Oct 2002 23:05:06 -0000	1.1
-+++ libpthread/pthread/pt-setcancelstate.c	28 Apr 2009 17:51:08 -0000
+---
+ libpthread/pthread/pt-setcancelstate.c |    3 ++-
+ libpthread/pthread/pt-setcanceltype.c  |    3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+--- a/libpthread/pthread/pt-setcancelstate.c
++++ b/libpthread/pthread/pt-setcancelstate.c
 @@ -35,7 +35,8 @@ pthread_setcancelstate (int state, int *
        break;
      }
@@ -15,13 +15,8 @@ diff -u -p -r1.1 pt-setcancelstate.c
    p->cancel_state = state;
  
    return 0;
-Index: libpthread/pthread/pt-setcanceltype.c
-===================================================================
-RCS file: /cvsroot/hurd/hurd/libpthread/pthread/pt-setcanceltype.c,v
-retrieving revision 1.1
-diff -u -p -r1.1 pt-setcanceltype.c
---- libpthread/pthread/pt-setcanceltype.c	10 Oct 2002 23:05:06 -0000	1.1
-+++ libpthread/pthread/pt-setcanceltype.c	28 Apr 2009 17:51:08 -0000
+--- a/libpthread/pthread/pt-setcanceltype.c
++++ b/libpthread/pthread/pt-setcanceltype.c
 @@ -35,7 +35,8 @@ pthread_setcanceltype (int type, int *ol
        break;
      }

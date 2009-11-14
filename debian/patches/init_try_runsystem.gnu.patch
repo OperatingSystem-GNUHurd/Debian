@@ -1,6 +1,11 @@
---- init/init.c	4 Feb 2006 18:39:33 -0000	1.131
-+++ init/init.c	19 Nov 2007 21:14:40 -0000
-@@ -1082,10 +1082,12 @@
+---
+ daemons/console-run.c |    7 +++++++
+ init/init.c           |   24 ++++++++++++++++++++----
+ 2 files changed, 27 insertions(+), 4 deletions(-)
+
+--- a/init/init.c
++++ b/init/init.c
+@@ -1082,10 +1082,12 @@ start_child (const char *prog, char **pr
  static void
  launch_something (const char *why)
  {
@@ -13,7 +18,7 @@
      _PATH_BSHELL,
      "/bin/shd",			/* XXX */
    };
-@@ -1093,12 +1095,26 @@
+@@ -1093,12 +1095,26 @@ launch_something (const char *why)
    if (why)
      error (0, 0, "%s %s", tries[try - 1], why);
  
@@ -44,9 +49,9 @@
  
    crash_system ();
  }
---- daemons/console-run.c	26 Mar 2002 18:59:31 -0000	1.5
-+++ daemons/console-run.c	19 Nov 2007 20:16:15 -0000
-@@ -49,6 +49,7 @@
+--- a/daemons/console-run.c
++++ b/daemons/console-run.c
+@@ -49,6 +49,7 @@ int
  main (int argc, char **argv)
  {
    mach_port_t consdev = get_console ();
@@ -54,7 +59,7 @@
    char *consname;
  
    if (consdev == MACH_PORT_NULL)
-@@ -62,6 +63,12 @@
+@@ -62,6 +63,12 @@ main (int argc, char **argv)
    if (argc < 2)
      error (1, 0, "Usage: %s PROGRAM [ARG...]", program_invocation_short_name);
  

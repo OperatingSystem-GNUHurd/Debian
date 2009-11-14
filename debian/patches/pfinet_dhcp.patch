@@ -25,9 +25,14 @@
 	* linux-src/net/ipv4/devinet.c (inet_insert_ifa) [_HURD_]: Don't
 	fail when the address is `0.0.0.0'.
       
---- pfinet/options.c	14 Oct 2007 02:26:10 -0000	1.14
-+++ pfinet/options.c	20 Nov 2007 20:27:14 -0000
-@@ -60,23 +60,26 @@
+---
+ pfinet/linux-src/net/ipv4/devinet.c |    2 
+ pfinet/options.c                    |  381 ++++++++++++++++++++++++++----------
+ 2 files changed, 278 insertions(+), 105 deletions(-)
+
+--- a/pfinet/options.c
++++ b/pfinet/options.c
+@@ -60,23 +60,26 @@ extern struct inet6_dev *ipv6_find_idev 
  extern int inet6_addr_add (int ifindex, struct in6_addr *pfx, int plen);
  extern int inet6_addr_del (int ifindex, struct in6_addr *pfx, int plen);
  
@@ -64,7 +69,7 @@
    {0}
  };
  
-@@ -112,6 +115,50 @@
+@@ -112,6 +115,50 @@ struct parse_hook
    struct parse_interface *curint;
  };
  
@@ -115,7 +120,7 @@
  /* Adds an empty interface slot to H, and sets H's current interface to it, or
     returns an error. */
  static error_t
-@@ -122,6 +169,7 @@
+@@ -122,6 +169,7 @@ parse_hook_add_interface (struct parse_h
  	     (h->num_interfaces + 1) * sizeof (struct parse_interface));
    if (! new)
      return ENOMEM;
@@ -123,7 +128,7 @@
    h->interfaces = new;
    h->num_interfaces++;
    h->curint = new + h->num_interfaces - 1;
-@@ -183,10 +231,16 @@
+@@ -183,10 +231,16 @@ parse_opt (int opt, char *arg, struct ar
       if (addr == INADDR_NONE) PERR (EINVAL, "Malformed %s", type);	      \
       addr; })
  
@@ -142,11 +147,10 @@
  #ifdef CONFIG_IPV6
        struct parse_interface *gw6_in;
        char *ptr;
-@@ -216,30 +270,60 @@
- 	err = find_device (arg, &in->device);
+@@ -217,29 +271,59 @@ parse_opt (int opt, char *arg, struct ar
        if (err)
  	FAIL (err, 10, err, "%s", arg);
-
+ 
 +      /* Set old interface values */
 +      parse_interface_copy_device (in->device, in);
        break;
@@ -219,7 +223,7 @@
  
      case '4':
        pfinet_bind (PORTCLASS_INET, arg);
-@@ -254,36 +338,46 @@
+@@ -254,36 +338,46 @@ parse_opt (int opt, char *arg, struct ar
        break;
  
      case 'A':
@@ -288,7 +292,7 @@
        break;
  #endif /* CONFIG_IPV6 */
  
-@@ -323,20 +417,19 @@
+@@ -323,20 +417,19 @@ parse_opt (int opt, char *arg, struct ar
  	  /* Specifying a netmask for an address-less interface is a no-no.  */
  	  FAIL (EDESTADDRREQ, 14, 0, "Cannot set netmask");
  #endif
@@ -316,7 +320,7 @@
  
  #ifdef CONFIG_IPV6
  	  if (!IN6_IS_ADDR_UNSPECIFIED (&in->gateway6))
-@@ -361,15 +454,20 @@
+@@ -361,15 +454,20 @@ parse_opt (int opt, char *arg, struct ar
  	    idev = ipv6_find_idev(in->device);
  #endif
  
@@ -345,7 +349,7 @@
  	    }
  
  #ifdef CONFIG_IPV6
-@@ -377,24 +475,25 @@
+@@ -377,24 +475,25 @@ parse_opt (int opt, char *arg, struct ar
  	    continue;
  
  	  /* First let's remove all non-local addresses. */
@@ -389,7 +393,7 @@
  	      /* Now assign the new address */
  	      inet6_addr_add (in->device->ifindex, &in->address6.addr,
  			      in->address6.prefix_len);
-@@ -418,33 +517,40 @@
+@@ -418,33 +517,40 @@ parse_opt (int opt, char *arg, struct ar
  	req.nlh.nlmsg_seq = 0;
  	req.nlh.nlmsg_len = NLMSG_LENGTH (sizeof req.rtm);
  
@@ -448,7 +452,7 @@
  	    req.nlh.nlmsg_type = RTM_NEWROUTE;
  	    req.nlh.nlmsg_flags = NLM_F_REQUEST | NLM_F_CREATE | NLM_F_REPLACE;
  	    tb = fib_new_table (req.rtm.rtm_table);
-@@ -467,13 +574,77 @@
+@@ -467,13 +573,77 @@ parse_opt (int opt, char *arg, struct ar
  	  if (!gw6_in || rt6i->rt6i_dev != gw6_in->device
  	      || !IN6_ARE_ADDR_EQUAL (&rt6i->rt6i_gateway, &gw6_in->gateway6))
  	    {
@@ -527,7 +531,7 @@
        __mutex_unlock (&global_lock);
  
        /* Fall through to free hook.  */
-@@ -526,8 +697,9 @@
+@@ -526,8 +696,9 @@ trivfs_append_args (struct trivfs_contro
          ADD_ADDR_OPT ("netmask", mask);
        if (peer != addr)
  	ADD_ADDR_OPT ("peer", peer);
@@ -539,10 +543,9 @@
  	ADD_ADDR_OPT ("gateway", FIB_RES_GW (res));
  
  #undef ADD_ADDR_OPT
-diff -u -r1.8 devinet.c
---- pfinet/linux-src/net/ipv4/devinet.c	18 Jul 2001 17:37:13 -0000	1.8
-+++ pfinet/linux-src/net/ipv4/devinet.c	20 Nov 2007 20:30:21 -0000
-@@ -214,10 +214,12 @@
+--- a/pfinet/linux-src/net/ipv4/devinet.c
++++ b/pfinet/linux-src/net/ipv4/devinet.c
+@@ -214,10 +214,12 @@ inet_insert_ifa(struct in_device *in_dev
  {
  	struct in_ifaddr *ifa1, **ifap, **last_primary;
  

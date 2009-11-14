@@ -1,6 +1,10 @@
---- hurd/libdiskfs/init-init.c	2001-08-21 00:45:11.000000000 +0200
-+++ hurd/libdiskfs/init-init.c	2007-03-31 23:29:57.000000000 +0200
-@@ -57,6 +57,9 @@
+---
+ libdiskfs/init-init.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+--- a/libdiskfs/init-init.c
++++ b/libdiskfs/init-init.c
+@@ -57,6 +57,9 @@ diskfs_init_diskfs (void)
  {
    error_t err;
  

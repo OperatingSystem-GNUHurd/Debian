@@ -7,8 +7,10 @@ Date:   Sun Oct 18 00:24:19 2009 +0200
     * sysdeps/hurd/pt-kill.c (pthread_kill): Return immediately after checks
     without calling _hurd_raise_signal if sig is 0.
 
-diff --git a/sysdeps/hurd/pt-kill.c b/sysdeps/hurd/pt-kill.c
-index f970e06..d204e3f 100644
+---
+ libpthread/sysdeps/hurd/pt-kill.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
 --- a/libpthread/sysdeps/hurd/pt-kill.c
 +++ b/libpthread/sysdeps/hurd/pt-kill.c
 @@ -39,6 +39,9 @@ pthread_kill (pthread_t thread, int sig)

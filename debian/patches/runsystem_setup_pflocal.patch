@@ -1,6 +1,10 @@
---- daemons/runsystem.sh	2007-11-15 19:41:12.000000000 +0100
-+++ deamons/runsystem.sh	2007-11-15 19:43:39.000000000 +0100
-@@ -53,6 +53,12 @@
+---
+ daemons/runsystem.sh |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+--- a/daemons/runsystem.sh
++++ b/daemons/runsystem.sh
+@@ -53,6 +53,12 @@ function singleuser ()
  }
  
  
