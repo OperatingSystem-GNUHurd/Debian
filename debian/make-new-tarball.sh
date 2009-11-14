@@ -10,5 +10,7 @@ fi
 BASENAME=$(basename $1)
 DIRNAME=$(dirname $1)
 
-tar -czvf hurd.tgz --exclude=CVS --exclude=.cvsignore --exclude=debian -C $DIRNAME $BASENAME
+tar -czvf hurd.tgz \
+    --exclude=.git --exclude=.gitignore --exclude=debian \
+    -C $DIRNAME $BASENAME
 
