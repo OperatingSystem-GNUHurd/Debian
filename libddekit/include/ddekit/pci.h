@@ -1,7 +1,7 @@
 #ifndef _ddekit_pci_h
 #define _ddekit_pci_h
 
-#include <l4/dde/ddekit/types.h>
+#include "ddekit/types.h"
 
 /** \defgroup DDEKit_pci */
 

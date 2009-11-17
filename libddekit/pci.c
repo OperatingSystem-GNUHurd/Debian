@@ -1,14 +1,5 @@
-#include <l4/dde/ddekit/pci.h>
-#include <l4/dde/ddekit/printf.h>
-#include <l4/dde/ddekit/panic.h>
-#include <l4/dde/ddekit/memory.h>
-#include <l4/dde/ddekit/assert.h>
-
-#include <l4/generic_io/types.h>
-#include <l4/generic_io/libio.h>
-#include <l4/env/errno.h>
-#include <l4/log/l4log.h>
-
+#include <pciaccess.h>
+#include "ddekit/pci.h"
 #include "config.h"
 
 #define dbg_this 0
@@ -20,7 +11,7 @@ typedef struct ddekit_pci_dev {
 	int bus;                      /**< bus ID */
 	int slot;                     /**< slot ID */
 	int func;                     /**< function */
-	l4io_pci_dev_t l4dev;         /**< L4IO handle */
+	struct pci_device *dev;
 	struct ddekit_pci_dev *next;  /**< chaining info */
 } ddekit_pci_dev_t;
 
@@ -40,49 +31,31 @@ static inline int invalid_device(ddekit_pci_dev_t *d)
  */
 void ddekit_pci_init(void)
 {
-	l4io_pdev_t start = 0;
-
 	int slots_found = 0;
 	int i;
+	struct pci_device *pci_dev;
+	struct pci_device_iterator *dev_iter;
 
 	/* Init device list */
 	for (i = 0; i < MAX_PCI_DEVS; i++)
 		ddekit_pci_bus[i].slot = -1;
 
-	while (1) {
-		l4io_pci_dev_t l4dev;
-		int err;
-
-		/* search next device */
-		err = l4io_pci_find_device(~0, ~0, start, &l4dev);
-		if (err) {
-			if (err == -L4_ENOTFOUND) {
-				LOGd(dbg_this, "no more pci devices");
-			} else {
-				LOGd(dbg_this, "error: scanning pci devices: %s (%d)", l4env_errstr(err), err);
-			}
+	dev_iter = pci_slot_match_iterator_create (NULL);
+	while ((pci_dev = pci_device_next (dev_iter)) != NULL) {
+		if (slots_found == MAX_PCI_DEVS) {
+			LOGd(dbg_this, "find more than %d pci devices",
+			     slots_found);
 			break;
 		}
-
-		/* next search start from here */
-		start = l4dev.handle;
-
-		/* print info */
-
 		/* Pretend all our devices are chained to exactly one bus. */
 		ddekit_pci_bus[slots_found].bus   = 0; /*l4dev.bus;*/
 		ddekit_pci_bus[slots_found].slot  = slots_found;
 		ddekit_pci_bus[slots_found].func  = 0;
-		ddekit_pci_bus[slots_found].l4dev = l4dev;
-
-		LOGd(dbg_this, "pcib_identify: found device (%x, %x, %x), mapped to (%x, %x, %x)",
-		     l4dev.bus, l4dev.devfn >> 3, l4dev.devfn & 0x07,
-		     ddekit_pci_bus[slots_found].bus,
-		     ddekit_pci_bus[slots_found].slot,
-		     ddekit_pci_bus[slots_found].func);
+		ddekit_pci_bus[slots_found].dev = pci_dev;
 
 		++slots_found;
 	}
+	pci_iterator_destroy (dev_iter);
 }
 
 
@@ -184,7 +157,7 @@ int ddekit_pci_readb (int bus, int slot, int func, int pos, ddekit_uint8_t  *val
 {
 	ddekit_pci_dev_t *dev = ddekit_pci_find_device_fixed(bus, slot, func);
 	if (dev)
-		return l4io_pci_readb_cfg(dev->l4dev.handle, pos, val);
+		return pci_device_cfg_read_u8 (dev->dev, val, pos);
 	else
 		return -1;
 }
@@ -194,7 +167,7 @@ int ddekit_pci_readw (int bus, int slot, int func, int pos, ddekit_uint16_t *val
 {
 	ddekit_pci_dev_t *dev = ddekit_pci_find_device_fixed(bus, slot, func);
 	if (dev)
-		return l4io_pci_readw_cfg(dev->l4dev.handle, pos, val);
+		return pci_device_cfg_read_u16 (dev->dev, val, pos);
 	else
 		return -1;
 }
@@ -204,7 +177,7 @@ int ddekit_pci_readl (int bus, int slot, int func, int pos, ddekit_uint32_t *val
 {
 	ddekit_pci_dev_t *dev = ddekit_pci_find_device_fixed(bus, slot, func);
 	if (dev)
-		return l4io_pci_readl_cfg(dev->l4dev.handle, pos, val);
+		return pci_device_cfg_read_u32 (dev->dev, val, pos);
 	else
 		return -1;
 }
@@ -214,7 +187,7 @@ int ddekit_pci_writeb(int bus, int slot, int func, int pos, ddekit_uint8_t   val
 {
 	ddekit_pci_dev_t *dev = ddekit_pci_find_device_fixed(bus, slot, func);
 	if (dev)
-		return l4io_pci_writeb_cfg(dev->l4dev.handle, pos, val);
+		return pci_device_cfg_write_u8 (dev->dev, val, pos);
 	else
 		return -1;
 }
@@ -224,7 +197,7 @@ int ddekit_pci_writew(int bus, int slot, int func, int pos, ddekit_uint16_t  val
 {
 	ddekit_pci_dev_t *dev = ddekit_pci_find_device_fixed(bus, slot, func);
 	if (dev)
-		return l4io_pci_writew_cfg(dev->l4dev.handle, pos, val);
+		return pci_device_cfg_write_u16 (dev->dev, val, pos);
 	else
 		return -1;
 }
@@ -234,19 +207,20 @@ int ddekit_pci_writel(int bus, int slot, int func, int pos, ddekit_uint32_t  val
 {
 	ddekit_pci_dev_t *dev = ddekit_pci_find_device_fixed(bus, slot, func);
 	if (dev)
-		return l4io_pci_writel_cfg(dev->l4dev.handle, pos, val);
+		return pci_device_cfg_write_u32 (dev->dev, val, pos);
 	else
 		return -1;
 }
 
 int ddekit_pci_enable_device(struct ddekit_pci_dev *dev)
 {
-	return l4io_pci_enable(dev->l4dev.handle);
+	return pci_device_enable (dev->dev);
 }
 
 int ddekit_pci_disable_device(struct ddekit_pci_dev *dev)
 {
-	return l4io_pci_disable(dev->l4dev.handle);
+	// TODO
+	return -1;
 }
 
 /********************************************************************************
@@ -264,7 +238,7 @@ int ddekit_pci_disable_device(struct ddekit_pci_dev *dev)
  */
 unsigned short ddekit_pci_get_vendor(struct ddekit_pci_dev *dev)
 {
-	return dev->l4dev.vendor;
+	return dev->dev.vendor_id;
 }
 
 
@@ -277,7 +251,7 @@ unsigned short ddekit_pci_get_vendor(struct ddekit_pci_dev *dev)
  */
 unsigned short ddekit_pci_get_device_id(struct ddekit_pci_dev *dev)
 {
-	return dev->l4dev.device;
+	return dev->dev.device_id;
 }
 
 
@@ -290,7 +264,7 @@ unsigned short ddekit_pci_get_device_id(struct ddekit_pci_dev *dev)
  */
 unsigned short ddekit_pci_get_sub_vendor(struct ddekit_pci_dev *dev)
 {
-	return dev->l4dev.sub_vendor;
+	return dev->dev.subvendor_id;
 }
 
 
@@ -303,7 +277,7 @@ unsigned short ddekit_pci_get_sub_vendor(struct ddekit_pci_dev *dev)
  */
 unsigned short ddekit_pci_get_sub_device(struct ddekit_pci_dev *dev)
 {
-	return dev->l4dev.sub_device;
+	return dev->dev.subdevice_id;
 }
 
 
@@ -316,7 +290,7 @@ unsigned short ddekit_pci_get_sub_device(struct ddekit_pci_dev *dev)
  */
 unsigned       ddekit_pci_get_dev_class(struct ddekit_pci_dev *dev)
 {
-	return dev->l4dev.dev_class;
+	return dev->dev.device_class;
 }
 
 
@@ -329,7 +303,7 @@ unsigned       ddekit_pci_get_dev_class(struct ddekit_pci_dev *dev)
  */
 unsigned long  ddekit_pci_get_irq(struct ddekit_pci_dev *dev)
 {
-	return dev->l4dev.irq;
+	return dev->dev.irq;
 }
 
 
@@ -342,7 +316,8 @@ unsigned long  ddekit_pci_get_irq(struct ddekit_pci_dev *dev)
  */
 char *ddekit_pci_get_name(struct ddekit_pci_dev *dev)
 {
-	return dev->l4dev.name;
+	// TODO
+	return NULL;
 }
 
 
@@ -355,7 +330,8 @@ char *ddekit_pci_get_name(struct ddekit_pci_dev *dev)
  */
 char *ddekit_pci_get_slot_name(struct ddekit_pci_dev *dev)
 {
-	return dev->l4dev.slot_name;
+	// TODO
+	return NULL;
 }
 
 
@@ -372,7 +348,7 @@ ddekit_pci_res_t *ddekit_pci_get_resource(struct ddekit_pci_dev *dev, unsigned i
 	if (idx > L4IO_PCIDEV_RES)
 		return NULL;
 
-	return (ddekit_pci_res_t *)(&(dev->l4dev.res[idx]));
+	//TODO return (ddekit_pci_res_t *)(&(dev->l4dev.res[idx]));
 }
 
 
@@ -383,7 +359,7 @@ ddekit_pci_res_t *ddekit_pci_get_resource(struct ddekit_pci_dev *dev, unsigned i
  */
 void ddekit_pci_set_master(struct ddekit_pci_dev *dev)
 {
-	l4io_pci_set_master(dev->l4dev.handle);
+	//TODO l4io_pci_set_master(dev->l4dev.handle);
 }
 
 int ddekit_pci_irq_enable(int bus, int slot, int func, int pin, int *irq)
