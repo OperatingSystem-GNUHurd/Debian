@@ -43,3 +43,4 @@ MIGCOMSFLAGS = -prefix dde_
 
 include ../Makeconf
 
+LDFLAGS += -lpciaccess
