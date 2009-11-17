@@ -1,0 +1,107 @@
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/repos/tudos/!svn/ver/457/trunk/l4/pkg/dde/include/ddekit
+END
+panic.h
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/include/ddekit/panic.h
+END
+interrupt.h
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/repos/tudos/!svn/ver/301/trunk/l4/pkg/dde/include/ddekit/interrupt.h
+END
+condvar.h
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/include/ddekit/condvar.h
+END
+pgtab.h
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/tudos/!svn/ver/395/trunk/l4/pkg/dde/include/ddekit/pgtab.h
+END
+initcall.h
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/tudos/!svn/ver/238/trunk/l4/pkg/dde/include/ddekit/initcall.h
+END
+assert.h
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/include/ddekit/assert.h
+END
+printf.h
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/include/ddekit/printf.h
+END
+types.h
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/include/ddekit/types.h
+END
+thread.h
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/tudos/!svn/ver/238/trunk/l4/pkg/dde/include/ddekit/thread.h
+END
+memory.h
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/include/ddekit/memory.h
+END
+resources.h
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/include/ddekit/resources.h
+END
+pci.h
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/include/ddekit/pci.h
+END
+inline.h
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/include/ddekit/inline.h
+END
+timer.h
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/tudos/!svn/ver/457/trunk/l4/pkg/dde/include/ddekit/timer.h
+END
+semaphore.h
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/include/ddekit/semaphore.h
+END
+debug.h
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/include/ddekit/debug.h
+END
+lock.h
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/tudos/!svn/ver/253/trunk/l4/pkg/dde/include/ddekit/lock.h
+END
