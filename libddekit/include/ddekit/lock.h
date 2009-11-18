@@ -52,7 +52,7 @@ static int  ddekit_lock_try_lock(ddekit_lock_t *mtx); // returns 0 on success, !
 static void ddekit_lock_unlock  (ddekit_lock_t *mtx);
 
 // inline implementation or inline call to non-inline implementation
-#include <l4/dde/ddekit/inline.h>
+#include "ddekit/inline.h"
 
 static INLINE void ddekit_lock_init_unlocked(ddekit_lock_t *mtx) {
 	_ddekit_lock_init(mtx);
