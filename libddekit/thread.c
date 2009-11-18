@@ -116,23 +116,18 @@ void ddekit_thread_sleep(ddekit_lock_t *lock) {
 	condition_t sleep_cond;
 
 	td = ddekit_thread_myself();
-	sleep_cond = ddekit_thread_get_data (&td->thread);
+	sleep_cond = ddekit_thread_get_data (td);
 
-	mutex_lock (lock);
 	// TODO condition_wait cannot guarantee that the thread is 
 	// woke up by another thread, maybe by signals.
 	// Does it matter here?
 	condition_wait (sleep_cond, lock);
-	mutex_unlock (lock);
 }
 
 void  ddekit_thread_wakeup(ddekit_thread_t *td) {
-	ddekit_thread_t *td;
 	condition_t sleep_cond;
 
-	td = ddekit_thread_myself();
-	sleep_cond = ddekit_thread_get_data (&td->thread);
-
+	sleep_cond = ddekit_thread_get_data (td);
 	condition_signal (sleep_cond);
 }
 
