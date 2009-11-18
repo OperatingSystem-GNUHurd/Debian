@@ -3,8 +3,6 @@
 
 /** \defgroup DDEKit_threads */
 
-#include <l4/dde/ddekit/lock.h>
-
 struct ddekit_thread;
 typedef struct ddekit_thread ddekit_thread_t;
 
@@ -118,28 +116,11 @@ void  ddekit_thread_wakeup(ddekit_thread_t *thread);
  */
 void  ddekit_thread_exit(void) __attribute__((noreturn));
 
-/** Terminate a thread 
- *
- * \ingroup DDEKit_threads
- */
-void  ddekit_thread_terminate(ddekit_thread_t *thread);
-
 /** Get the name, a thread registered with DDEKit. 
  *
  * \ingroup DDEKit_threads
  */
 const char *ddekit_thread_get_name(ddekit_thread_t *thread);
-
-/** Get unique ID of a DDEKit thread.
- *
- * \ingroup DDEKit_threads
- *
- *  DDEKit does not allow direct access to the thread data
- *  structure, since this struct contains L4-specific data types.
- *  However, applications might want to get some kind of ID related
- *  to a ddekit_thread, for instance to use it as a Linux-like PID.
- */
-int ddekit_thread_get_id(ddekit_thread_t *thread);
 
 /** Hint that this thread is done and may be scheduled somehow. 
  *
