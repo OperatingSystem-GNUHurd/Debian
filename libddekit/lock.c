@@ -33,6 +33,9 @@ void _ddekit_lock_unlock(struct ddekit_lock **mtx) {
 
 
 int _ddekit_lock_owner(struct ddekit_lock **mtx) {
-	return (int)l4lock_owner(&(*mtx)->lock);
+	/* The return value is the address of the holder.
+	 * I hope it will be OK. At least, it is OK
+	 * for the current implementation of DDE Linux/BSD */
+	return (int) (*mtx)->lock.holder;
 }
 
