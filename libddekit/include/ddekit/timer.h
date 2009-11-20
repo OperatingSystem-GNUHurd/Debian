@@ -1,7 +1,9 @@
 #ifndef _ddekit_timer_h
 #define _ddekit_timer_h
 
-#include <l4/dde/ddekit/thread.h>
+#include "ddekit/thread.h"
+
+#define jiffies fetch_jiffies()
 
 enum
 {

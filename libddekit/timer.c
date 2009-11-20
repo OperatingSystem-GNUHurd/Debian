@@ -1,19 +1,13 @@
-#include <l4/dde/ddekit/timer.h>
-#include <l4/dde/ddekit/thread.h>
-#include <l4/dde/ddekit/printf.h>
-#include <l4/dde/ddekit/panic.h>
-#include <l4/dde/ddekit/assert.h>
-#include <l4/dde/ddekit/memory.h>
-#include <l4/dde/ddekit/semaphore.h>
+#include <error.h>
+#include <maptime.h>
+#include <cthreads.h>
 
-#include <l4/thread/thread.h>
-#include <l4/lock/lock.h>
-#include <l4/env/errno.h>
-#include <l4/generic_io/libio.h>
-#include <l4/sys/ipc.h>
-#include <l4/util/rdtsc.h>
+#include "ddekit/timer.h"
 
 #define	__DEBUG	0
+
+volatile struct mapped_time_value *mapped_time;
+long long root_jiffies;
 
 /* Just to remind BjoernD of what this is:
  * HZ = clock ticks per second
@@ -22,7 +16,6 @@
  * So, if someone schedules a timeout to expire in 2 seconds,
  * this expires date will be in jiffies + 2 * HZ.
  */
-extern volatile unsigned long jiffies;
 extern unsigned long HZ;
 
 typedef struct _timer
@@ -36,8 +29,8 @@ typedef struct _timer
 
 
 static ddekit_timer_t  *timer_list          = NULL; ///< list of pending timers
-static l4lock_t        timer_lock           = L4LOCK_UNLOCKED; ///< lock to access timer_list
-static l4_threadid_t   timer_thread         = L4_NIL_ID; ///< the timer thread
+static struct mutex    timer_lock	    = MUTEX_INITIALIZER; ///< lock to access timer_list
+static cthread_t       timer_thread;                     ///< the timer thread
 static ddekit_thread_t *timer_thread_ddekit = NULL; ///< ddekit ID of timer thread
 static ddekit_sem_t    *notify_semaphore    = NULL; ///< timer thread's wait semaphore
 
@@ -58,20 +51,27 @@ static void dump_list(char *msg)
 #endif
 }
 
+int fetch_jiffies ()
+{
+  struct timeval tv;
+  long long j;
+
+  maptime_read (mapped_time, &tv);
+
+  j = (long long) tv.tv_sec * HZ + ((long long) tv.tv_usec * HZ) / 1000000;
+  return j - root_jiffies;
+}
 
 /** Notify the timer thread there is a new timer at the beginning of the
  *  timer list.
  */
 static inline void __notify_timer_thread(void)
 {
-	int err;
-	l4_msgdope_t result;
-	
 	/* Do not notify if there is no timer thread.
 	 * XXX: Perhaps we should better assert that there is a timer
 	 *      thread before allowing users to add a timer.
 	 */
-	if (l4_is_nil_id(timer_thread))
+	if (timer_thread == NULL)
 		return;
 
 	ddekit_sem_up(notify_semaphore);
@@ -91,7 +91,7 @@ int ddekit_add_timer(void (*fn)(void *), void *args, unsigned long timeout)
 	t->expires = timeout;
 	t->next    = NULL;
 
-	l4lock_lock(&timer_lock);
+	mutex_lock (&timer_lock);
 
 	t->id         = timer_id_ctr++;
 
@@ -122,7 +122,7 @@ int ddekit_add_timer(void (*fn)(void *), void *args, unsigned long timeout)
 		__notify_timer_thread();
 	}
 
-	l4lock_unlock(&timer_lock);
+	mutex_unlock (&timer_lock);
 
 	dump_list("after add");
 	
@@ -135,7 +135,7 @@ int ddekit_del_timer(int timer)
 	ddekit_timer_t *it, *it_next;
 	int ret = -1;
 
-	l4lock_lock(&timer_lock);
+	mutex_lock (&timer_lock);
 
 	/* no timer? */
 	if (!timer_list) {
@@ -176,7 +176,7 @@ int ddekit_del_timer(int timer)
 	}
 
 out:
-	l4lock_unlock(&timer_lock);
+	mutex_unlock (&timer_lock);
 
 	dump_list("after del");
 	
@@ -195,7 +195,7 @@ int ddekit_timer_pending(int timer)
 	ddekit_timer_t *t = NULL;
 	int r = 0;
 
-	l4lock_lock(&timer_lock);
+	mutex_lock (&timer_lock);
 
 	t = timer_list;
 	while (t) {
@@ -206,7 +206,7 @@ int ddekit_timer_pending(int timer)
 		t = t->next;
 	}
 
-	l4lock_unlock(&timer_lock);
+	mutex_unlock (&timer_lock);
 
 	return r;
 }
@@ -222,8 +222,7 @@ static ddekit_timer_t *get_next_timer(void)
 	ddekit_timer_t *t = NULL;
 
 	/* This function must be called with the timer_lock held. */
-	Assert(l4_thread_equal(l4thread_l4_id(l4lock_owner(&timer_lock)), 
-				           timer_thread));
+	Assert(timer_lock.holder == timer_thread);
 
 	if (timer_list &&
 	   (timer_list->expires <= jiffies)) {
@@ -248,27 +247,24 @@ enum
  */
 static inline int __timer_sleep(unsigned to)
 {
-	l4_umword_t dummy;
-	l4_msgdope_t res;
-
 	int err = 0;
 	
-	l4lock_unlock(&timer_lock);
+	mutex_unlock (&timer_lock);
 
-		if (to == DDEKIT_TIMEOUT_NEVER) {
-			ddekit_sem_down(notify_semaphore);
-		}
-		else {
+	if (to == DDEKIT_TIMEOUT_NEVER) {
+		ddekit_sem_down(notify_semaphore);
+	}
+	else {
 #if 0
-			ddekit_printf("Going to sleep for %lu µs (%lu ms)\n", to * 1000, to);
+		ddekit_printf("Going to sleep for %lu µs (%lu ms)\n", to * 1000, to);
 #endif
-			err = ddekit_sem_down_timed(notify_semaphore, to);
+		err = ddekit_sem_down_timed(notify_semaphore, to);
 #if 0
-			ddekit_printf("err: %x\n", err);
+		ddekit_printf("err: %x\n", err);
 #endif
-		}
+	}
 
-	l4lock_lock(&timer_lock);
+	mutex_lock (&timer_lock);
 
 	return (err ? 1 : 0);
 }
@@ -283,9 +279,9 @@ static void ddekit_timer_thread(void *arg)
 	l4thread_set_prio(l4thread_myself(), 0x11);
 #endif
 
-	l4thread_started(0);
+//	l4thread_started(0);
 
-	l4lock_lock(&timer_lock);
+	mutex_lock (&timer_lock);
 	while (1) {
 		ddekit_timer_t *timer = NULL;
 		unsigned long  to     = DDEKIT_TIMEOUT_NEVER;
@@ -303,13 +299,14 @@ static void ddekit_timer_thread(void *arg)
 		__timer_sleep(to);
 
 		while ((timer = get_next_timer()) != NULL) {
-			l4lock_unlock(&timer_lock);
+			mutex_unlock (&timer_lock);
 			//ddekit_printf("doing timer fn @ %p\n", timer->fn);
 			timer->fn(timer->args);
 			ddekit_simple_free(timer);
-			l4lock_lock(&timer_lock);
+			mutex_lock (&timer_lock);
 		}
 	}
+	// TODO how is the thread terminated?
 }
 
 ddekit_thread_t *ddekit_get_timer_thread()
@@ -320,10 +317,18 @@ ddekit_thread_t *ddekit_get_timer_thread()
 
 void ddekit_init_timers(void)
 {
-	l4_tsc_init(L4_TSC_INIT_AUTO);
+  error_t err;
+  struct timeval tp;
 
-	/* XXX this module needs HZ and jiffies to work - so l4io info page must be mapped */
-	timer_thread = l4thread_l4_id( l4thread_create_named(ddekit_timer_thread,
-	                                "ddekit_timer", 0,
-	                                L4THREAD_CREATE_SYNC));
+  err = maptime_map (0, 0, &mapped_time);
+  if (err)
+    error (2, err, "cannot map time device");
+
+  maptime_read (mapped_time, &tp);
+
+  root_jiffies = (long long) tp.tv_sec * HZ
+    + ((long long) tp.tv_usec * HZ) / 1000000;
+
+  timer_thread = cthread_fork ((cthread_fn_t) timer_function, 0);
+  cthread_detach (timer_thread);
 }
