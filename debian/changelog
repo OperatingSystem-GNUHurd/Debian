@@ -18,6 +18,9 @@ hurd (20090404-3) UNRELEASED; urgency=low
     - Remove quilt from Build-Depends.
     - Remove patchsys-quilt.mk include from debian/rules.
 
+  [ Michael Banck ]
+  * debian/control (Uploaders): Removed Marcus Brinkmann.
+
  -- Samuel Thibault <sthibault@debian.org>  Tue, 13 Oct 2009 01:20:44 +0200
 
 hurd (20090404-2) unstable; urgency=low
