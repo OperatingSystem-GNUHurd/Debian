@@ -1,15 +1,21 @@
-#include <l4/dde/ddekit/resources.h>
+#include <sys/io.h>
 
-#include <l4/generic_io/libio.h>
+#include "ddekit/resources.h"
 
 #include "config.h"
 
 int ddekit_request_dma(int nr) {
+#if 0
 	return l4io_request_dma(nr);
+#endif
+	return -1;
 }
 
 int ddekit_release_dma(int nr) {
+#if 0
 	return l4io_release_dma(nr);
+#endif
+	return -1;
 }
 
 /** Request an IO region
@@ -18,7 +24,7 @@ int ddekit_release_dma(int nr) {
  * \return -1   error
  */
 int ddekit_request_io(ddekit_addr_t start, ddekit_addr_t count) {
-	return l4io_request_region(start, count);
+	return ioperm (start, count, 1);
 }
 
 /** Release an IO region.
@@ -27,7 +33,7 @@ int ddekit_request_io(ddekit_addr_t start, ddekit_addr_t count) {
  * \return <0   error
  */
 int ddekit_release_io(ddekit_addr_t start, ddekit_addr_t count) {
-	return l4io_release_region(start, count);
+	return ioperm (start, count, 0);
 }
 
 /** Request a memory region.
@@ -37,6 +43,7 @@ int ddekit_release_io(ddekit_addr_t start, ddekit_addr_t count) {
  * \return -1	 error
  */
 int ddekit_request_mem(ddekit_addr_t start, ddekit_addr_t count, ddekit_addr_t *vaddr) {
+#if 0
 	ddekit_addr_t v;
 
 	v = l4io_request_mem_region(start, count, 0);
@@ -45,6 +52,8 @@ int ddekit_request_mem(ddekit_addr_t start, ddekit_addr_t count, ddekit_addr_t *
 		return 0;
 	} else
 		return -1;
+#endif
+	return -1;
 }
 
 /** Release memory region.
@@ -53,5 +62,8 @@ int ddekit_request_mem(ddekit_addr_t start, ddekit_addr_t count, ddekit_addr_t *
  * \return <0 error
  */
 int ddekit_release_mem(ddekit_addr_t start, ddekit_addr_t count) {
+#if 0
 	return l4io_release_mem_region(start, count);
+#endif
+	return -1;
 }

@@ -1,7 +1,7 @@
 #ifndef _ddekit_resources_h
 #define _ddekit_resources_h
 
-#include <l4/dde/ddekit/types.h>
+#include "ddekit/types.h"
 
 int ddekit_request_dma(int nr);
 int ddekit_release_dma(int nr);
