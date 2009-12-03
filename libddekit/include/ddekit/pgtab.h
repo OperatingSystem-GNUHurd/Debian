@@ -8,7 +8,7 @@
 #ifndef _ddekit_pgtab_h
 #define _ddekit_pgtab_h
 
-#include <l4/dde/ddekit/types.h>
+#include "ddekit/types.h"
 
 /* FIXME Region types may be defined by pgtab users. Do we really need them
  * here? */
