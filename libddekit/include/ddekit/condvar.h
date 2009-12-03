@@ -3,8 +3,6 @@
 
 /** \file ddekit/condvar.h */
 
-#include <l4/dde/ddekit/lock.h>
-
 struct ddekit_condvar;
 typedef struct ddekit_condvar ddekit_condvar_t;
 
