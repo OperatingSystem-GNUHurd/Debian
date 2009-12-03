@@ -20,7 +20,7 @@ makemode := library
 
 libname = libddekit
 SRCS= condvar.c init.c initcall.c interrupt.c lock.c malloc.c memory.c 	\
-      panic.c pci.c pgtab-old.c pgtab.c printf.c resources.c list.c \
+      pci.c pgtab-old.c pgtab.c printf.c resources.c list.c \
       thread.c timer.c kmem.c
 LCLHDRS = include/ddekit/condvar.h include/ddekit/lock.h	\
 	  include/ddekit/initcall.h include/ddekit/debug.h	\
