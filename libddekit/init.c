@@ -8,7 +8,9 @@
 void ddekit_init(void)
 {
 	extern void linux_kmem_init ();
+	extern int log_init ();
 	ddekit_init_threads();
 	linux_kmem_init ();
+	log_init ();
 }
 

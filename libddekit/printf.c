@@ -4,9 +4,12 @@
  * \date    2006-03-01
  */
 
-#include <l4/dde/ddekit/printf.h>
+#include <stdio.h>
+#include <unistd.h>
 
-#include <l4/log/l4log.h>
+#include "ddekit/printf.h"
+
+static FILE *output;
 
 /**
  * Log constant string message w/o arguments
@@ -15,7 +18,17 @@
  */
 int ddekit_print(const char *msg)
 {
-	return LOG_printf("%s", msg);
+	int ret;
+
+	/* If LOG hasn't been initialized or failed its initialization,
+	 * return the error. */
+	if (output == NULL)
+		return -1;
+
+	ret = fprintf (output, "%s", msg);
+	if (!ret)
+		fflush (output);
+	return ret;
 }
 
 /**
@@ -42,5 +55,24 @@ int ddekit_printf(const char *fmt, ...)
  */
 int ddekit_vprintf(const char *fmt, va_list va)
 {
-	return LOG_vprintf(fmt, va);
+	char *tmp = NULL;
+	int ret;
+
+	ret = vasprintf (&tmp, fmt, va);
+	if (!ret) {
+		ret = ddekit_print (tmp);
+		free (tmp);
+	}
+	return ret;
+}
+
+int log_init ()
+{
+	char *log_file_name = mktemp ("/tmp/dde_log.XXXXXX");
+	output = fopen (log_file_name, "a+");
+	if (!output) {
+		error (0, errno, "open %s", log_file_name);
+		return -1;
+	}
+	return 0;
 }
