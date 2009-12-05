@@ -154,6 +154,10 @@ ddekit_thread_t *ddekit_interrupt_attach(int irq, int shared,
 	ddekit_thread_t *thread;
 	char thread_name[10];
 
+	/* We cannot attach the interrupt to the irq which has been used. */
+	if (ddekit_irq_ctrl[irq].irq_thread)
+	  return NULL;
+
 	/* initialize info structure for interrupt loop */
 	params = ddekit_simple_malloc(sizeof(*params));
 	if (!params) return NULL;
@@ -178,7 +182,6 @@ ddekit_thread_t *ddekit_interrupt_attach(int irq, int shared,
 		return NULL;
 	}
 
-	// TODO can ddekit really work for shared irq?
 	ddekit_irq_ctrl[irq].handle_irq = 1; /* IRQ nesting level is initially 1 */
 	ddekit_irq_ctrl[irq].irq_thread = thread;
 	ddekit_lock_init_unlocked (&ddekit_irq_ctrl[irq].irqlock);
@@ -204,11 +207,16 @@ void ddekit_interrupt_detach(int irq)
 {
 	ddekit_interrupt_disable(irq);
 	ddekit_lock_lock (&ddekit_irq_ctrl[irq].irqlock);
-	ddekit_irq_ctrl[irq].thread_exit = TRUE;
-	ddekit_lock_unlock (&ddekit_irq_ctrl[irq].irqlock);
+	if (ddekit_irq_ctrl[irq].handle_irq == 0) {
+		ddekit_irq_ctrl[irq].thread_exit = TRUE;
+		ddekit_irq_ctrl[irq].irq_thread = NULL;
 
-	/* I hope this ugly trick can work. */
-	thread_abort (ddekit_irq_ctrl[irq].mach_thread);
+		/* If the irq thread is waiting for interrupt notification
+		 * messages, thread_abort() can force it to return.
+		 * I hope this ugly trick can work. */
+		thread_abort (ddekit_irq_ctrl[irq].mach_thread);
+	}
+	ddekit_lock_unlock (&ddekit_irq_ctrl[irq].irqlock);
 }
 
 
