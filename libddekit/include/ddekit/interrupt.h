@@ -12,9 +12,9 @@
 #ifndef _ddekit_interrupt_h
 #define _ddekit_interrupt_h
 
-#include <l4/dde/ddekit/thread.h>
+#include "ddekit/thread.h"
 
-#define DDEKIT_IRQ_PRIO         0x11
+#define DDEKIT_IRQ_PRIO         2
 
 /**
  * Attach to hardware interrupt

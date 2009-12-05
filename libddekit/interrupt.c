@@ -8,15 +8,7 @@
  * FIXME use consume flag to indicate IRQ was handled
  */
 
-#include <l4/dde/ddekit/interrupt.h>
-#include <l4/dde/ddekit/semaphore.h>
-#include <l4/dde/ddekit/thread.h>
-#include <l4/dde/ddekit/memory.h>
-#include <l4/dde/ddekit/panic.h>
-
-#include <l4/omega0/client.h>
-#include <l4/log/l4log.h>
-#include <l4/thread/thread.h>
+#include "ddekit/interrupt.h"
 
 #include <stdio.h>
 
@@ -44,22 +36,18 @@ struct intloop_params
 static struct
 {
 	int               handle_irq; /* nested irq disable count */
-	ddekit_sem_t     *irqsem;     /* synch semaphore */
+	ddekit_lock_t    *irqlock;
 	ddekit_thread_t  *irq_thread; /* thread ID for detaching from IRQ later on */
-	omega0_irqdesc_t  irq_desc;   /* Omega0-style IRQ descriptor */
+	boolean_t        thread_exit;
+	thread_t         mach_thread;
 } ddekit_irq_ctrl[MAX_INTERRUPTS];
 
 
 static void ddekit_irq_exit_fn(l4thread_t thread, void *data)
 {
-	int idx = (int)data;
-
-	// * detach from IRQ
-	omega0_detach(ddekit_irq_ctrl[idx].irq_desc);
+	// TODO we can remove the port for delivery of interrupt explicitly,
+	// though it cannot cause any harm even if we don't remove it.
 }
-
-L4THREAD_EXIT_FN_STATIC(exit_fn, ddekit_irq_exit_fn);
-
 
 /**
  * Interrupt service loop
@@ -67,35 +55,38 @@ L4THREAD_EXIT_FN_STATIC(exit_fn, ddekit_irq_exit_fn);
  */
 static void intloop(void *arg)
 {
+	kern_return_t ret;
 	struct intloop_params *params = arg;
+	mach_port_t      delivery_port;
+	int my_index;
 
-	l4thread_set_prio(l4thread_myself(), DDEKIT_IRQ_PRIO);
+	my_index = params->irq;
+	ddekit_irq_ctrl[my_index]->mach_thread = mach_thread_self ();
+	ret = thread_priority (mach_thread_self (), DDEKIT_IRQ_PRIO, 0);
+	if (ret)
+		error (0, ret, "thread_priority");
 
-    omega0_request_t req  = { .i = 0 };
-	int o0handle;
-	int my_index = params->irq;
-    omega0_irqdesc_t *desc = &ddekit_irq_ctrl[my_index].irq_desc;
-
-	/* setup interrupt descriptor */
-	desc->s.num = params->irq + 1;
-	desc->s.shared = params->shared;
-
-	/* allocate irq */
-	o0handle = omega0_attach(*desc);
-	if (o0handle < 0) {
+	// TODO I should give another parameter to show whether
+	// the interrupt can be shared.
+	ret = device_intr_notify (master_device, dev->irq,
+				  dev->dev_id, delivery_port,
+				  MACH_MSG_TYPE_MAKE_SEND);
+	if (!ret) {
 		/* inform thread creator of error */
 		/* XXX does omega0 error code have any meaning to DDEKit users? */
-		params->start_err = o0handle;
+		params->start_err = ret;
 		ddekit_sem_up(params->started);
-		return;
+		return NULL;
 	}
 
+#if 0
 	/* 
 	 * Setup an exit fn. This will make sure that we clean up everything,
 	 * before shutting down an IRQ thread.
 	 */
 	if (l4thread_on_exit(&exit_fn, (void *)my_index) < 0)
 		ddekit_panic("Could not set exit handler for IRQ fn.");
+#endif
 
 	/* after successful initialization call thread_init() before doing anything
 	 * else here */
@@ -105,27 +96,21 @@ static void intloop(void *arg)
 	params->start_err = 0;
 	ddekit_sem_up(params->started);
 
-	/* prepare request structure */
-	req.s.param   = params->irq + 1;
-	req.s.wait    = 1;
-	req.s.consume = 0;
-	req.s.unmask  = 1;
+	int irq_server (mach_msg_header_t *inp, mach_msg_header_t *outp) {
+		mach_irq_notification_t *irq_header = (mach_irq_notification_t *) inp;
 
-	while (1) {
-		int err;
+		if (inp->msgh_id != MACH_NOTIFY_IRQ)
+			return 0;
 
-		/* wait for int */
-		err = omega0_request(o0handle, req);
-		if (err != params->irq + 1)
-			LOG("omega0_request returned %d, %d (irq+1) expected", err, params->irq + 1);
-
-		LOGd(DEBUG_INTERRUPTS, "received irq 0x%X", err - 1);
-
-		/* unmask only the first time */
-		req.s.unmask = 0;
+		/* It's an interrupt not for us. It shouldn't happen. */
+		if (irq_header->irq != params->irq) {
+			LOG("We get interrupt %d, %d is expected",
+			    irq_header->irq, params->irq);
+			return 1;
+		}
 
 		/* only call registered handler function, if IRQ is not disabled */
-		ddekit_sem_down(ddekit_irq_ctrl[my_index].irqsem);
+		ddekit_lock_lock (&ddekit_irq_ctrl[my_index].irqlock);
 		if (ddekit_irq_ctrl[my_index].handle_irq > 0) {
 			LOGd(DEBUG_INTERRUPTS, "IRQ %x, handler %p", my_index,params->handler);
 			params->handler(params->priv);
@@ -133,9 +118,18 @@ static void intloop(void *arg)
 		else
 			LOGd(DEBUG_INTERRUPTS, "not handling IRQ %x, because it is disabled.", my_index);
 
-		ddekit_sem_up(ddekit_irq_ctrl[my_index].irqsem);
-		LOGd(DEBUG_INTERRUPTS, "after irq handler");
+		//  ((mig_reply_header_t *) outp)->RetCode = MIG_NO_REPLY;
+
+		if (ddekit_irq_ctrl[irq].thread_exit) {
+			ddekit_lock_unlock (&ddekit_irq_ctrl[my_index].irqlock);
+			ddekit_thread_exit();
+			return 1;
+		}
+		ddekit_lock_unlock (&ddekit_irq_ctrl[my_index].irqlock);
+		return 1;
 	}
+
+	mach_msg_server (int_server, 0, delivery_port);
 }
 
 
@@ -164,6 +158,7 @@ ddekit_thread_t *ddekit_interrupt_attach(int irq, int shared,
 	params = ddekit_simple_malloc(sizeof(*params));
 	if (!params) return NULL;
 
+	// TODO make sure irq is 0-15 instead of 1-16.
 	params->irq         = irq;
 	params->thread_init = thread_init;
 	params->handler     = handler;
@@ -175,6 +170,7 @@ ddekit_thread_t *ddekit_interrupt_attach(int irq, int shared,
 	/* construct name */
 	snprintf(thread_name, 10, "irq%02X", irq);
 
+	/* allocate irq */
 	/* create interrupt loop thread */
 	thread = ddekit_thread_create(intloop, params, thread_name);
 	if (!thread) {
@@ -182,9 +178,11 @@ ddekit_thread_t *ddekit_interrupt_attach(int irq, int shared,
 		return NULL;
 	}
 
+	// TODO can ddekit really work for shared irq?
 	ddekit_irq_ctrl[irq].handle_irq = 1; /* IRQ nesting level is initially 1 */
 	ddekit_irq_ctrl[irq].irq_thread = thread;
-	ddekit_irq_ctrl[irq].irqsem     = ddekit_sem_init(1);
+	ddekit_lock_init_unlocked (&ddekit_irq_ctrl[irq].irqlock);
+	ddekit_irq_ctrl[irq].thread_exit = FALSE;
 
 
 	/* wait for intloop initialization result */
@@ -205,25 +203,30 @@ ddekit_thread_t *ddekit_interrupt_attach(int irq, int shared,
 void ddekit_interrupt_detach(int irq)
 {
 	ddekit_interrupt_disable(irq);
-	ddekit_thread_terminate(ddekit_irq_ctrl[irq].irq_thread);
+	ddekit_lock_lock (&ddekit_irq_ctrl[irq].irqlock);
+	ddekit_irq_ctrl[irq].thread_exit = TRUE;
+	ddekit_lock_unlock (&ddekit_irq_ctrl[irq].irqlock);
+
+	/* I hope this ugly trick can work. */
+	thread_abort (ddekit_irq_ctrl[irq].mach_thread);
 }
 
 
 void ddekit_interrupt_disable(int irq)
 {
-	if (ddekit_irq_ctrl[irq].irqsem) {
-		ddekit_sem_down(ddekit_irq_ctrl[irq].irqsem);
+	if (ddekit_irq_ctrl[irq].irqlock) {
+		ddekit_lock_lock (&ddekit_irq_ctrl[irq].irqlock);
 		--ddekit_irq_ctrl[irq].handle_irq;
-		ddekit_sem_up(ddekit_irq_ctrl[irq].irqsem);
+		ddekit_lock_unlock (&ddekit_irq_ctrl[irq].irqlock);
 	}
 }
 
 
 void ddekit_interrupt_enable(int irq)
 {
-	if (ddekit_irq_ctrl[irq].irqsem) {
-		ddekit_sem_down(ddekit_irq_ctrl[irq].irqsem);
+	if (ddekit_irq_ctrl[irq].irqlock) {
+		ddekit_lock_lock (&ddekit_irq_ctrl[irq].irqlock);
 		++ddekit_irq_ctrl[irq].handle_irq;
-		ddekit_sem_up(ddekit_irq_ctrl[irq].irqsem);
+		ddekit_lock_unlock (&ddekit_irq_ctrl[irq].irqlock);
 	}
 }
