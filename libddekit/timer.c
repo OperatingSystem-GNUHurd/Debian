@@ -19,7 +19,6 @@ long long root_jiffies;
  * So, if someone schedules a timeout to expire in 2 seconds,
  * this expires date will be in jiffies + 2 * HZ.
  */
-extern unsigned long HZ;
 
 typedef struct _timer
 {

@@ -4,6 +4,7 @@
 #include "ddekit/thread.h"
 
 #define jiffies fetch_jiffies()
+#define HZ 100
 
 enum
 {
