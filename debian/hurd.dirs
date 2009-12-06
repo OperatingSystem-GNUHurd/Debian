@@ -1,6 +1,7 @@
 servers
 servers/socket
 etc/default
+etc/sysctl.d
 usr/share/msgids
 usr/bin
 boot

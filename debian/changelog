@@ -12,6 +12,7 @@ hurd (20090404-3) UNRELEASED; urgency=low
     /dev/cons/vcs by default.
   * debian/copyright: Reference /usr/share/common-licenses/GPL-2 instead of
     just GPL.
+  * debian/hurd.dirs: Add /etc/sysctl.d.
 
   [ Guillem Jover ]
   * Update make-new-tarball.sh to exclude git instead of CVS paths.
