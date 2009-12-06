@@ -71,10 +71,16 @@ int ddekit_vprintf(const char *fmt, va_list va)
 
 int log_init ()
 {
-	char *log_file_name = mktemp ("/tmp/dde_log.XXXXXX");
-	output = fopen (log_file_name, "a+");
+	char template[] = "/var/log/dde_log.XXXXXX";
+	int ret = mkstemp (template);
+	if (ret < 0) {
+		error (0, errno, "mkstemp");
+		return -1;
+	}
+
+	output = fopen (template, "a+");
 	if (!output) {
-		error (0, errno, "open %s", log_file_name);
+		error (0, errno, "open %s", template);
 		return -1;
 	}
 	return 0;
