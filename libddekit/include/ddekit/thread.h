@@ -3,6 +3,8 @@
 
 /** \defgroup DDEKit_threads */
 
+#include "ddekit/lock.h"
+
 struct ddekit_thread;
 typedef struct ddekit_thread ddekit_thread_t;
 

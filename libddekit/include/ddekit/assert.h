@@ -1,8 +1,8 @@
 #ifndef _ddekit_assert_h
 #define _ddekit_assert_h
 
-#include <l4/dde/ddekit/printf.h>
-#include <l4/dde/ddekit/panic.h>
+#include "ddekit/printf.h"
+#include "ddekit/panic.h"
 
 /** \file ddekit/assert.h */
 

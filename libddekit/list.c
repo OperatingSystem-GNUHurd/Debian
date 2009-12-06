@@ -48,7 +48,7 @@ struct list *remove_entry_head (struct list *head)
 {
   struct list *entry = head->next;
 
-  if (EMPTY_ENTRY (entry))
+  if (EMPTY_LIST (entry))
     return NULL;
   
   remove_entry (entry);
@@ -59,7 +59,7 @@ struct list *remove_entry_end (struct list *head)
 {
   struct list *entry = head->prev;
 
-  if (EMPTY_ENTRY (entry))
+  if (EMPTY_LIST (entry))
     return NULL;
   
   remove_entry (entry);

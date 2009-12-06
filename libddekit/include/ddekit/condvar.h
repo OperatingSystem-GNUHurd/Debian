@@ -2,6 +2,7 @@
 #define _ddekit_condvar_h
 
 /** \file ddekit/condvar.h */
+#include "ddekit/lock.h"
 
 struct ddekit_condvar;
 typedef struct ddekit_condvar ddekit_condvar_t;

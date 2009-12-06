@@ -8,15 +8,32 @@
  * FIXME use consume flag to indicate IRQ was handled
  */
 
-#include "ddekit/interrupt.h"
-
 #include <stdio.h>
+#include <error.h>
+#include <mach.h>
+#include <hurd.h>
+
+#include "ddekit/interrupt.h"
+#include "ddekit/semaphore.h"
+#include "ddekit/printf.h"
+#include "ddekit/memory.h"
+
+#include "device_U.h"
 
 #define DEBUG_INTERRUPTS  0
 
 #define MAX_INTERRUPTS   32
 
 #define BLOCK_IRQ         0
+
+#define MACH_NOTIFY_IRQ 100
+
+typedef struct
+{
+  mach_msg_header_t irq_header;
+  mach_msg_type_t   irq_type;
+  int		    irq;
+} mach_irq_notification_t;
 
 /*
  * Internal type for interrupt loop parameters
@@ -35,19 +52,14 @@ struct intloop_params
 
 static struct
 {
-	int               handle_irq; /* nested irq disable count */
-	ddekit_lock_t    *irqlock;
+	int              handle_irq; /* nested irq disable count */
+	ddekit_lock_t    irqlock;
 	ddekit_thread_t  *irq_thread; /* thread ID for detaching from IRQ later on */
 	boolean_t        thread_exit;
 	thread_t         mach_thread;
 } ddekit_irq_ctrl[MAX_INTERRUPTS];
 
-
-static void ddekit_irq_exit_fn(l4thread_t thread, void *data)
-{
-	// TODO we can remove the port for delivery of interrupt explicitly,
-	// though it cannot cause any harm even if we don't remove it.
-}
+static mach_port_t master_device;
 
 /**
  * Interrupt service loop
@@ -57,26 +69,25 @@ static void intloop(void *arg)
 {
 	kern_return_t ret;
 	struct intloop_params *params = arg;
-	mach_port_t      delivery_port;
+	mach_port_t      delivery_port = mach_reply_port ();
 	int my_index;
 
 	my_index = params->irq;
-	ddekit_irq_ctrl[my_index]->mach_thread = mach_thread_self ();
+	ddekit_irq_ctrl[my_index].mach_thread = mach_thread_self ();
 	ret = thread_priority (mach_thread_self (), DDEKIT_IRQ_PRIO, 0);
 	if (ret)
 		error (0, ret, "thread_priority");
 
 	// TODO I should give another parameter to show whether
 	// the interrupt can be shared.
-	ret = device_intr_notify (master_device, dev->irq,
-				  dev->dev_id, delivery_port,
+	ret = device_intr_notify (master_device, params->irq,
+				  0, delivery_port,
 				  MACH_MSG_TYPE_MAKE_SEND);
 	if (!ret) {
 		/* inform thread creator of error */
 		/* XXX does omega0 error code have any meaning to DDEKit users? */
 		params->start_err = ret;
 		ddekit_sem_up(params->started);
-		return NULL;
 	}
 
 #if 0
@@ -104,23 +115,25 @@ static void intloop(void *arg)
 
 		/* It's an interrupt not for us. It shouldn't happen. */
 		if (irq_header->irq != params->irq) {
-			LOG("We get interrupt %d, %d is expected",
-			    irq_header->irq, params->irq);
+			ddekit_printf ("We get interrupt %d, %d is expected",
+				       irq_header->irq, params->irq);
 			return 1;
 		}
 
 		/* only call registered handler function, if IRQ is not disabled */
 		ddekit_lock_lock (&ddekit_irq_ctrl[my_index].irqlock);
 		if (ddekit_irq_ctrl[my_index].handle_irq > 0) {
-			LOGd(DEBUG_INTERRUPTS, "IRQ %x, handler %p", my_index,params->handler);
+			ddekit_printf ("IRQ %x, handler %p",
+				       my_index,params->handler);
 			params->handler(params->priv);
 		}
 		else
-			LOGd(DEBUG_INTERRUPTS, "not handling IRQ %x, because it is disabled.", my_index);
+			ddekit_printf ("not handling IRQ %x, because it is disabled.",
+				       my_index);
 
 		//  ((mig_reply_header_t *) outp)->RetCode = MIG_NO_REPLY;
 
-		if (ddekit_irq_ctrl[irq].thread_exit) {
+		if (ddekit_irq_ctrl[my_index].thread_exit) {
 			ddekit_lock_unlock (&ddekit_irq_ctrl[my_index].irqlock);
 			ddekit_thread_exit();
 			return 1;
@@ -129,7 +142,7 @@ static void intloop(void *arg)
 		return 1;
 	}
 
-	mach_msg_server (int_server, 0, delivery_port);
+	mach_msg_server (irq_server, 0, delivery_port);
 }
 
 
@@ -237,4 +250,14 @@ void ddekit_interrupt_enable(int irq)
 		++ddekit_irq_ctrl[irq].handle_irq;
 		ddekit_lock_unlock (&ddekit_irq_ctrl[irq].irqlock);
 	}
+}
+
+void interrupt_init ()
+{
+	
+	error_t err;
+
+	err = get_privileged_ports (0, &master_device);
+	if (err)
+		error (1, err, "get_privileged_ports");
 }

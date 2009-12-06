@@ -29,6 +29,9 @@
  *
  * Each chunk stores its size in the first word for free() to work.
  */
+
+#include <stdlib.h>
+
 void *ddekit_simple_malloc(unsigned size)
 {
   return malloc (size);

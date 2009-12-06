@@ -4,7 +4,10 @@
  * \date    2006-03-01
  */
 
+#include <error.h>
+#include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include "ddekit/printf.h"

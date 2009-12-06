@@ -1,6 +1,7 @@
 #include <cthreads.h>
 
 #include "ddekit/lock.h"
+#include "ddekit/memory.h"
 
 #define DDEKIT_DEBUG_LOCKS 0
 
@@ -48,6 +49,6 @@ int _ddekit_lock_owner(struct ddekit_lock **mtx) {
 	/* The return value is the address of the holder.
 	 * I hope it will be OK. At least, it is OK
 	 * for the current implementation of DDE Linux/BSD */
-	return (int) (*mtx)->holder;
+	return (int) (*mtx)->helder;
 }
 

@@ -1,4 +1,8 @@
+#include <stdlib.h>
 #include <pciaccess.h>
+
+#include "ddekit/assert.h"
+#include "ddekit/printf.h"
 #include "ddekit/pci.h"
 #include "config.h"
 
@@ -43,8 +47,8 @@ void ddekit_pci_init(void)
 	dev_iter = pci_slot_match_iterator_create (NULL);
 	while ((pci_dev = pci_device_next (dev_iter)) != NULL) {
 		if (slots_found == MAX_PCI_DEVS) {
-			LOGd(dbg_this, "find more than %d pci devices",
-			     slots_found);
+			ddekit_printf ("find more than %d pci devices",
+				       slots_found);
 			break;
 		}
 		/* Pretend all our devices are chained to exactly one bus. */
@@ -68,7 +72,7 @@ int ddekit_pci_get_device(int nr, int *bus, int *slot, int *func)
 {
 	ddekit_pci_dev_t *dev;
 
-	LOGd(dbg_this, "searching for dev #%d", nr);
+	ddekit_printf ("searching for dev #%d", nr);
 
 	if (nr >= 0 && nr < MAX_PCI_DEVS && !invalid_device(&ddekit_pci_bus[nr])) {
 		dev = &ddekit_pci_bus[nr];
@@ -89,7 +93,8 @@ ddekit_pci_dev_t *ddekit_pci_find_device(int *bus, int *slot, int *func,
 	Assert(slot);
 	Assert(func);
 
-	LOGd(dbg_this, "start %p (slot %d)", start, start ? start->slot : -1);
+	ddekit_printf ("start %p (slot %d)",
+		       start, start ? start->slot : -1);
 	int idx = start ? start->slot + 1 : 0;
 	
 	for ( ; idx < MAX_PCI_DEVS; ++idx) {
@@ -214,7 +219,8 @@ int ddekit_pci_writel(int bus, int slot, int func, int pos, ddekit_uint32_t  val
 
 int ddekit_pci_enable_device(struct ddekit_pci_dev *dev)
 {
-	return pci_device_enable (dev->dev);
+	pci_device_enable (dev->dev);
+	return 0;
 }
 
 int ddekit_pci_disable_device(struct ddekit_pci_dev *dev)
@@ -238,7 +244,7 @@ int ddekit_pci_disable_device(struct ddekit_pci_dev *dev)
  */
 unsigned short ddekit_pci_get_vendor(struct ddekit_pci_dev *dev)
 {
-	return dev->dev.vendor_id;
+	return dev->dev->vendor_id;
 }
 
 
@@ -251,7 +257,7 @@ unsigned short ddekit_pci_get_vendor(struct ddekit_pci_dev *dev)
  */
 unsigned short ddekit_pci_get_device_id(struct ddekit_pci_dev *dev)
 {
-	return dev->dev.device_id;
+	return dev->dev->device_id;
 }
 
 
@@ -264,7 +270,7 @@ unsigned short ddekit_pci_get_device_id(struct ddekit_pci_dev *dev)
  */
 unsigned short ddekit_pci_get_sub_vendor(struct ddekit_pci_dev *dev)
 {
-	return dev->dev.subvendor_id;
+	return dev->dev->subvendor_id;
 }
 
 
@@ -277,7 +283,7 @@ unsigned short ddekit_pci_get_sub_vendor(struct ddekit_pci_dev *dev)
  */
 unsigned short ddekit_pci_get_sub_device(struct ddekit_pci_dev *dev)
 {
-	return dev->dev.subdevice_id;
+	return dev->dev->subdevice_id;
 }
 
 
@@ -290,7 +296,7 @@ unsigned short ddekit_pci_get_sub_device(struct ddekit_pci_dev *dev)
  */
 unsigned       ddekit_pci_get_dev_class(struct ddekit_pci_dev *dev)
 {
-	return dev->dev.device_class;
+	return dev->dev->device_class;
 }
 
 
@@ -303,7 +309,7 @@ unsigned       ddekit_pci_get_dev_class(struct ddekit_pci_dev *dev)
  */
 unsigned long  ddekit_pci_get_irq(struct ddekit_pci_dev *dev)
 {
-	return dev->dev.irq;
+	return dev->dev->irq;
 }
 
 
@@ -345,10 +351,11 @@ char *ddekit_pci_get_slot_name(struct ddekit_pci_dev *dev)
  */
 ddekit_pci_res_t *ddekit_pci_get_resource(struct ddekit_pci_dev *dev, unsigned int idx)
 {
-	if (idx > L4IO_PCIDEV_RES)
+	// TODO
+//	if (idx > L4IO_PCIDEV_RES)
 		return NULL;
 
-	//TODO return (ddekit_pci_res_t *)(&(dev->l4dev.res[idx]));
+//	return (ddekit_pci_res_t *)(&(dev->l4dev.res[idx]));
 }
 
 

@@ -28,8 +28,11 @@
 #include <hurd.h>
 #include <cthreads.h>
 
-#include "util.h"
 #include "vm_param.h"
+
+#include "ddekit/panic.h"
+
+#define debug ddekit_debug
 
 extern int printf (const char *, ...);
 

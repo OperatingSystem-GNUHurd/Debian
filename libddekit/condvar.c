@@ -13,12 +13,12 @@ struct ddekit_condvar {
 };
 
 ddekit_condvar_t *ddekit_condvar_init() {
-	ddekit_condvar_t *cvp;
+	struct condition *cvp;
 
 	cvp = condition_alloc ();
 	condition_init (cvp);
 
-	return cvp;
+	return (ddekit_condvar_t *) cvp;
 }
 
 void ddekit_condvar_wait(ddekit_condvar_t *cvp, ddekit_lock_t *mp) {

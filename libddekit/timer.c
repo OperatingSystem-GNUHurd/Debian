@@ -2,6 +2,9 @@
 #include <maptime.h>
 #include <cthreads.h>
 
+#include "ddekit/memory.h"
+#include "ddekit/assert.h"
+#include "ddekit/semaphore.h"
 #include "ddekit/timer.h"
 
 #define	__DEBUG	0
@@ -118,7 +121,7 @@ int ddekit_add_timer(void (*fn)(void *), void *args, unsigned long timeout)
 	 * necessary to notify the timer thread.
 	 */
 	if (t == timer_list) {
-		Assert(!l4_is_nil_id(timer_thread));
+		Assert(timer_thread);
 		__notify_timer_thread();
 	}
 
@@ -329,6 +332,6 @@ void ddekit_init_timers(void)
   root_jiffies = (long long) tp.tv_sec * HZ
     + ((long long) tp.tv_usec * HZ) / 1000000;
 
-  timer_thread = cthread_fork ((cthread_fn_t) timer_function, 0);
+  timer_thread = cthread_fork ((cthread_fn_t) ddekit_timer_thread, 0);
   cthread_detach (timer_thread);
 }

@@ -11,8 +11,10 @@
  */
 
 #include "ddekit/memory.h"
+#include "ddekit/panic.h"
 
 extern void * linux_kmalloc (unsigned int size, int priority);
+extern void linux_kfree (void *p);
 
 
 /****************
@@ -110,6 +112,7 @@ void *ddekit_slab_get_data(struct ddekit_slab * slab)
 #if 0
 	return l4slab_get_data(&slab->cache);
 #endif
+	return NULL;
 }
 
 
@@ -154,7 +157,7 @@ struct ddekit_slab * ddekit_slab_init(unsigned size, int contiguous)
  */
 void ddekit_large_free(void *objp)
 {
-	return linux_kfree (objp);
+	linux_kfree (objp);
 }
 
 
