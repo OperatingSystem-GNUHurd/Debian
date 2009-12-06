@@ -22,6 +22,7 @@
  *
  */
 
+#include <error.h>
 #include <stdio.h>
 #include <assert.h>
 #include "mach_U.h"
@@ -120,8 +121,13 @@ int phys_to_virt (vm_address_t addr)
 void
 linux_kmem_init ()
 {
-  extern mach_port_t priv_host;
+  mach_port_t priv_host;
   int i, j;
+  error_t err;
+
+  err = get_privileged_ports (&priv_host, NULL);
+  if (err)
+    error (2, err, "get_privileged_ports");
 
   for (i = 0; i < MEM_CHUNKS; i++)
     {
