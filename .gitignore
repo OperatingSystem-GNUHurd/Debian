@@ -74,3 +74,8 @@ utils/unsu
 utils/vminfo
 utils/vmstat
 utils/w
+
+core
+test
+
+.svn
