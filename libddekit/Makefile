@@ -37,11 +37,11 @@ installhdrs =
 MIGSTUBS = deviceUser.o machUser.o
 OBJS = $(sort $(SRCS:.c=.o) $(MIGSTUBS))
 
-HURDLIBS = threads ports
+HURDLIBS = threads ports shouldbeinlibc
 
 MIGCOMSFLAGS = -prefix dde_
 
 include ../Makeconf
 
 LDFLAGS += -lpciaccess
-CFLAGS += -Iinclude -Iinclude/ddekit
+CFLAGS += -Iinclude
