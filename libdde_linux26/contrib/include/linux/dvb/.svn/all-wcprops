@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/dvb
+END
+frontend.h
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/dvb/frontend.h
+END
+audio.h
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/dvb/audio.h
+END
+ca.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/linux26/contrib/include/linux/dvb/ca.h
+END
+Kbuild
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/linux26/contrib/include/linux/dvb/Kbuild
+END
+osd.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/linux26/contrib/include/linux/dvb/osd.h
+END
+version.h
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/dvb/version.h
+END
+net.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/dvb/net.h
+END
+video.h
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/dvb/video.h
+END
+dmx.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/dvb/dmx.h
+END

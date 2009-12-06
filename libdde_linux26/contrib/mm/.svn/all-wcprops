@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/repos/tudos/!svn/ver/457/trunk/l4/pkg/dde/linux26/contrib/mm
+END
+internal.h
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/mm/internal.h
+END
+mempool.c
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/mm/mempool.c
+END
+backing-dev.c
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/mm/backing-dev.c
+END
+swap.c
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/mm/swap.c
+END
+bounce.c
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/mm/bounce.c
+END
+dmapool.c
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/tudos/!svn/ver/457/trunk/l4/pkg/dde/linux26/contrib/mm/dmapool.c
+END
+util.c
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/mm/util.c
+END

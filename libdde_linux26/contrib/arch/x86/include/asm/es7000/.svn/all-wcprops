@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/arch/x86/include/asm/es7000
+END
+apicdef.h
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/arch/x86/include/asm/es7000/apicdef.h
+END
+apic.h
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/arch/x86/include/asm/es7000/apic.h
+END
+wakecpu.h
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/arch/x86/include/asm/es7000/wakecpu.h
+END
+ipi.h
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/arch/x86/include/asm/es7000/ipi.h
+END
+mpparse.h
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/arch/x86/include/asm/es7000/mpparse.h
+END

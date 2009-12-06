@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/examples/ne2k
+END
+arping.c
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/examples/ne2k/arping.c
+END
+8390.c
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/examples/ne2k/8390.c
+END
+main.c
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/examples/ne2k/main.c
+END
+arping.h
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/examples/ne2k/arping.h
+END
+8390.h
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/examples/ne2k/8390.h
+END
+ne2k-pci.c
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/examples/ne2k/ne2k-pci.c
+END
+lib8390.c
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/examples/ne2k/lib8390.c
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/examples/ne2k/Makefile
+END

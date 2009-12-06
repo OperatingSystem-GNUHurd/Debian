@@ -1,0 +1,107 @@
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/acpi
+END
+acrestyp.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/acpi/acrestyp.h
+END
+reboot.h
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/acpi/reboot.h
+END
+acpi_numa.h
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/acpi/acpi_numa.h
+END
+pdc_intel.h
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/acpi/pdc_intel.h
+END
+acoutput.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/acpi/acoutput.h
+END
+actbl1.h
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/acpi/actbl1.h
+END
+acnames.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/acpi/acnames.h
+END
+actypes.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/acpi/actypes.h
+END
+acexcep.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/acpi/acexcep.h
+END
+acpixf.h
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/acpi/acpixf.h
+END
+acpi_drivers.h
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/acpi/acpi_drivers.h
+END
+acpiosxf.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/acpi/acpiosxf.h
+END
+acpi.h
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/acpi/acpi.h
+END
+processor.h
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/acpi/processor.h
+END
+container.h
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/linux26/contrib/include/acpi/container.h
+END
+actbl.h
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/acpi/actbl.h
+END
+acpi_bus.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/acpi/acpi_bus.h
+END

@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rxrpc
+END
+types.h
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/linux26/contrib/include/rxrpc/types.h
+END
+packet.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rxrpc/packet.h
+END

@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/arch/x86/kernel
+END
+pci-nommu.c
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/arch/x86/kernel/pci-nommu.c
+END
+pci-dma.c
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/arch/x86/kernel/pci-dma.c
+END

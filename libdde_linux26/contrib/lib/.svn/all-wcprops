@@ -1,0 +1,155 @@
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib
+END
+proportions.c
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/proportions.c
+END
+hweight.c
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/hweight.c
+END
+kasprintf.c
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/kasprintf.c
+END
+scatterlist.c
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/scatterlist.c
+END
+cpumask.c
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/cpumask.c
+END
+radix-tree.c
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/radix-tree.c
+END
+string.c
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/string.c
+END
+hexdump.c
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/hexdump.c
+END
+vsprintf.c
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/vsprintf.c
+END
+find_next_bit.c
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/find_next_bit.c
+END
+crc32.c
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/crc32.c
+END
+bitmap.c
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/bitmap.c
+END
+gen_crc32table.c
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/linux26/contrib/lib/gen_crc32table.c
+END
+rwsem-spinlock.c
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/rwsem-spinlock.c
+END
+idr.c
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/idr.c
+END
+kobject.c
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/kobject.c
+END
+crc32defs.h
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/linux26/contrib/lib/crc32defs.h
+END
+ctype.c
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/linux26/contrib/lib/ctype.c
+END
+klist.c
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/klist.c
+END
+kref.c
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/kref.c
+END
+kernel_lock.c
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/kernel_lock.c
+END
+bitrev.c
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/bitrev.c
+END
+parser.c
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/parser.c
+END
+sha1.c
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/sha1.c
+END
+rwsem.c
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/lib/rwsem.c
+END

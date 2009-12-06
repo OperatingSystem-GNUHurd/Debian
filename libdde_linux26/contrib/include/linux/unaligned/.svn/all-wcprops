@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/unaligned
+END
+access_ok.h
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/unaligned/access_ok.h
+END
+be_struct.h
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/unaligned/be_struct.h
+END
+be_memmove.h
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/unaligned/be_memmove.h
+END
+packed_struct.h
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/unaligned/packed_struct.h
+END
+generic.h
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/unaligned/generic.h
+END
+le_byteshift.h
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/unaligned/le_byteshift.h
+END
+le_struct.h
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/unaligned/le_struct.h
+END
+le_memmove.h
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/unaligned/le_memmove.h
+END
+memmove.h
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/unaligned/memmove.h
+END
+be_byteshift.h
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/unaligned/be_byteshift.h
+END

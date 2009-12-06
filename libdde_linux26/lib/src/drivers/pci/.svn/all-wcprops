@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/lib/src/drivers/pci
+END
+pci-driver.c
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/lib/src/drivers/pci/pci-driver.c
+END
+probe.c
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/lib/src/drivers/pci/probe.c
+END
+pci.c
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/lib/src/drivers/pci/pci.c
+END
