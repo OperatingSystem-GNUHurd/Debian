@@ -80,7 +80,10 @@ struct ddekit_slab
  */
 void *ddekit_slab_alloc(struct ddekit_slab * slab)
 {
-	return linux_kmalloc (slab->size, 0);
+	if (slab->contiguous)
+		return linux_kmalloc (slab->size, 0);
+	else
+		return ddekit_simple_malloc (slab->size);
 }
 
 
@@ -89,7 +92,10 @@ void *ddekit_slab_alloc(struct ddekit_slab * slab)
  */
 void  ddekit_slab_free(struct ddekit_slab * slab, void *objp)
 {
-	linux_kfree (objp);
+	if (slab->contiguous)
+		linux_kfree (objp);
+	else
+		ddekit_simple_free (objp);
 }
 
 
@@ -168,7 +174,6 @@ void ddekit_large_free(void *objp)
  */
 void *ddekit_large_malloc(int size)
 {
-	// TODO I hope linux_kmalloc can provide large enough pages.
 	return linux_kmalloc (size, 0);
 }
 
