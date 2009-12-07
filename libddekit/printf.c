@@ -29,7 +29,7 @@ int ddekit_print(const char *msg)
 		return -1;
 
 	ret = fprintf (output, "%s", msg);
-	if (!ret)
+	if (ret > 0)
 		fflush (output);
 	return ret;
 }
@@ -62,7 +62,7 @@ int ddekit_vprintf(const char *fmt, va_list va)
 	int ret;
 
 	ret = vasprintf (&tmp, fmt, va);
-	if (!ret) {
+	if (ret > 0) {
 		ret = ddekit_print (tmp);
 		free (tmp);
 	}
