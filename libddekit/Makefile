@@ -19,7 +19,7 @@ dir := libddekit
 makemode := library
 
 libname = libddekit
-SRCS= condvar.c init.c interrupt.c lock.c malloc.c memory.c 	\
+SRCS= condvar.c init.c interrupt.c lock.c memory.c 	\
       pci.c pgtab.c printf.c resources.c list.c \
       thread.c timer.c kmem.c
 LCLHDRS = include/ddekit/condvar.h include/ddekit/lock.h	\

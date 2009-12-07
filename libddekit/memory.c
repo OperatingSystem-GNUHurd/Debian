@@ -160,6 +160,9 @@ struct ddekit_slab * ddekit_slab_init(unsigned size, int contiguous)
  * Free large block of memory
  *
  * This is no useful for allocation < page size.
+ *
+ * TODO The freed memory can be cached and will be still accessible (
+ * no page fault when accessed). I hope it won't caused any troubles.
  */
 void ddekit_large_free(void *objp)
 {
