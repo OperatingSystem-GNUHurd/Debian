@@ -22,6 +22,7 @@
  *
  */
 
+#include <string.h>
 #include <error.h>
 #include <stdio.h>
 #include <assert.h>
@@ -42,6 +43,10 @@ extern int printf (const char *, ...);
    Increase MEM_CHUNKS if the kernel is running out of memory.  */
 #define MEM_CHUNK_SIZE	(64 * 1024)
 #define MEM_CHUNKS	7
+#define MEM_CHUNKS_TOTAL (MEM_CHUNKS + 5)
+
+/* round up the size at alignment of page size. */
+#define ROUND_UP(size) ((size) + __vm_page_size - 1) & (~(__vm_page_size - 1))
 
 /* Mininum amount that linux_kmalloc will allocate.  */
 #define MIN_ALLOC	12
@@ -78,11 +83,15 @@ void free_pages (unsigned long addr, unsigned long order);
 
 static struct mutex mem_lock = MUTEX_INITIALIZER;
 
-/* Chunks from which pages are allocated.  */
-static struct chunkhdr pages_free[MEM_CHUNKS];
+/* Chunks from which pages are allocated. 
+ * The extra slots are used to hold the huge chunks (> MEM_CHUNKS_SIZE)
+ * which are allocated by the user. */
+static struct chunkhdr pages_free[MEM_CHUNKS_TOTAL];
 
 /* Memory list maintained by linux_kmalloc.  */
 static struct pagehdr *memlist;
+
+static mach_port_t priv_host;
 
 /* Some statistics.  */
 int num_block_coalesce = 0;
@@ -93,13 +102,13 @@ int virt_to_phys (vm_address_t addr)
 {
   int i;
 
-  for (i = 0; i < MEM_CHUNKS; i++)
+  for (i = 0; i < MEM_CHUNKS_TOTAL; i++)
     {
       if (pages_free[i].start <= addr && pages_free[i].end > addr)
 	return addr - pages_free[i].start + pages_free[i].pstart;
     }
   debug ("an address not in any chunks.");
-  abort ();
+  return -1;
 }
 
 int phys_to_virt (vm_address_t addr)
@@ -107,21 +116,20 @@ int phys_to_virt (vm_address_t addr)
 #define CHUNK_SIZE(chunk) ((chunk)->end - (chunk)->start)
   int i;
 
-  for (i = 0; i < MEM_CHUNKS; i++)
+  for (i = 0; i < MEM_CHUNKS_TOTAL; i++)
     {
       if (pages_free[i].pstart <= addr
 	  && pages_free[i].pstart + CHUNK_SIZE (pages_free + i) > addr)
 	return addr - pages_free[i].pstart + pages_free[i].start;
     }
   debug ("an address not in any chunks.");
-  abort ();
+  return -1;
 }
 
 /* Initialize the Linux memory allocator.  */
 void
 linux_kmem_init ()
 {
-  mach_port_t priv_host;
   int i, j;
   error_t err;
 
@@ -141,20 +149,9 @@ linux_kmem_init ()
 	abort ();
 
       assert (pages_free[i].start);
-//      assert ((pages_free[i].start & 0xffff) == 0);
-
-//      /* Sanity check: ensure pages are contiguous and within DMA limits.  */
-//      for (p = pages, j = 0; j < MEM_CHUNK_SIZE - PAGE_SIZE; j += PAGE_SIZE)
-//	{
-//	  assert (p->phys_addr < 16 * 1024 * 1024);
-//	  assert (p->phys_addr + PAGE_SIZE
-//		  == ((vm_page_t) p->pageq.next)->phys_addr);
-//
-//	  p = (vm_page_t) p->pageq.next;
-//	}
 
       pages_free[i].end = pages_free[i].start + MEM_CHUNK_SIZE;
-      assert (pages_free[i].end <= 16 * 1024 * 1024);
+      assert (pages_free[i].pstart + MEM_CHUNK_SIZE <= 16 * 1024 * 1024);
 
       /* Initialize free page bitmap.  */
       pages_free[i].bitmap = 0;
@@ -162,6 +159,10 @@ linux_kmem_init ()
       while (--j >= 0)
 	pages_free[i].bitmap |= 1 << j;
     }
+
+  /* Initialize the space for extra slots. */
+  memset (pages_free + i, 0,
+	  sizeof (pages_free[0]) * (MEM_CHUNKS_TOTAL - MEM_CHUNKS));
 
   linux_mem_avail = (MEM_CHUNKS * MEM_CHUNK_SIZE) >> PAGE_SHIFT;
 }
@@ -263,11 +264,31 @@ linux_kmalloc (unsigned int size, int priority)
   else
     size = (size + sizeof (int) - 1) & ~(sizeof (int) - 1);
 
-  assert (size <= (MEM_CHUNK_SIZE
-		   - sizeof (struct pagehdr)
-		   - sizeof (struct blkhdr)));
-
   mutex_lock (&mem_lock);
+
+  if (size > (MEM_CHUNK_SIZE - sizeof (struct pagehdr)
+	      - sizeof (struct blkhdr)))
+    {
+      error_t err;
+      int i;
+
+      /* Find an extra slot. */
+      for (i = MEM_CHUNKS; i < MEM_CHUNKS_TOTAL; i++)
+	if (pages_free[i].end == 0)
+	  break;
+
+      assert (i < MEM_CHUNKS_TOTAL);
+      size = ROUND_UP (size);
+      err = vm_dma_buff_alloc (priv_host, mach_task_self (), size,
+			       &pages_free[i].start, &pages_free[i].pstart);
+      if (!err)
+	pages_free[i].end = pages_free[i].start + size;
+      mutex_unlock (&mem_lock);
+      printf ("allocate %d bytes at (virt: %x, phys: %x), slot %d\n",
+	      size, pages_free[i].start, pages_free[i].pstart, i);
+
+      return err ? NULL : (void *) pages_free[i].start;
+    }
 
 again:
   check_page_list (__LINE__);
@@ -347,10 +368,24 @@ linux_kfree (void *p)
 {
   struct blkhdr *bh;
   struct pagehdr *ph;
+  int i;
 
   assert (((int) p & (sizeof (int) - 1)) == 0);
 
   mutex_lock (&mem_lock);
+  
+  for (i = MEM_CHUNKS; i < MEM_CHUNKS_TOTAL; i++)
+    {
+      if ((vm_address_t) p == pages_free[i].start)
+	{
+	  // TODO I think the page cannot be deallocated.
+	  vm_deallocate (mach_task_self (), (vm_address_t) p,
+			 pages_free[i].end - pages_free[i].start);
+	  memset (pages_free + i, 0, sizeof (pages_free[i]));
+	  mutex_unlock (&mem_lock);
+	  return;
+	}
+    }
 
   check_page_list (__LINE__);
 
