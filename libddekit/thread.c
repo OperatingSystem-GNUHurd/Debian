@@ -231,12 +231,6 @@ void ddekit_yield(void)
 }
 
 void ddekit_init_threads() {
-	char *str = "main";
-	char *name = ddekit_simple_malloc (strlen (str) + 1);
-
-	strcpy (name, str);
-	// TODO maybe the name has already been set.
-	cthread_set_name (cthread_self (), name);
 }
 
 /**********************************************************************
