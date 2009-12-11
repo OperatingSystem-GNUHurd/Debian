@@ -2,6 +2,7 @@
 #include <maptime.h>
 #include <cthreads.h>
 
+#include "ddekit/lock.h"
 #include "ddekit/memory.h"
 #include "ddekit/assert.h"
 #include "ddekit/semaphore.h"
@@ -31,7 +32,7 @@ typedef struct _timer
 
 
 static ddekit_timer_t  *timer_list          = NULL; ///< list of pending timers
-static struct mutex    timer_lock	    = MUTEX_INITIALIZER; ///< lock to access timer_list
+static ddekit_lock_t   timer_lock;		    ///< lock to access timer_list
 static cthread_t       timer_thread;                     ///< the timer thread
 static ddekit_thread_t *timer_thread_ddekit = NULL; ///< ddekit ID of timer thread
 static ddekit_sem_t    *notify_semaphore    = NULL; ///< timer thread's wait semaphore
@@ -53,11 +54,13 @@ static void dump_list(char *msg)
 #endif
 }
 
-int fetch_jiffies ()
+long long fetch_jiffies ()
 {
   struct timeval tv;
   long long j;
 
+  if (mapped_time == NULL)
+    ddekit_init_timers ();
   maptime_read (mapped_time, &tv);
 
   j = (long long) tv.tv_sec * HZ + ((long long) tv.tv_usec * HZ) / 1000000;
@@ -86,6 +89,7 @@ int ddekit_add_timer(void (*fn)(void *), void *args, unsigned long timeout)
 	ddekit_timer_t *t = ddekit_simple_malloc(sizeof(ddekit_timer_t));
 
 	Assert(t);
+	printf ("add a timer at %ld\n", timeout);
 
 	/* fill in values */
 	t->fn      = fn;
@@ -93,7 +97,7 @@ int ddekit_add_timer(void (*fn)(void *), void *args, unsigned long timeout)
 	t->expires = timeout;
 	t->next    = NULL;
 
-	mutex_lock (&timer_lock);
+	ddekit_lock_lock (&timer_lock);
 
 	t->id         = timer_id_ctr++;
 
@@ -124,7 +128,7 @@ int ddekit_add_timer(void (*fn)(void *), void *args, unsigned long timeout)
 		__notify_timer_thread();
 	}
 
-	mutex_unlock (&timer_lock);
+	ddekit_lock_unlock (&timer_lock);
 
 	dump_list("after add");
 	
@@ -137,7 +141,7 @@ int ddekit_del_timer(int timer)
 	ddekit_timer_t *it, *it_next;
 	int ret = -1;
 
-	mutex_lock (&timer_lock);
+	ddekit_lock_lock (&timer_lock);
 
 	/* no timer? */
 	if (!timer_list) {
@@ -178,7 +182,7 @@ int ddekit_del_timer(int timer)
 	}
 
 out:
-	mutex_unlock (&timer_lock);
+	ddekit_lock_unlock (&timer_lock);
 
 	dump_list("after del");
 	
@@ -197,7 +201,7 @@ int ddekit_timer_pending(int timer)
 	ddekit_timer_t *t = NULL;
 	int r = 0;
 
-	mutex_lock (&timer_lock);
+	ddekit_lock_lock (&timer_lock);
 
 	t = timer_list;
 	while (t) {
@@ -208,7 +212,7 @@ int ddekit_timer_pending(int timer)
 		t = t->next;
 	}
 
-	mutex_unlock (&timer_lock);
+	ddekit_lock_unlock (&timer_lock);
 
 	return r;
 }
@@ -224,7 +228,7 @@ static ddekit_timer_t *get_next_timer(void)
 	ddekit_timer_t *t = NULL;
 
 	/* This function must be called with the timer_lock held. */
-	Assert(timer_lock.holder == timer_thread);
+	Assert(ddekit_lock_owner (&timer_lock) == (int) timer_thread);
 
 	if (timer_list &&
 	   (timer_list->expires <= jiffies)) {
@@ -251,7 +255,7 @@ static inline int __timer_sleep(unsigned to)
 {
 	int err = 0;
 	
-	mutex_unlock (&timer_lock);
+	ddekit_lock_unlock (&timer_lock);
 
 	if (to == DDEKIT_TIMEOUT_NEVER) {
 		ddekit_sem_down(notify_semaphore);
@@ -266,7 +270,7 @@ static inline int __timer_sleep(unsigned to)
 #endif
 	}
 
-	mutex_lock (&timer_lock);
+	ddekit_lock_lock (&timer_lock);
 
 	return (err ? 1 : 0);
 }
@@ -283,7 +287,7 @@ static void ddekit_timer_thread(void *arg)
 
 //	l4thread_started(0);
 
-	mutex_lock (&timer_lock);
+	ddekit_lock_lock (&timer_lock);
 	while (1) {
 		ddekit_timer_t *timer = NULL;
 		unsigned long  to     = DDEKIT_TIMEOUT_NEVER;
@@ -301,11 +305,11 @@ static void ddekit_timer_thread(void *arg)
 		__timer_sleep(to);
 
 		while ((timer = get_next_timer()) != NULL) {
-			mutex_unlock (&timer_lock);
+			ddekit_lock_unlock (&timer_lock);
 			//ddekit_printf("doing timer fn @ %p\n", timer->fn);
 			timer->fn(timer->args);
 			ddekit_simple_free(timer);
-			mutex_lock (&timer_lock);
+			ddekit_lock_lock (&timer_lock);
 		}
 	}
 	// TODO how is the thread terminated?
@@ -321,7 +325,12 @@ void ddekit_init_timers(void)
 {
   error_t err;
   struct timeval tp;
+  static boolean_t initialized = FALSE;
 
+  if (initialized)
+    return;
+
+  initialized = TRUE;
   err = maptime_map (0, 0, &mapped_time);
   if (err)
     error (2, err, "cannot map time device");
@@ -331,6 +340,7 @@ void ddekit_init_timers(void)
   root_jiffies = (long long) tp.tv_sec * HZ
     + ((long long) tp.tv_usec * HZ) / 1000000;
 
+  ddekit_lock_init (&timer_lock);
   timer_thread = cthread_fork ((cthread_fn_t) ddekit_timer_thread, 0);
   cthread_detach (timer_thread);
 }
