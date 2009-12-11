@@ -187,8 +187,8 @@ void ddekit_thread_sleep(ddekit_lock_t *lock) {
 	condition_wait (data->sleep_cond, (struct mutex *) *lock);
 }
 
-void  dekit_thread_wakeup(ddekit_thread_t *td) {
-	struct _ddekit_private_data *data = cthread_ldata (cthread_self ());
+void  ddekit_thread_wakeup(ddekit_thread_t *td) {
+	struct _ddekit_private_data *data = cthread_ldata (&td->thread);
 
 	condition_signal (data->sleep_cond);
 }
@@ -198,12 +198,14 @@ void  ddekit_thread_exit() {
 	struct _ddekit_private_data *data;
 	cthread_t t = cthread_self ();
 
-	// TODO I hope I don't need a lock to protect ldata and name.
+	// TODO I need a lock to protect ldata and name.
 
 	/* I have to free the sleep condition variable
 	 * before the thread exits. */
 	data = cthread_ldata (t);
 	cthread_set_ldata (t, NULL);
+	mach_port_destroy (mach_task_self (),
+			   data->wakeupmsg.msgh_remote_port);
 	condition_free (data->sleep_cond);
 	ddekit_simple_free (data);
 
