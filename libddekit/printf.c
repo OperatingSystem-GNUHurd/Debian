@@ -9,9 +9,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <mach.h>
 
 #include "ddekit/printf.h"
 
+extern boolean_t using_std;
 static FILE *output;
 
 /**
@@ -71,17 +73,23 @@ int ddekit_vprintf(const char *fmt, va_list va)
 
 int log_init ()
 {
-	char template[] = "/var/log/dde_log.XXXXXX";
-	int ret = mkstemp (template);
-	if (ret < 0) {
-		error (0, errno, "mkstemp");
-		return -1;
+	if (using_std) {
+		output = stdout;
+	}
+	else {
+		char template[] = "/var/log/dde_log.XXXXXX";
+		int ret = mkstemp (template);
+		if (ret < 0) {
+			error (0, errno, "mkstemp");
+			return -1;
+		}
+
+		output = fopen (template, "a+");
+		if (!output) {
+			error (0, errno, "open %s", template);
+			return -1;
+		}
 	}
 
-	output = fopen (template, "a+");
-	if (!output) {
-		error (0, errno, "open %s", template);
-		return -1;
-	}
 	return 0;
 }
