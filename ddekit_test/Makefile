@@ -28,4 +28,4 @@ OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
 
 include ../Makeconf
 
-CFLAGS = -I../libddekit/include
+CFLAGS = -I../libddekit/include -g

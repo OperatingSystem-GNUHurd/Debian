@@ -1,3 +1,5 @@
+#include <mach.h>
+
 #include "dde.h"
 #include "ddekit/thread.h"
 #include "ddekit/printf.h"
@@ -5,6 +7,7 @@
 
 #define VERBOSE 1
 
+boolean_t using_std = 1;
 
 /****************
  ** Timer test **
@@ -67,6 +70,8 @@ static void timer_test(void)
 	ddekit_printf("added timer: %d\n", twenty_timer);
 	i = ddekit_add_timer(timer_func, (void *)30, jiffies + 30*HZ);
 	ddekit_printf("added timer: %d\n", i);
+
+	ddekit_thread_msleep (10 * 1000);
 }
 
 /********************************
@@ -255,8 +260,8 @@ int main(int argc, char **argv)
 
 	ddekit_init();
 
-	if (1) memory_test();
-	if (0) timer_test();
+	if (0) memory_test();
+	if (1) timer_test();
 
 	return 0;
 }
