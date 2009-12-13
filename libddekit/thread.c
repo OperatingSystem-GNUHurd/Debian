@@ -284,6 +284,7 @@ void ddekit_yield(void)
 }
 
 void ddekit_init_threads() {
+	ddekit_thread_setup_myself ("main");
 }
 
 /**********************************************************************
