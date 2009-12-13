@@ -36,6 +36,28 @@ struct ddekit_sem
 	int value;
 };
 
+static void _thread_cleanup ()
+{
+	const char *name;
+	struct _ddekit_private_data *data;
+	cthread_t t = cthread_self ();
+
+	// TODO I need a lock to protect ldata and name.
+
+	/* I have to free the sleep condition variable
+	 * before the thread exits. */
+	data = cthread_ldata (t);
+	cthread_set_ldata (t, NULL);
+	mach_port_destroy (mach_task_self (),
+			   data->wakeupmsg.msgh_remote_port);
+	condition_free (data->sleep_cond);
+	ddekit_simple_free (data);
+
+	name = cthread_name (t);
+	cthread_set_name (t, NULL);
+	ddekit_simple_free ((char *) name);
+}
+
 /* Prepare a wakeup message.  */
 static error_t _create_wakeupmsg (struct _ddekit_private_data *data)
 {
@@ -113,14 +135,49 @@ ddekit_thread_t *ddekit_thread_setup_myself(const char *name) {
 	return td;
 }
 
+typedef struct
+{
+  void (*fun)(void *);
+  void *arg;
+  struct condition cond;
+  struct mutex lock;
+  int status;
+} priv_arg_t;
+
+static void* _priv_fun (void *arg)
+{
+  priv_arg_t *priv_arg = arg;
+  /* We wait until the initialization of the thread is finished. */
+  mutex_lock (&priv_arg->lock);
+  while (!priv_arg->status)
+    condition_wait (&priv_arg->cond, &priv_arg->lock);
+  mutex_unlock (&priv_arg->lock);
+
+  priv_arg->fun(priv_arg->arg);
+  _thread_cleanup ();
+  return NULL;
+}
+
 ddekit_thread_t *ddekit_thread_create(void (*fun)(void *), void *arg, const char *name) {
 	ddekit_thread_t *td;
+	priv_arg_t *priv_arg = (priv_arg_t *) malloc (sizeof (*priv_arg));
 
-	// TODO I should let the thread suspend
-	// before initialization is completed.
-	td = (ddekit_thread_t *) cthread_fork (fun, arg);
+	priv_arg->fun = fun;
+	priv_arg->arg = arg;
+	condition_init (&priv_arg->cond);
+	mutex_init (&priv_arg->lock);
+	priv_arg->status = 0;
+
+	td = (ddekit_thread_t *) cthread_fork (_priv_fun, priv_arg);
 	cthread_detach (&td->thread);
 	setup_thread (td, name);
+
+	/* Tell the new thread that initialization has been finished. */
+	mutex_lock (&priv_arg->lock);
+	priv_arg->status = 1;
+	cond_signal (&priv_arg->cond);
+	mutex_unlock (&priv_arg->lock);
+
 	return td;
 }
 
@@ -194,25 +251,7 @@ void  ddekit_thread_wakeup(ddekit_thread_t *td) {
 }
 
 void  ddekit_thread_exit() {
-	const char *name;
-	struct _ddekit_private_data *data;
-	cthread_t t = cthread_self ();
-
-	// TODO I need a lock to protect ldata and name.
-
-	/* I have to free the sleep condition variable
-	 * before the thread exits. */
-	data = cthread_ldata (t);
-	cthread_set_ldata (t, NULL);
-	mach_port_destroy (mach_task_self (),
-			   data->wakeupmsg.msgh_remote_port);
-	condition_free (data->sleep_cond);
-	ddekit_simple_free (data);
-
-	name = cthread_name (t);
-	cthread_set_name (t, NULL);
-	ddekit_simple_free ((char *) name);
-
+	_thread_cleanup ();
 	cthread_exit (0);
 }
 
