@@ -36,18 +36,20 @@ struct ddekit_sem
 	int value;
 };
 
+static struct mutex global_lock = MUTEX_INITIALIZER;
+
 static void _thread_cleanup ()
 {
 	const char *name;
 	struct _ddekit_private_data *data;
 	cthread_t t = cthread_self ();
 
-	// TODO I need a lock to protect ldata and name.
-
 	/* I have to free the sleep condition variable
 	 * before the thread exits. */
+	mutex_lock (&global_lock);
 	data = cthread_ldata (t);
 	cthread_set_ldata (t, NULL);
+	mutex_unlock (&global_lock);
 	mach_port_destroy (mach_task_self (),
 			   data->wakeupmsg.msgh_remote_port);
 	condition_free (data->sleep_cond);
@@ -125,7 +127,9 @@ static void setup_thread (struct ddekit_thread *t, const char *name) {
 	if (err)
 	  error (1, err, "_create_wakeupmsg");
 
+	mutex_lock (&global_lock);
 	cthread_set_ldata (&t->thread, private_data);
+	mutex_unlock (&global_lock);
 }
 
 ddekit_thread_t *ddekit_thread_setup_myself(const char *name) {
@@ -236,7 +240,11 @@ void ddekit_thread_nsleep(unsigned long nsecs) {
 }
 
 void ddekit_thread_sleep(ddekit_lock_t *lock) {
-	struct _ddekit_private_data *data = cthread_ldata (cthread_self ());
+	struct _ddekit_private_data *data;
+	
+	mutex_lock (&global_lock);
+	data= cthread_ldata (cthread_self ());
+	mutex_unlock (&global_lock);
 
 	// TODO condition_wait cannot guarantee that the thread is 
 	// woke up by another thread, maybe by signals.
@@ -245,8 +253,14 @@ void ddekit_thread_sleep(ddekit_lock_t *lock) {
 }
 
 void  ddekit_thread_wakeup(ddekit_thread_t *td) {
-	struct _ddekit_private_data *data = cthread_ldata (&td->thread);
+	struct _ddekit_private_data *data;
+	
+	mutex_lock (&global_lock);
+	data = cthread_ldata (&td->thread);
+	mutex_unlock (&global_lock);
 
+	if (data == NULL)
+		return;
 	condition_signal (data->sleep_cond);
 }
 
@@ -348,7 +362,9 @@ static int _sem_timedwait_internal (ddekit_sem_t *restrict sem,
 	}
 
 	/* Add ourselves to the queue.  */
+	mutex_lock (&global_lock);
 	self_private_data = cthread_ldata (cthread_self ());
+	mutex_unlock (&global_lock);
 
 	add_entry_head (&sem->head, (struct list *) self_private_data);
 	spin_unlock (&sem->lock);
