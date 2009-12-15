@@ -104,7 +104,7 @@ static void setup_thread (struct ddekit_thread *t, const char *name) {
 		else 
 			strcpy (cpy, name);
 
-		cthread_set_name (&t->thread, name);
+		cthread_set_name (&t->thread, cpy);
 	}
 
 	/*
