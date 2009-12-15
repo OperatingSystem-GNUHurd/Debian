@@ -21,6 +21,10 @@ ddekit_condvar_t *ddekit_condvar_init() {
 	return (ddekit_condvar_t *) cvp;
 }
 
+void ddekit_condvar_deinit(ddekit_condvar_t *cvp) {
+	condition_free (&cvp->cond);
+}
+
 void ddekit_condvar_wait(ddekit_condvar_t *cvp, ddekit_lock_t *mp) {
 	/* This isn't nice. The encapsulation is broken.
 	 * TODO I can merge the two files condvar.c and lock.c. */
