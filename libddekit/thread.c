@@ -9,6 +9,7 @@
 
 #include "ddekit/memory.h"
 #include "ddekit/semaphore.h"
+#include "ddekit/condvar.h"
 #include "list.h"
 #include "ddekit/thread.h"
 
@@ -18,7 +19,7 @@
 
 struct _ddekit_private_data {
 	struct list list;
-	condition_t sleep_cond;
+	ddekit_condvar_t *sleep_cond;
 	/* point to the thread who has the private data. */
 	struct ddekit_thread *thread;
 	mach_msg_header_t wakeupmsg;
@@ -52,7 +53,7 @@ static void _thread_cleanup ()
 	mutex_unlock (&global_lock);
 	mach_port_destroy (mach_task_self (),
 			   data->wakeupmsg.msgh_remote_port);
-	condition_free (data->sleep_cond);
+	ddekit_condvar_deinit (data->sleep_cond);
 	ddekit_simple_free (data);
 
 	name = cthread_name (t);
@@ -116,9 +117,7 @@ static void setup_thread (struct ddekit_thread *t, const char *name) {
 	private_data = (struct _ddekit_private_data *)
 	  ddekit_simple_malloc (sizeof (*private_data));
 
-	private_data->sleep_cond = condition_alloc ();
-	condition_init (private_data->sleep_cond);
-
+	private_data->sleep_cond = ddekit_condvar_init ();
 	private_data->list.prev = &private_data->list;
 	private_data->list.next = &private_data->list;
 	private_data->thread = t;
@@ -249,7 +248,7 @@ void ddekit_thread_sleep(ddekit_lock_t *lock) {
 	// TODO condition_wait cannot guarantee that the thread is 
 	// woke up by another thread, maybe by signals.
 	// Does it matter here?
-	condition_wait (data->sleep_cond, (struct mutex *) *lock);
+	ddekit_condvar_wait (data->sleep_cond, lock);
 }
 
 void  ddekit_thread_wakeup(ddekit_thread_t *td) {
@@ -261,7 +260,7 @@ void  ddekit_thread_wakeup(ddekit_thread_t *td) {
 
 	if (data == NULL)
 		return;
-	condition_signal (data->sleep_cond);
+	ddekit_condvar_signal (data->sleep_cond);
 }
 
 void  ddekit_thread_exit() {
