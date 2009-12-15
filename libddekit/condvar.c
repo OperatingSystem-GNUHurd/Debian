@@ -24,7 +24,7 @@ ddekit_condvar_t *ddekit_condvar_init() {
 void ddekit_condvar_wait(ddekit_condvar_t *cvp, ddekit_lock_t *mp) {
 	/* This isn't nice. The encapsulation is broken.
 	 * TODO I can merge the two files condvar.c and lock.c. */
-	condition_wait (&cvp->cond, (struct mutex *) mp);
+	condition_wait (&cvp->cond, (struct mutex *) *mp);
 }
 
 int ddekit_condvar_wait_timed(ddekit_condvar_t *cvp,
