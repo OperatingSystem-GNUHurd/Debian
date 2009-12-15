@@ -1,6 +1,8 @@
 #include <mach.h>
 
 #include "dde.h"
+#include "ddekit/condvar.h"
+#include "ddekit/semaphore.h"
 #include "ddekit/thread.h"
 #include "ddekit/printf.h"
 #include "ddekit/assert.h"
@@ -253,6 +255,78 @@ static void memory_test(void)
 	}
 }
 
+ddekit_sem_t *sem;
+ddekit_condvar_t *cond;
+ddekit_lock_t cond_lock;
+int status;
+
+static void thread_func (void *arg)
+{
+  ddekit_lock_t lock = arg;
+  int ret;
+
+  ddekit_printf ("%s thread starts at %d\n",
+		 ddekit_thread_get_name (ddekit_thread_myself ()), time (NULL));
+  ddekit_lock_lock (&lock);
+  ddekit_thread_sleep (&lock);
+  ddekit_lock_unlock (&lock);
+  ddekit_printf ("%s thread wakes up at %d\n",
+		 ddekit_thread_get_name (ddekit_thread_myself ()), time (NULL));
+
+  ret = ddekit_sem_down_timed (sem, 1000);
+  ddekit_printf ("%s thread enter a semaphore at %d, timeout: %d\n",
+		 ddekit_thread_get_name (ddekit_thread_myself ()),
+		 time (NULL), ret != 0);
+
+  ddekit_printf ("%s thread waits for signal at %d\n",
+		 ddekit_thread_get_name (ddekit_thread_myself ()), time (NULL));
+  ddekit_lock_lock (&cond_lock);
+  while (!status)
+    ddekit_condvar_wait (cond, &cond_lock);
+  ddekit_lock_unlock (&cond_lock);
+  ddekit_printf ("%s thread wakes up at %d\n",
+		 ddekit_thread_get_name (ddekit_thread_myself ()), time (NULL));
+}
+
+static void thread_test ()
+{
+  ddekit_thread_t *thread1 = NULL;
+  ddekit_thread_t *thread2 = NULL;
+  ddekit_lock_t lock1;
+  ddekit_lock_t lock2;
+  
+  sem = ddekit_sem_init (0);
+  cond = ddekit_condvar_init ();
+  status = 0;
+  ddekit_lock_init (&cond_lock);
+  ddekit_lock_init (&lock1);
+  ddekit_lock_init (&lock2);
+
+  thread1 = ddekit_thread_create (thread_func, lock1, "test1");
+  thread2 = ddekit_thread_create (thread_func, lock2, "test2");
+
+  sleep (3);
+  ddekit_lock_lock (&lock1);
+  ddekit_thread_wakeup (thread1);
+  ddekit_lock_unlock (&lock1);
+
+  ddekit_lock_lock (&lock2);
+  ddekit_thread_wakeup (thread2);
+  ddekit_lock_unlock (&lock2);
+  sleep (2);
+
+  ddekit_sem_up (sem);
+  ddekit_sem_up (sem);
+  sleep (1);
+
+  ddekit_printf ("main thread wakes up the other two at %d\n", time (NULL));
+  ddekit_lock_lock (&cond_lock);
+  status = 1;
+  ddekit_condvar_broadcast (cond);
+  ddekit_lock_unlock (&cond_lock);
+  sleep (1);
+}
+
 
 int main(int argc, char **argv)
 {
@@ -261,7 +335,8 @@ int main(int argc, char **argv)
 	ddekit_init();
 
 	if (0) memory_test();
-	if (1) timer_test();
+	if (0) timer_test();
+	if (1) thread_test();
 
 	return 0;
 }
