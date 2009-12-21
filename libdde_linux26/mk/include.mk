@@ -34,7 +34,7 @@ endif
 INSTALL_INC_PREFIX	?= l4/$(PKGNAME)
 INCSRC_DIR		?= $(SRC_DIR)
 
-include $(L4DIR)/mk/Makeconf
+#include $(L4DIR)/mk/Makeconf
 $(GENERAL_D_LOC): $(L4DIR)/mk/include.mk
 -include $(DEPSVAR)
 

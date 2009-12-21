@@ -1,5 +1,7 @@
-PKGDIR 	?= ../..
-L4DIR	?= $(PKGDIR)/../..
+PKGDIR 	?= ..
+L4DIR	?= $(PKGDIR)
+
+BUILD_ARCH := x86
 
 TARGET = include arch/$(BUILD_ARCH)/include
 

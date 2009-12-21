@@ -1,6 +1,6 @@
-PKGDIR 	?= ..
-L4DIR	?= $(PKGDIR)/../..
+PKGDIR 	?= .
+L4DIR	?= $(PKGDIR)
 
-TARGET = contrib include lib examples
+TARGET = contrib include lib
 
 include $(L4DIR)/mk/subdir.mk

@@ -1,8 +1,14 @@
-PKGDIR     ?= ../../..
-L4DIR      ?= $(PKGDIR)/../..
-CONTRIB    ?= $(PKGDIR)/linux26/contrib
+PKGDIR     ?= ../..
+L4DIR      ?= $(PKGDIR)
+CONTRIB    ?= $(PKGDIR)/contrib
 
 -include $(PKGDIR_OBJ)/Makeconf
+
+CONFIG_DDE26_COMMON := y
+CONFIG_DDE26_NET := y
+CONFIG_DDE26_BLOCK := y
+CONFIG_DDE26_SOUND := y
+CONFIG_DDE26_CHAR :=y
 
 ifeq ($(CONFIG_DDE26_COMMON),y)
 TARGET += libdde_linux26.o.a
@@ -25,6 +31,7 @@ TARGET += libdde_linux26_char.a
 endif
 
 SYSTEMS = x86-l4v2
+ARCH = x86
 
 ifeq ($(ARCH), x86)
 ARCH_DIR = arch/x86
@@ -225,6 +232,6 @@ gen_crc32table : lib/gen_crc32table.c
 	@$(GEN_MESSAGE)
 	$(VERBOSE)$(HOST_CC) -O2 -o $@ $<
 
-include $(PKGDIR)/linux26/Makeconf
+include $(PKGDIR)/Makeconf
 
 include $(L4DIR)/mk/lib.mk

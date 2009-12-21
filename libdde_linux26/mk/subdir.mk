@@ -6,18 +6,10 @@
 #
 # 05/2002 Jork Loeser <jork.loeser@inf.tu-dresden.de>
 
-include $(L4DIR)/mk/Makeconf
+#include $(L4DIR)/mk/Makeconf
 
-ifeq ($(PKGDIR),.)
-TARGET ?= $(patsubst %/Makefile,%,$(wildcard $(addsuffix /Makefile, \
-	idl include src lib server examples doc)))
-$(if $(wildcard include/Makefile), idl lib server examples: include)
-$(if $(wildcard idl/Makefile), lib server examples: idl)
-$(if $(wildcard lib/Makefile), server examples: lib)
-else
 TARGET ?= $(patsubst %/Makefile,%,$(wildcard $(addsuffix /Makefile, \
 	idl src lib server examples doc)))
-endif
 SUBDIR_TARGET	:= $(if $(filter doc,$(MAKECMDGOALS)),$(TARGET),    \
 			$(filter-out doc,$(TARGET)))
 

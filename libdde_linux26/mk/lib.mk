@@ -16,6 +16,7 @@ ifeq ($(origin _L4DIR_MK_LIB_MK),undefined)
 _L4DIR_MK_LIB_MK=y
 
 ROLE = lib.mk
+SYSTEM = x86-l4v2
 
 # define INSTALLDIRs prior to including install.inc, where the install-
 # rules are defined. Same for INSTALLDIR.
@@ -60,7 +61,7 @@ LDFLAGS	+= $(LIBS) $(LDFLAGS_$@) $(LDNOSTDLIB)
 LDSCRIPT = $(call findfile,main_rel.ld,$(L4LIBDIR))
 
 # install.inc eventually defines rules for every target
-include $(L4DIR)/mk/install.inc
+#include $(L4DIR)/mk/install.inc
 
 DEPS	+= $(foreach file,$(TARGET), $(dir $(file)).$(notdir $(file)).d)
 

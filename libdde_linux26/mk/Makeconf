@@ -139,19 +139,19 @@ findfile	= $(firstword $(wildcard $(addsuffix /$(1),$(2))) $(1)_NOT_FOUND)
 # include this one early to be able to set OBJ_BASE
 -include $(L4DIR)/Makeconf.local
 
-ifeq ($(filter $(IGNORE_OBJDIR_TARGETS),$(MAKECMDGOALS)),)
+#ifeq ($(filter $(IGNORE_OBJDIR_TARGETS),$(MAKECMDGOALS)),)
 # output directory
-ifeq ($(O)$(OBJ_BASE),)
-$(error need to give builddir with O=.../builddir)
-else
-ifneq ($(O),)
-ifeq ($(origin OBJ_BASE),undefined)
-OBJ_BASE := $(call absfilename, $(O))
-export OBJ_BASE
-endif
-endif
-endif
-endif
+#ifeq ($(O)$(OBJ_BASE),)
+#$(error need to give builddir with O=.../builddir)
+#else
+#ifneq ($(O),)
+#ifeq ($(origin OBJ_BASE),undefined)
+#OBJ_BASE := $(call absfilename, $(O))
+#export OBJ_BASE
+#endif
+#endif
+#endif
+#endif
 
 ifeq ($(origin L4DIR_ABS),undefined)
 L4DIR_ABS      := $(call absfilename,$(L4DIR))
@@ -207,25 +207,25 @@ VPATH_SRC_BASE ?= $(SRC_DIR)
 
 # Makeconf.local handling
 # dont use -include here, as we have special build conditions in $(L4DIR)/
-ifeq ($(origin BID_ROOT_CONF),undefined)
-BID_ROOT_CONF := $(call absfilename, $(OBJ_BASE))/Makeconf.bid.local
-endif
-ifeq ($(filter $(IGNORE_OBJDIR_TARGETS),$(MAKECMDGOALS)),)
-ifeq ($(wildcard $(BID_ROOT_CONF)),)
-ifeq ($(BID_IGN_ROOT_CONF),)
-$(error No configuration file found in build directory "$(OBJ_BASE)". Please run "make O=/path/to/objdir config" in "$(L4DIR_ABS)" or specify a valid build directory)
-endif
-else
-include $(BID_ROOT_CONF)
-endif
-endif
+#ifeq ($(origin BID_ROOT_CONF),undefined)
+#BID_ROOT_CONF := $(call absfilename, $(OBJ_BASE))/Makeconf.bid.local
+#endif
+#ifeq ($(filter $(IGNORE_OBJDIR_TARGETS),$(MAKECMDGOALS)),)
+#ifeq ($(wildcard $(BID_ROOT_CONF)),)
+#ifeq ($(BID_IGN_ROOT_CONF),)
+#$(error No configuration file found in build directory "$(OBJ_BASE)". Please run "make O=/path/to/objdir config" in "$(L4DIR_ABS)" or specify a valid build directory)
+#endif
+#else
+#include $(BID_ROOT_CONF)
+#endif
+#endif
 
--include $(L4DIR)/Makeconf.$(CONFIG_LABEL)
+#-include $(L4DIR)/Makeconf.$(CONFIG_LABEL)
 
--include $(OBJ_BASE)/Makeconf.local
-ifneq ($(PKGDIR),)
--include $(PKGDIR)/Makeconf.local
-endif
+#-include $(OBJ_BASE)/Makeconf.local
+#ifneq ($(PKGDIR),)
+#-include $(PKGDIR)/Makeconf.local
+#endif
 # if it is not already set, we use this in the local dir
 MAKECONFLOCAL ?= Makeconf.local
 -include $(MAKECONFLOCAL)
@@ -248,7 +248,7 @@ PL_j := -j $(PL)
 export PL
 endif
 
-include $(L4DIR)/mk/config.inc
+#include $(L4DIR)/mk/config.inc
 
 ifeq ($(HAVE_LDSO),y)
 # MAKEDEP-call:
