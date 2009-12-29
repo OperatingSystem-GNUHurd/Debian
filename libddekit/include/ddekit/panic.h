@@ -3,7 +3,7 @@
 
 /** \defgroup DDEKit_util */
 
-#include <stdio.h>
+#include "c_headers.h"
 
 /** Panic - print error message and enter the kernel debugger.
  * \ingroup DDEKit_util

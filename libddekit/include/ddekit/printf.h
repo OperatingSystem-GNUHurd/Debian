@@ -1,7 +1,7 @@
 #ifndef _ddekit_print_h
 #define _ddekit_print_h
 
-#include <stdarg.h>
+#include "c_headers.h"
 
 /** Print message.
  * \ingroup DDEKit_util

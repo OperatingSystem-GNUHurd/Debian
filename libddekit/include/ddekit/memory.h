@@ -123,9 +123,6 @@ void *ddekit_contig_malloc(
  ** Simple memory allocator **
  *****************************/
 
-#include <stdlib.h>
-#include "ddekit/inline.h"
-
 /**
  * Allocate memory block via simple allocator
  *
@@ -135,19 +132,13 @@ void *ddekit_contig_malloc(
  * The blocks allocated via this allocator CANNOT be used for DMA or other
  * device operations, i.e., there exists no virt->phys mapping.
  */
-static INLINE void *ddekit_simple_malloc(unsigned size)
-{
-	return malloc (size);
-}
+void *ddekit_simple_malloc(unsigned size);
 
 /**
  * Free memory block via simple allocator
  *
  * \param p  pointer to memory block
  */
-static INLINE void ddekit_simple_free(void *p)
-{
-	free (p);
-}
+void ddekit_simple_free(void *p);
 
 #endif
