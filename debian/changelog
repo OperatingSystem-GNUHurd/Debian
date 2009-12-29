@@ -14,6 +14,7 @@ hurd (20090404-3) UNRELEASED; urgency=low
     just GPL.
   * debian/hurd.dirs: Add /etc/sysctl.d.
   * debian/control (hurd-udeb): Add Provides: *-modules.
+  * debian/patches/diskfs_no_inherit_dir_group.patch: Fix documentation too.
 
   [ Guillem Jover ]
   * Update make-new-tarball.sh to exclude git instead of CVS paths.
