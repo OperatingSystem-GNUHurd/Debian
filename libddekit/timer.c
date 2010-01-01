@@ -1,6 +1,7 @@
 #include <error.h>
 #include <maptime.h>
 #include <cthreads.h>
+#include <stdio.h>
 
 #include "ddekit/lock.h"
 #include "ddekit/memory.h"

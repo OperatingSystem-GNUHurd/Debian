@@ -10,6 +10,8 @@
  * FIXME check thread-safety and add locks where appropriate
  */
 
+#include <stdlib.h>
+
 #include "ddekit/memory.h"
 #include "ddekit/panic.h"
 
