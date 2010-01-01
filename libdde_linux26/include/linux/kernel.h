@@ -162,7 +162,7 @@ extern long (*panic_blink)(long time);
 NORET_TYPE void panic(const char * fmt, ...)
 	__attribute__ ((NORET_AND format (printf, 1, 2))) __cold;
 #else
-#include <l4/dde/ddekit/panic.h>
+#include <ddekit/panic.h>
 #define panic ddekit_panic
 #endif
 extern void oops_enter(void);
@@ -249,7 +249,7 @@ extern int printk_ratelimit(void);
 extern bool printk_timed_ratelimit(unsigned long *caller_jiffies,
 				   unsigned int interval_msec);
 #else // DDE_LINUX
-#include <l4/dde/ddekit/printf.h>
+#include <ddekit/printf.h>
 #define printk ddekit_printf
 #endif
 #else

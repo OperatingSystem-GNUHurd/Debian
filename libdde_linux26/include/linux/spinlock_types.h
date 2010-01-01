@@ -101,7 +101,7 @@ typedef struct {
 
 #else
 
-#include <l4/dde/ddekit/lock.h>
+#include <ddekit/lock.h>
 
 typedef struct {
 	ddekit_lock_t ddekit_lock;

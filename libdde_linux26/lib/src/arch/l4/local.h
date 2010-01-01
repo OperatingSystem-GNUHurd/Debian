@@ -3,24 +3,24 @@
 
 #include <linux/sched.h>
 
-#include <l4/dde/ddekit/assert.h>
-#include <l4/dde/ddekit/condvar.h>
-#include <l4/dde/ddekit/debug.h>
-#include <l4/dde/ddekit/initcall.h>
-#include <l4/dde/ddekit/interrupt.h>
-#include <l4/dde/ddekit/lock.h>
-#include <l4/dde/ddekit/memory.h>
-#include <l4/dde/ddekit/panic.h>
-#include <l4/dde/ddekit/pci.h>
-#include <l4/dde/ddekit/pgtab.h>
-#include <l4/dde/ddekit/printf.h>
-#include <l4/dde/ddekit/resources.h>
-#include <l4/dde/ddekit/semaphore.h>
-#include <l4/dde/ddekit/thread.h>
-#include <l4/dde/ddekit/types.h>
-#include <l4/dde/ddekit/timer.h>
+#include <ddekit/assert.h>
+#include <ddekit/condvar.h>
+#include <ddekit/debug.h>
+#include <ddekit/initcall.h>
+#include <ddekit/interrupt.h>
+#include <ddekit/lock.h>
+#include <ddekit/memory.h>
+#include <ddekit/panic.h>
+#include <ddekit/pci.h>
+#include <ddekit/pgtab.h>
+#include <ddekit/printf.h>
+#include <ddekit/resources.h>
+#include <ddekit/semaphore.h>
+#include <ddekit/thread.h>
+#include <ddekit/types.h>
+#include <ddekit/timer.h>
 
-#include <l4/dde/linux26/dde26.h>
+#include <dde26.h>
 
 #define DDE_DEBUG     1
 #define DDE_FERRET    0

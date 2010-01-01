@@ -15,7 +15,7 @@
 #include <linux/mm_types.h>
 
 #ifdef DDE_LINUX
-#include <l4/dde/linux26/dde26.h> 
+#include <dde26.h> 
 #endif
 
 struct mempolicy;

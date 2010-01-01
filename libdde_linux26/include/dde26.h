@@ -1,7 +1,7 @@
 #ifndef __DDE_26_H
 #define __DDE_26_H
 
-#include <l4/dde/ddekit/thread.h>
+#include <ddekit/thread.h>
 
 #define WARN_UNIMPL         printk("unimplemented: %s\n", __FUNCTION__)
 

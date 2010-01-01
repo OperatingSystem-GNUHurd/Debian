@@ -1,7 +1,7 @@
 #include "local.h"
 
-#include <l4/dde/linux26/dde26.h>
-#include <l4/dde/dde.h>
+#include <dde26.h>
+#include <dde.h>
 
 #define DEBUG_PCI(msg, ...)	ddekit_printf( "\033[33m"msg"\033[0m\n", ##__VA_ARGS__)
 
