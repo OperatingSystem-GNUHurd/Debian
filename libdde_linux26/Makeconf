@@ -13,17 +13,20 @@ ifeq ($(ARCH), arm)
 KBUILD_CPPFLAGS = -include linux/autoconf-arm.h
 endif
 
+OBJ_BASE = /root/hurd/libdde_linux26/build
+
 # includes
-MY_DDE_INCDIR = $(OBJ_BASE)/include/$(ARCH)/l4/dde/linux26 \
-                $(OBJ_BASE)/include/l4/dde/linux26
+MY_DDE_INCDIR = $(OBJ_BASE)/include/$(ARCH) \
+                $(OBJ_BASE)/include/
 
 SUFFIX_amd64 = x86_64
 SUFFIX_x86   = x86
 SUFFIX_arm   = arm
 
-MY_LINUX26_INCDIR = $(OBJ_BASE)/include/$(ARCH)/l4/dde/linux26/linux-headers \
-					$(OBJ_BASE)/include/$(ARCH)/l4/dde/linux26/asm \
-                    $(OBJ_BASE)/include/l4/dde/linux26/linux-headers
+MY_LINUX26_INCDIR = $(OBJ_BASE)/include/$(ARCH)/linux-headers \
+		    $(OBJ_BASE)/include/$(ARCH)/asm \
+                    $(OBJ_BASE)/include/linux-headers/asm \
+                    $(OBJ_BASE)/include/linux-headers
 
 # stolen from fiasco/src/Makeconf, checks whether a compiler supports a certain
 # parameter
@@ -36,10 +39,10 @@ L4_MULTITHREADED = y
 
 # arch-specific stuff
 ifeq ($(ARCH), x86)
-MY_DDE_INCDIR += $(OBJ_BASE)/include/l4/dde/linux26/linux-headers/asm/mach-default
+MY_DDE_INCDIR += $(OBJ_BASE)/include/linux-headers/asm/mach-default
 endif
 
-PRIVATE_INCDIR += $(MY_DDE_INCDIR) $(MY_LINUX26_INCDIR)
+PRIVATE_INCDIR += $(MY_DDE_INCDIR) $(MY_LINUX26_INCDIR) /root/hurd/libddekit/include
 
 DEFINES += -D__KERNEL__ -DDDE_LINUX $(KBUILD_DEFINES)
 CPPFLAGS += $(KBUILD_CPPFLAGS)

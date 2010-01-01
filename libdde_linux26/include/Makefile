@@ -2,9 +2,9 @@ PKGDIR	?= ..
 L4DIR	?= $(PKGDIR)
 
 # Force these include files to appear in a special subfolder of dde/
-INSTALL_INC_PREFIX = l4/dde/linux26
+INSTALL_INC_PREFIX = 
 
-#include $(L4DIR)/mk/Makeconf
+include $(L4DIR)/mk/Makeconf
 -include $(PKGDIR_OBJ)/Makeconf
 
 include $(L4DIR)/mk/include.mk
@@ -18,6 +18,7 @@ SUFFIX_arm   = arm
 # macro to establish a symlink to a dir if not already existing
 MAKELINK = if [ ! $1 -ef $2 ] ; then ln -sf $3 $2 ; fi
 
+BUILD_ARCH = x86
 ARCH = $(BUILD_ARCH)
 
 all::

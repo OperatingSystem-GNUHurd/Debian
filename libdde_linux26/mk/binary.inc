@@ -155,11 +155,11 @@ all::		$(TARGET)
 disasm: $(TARGET)
 	$(call DISASM_CMD,$<)
 
-L4INCDIR ?=	$(addprefix $(OBJ_BASE)/include/$(ARCH)/,$(L4API)) \
-                $(addprefix $(OBJ_BASE)/include/,$(L4API)) \
-                $(OBJ_BASE)/include/$(ARCH) \
+L4INCDIR ?=	$(OBJ_BASE)/include/$(ARCH) \
                 $(OBJ_BASE)/include \
-		$(DICE_INCDIR) \
+#		$(addprefix $(OBJ_BASE)/include/$(ARCH)/,$(L4API)) \
+#               $(addprefix $(OBJ_BASE)/include/,$(L4API)) \
+#		$(DICE_INCDIR) \
                 $(addprefix $(DROPS_STDDIR)/include/$(ARCH)/,$(L4API)) \
                 $(addprefix $(DROPS_STDDIR)/include/,$(L4API)) \
                 $(DROPS_STDDIR)/include/$(ARCH) \
@@ -291,14 +291,20 @@ endif
 endif
 
 CPPFLAGS+= $(CPPFLAGS_$(OSYSTEM)) $(CPPFLAGS_$(<F)) $(CPPFLAGS_$(<F)_$(OSYSTEM))
+# defined in mk/Makeconf and this file.
 CPPFLAGS+= $(DEFINES)
 CPPFLAGS+= $(BID_CPPFLAGS_SYSCALLS)
 CPPFLAGS+= $(addprefix -I, $(PRIVATE_INCDIR) $(PRIVATE_INCDIR_$(OSYSTEM)) $(PRIVATE_INCDIR_$@) $(PRIVATE_INCDIR_$@_$(OSYSTEM)))
-CPPFLAGS+= $(if $(CLIENTIDL)$(SERVERIDL)$(addprefix CLIENTIDL_,$(TARGET))$(addprefix SERVERIDL_,$(TARGET)),$(addprefix -I, $(IDL_PATH)))
+CPPFLAGS+= -I.
+#CPPFLAGS+= $(if $(CLIENTIDL)$(SERVERIDL)$(addprefix CLIENTIDL_,$(TARGET))$(addprefix SERVERIDL_,$(TARGET)),$(addprefix -I, $(IDL_PATH)))
 ifneq ($(MODE),host)
 CPPFLAGS+= $(addprefix -I, $(L4INCDIR))
 endif
 CPPFLAGS+= $(LIBCINCDIR)
+#CPPFLAGS+= -I/root/hurd/libddekit/include
+#CPPFLAGS+= -I/root/hurd/libdde_linux26/include
+#CPPFLAGS+= -I/root/hurd/libdde_linux26/contrib/include
+#CPPFLAGS+= -I/root/hurd/libdde_linux26/contrib/arch/x86/include
 
 CXXFLAGS+= $(BID_CFLAGS_GSTAB) $(BID_CFLAGS_OMIT_FP)
 CXXFLAGS+= $(CXXFLAGS_$(OSYSTEM))

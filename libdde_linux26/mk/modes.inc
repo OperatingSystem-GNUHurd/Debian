@@ -31,14 +31,14 @@ else
 LDS_LOADER   = $(LDS_DEFAULT)
 endif
 
-LIBC_INCLUDE   = -nostdinc                                 \
-                 -I$(OBJ_BASE)/include/$(ARCH)/uclibc      \
-                 -I$(OBJ_BASE)/include/uclibc              \
-                 -I$(OBJ_BASE)/include/uclibc++            \
-                 -I$(DROPS_STDDIR)/include/$(ARCH)/uclibc  \
-                 -I$(DROPS_STDDIR)/include/uclibc          \
-                 -I$(DROPS_STDDIR)/include/uclibc++        \
-                 $(I_GCCINCDIR)
+#LIBC_INCLUDE   = -nostdinc                                  
+#                 -I$(OBJ_BASE)/include/$(ARCH)/uclibc      \
+#                 -I$(OBJ_BASE)/include/uclibc              \
+#                 -I$(OBJ_BASE)/include/uclibc++            \
+#                 -I$(DROPS_STDDIR)/include/$(ARCH)/uclibc  \
+#                 -I$(DROPS_STDDIR)/include/uclibc          \
+#                 -I$(DROPS_STDDIR)/include/uclibc++        \
+#                 $(I_GCCINCDIR)
 LIBC_LIB       = -luc_c
 
 #############################################################################

@@ -31,6 +31,9 @@
 ifeq ($(origin _L4DIR_MK_MAKECONF),undefined)
 _L4DIR_MK_MAKECONF=y
 
+SYSTEMS = x86-l4v2
+ARCH = x86
+
 # the default target is all
 all::
 
@@ -230,7 +233,7 @@ VPATH_SRC_BASE ?= $(SRC_DIR)
 MAKECONFLOCAL ?= Makeconf.local
 -include $(MAKECONFLOCAL)
 
-DROPS_STDDIR	?= /home/drops
+DROPS_STDDIR	?= /root/hurd/libdde_linux26/build
 ifeq ($(STATICFILE),)
 STATICFILE	= $(OBJ_BASE)/pkg/STATIC $(L4DIR)/pkg/STATIC
 endif
@@ -320,8 +323,8 @@ ifeq ($(USE_DIETLIBC),y)
   $(warning Dietlibc will soon be removed from the tree.)
 else
   # uClibc explicitly set for all architectures
-  DEFINES	+= -DUSE_UCLIBC=y
-  USE_UCLIBC	= y
+  DEFINES	+= #-DUSE_UCLIBC=y
+  USE_UCLIBC	= #y
   LIBC_TYPE	= uc
 endif
 
