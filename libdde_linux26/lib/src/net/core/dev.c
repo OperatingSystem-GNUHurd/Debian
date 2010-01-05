@@ -5252,7 +5252,7 @@ out:
 	return rc;
 }
 
-subsys_initcall(net_dev_init);
+//subsys_initcall(net_dev_init);
 
 EXPORT_SYMBOL(__dev_get_by_index);
 EXPORT_SYMBOL(__dev_get_by_name);

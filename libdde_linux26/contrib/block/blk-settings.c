@@ -469,4 +469,4 @@ static int __init blk_settings_init(void)
 	blk_max_pfn = max_pfn - 1;
 	return 0;
 }
-subsys_initcall(blk_settings_init);
+//subsys_initcall(blk_settings_init);

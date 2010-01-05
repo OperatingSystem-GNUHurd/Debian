@@ -154,7 +154,7 @@ void __init l4dde26_init_timers(void)
 	INITIALIZE_INITVAR(dde26_timer);
 }
 
-core_initcall(l4dde26_init_timers);
+//core_initcall(l4dde26_init_timers);
 
 extern unsigned long volatile __jiffy_data jiffies;
 

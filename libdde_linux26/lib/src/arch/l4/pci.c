@@ -186,4 +186,4 @@ void __init l4dde26_init_pci(void)
 	INITIALIZE_INITVAR(dde26_pci);
 }
 
-arch_initcall(l4dde26_init_pci);
+//arch_initcall(l4dde26_init_pci);

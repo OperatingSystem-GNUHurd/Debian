@@ -997,7 +997,7 @@ static int __init pci_driver_init(void)
 	return bus_register(&pci_bus_type);
 }
 
-postcore_initcall(pci_driver_init);
+//postcore_initcall(pci_driver_init);
 
 EXPORT_SYMBOL(pci_match_id);
 EXPORT_SYMBOL(__pci_register_driver);

@@ -273,4 +273,4 @@ static void __init dde_page_cache_init(void)
 		INIT_HLIST_HEAD(&dde_page_cache[i]);
 }
 
-core_initcall(dde_page_cache_init);
+//core_initcall(dde_page_cache_init);

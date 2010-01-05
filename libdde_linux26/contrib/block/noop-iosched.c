@@ -114,7 +114,7 @@ static void __exit noop_exit(void)
 	elv_unregister(&elevator_noop);
 }
 
-subsys_initcall(noop_init);
+//subsys_initcall(noop_init);
 module_exit(noop_exit);
 
 

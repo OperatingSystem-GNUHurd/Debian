@@ -177,4 +177,4 @@ static int __init blk_ioc_init(void)
 			sizeof(struct io_context), 0, SLAB_PANIC, NULL);
 	return 0;
 }
-subsys_initcall(blk_ioc_init);
+//subsys_initcall(blk_ioc_init);

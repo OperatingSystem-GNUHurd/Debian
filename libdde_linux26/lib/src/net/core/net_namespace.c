@@ -239,7 +239,7 @@ static int __init net_ns_init(void)
 	return 0;
 }
 
-pure_initcall(net_ns_init);
+//pure_initcall(net_ns_init);
 
 #ifdef CONFIG_NET_NS
 static int register_pernet_operations(struct list_head *list,

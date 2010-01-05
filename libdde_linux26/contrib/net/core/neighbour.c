@@ -2820,5 +2820,5 @@ static int __init neigh_init(void)
 	return 0;
 }
 
-subsys_initcall(neigh_init);
+//subsys_initcall(neigh_init);
 

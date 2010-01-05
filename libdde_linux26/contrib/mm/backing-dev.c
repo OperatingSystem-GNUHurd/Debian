@@ -167,7 +167,7 @@ static __init int bdi_class_init(void)
 	return 0;
 }
 
-postcore_initcall(bdi_class_init);
+//postcore_initcall(bdi_class_init);
 
 int bdi_register(struct backing_dev_info *bdi, struct device *parent,
 		const char *fmt, ...)

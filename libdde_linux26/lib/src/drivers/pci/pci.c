@@ -2434,7 +2434,7 @@ static int __init pci_setup(char *str)
 }
 early_param("pci", pci_setup);
 
-device_initcall(pci_init);
+//device_initcall(pci_init);
 
 EXPORT_SYMBOL(pci_reenable_device);
 EXPORT_SYMBOL(pci_enable_device_io);

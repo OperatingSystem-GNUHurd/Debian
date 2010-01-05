@@ -172,4 +172,4 @@ static __init int blk_softirq_init(void)
 	register_hotcpu_notifier(&blk_cpu_notifier);
 	return 0;
 }
-subsys_initcall(blk_softirq_init);
+//subsys_initcall(blk_softirq_init);
