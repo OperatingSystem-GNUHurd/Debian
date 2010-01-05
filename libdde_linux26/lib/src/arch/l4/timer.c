@@ -156,8 +156,6 @@ void __init l4dde26_init_timers(void)
 
 //core_initcall(l4dde26_init_timers);
 
-extern unsigned long volatile __jiffy_data jiffies;
-
 __attribute__((weak)) void do_gettimeofday (struct timeval *tv)
 {
 	WARN_UNIMPL;
