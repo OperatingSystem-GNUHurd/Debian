@@ -12,10 +12,6 @@
 #include <linux/interrupt.h>
 #include <linux/string.h>     /* memset() */
 
-/* DDEKit */
-#include <l4/dde/ddekit/interrupt.h>
-#include <l4/dde/ddekit/memory.h>
-
 /* local */
 #include "dde26.h"
 #include "local.h"

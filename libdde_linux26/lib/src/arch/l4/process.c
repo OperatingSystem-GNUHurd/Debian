@@ -1,5 +1,5 @@
-#include <l4/dde/dde.h>
-#include <l4/dde/linux26/dde26.h>
+#include <dde.h>
+#include <dde26.h>
 
 #include <asm/atomic.h>
 

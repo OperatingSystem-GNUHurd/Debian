@@ -14,9 +14,7 @@
 /* Linux */
 #include <linux/slab.h>
 
-/* DDEKit */
-#include <l4/dde/ddekit/memory.h>
-#include <l4/dde/ddekit/lock.h>
+#include "local.h"
 
 
 /*******************

@@ -8,7 +8,7 @@
  * GNU General Public License 2. Please see the COPYING file for details.     *
  ******************************************************************************/
 
-#include <l4/dde/linux26/dde26_net.h>
+#include <dde26_net.h>
 
 #include <linux/kernel.h>
 #include <linux/skbuff.h>

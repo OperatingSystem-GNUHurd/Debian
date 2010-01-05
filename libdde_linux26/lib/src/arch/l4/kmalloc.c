@@ -20,11 +20,9 @@
 #include <linux/mm.h>
 #include <asm/io.h>
 
-/* DDEKit */
-#include <l4/dde/ddekit/debug.h>
-#include <l4/dde/ddekit/memory.h>
+#include "local.h"
 
-#include <l4/dde/linux26/dde26.h>
+#include <dde26.h>
 
 /* dummy */
 int forbid_dac;

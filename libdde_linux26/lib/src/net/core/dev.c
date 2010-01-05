@@ -74,7 +74,7 @@
 
 #ifdef DDE_LINUX
 #include "local.h"
-#include <l4/dde/linux26/dde26_net.h>
+#include <dde26_net.h>
 #endif
 
 #include <asm/uaccess.h>
