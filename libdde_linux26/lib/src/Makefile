@@ -3,6 +3,9 @@ L4DIR      ?= $(PKGDIR)
 CONTRIB    ?= $(PKGDIR)/contrib
 
 -include $(PKGDIR_OBJ)/Makeconf
+ifeq ($(origin SRC_DIR),undefined)
+SRC_DIR        := $(shell pwd)
+endif
 
 CONFIG_DDE26_COMMON := y
 CONFIG_DDE26_NET := y
