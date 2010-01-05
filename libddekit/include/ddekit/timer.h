@@ -54,5 +54,6 @@ void ddekit_init_timers(void);
 /** Get the timer thread.
  */
 ddekit_thread_t *ddekit_get_timer_thread(void);
+extern long long fetch_jiffies (void);
 
 #endif
