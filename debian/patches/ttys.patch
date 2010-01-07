@@ -1,3 +1,4 @@
+Add Marcus' console ttys.
 ---
  config/ttys |    6 ++++++
  1 file changed, 6 insertions(+)

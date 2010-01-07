@@ -1,3 +1,4 @@
+Use libc's __extern_inline which works properly according to optimization flags
 ---
  libdiskfs/diskfs.h          |   17 ++++++----
  libpipe/pipe.h              |   74 ++++++++++++++++++++++++++++++++------------

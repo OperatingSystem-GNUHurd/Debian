@@ -1,3 +1,4 @@
+Provide more mutex initializers
 ---
  libpthread/include/pthread/pthread.h              |    2 ++
  libpthread/sysdeps/generic/bits/mutex-attr.h      |    1 +

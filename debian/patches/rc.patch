@@ -1,3 +1,4 @@
+More debianish rc scripts
 ---
  daemons/rc.sh |   43 ++++++++++++++++++++++++++++++++-----------
  1 file changed, 32 insertions(+), 11 deletions(-)

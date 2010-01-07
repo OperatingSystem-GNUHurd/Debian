@@ -1,3 +1,4 @@
+Debian GNU/Hurd has a real /usr
 ---
  daemons/rc.sh        |    2 +-
  daemons/runsystem.sh |    2 +-

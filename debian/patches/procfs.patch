@@ -1,3 +1,4 @@
+Madhusudan's experimental procfs server for Linux-like /proc
 ---
  Makefile                     |    2 
  procfs/ChangeLog             |  161 ++++++++++

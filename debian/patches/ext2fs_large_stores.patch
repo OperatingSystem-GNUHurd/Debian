@@ -1,3 +1,4 @@
+Support for >2GB volumes
 ---
  console/pager.c          |   10 
  ext2fs/balloc.c          |   57 +++--

@@ -1,3 +1,4 @@
+Follow POSIX rules for gid of new nodes.
 ---
  opts-common.c |    2 +-
  libdiskfs/init-init.c |    3 +++

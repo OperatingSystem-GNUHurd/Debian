@@ -1,3 +1,5 @@
+Avoid a mutex deadlock by simply preventing '.' or '..' in source or target
+operands.
 ---
  libdiskfs/dir-rename.c |    5 +++++
  1 file changed, 5 insertions(+)

@@ -1,3 +1,5 @@
+Automatically setup local sockets if not already done so. Needed early for shell
+pipelines.
 ---
  daemons/runsystem.sh |    6 ++++++
  1 file changed, 6 insertions(+)

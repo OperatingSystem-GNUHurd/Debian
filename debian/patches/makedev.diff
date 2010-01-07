@@ -1,3 +1,5 @@
+Do not create the shm node since Marcus' SHM implementation uses a directory
+there.
 ---
  sutils/MAKEDEV.sh |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

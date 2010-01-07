@@ -1,3 +1,4 @@
+Automatically startup the hurd console when enabled.
 ---
  daemons/runsystem.sh |   14 ++++++++++++++
  1 file changed, 14 insertions(+)
