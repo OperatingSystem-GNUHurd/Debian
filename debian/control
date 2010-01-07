@@ -14,10 +14,8 @@ Vcs-Browser: http://svn.debian.org/wsvn/pkg-hurd/hurd/
 Vcs-Svn: svn://svn.debian.org/pkg-hurd/hurd/trunk/
 
 Package: hurd
-Priority: required
-Section: admin
 Essential: yes
-Depends: gnumach (>= 2:1.3.99.dfsg.cvs20070526-1), sysv-rc, ${shlibs:Depends}
+Depends: ${misc:Depends}, gnumach (>= 2:1.3.99.dfsg.cvs20070526-1), sysv-rc, ${shlibs:Depends}
 Suggests: hurd-doc
 Provides: makedev, login
 Replaces: makedev, login
@@ -31,7 +29,7 @@ Package: hurd-dev
 Priority: standard
 Section: libdevel
 Architecture: hurd-i386
-Depends: hurd
+Depends: ${misc:Depends}, hurd
 Provides: libsem-dev
 Replaces: libsem-dev
 Conflicts: libsem-dev
@@ -42,7 +40,7 @@ Package: hurd-dbg
 Priority: extra
 Section: debug
 Architecture: hurd-i386
-Depends: hurd (= ${binary:Version})
+Depends: ${misc:Depends}, hurd (= ${binary:Version})
 Description: The GNU Hurd (debugging files)
  This package includes the unstripped binaries and libraries.
 
@@ -50,6 +48,7 @@ Package: hurd-doc
 Priority: optional
 Section: doc
 Architecture: all
+Depends: ${misc:Depends}
 Suggests: hurd (>= ${source:Version})
 Description: The GNU Hurd manual
  This package includes the manual in info and HTML format.
@@ -59,6 +58,7 @@ XC-Package-Type: udeb
 Priority: optional
 Section: debian-installer
 Architecture: hurd-i386
+Depends: ${misc:Depends}
 Provides: hurd, ext2-modules, fat-modules, ipv6-modules, isofs-modules, loop-modules, mouse-modules, nfs-modules, socket-modules, ufs-modules
 Description: The GNU Hurd - udeb
  This is the GNU Hurd udeb package. It contains essential system software and
