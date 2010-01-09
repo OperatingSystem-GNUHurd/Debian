@@ -19,6 +19,11 @@ hurd (20090404-3) UNRELEASED; urgency=low
     - Drop duplicate priority and section fields.
     - Add ${misc:Depends}.
     - Add dpkg (>= 1.15.4) | install-info dependency.
+  * hurd-udeb.runsystem: New runsystem file for the d-i case, incomplete for
+    now.
+  * hurd-udeb.install: Remove getty, runttys, /etc/ttys ftpcp, ftpdir, ftpfs,
+    hostmux, usermux, nfs, rpctrace, gcore, forks. Install hurd-udeb.runsystem
+    as /libexec/runsystem.gnu.
 
   [ Guillem Jover ]
   * Update make-new-tarball.sh to exclude git instead of CVS paths.
