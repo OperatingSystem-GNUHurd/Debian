@@ -15,8 +15,10 @@ hurd (20090404-3) UNRELEASED; urgency=low
   * debian/hurd.dirs: Add /etc/sysctl.d.
   * debian/control (hurd-udeb): Add Provides: *-modules.
   * debian/patches/diskfs_no_inherit_dir_group.patch: Fix documentation too.
-  * debian/control: Drop duplicate priority and section fields.
-  * debian/control: Add ${misc:Depends}.
+  * debian/control:
+    - Drop duplicate priority and section fields.
+    - Add ${misc:Depends}.
+    - Add dpkg (>= 1.15.4) | install-info dependency.
 
   [ Guillem Jover ]
   * Update make-new-tarball.sh to exclude git instead of CVS paths.
