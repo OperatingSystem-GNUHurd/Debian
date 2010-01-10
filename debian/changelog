@@ -22,8 +22,8 @@ hurd (20090404-3) UNRELEASED; urgency=low
   * hurd-udeb.runsystem: New runsystem file for the d-i case, incomplete for
     now.
   * hurd-udeb.install: Remove getty, runttys, /etc/ttys ftpcp, ftpdir, ftpfs,
-    hostmux, usermux, nfs, rpctrace, gcore, forks. Install hurd-udeb.runsystem
-    as /libexec/runsystem.gnu.
+    hostmux, usermux, nfs, isofs.static, rpctrace, gcore, forks. Install
+    local/runsystem.gnu in /libexec, install ext2fs.static in /boot
 
   [ Guillem Jover ]
   * Update make-new-tarball.sh to exclude git instead of CVS paths.

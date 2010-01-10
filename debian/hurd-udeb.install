@@ -2,7 +2,7 @@ debian/tmp/lib/*.so.*
 debian/tmp/lib/hurd/console/*.so.* usr/lib/hurd/console
 debian/tmp/libexec/rc
 debian/tmp/libexec/console-run
-debian/hurd-udeb.runsystem /libexec/runsystem.gnu
+debian/local/runsystem.gnu /libexec
 debian/tmp/sbin/e2os
 debian/tmp/sbin/MAKEDEV
 debian/tmp/sbin/losetup
@@ -44,7 +44,7 @@ debian/tmp/hurd/console
 debian/tmp/hurd/crash
 debian/tmp/hurd/exec
 debian/tmp/hurd/ext2fs
-debian/tmp/hurd/ext2fs.static
+debian/tmp/hurd/ext2fs.static /boot
 debian/tmp/hurd/fatfs
 debian/tmp/hurd/fifo
 debian/tmp/hurd/firmlink
@@ -52,7 +52,6 @@ debian/tmp/hurd/fwd
 debian/tmp/hurd/ifsock
 debian/tmp/hurd/init
 debian/tmp/hurd/iso9660fs
-debian/tmp/hurd/iso9660fs.static
 debian/tmp/hurd/mach-defpager
 debian/tmp/hurd/magic
 debian/tmp/hurd/new-fifo
