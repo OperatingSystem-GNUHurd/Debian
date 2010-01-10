@@ -8,8 +8,8 @@ RUNCOM=/libexec/rc
 
 # See whether pflocal is setup already, and do so if not (install case)
 
-if ! test -e /servers/socket/1 && which settrans >/dev/null ; then
-  settrans -c /servers/socket/1 /hurd/pflocal
+if ! test -e /servers/socket/1 && test -x /bin/settrans >/dev/null ; then
+  /bin/settrans -c /servers/socket/1 /hurd/pflocal
 fi
 
 # TODO:
