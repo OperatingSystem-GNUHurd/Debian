@@ -37,7 +37,7 @@ console -d vga -d pc_kbd -c /dev/vcs
 echo "Starting d-i's init in 2s, hoping for the best"
 sleep 2
 
-/bin/init
+/init
 
 echo "d-i init died"
 
