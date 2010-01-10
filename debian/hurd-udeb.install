@@ -37,7 +37,6 @@ debian/tmp/bin/storecat
 debian/tmp/bin/storeread
 debian/tmp/bin/msgport
 debian/tmp/bin/mount
-debian/hurd-udeb.ttys /etc/ttys
 debian/tmp/dev/MAKEDEV
 debian/tmp/hurd/auth
 debian/tmp/hurd/console
