@@ -16,6 +16,7 @@ settrans -c /servers/crash-kill /hurd/crash --kill
 settrans -c /servers/password /hurd/password
 settrans -c /servers/crash-suspend /hurd/crash --suspend
 settrans -c /servers/crash-dump-core /hurd/crash --dump-core
+settrans /proc /hurd/procfs
 ln -s crash-kill /servers/crash
 ln -s 1 /servers/socket/local
 ln -s 2 /servers/socket/inet
@@ -24,16 +25,21 @@ ln -s 2 /servers/socket/inet
 #settrans /dev /hurd/tmpfs 1M
 #ln -s /sbin/MAKEDEV /dev
 
+echo "setting up /dev"
 cd /dev
 rm -f null
 rm -f console
-echo "setting up /dev"
 ./MAKEDEV fd
-./MAKEDEV std ptyp ptyq com0 vcs tty1 tty2 tty3 tty4 tty5 tty6 hd0 hd1 hd2 hd3 loop0 loop1
-echo "setting up /dev/hd*"
-for i in 0 1 2 3
+./MAKEDEV std com0 vcs tty1 tty2 tty3 tty4 tty5 tty6 hd0 hd1 hd2 hd3 loop0 loop1
+echo "setting up /dev/pty*"
+for i in 0 1 2 3 4
 do
-	for j in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
+	./MAKEDEV ptyp$i ptyq$i
+done
+echo "setting up /dev/hd*"
+for i in 0 1
+do
+	for j in 1 2 3 4 5 6 7 8
 	do
 		./MAKEDEV hd${i}s${j}
 	done
@@ -58,13 +64,22 @@ done
 touch /dev/tty1
 
 # Startup the Hurd console.
-console -d vga -d pc_kbd -c /dev/vcs
+console -d vga -d pc_kbd -c /dev/vcs &
 
+sleep 1
+
+exec < /dev/tty1 > /dev/tty1 2>&1
+
+echo here is the console
 echo "Starting d-i's init in 2s, hoping for the best"
 sleep 2
 
-/init
+/bin/busybox init
 
-echo "d-i init died"
+echo "d-i init died, please press ctrl-alt-backspace to get back to the Mach console"
 
+# Kill our own console so it doesn't interfere with the emergency shell
+kill 7
+
+# Shouldn't even be reached
 exit 1
