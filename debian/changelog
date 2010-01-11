@@ -26,6 +26,7 @@ hurd (20090404-3) UNRELEASED; urgency=low
     local/runsystem.gnu in /libexec, install ext2fs.static in /boot
   * debian/rules: Do not ship libthread_*.pic.a, as mklibs doesn't manage to
     keep version information.
+  * debian/patches/MAKEDEV.patch: Make MAKEDEV bash-free.
 
   [ Guillem Jover ]
   * Update make-new-tarball.sh to exclude git instead of CVS paths.

@@ -1,20 +1,60 @@
-commit 4d2e9c98b5b886d80fb7396aef89ca50b0d5fcfe
+commit 62e4f1a11b4598daa4a22fe3b868fde3c6fa818e
 Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
-Date:   Sun Sep 27 23:33:29 2009 +0200
+Date:   Mon Jan 11 03:03:08 2010 +0100
 
-    Use #!/bin/bash instead of #!/bin/sh
+    Make MAKEDEV bash-free
     
-    The script makes big use of bashisms.
+    	* sutils/MAKEDEV.sh (cmd, st, lose, mkdev): Remove function, add
+    	().
+    	(mkdev): Use ${I#???} instead of ${I:3}.
 
 ---
- sutils/MAKEDEV.sh |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ MAKEDEV.sh |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
+diff --git a/sutils/MAKEDEV.sh b/sutils/MAKEDEV.sh
+index 260e93b..4277b05 100644
 --- a/sutils/MAKEDEV.sh
 +++ b/sutils/MAKEDEV.sh
-@@ -1,4 +1,4 @@
--#!/bin/sh
-+#!/bin/bash
- #
- # Make standard devices
- #
+@@ -51,12 +51,12 @@ case  "$#" in 0)
+   exit 1;;
+ esac
+ 
+-function cmd {
++cmd() {
+   eval $ECHO "$@"
+   eval $EXEC "$@"
+ }
+ 
+-function st {
++st() {
+   local NODE="$1"
+   local OWNER="$2"
+   local PERM="$3"
+@@ -68,7 +68,7 @@ function st {
+   fi
+ }
+ 
+-function lose {
++lose() {
+   local line
+   for line; do
+     echo 1>&2 "$0: $line"
+@@ -76,7 +76,7 @@ function lose {
+   exit 1
+ }
+ 
+-function mkdev {
++mkdev() {
+   local I
+   for I; do
+     case $I in
+@@ -120,7 +120,7 @@ function mkdev {
+       # ptys
+       [pt]ty[pqrstuvwxyzPQRS]?)
+ 	# Make one pty, both the master and slave halves.
+-	local id="${I:3}"
++	local id="${I#???}"
+ 	st pty$id root 666 /hurd/term ${DEVDIR}/pty$id \
+ 				      pty-master ${DEVDIR}/tty$id
+ 	st tty$id root 666 /hurd/term ${DEVDIR}/tty$id \
