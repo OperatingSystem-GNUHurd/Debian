@@ -19,11 +19,13 @@ hurd (20090404-3) UNRELEASED; urgency=low
     - Drop duplicate priority and section fields.
     - Add ${misc:Depends}.
     - Add dpkg (>= 1.15.4) | install-info dependency.
-  * hurd-udeb.runsystem: New runsystem file for the d-i case, incomplete for
-    now.
-  * hurd-udeb.install: Remove getty, runttys, /etc/ttys ftpcp, ftpdir, ftpfs,
-    hostmux, usermux, nfs, isofs.static, rpctrace, gcore, forks. Install
+  * debian/hurd-udeb.runsystem: New runsystem file for the d-i case, incomplete
+    for now.
+  * debian/hurd-udeb.install: Remove getty, runttys, /etc/ttys ftpcp, ftpdir,
+    ftpfs, hostmux, usermux, nfs, isofs.static, rpctrace, gcore, forks. Install
     local/runsystem.gnu in /libexec, install ext2fs.static in /boot
+  * debian/rules: Do not ship libthread_*.pic.a, as mklibs doesn't manage to
+    keep version information.
 
   [ Guillem Jover ]
   * Update make-new-tarball.sh to exclude git instead of CVS paths.
