@@ -6,15 +6,41 @@ export PATH
 SHELL=/bin/sh
 RUNCOM=/libexec/rc
 
-# See whether pflocal is setup already, and do so if not (install case)
+mkdir /servers/
+mkdir /servers/socket
+settrans -c /servers/socket/1 /hurd/pflocal
+settrans -c /servers/socket/2 /hurd/pfinet
+settrans -ck /servers/exec /hurd/exec
+settrans -c /servers/crash-suspend /hurd/crash --suspend
+settrans -c /servers/crash-kill /hurd/crash --kill
+settrans -c /servers/password /hurd/password
+settrans -c /servers/crash-suspend /hurd/crash --suspend
+settrans -c /servers/crash-dump-core /hurd/crash --dump-core
+ln -s crash-kill /servers/crash
+ln -s 1 /servers/socket/local
+ln -s 2 /servers/socket/inet
 
-if ! test -e /servers/socket/1 && test -x /bin/settrans >/dev/null ; then
-  /bin/settrans -c /servers/socket/1 /hurd/pflocal
-fi
+# would be better than the -N parameter given to genext2fs
+#settrans /dev /hurd/tmpfs 1M
+#ln -s /sbin/MAKEDEV /dev
 
-# TODO:
-# set up translators, /dev, etc. (./native-install, roughly)
+cd /dev
+rm -f null
+rm -f console
+echo "setting up /dev"
+./MAKEDEV fd
+./MAKEDEV std ptyp ptyq com0 vcs tty1 tty2 tty3 tty4 tty5 tty6 hd0 hd1 hd2 hd3 loop0 loop1
+echo "setting up /dev/hd*"
+for i in 0 1 2 3
+do
+	for j in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
+	do
+		./MAKEDEV hd${i}s${j}
+	done
+done
+cd /
 
+echo "running rc"
 # Run the rc script.  As long as it exits nonzero, punt to single-user.
 # After the single-user shell exits, we will start over attempting to
 # run rc; but later invocations strip the `autoboot' argument.
