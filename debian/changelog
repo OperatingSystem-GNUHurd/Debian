@@ -24,8 +24,7 @@ hurd (20090404-3) UNRELEASED; urgency=low
   * debian/hurd-udeb.install: Remove getty, runttys, /etc/ttys ftpcp, ftpdir,
     ftpfs, hostmux, usermux, nfs, isofs.static, rpctrace, gcore, forks. Install
     local/runsystem.gnu in /libexec, install ext2fs.static in /boot
-  * debian/rules: Do not ship libthread_*.pic.a, as mklibs doesn't manage to
-    keep version information.
+  * debian/rules: Do not ship *_pic.a, as mklibs breaks them.
   * debian/patches/MAKEDEV.patch: Make MAKEDEV bash-free.
   * debian/patches/tmpfs.patch: New patch to fix tmpfs crash.
 

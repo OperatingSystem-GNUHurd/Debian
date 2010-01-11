@@ -63,5 +63,5 @@ SUID_PROGRAMS = /bin/ids /bin/login /bin/ps-hurd /usr/bin/w-hurd
 binary-predeb/hurd::
 	chmod u+s $(patsubst %, $(CURDIR)/debian/$(cdbs_curpkg)%, $(SUID_PROGRAMS))
 binary-predeb/hurd-dev:: 
-	rm -f $(CURDIR)/debian/hurd-dev/lib/libthread*_pic.a
+	rm -f $(CURDIR)/debian/hurd-dev/lib/*_pic.a
 
