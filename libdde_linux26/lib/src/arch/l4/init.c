@@ -60,11 +60,11 @@ void l4dde26_do_initcalls(void)
 	l4dde26_init_pci ();
 	/* 1003: subsys_ */
 	net_dev_init ();
-	neigh_init ();
+//	neigh_init ();
 	blk_ioc_init ();
 	blk_settings_init ();
 	blk_softirq_init ();
-	genhd_device_init ();
+//	genhd_device_init ();
 	noop_init ();
 	init_bio ();
 	/* 1004: fs_ */
