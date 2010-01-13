@@ -16,7 +16,6 @@ ifeq ($(origin _L4DIR_MK_LIB_MK),undefined)
 _L4DIR_MK_LIB_MK=y
 
 ROLE = lib.mk
-SYSTEM = x86-l4v2
 
 # define INSTALLDIRs prior to including install.inc, where the install-
 # rules are defined. Same for INSTALLDIR.
