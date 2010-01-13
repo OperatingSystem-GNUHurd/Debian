@@ -4,7 +4,7 @@
 #ifdef CONFIG_BUG
 #define HAVE_ARCH_BUG
 #ifdef DDE_LINUX
-#include <l4/dde/ddekit/panic.h>
+#include <ddekit/panic.h>
 #define BUG() ddekit_panic("\033[31mBUG():\033[0m %s:%d", __FILE__, __LINE__);
 
 #define __WARN() ddekit_printf("\033[33mWARN():\033[0m%s:%d", __FILE__, __LINE__);
