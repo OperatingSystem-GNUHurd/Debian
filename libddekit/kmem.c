@@ -78,7 +78,7 @@ struct chunkhdr
   unsigned long bitmap;	/* busy/free bitmap of pages */
 };
 
-unsigned long __get_free_pages (unsigned long order, int dma);
+static unsigned long __get_free_pages (unsigned long order, int dma);
 void free_pages (unsigned long addr, unsigned long order);
 
 static struct mutex mem_lock = MUTEX_INITIALIZER;
