@@ -6,6 +6,7 @@
 #include <linux/wait.h>
 
 #include "pci.h"
+#include <ddekit/timer.h>
 
 /*
  * This interrupt-safe spinlock protects all accesses to PCI

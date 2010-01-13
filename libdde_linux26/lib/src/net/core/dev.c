@@ -134,6 +134,8 @@
 
 #include "net-sysfs.h"
 
+#include <ddekit/timer.h>
+
 /* Instead of increasing this, you should create a hash table. */
 #define MAX_GRO_SKBS 8
 

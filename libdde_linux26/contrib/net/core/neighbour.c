@@ -36,6 +36,8 @@
 #include <linux/string.h>
 #include <linux/log2.h>
 
+#include <ddekit/timer.h>
+
 #define NEIGH_DEBUG 1
 
 #define NEIGH_PRINTK(x...) printk(x)

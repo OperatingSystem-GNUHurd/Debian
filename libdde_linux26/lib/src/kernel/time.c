@@ -43,6 +43,7 @@
 #include <asm/unistd.h>
 
 #include "timeconst.h"
+#include <ddekit/timer.h>
 
 /*
  * The timezone where the local system is located.  Used as a default by some
@@ -590,14 +591,14 @@ timespec_to_jiffies(const struct timespec *value)
 EXPORT_SYMBOL(timespec_to_jiffies);
 
 void
-jiffies_to_timespec(const unsigned long jiffies, struct timespec *value)
+jiffies_to_timespec(const unsigned long jiffiesv, struct timespec *value)
 {
 	/*
 	 * Convert jiffies to nanoseconds and separate with
 	 * one divide.
 	 */
 	u32 rem;
-	value->tv_sec = div_u64_rem((u64)jiffies * TICK_NSEC,
+	value->tv_sec = div_u64_rem((u64)jiffiesv * TICK_NSEC,
 				    NSEC_PER_SEC, &rem);
 	value->tv_nsec = rem;
 }
@@ -631,7 +632,7 @@ timeval_to_jiffies(const struct timeval *value)
 }
 EXPORT_SYMBOL(timeval_to_jiffies);
 
-void jiffies_to_timeval(const unsigned long jiffies, struct timeval *value)
+void jiffies_to_timeval(const unsigned long jiffiesv, struct timeval *value)
 {
 	/*
 	 * Convert jiffies to nanoseconds and separate with
@@ -639,7 +640,7 @@ void jiffies_to_timeval(const unsigned long jiffies, struct timeval *value)
 	 */
 	u32 rem;
 
-	value->tv_sec = div_u64_rem((u64)jiffies * TICK_NSEC,
+	value->tv_sec = div_u64_rem((u64)jiffiesv * TICK_NSEC,
 				    NSEC_PER_SEC, &rem);
 	value->tv_usec = rem / NSEC_PER_USEC;
 }
@@ -681,6 +682,8 @@ unsigned long clock_t_to_jiffies(unsigned long x)
 #else
 unsigned long clock_t_to_jiffies(unsigned long x)
 {
+	assert (HZ);
+	assert (USER_HZ);
 	if (x >= ~0UL / (HZ / USER_HZ))
 		return ~0UL;
 	return x * (HZ / USER_HZ);

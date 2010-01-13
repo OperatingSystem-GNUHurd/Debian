@@ -44,6 +44,8 @@
 #include <asm/timex.h>
 #include <asm/io.h>
 
+#include <ddekit/timer.h>
+
 #ifndef DDE_LINUX
 
 u64 jiffies_64 __cacheline_aligned_in_smp = INITIAL_JIFFIES;
