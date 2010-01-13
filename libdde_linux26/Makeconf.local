@@ -1,0 +1,11 @@
+CONFIG_DDE26_COMMON := y
+CONFIG_DDE26_NET := y
+CONFIG_DDE26_BLOCK := y
+#CONFIG_DDE26_SOUND := y
+CONFIG_DDE26_CHAR :=y
+
+SYSTEMS = x86-l4v2
+ARCH = x86
+SYSTEM = x86-l4v2
+
+OBJ_BASE = /root/hurd/libdde_linux26/build
