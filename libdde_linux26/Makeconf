@@ -23,7 +23,6 @@ SUFFIX_arm   = arm
 
 MY_LINUX26_INCDIR = $(OBJ_BASE)/include/$(ARCH)/linux-headers \
 		    $(OBJ_BASE)/include/$(ARCH)/asm \
-                    $(OBJ_BASE)/include/linux-headers/asm \
                     $(OBJ_BASE)/include/linux-headers
 
 # stolen from fiasco/src/Makeconf, checks whether a compiler supports a certain

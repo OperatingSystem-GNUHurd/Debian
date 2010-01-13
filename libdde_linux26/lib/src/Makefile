@@ -41,7 +41,7 @@ endif
 vpath %.c     $(CONTRIB)
 vpath %.S    $(CONTRIB)
 
-PRIVATE_INCDIR += $(CONTRIB)/drivers/pci $(PKGDIR)/linux26/lib/src/arch/l4 \
+PRIVATE_INCDIR += $(CONTRIB)/drivers/pci $(PKGDIR)/lib/src/arch/l4 \
                   $(CONTRIB)/$(ARCH_DIR)/pci $(CONTRIB)/drivers/base/ \
                   $(CONTRIB)/lib $(PKGDIR_OBJ) $(CONTRIB)/net/core $(CONTRIB)/fs
 
