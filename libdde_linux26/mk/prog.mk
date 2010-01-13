@@ -56,6 +56,7 @@ TARGET_STANDARD := $(TARGET) $(TARGET_$(OSYSTEM))
 TARGET_PROFILE := $(addsuffix .pr,$(filter $(BUILD_PROFILE),$(TARGET)))
 TARGET	+= $(TARGET_$(OSYSTEM)) $(TARGET_PROFILE)
 
+CFLAGS += $(DDEKITINCDIR)
 # define some variables different for lib.mk and prog.mk
 ifeq ($(MODE),loader)
 LDFLAGS += --dynamic-linker libld-l4.s.so
@@ -65,20 +66,22 @@ LDFLAGS += -Map $(strip $@).map
 endif
 LDFLAGS += $(addprefix -L, $(PRIVATE_LIBDIR) $(PRIVATE_LIBDIR_$(OSYSTEM)) $(PRIVATE_LIBDIR_$@) $(PRIVATE_LIBDIR_$@_$(OSYSTEM)))
 LDFLAGS += $(addprefix -L, $(L4LIBDIR)) $(LIBCLIBDIR)
-LDFLAGS	+= $(addprefix -T, $(LDSCRIPT)) $(LIBS) $(L4LIBS) $(LIBCLIBS) $(LDFLAGS_$@)
+LDFLAGS += -L$(DDE26LIBDIR)
+LDFLAGS += -L$(DDEKITLIBDIR)
+LDFLAGS	+= $(LIBS) #$(addprefix -T, $(LDSCRIPT)) $(L4LIBS) $(LIBCLIBS) $(LDFLAGS_$@)
 # Not all host linkers understand this option
 ifneq ($(HOST_LINK),1)
 LDFLAGS += --warn-common
 endif
 
-ifeq ($(notdir $(LDSCRIPT)),main_stat.ld)
+#ifeq ($(notdir $(LDSCRIPT)),main_stat.ld)
 # ld denies -gc-section when linking against shared libraries
-ifeq ($(findstring FOO,$(patsubst -l%.s,FOO,$(LIBS) $(L4LIBS) $(LIBCLIBS))),)
-LDFLAGS += -gc-sections
-endif
-endif
+#ifeq ($(findstring FOO,$(patsubst -l%.s,FOO,$(LIBS) $(L4LIBS) $(LIBCLIBS))),)
+LDFLAGS += -Wl,-gc-sections
+#endif
+#endif
 
-include $(L4DIR)/mk/install.inc
+#include $(L4DIR)/mk/install.inc
 
 #VPATHEX = $(foreach obj, $(OBJS), $(firstword $(foreach dir, \
 #          . $(VPATH),$(wildcard $(dir)/$(obj)))))
@@ -120,13 +123,15 @@ LINK_PROGRAM  := $(LINK_PROGRAM-CXX-host-$(HOST_LINK))
 endif
 
 ifeq ($(LINK_PROGRAM),)
-LINK_PROGRAM  := $(LD) -m $(LD_EMULATION)
+#LINK_PROGRAM  := $(LD) -m $(LD_EMULATION)
+LINK_PROGRAM  := gcc
 endif
 
-$(TARGET): $(OBJS) $(LIBDEPS) $(CRT0) $(CRTN)
+$(TARGET): $(OBJS) $(LIBDEPS) 
 	@$(LINK_MESSAGE)
-	$(VERBOSE)$(call MAKEDEP,$(INT_LD_NAME),,,ld) $(LINK_PROGRAM) -o $@ $(CRT0) $(OBJS) $(LDFLAGS) $(CRTN)
+	$(VERBOSE)$(call MAKEDEP,$(INT_LD_NAME),,,ld) $(LINK_PROGRAM) -o $@ $(OBJS) $(LDFLAGS) $(CRTN)
 	@$(BUILT_MESSAGE)
+#	$(VERBOSE)$(call MAKEDEP,$(INT_LD_NAME),,,ld) $(LINK_PROGRAM) -o $@ $(CRT0) $(OBJS) $(LDFLAGS) $(CRTN)
 
 endif	# architecture is defined, really build
 

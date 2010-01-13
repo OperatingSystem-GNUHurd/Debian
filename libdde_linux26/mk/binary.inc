@@ -233,7 +233,7 @@ LDSCRIPT   ?= $(call BID_mode_var,LDSCRIPT)
 LIBS	+= $(strip $(LIBS_$(OSYSTEM)) $(LIBS_$@) $(LIBS_$@_$(OSYSTEM)))
 
 
-LDFLAGS	+= $(strip $(LDFLAGS_$(OSYSTEM)) $(LDFLAGS_$(ARCH)) $(LDFLAGS_$@) $(LDFLAGS_$@_$(OSYSTEM)))
+#LDFLAGS	+= $(strip $(LDFLAGS_$(OSYSTEM)) $(LDFLAGS_$(ARCH)) $(LDFLAGS_$@) $(LDFLAGS_$@_$(OSYSTEM)))
 
 # May 2007: force somewhat old hash-style as some(!, independant of the
 #           actual version) ld now use an other format, no uclibc upstream fix
@@ -301,10 +301,6 @@ ifneq ($(MODE),host)
 CPPFLAGS+= $(addprefix -I, $(L4INCDIR))
 endif
 CPPFLAGS+= $(LIBCINCDIR)
-#CPPFLAGS+= -I/root/hurd/libddekit/include
-#CPPFLAGS+= -I/root/hurd/libdde_linux26/include
-#CPPFLAGS+= -I/root/hurd/libdde_linux26/contrib/include
-#CPPFLAGS+= -I/root/hurd/libdde_linux26/contrib/arch/x86/include
 
 CXXFLAGS+= $(BID_CFLAGS_GSTAB) $(BID_CFLAGS_OMIT_FP)
 CXXFLAGS+= $(CXXFLAGS_$(OSYSTEM))
