@@ -202,7 +202,7 @@ struct net *copy_net_ns(unsigned long flags, struct net *old_net)
 }
 #endif
 
-static int __init net_ns_init(void)
+int __init net_ns_init(void)
 {
 	struct net_generic *ng;
 	int err;

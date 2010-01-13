@@ -1592,7 +1592,7 @@ static void __init biovec_init_slabs(void)
 	}
 }
 
-static int __init init_bio(void)
+int __init init_bio(void)
 {
 	bio_slab_max = 2;
 	bio_slab_nr = 0;

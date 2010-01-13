@@ -2404,7 +2404,7 @@ int __devinit pci_init(void)
 	return 0;
 }
 
-static int __init pci_setup(char *str)
+int __init pci_setup(char *str)
 {
 #ifndef DDE_LINUX
 	while (str) {

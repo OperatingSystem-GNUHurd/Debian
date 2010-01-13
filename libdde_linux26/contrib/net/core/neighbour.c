@@ -2808,7 +2808,7 @@ EXPORT_SYMBOL(neigh_sysctl_unregister);
 
 #endif	/* CONFIG_SYSCTL */
 
-static int __init neigh_init(void)
+int __init neigh_init(void)
 {
 	rtnl_register(PF_UNSPEC, RTM_NEWNEIGH, neigh_add, NULL);
 	rtnl_register(PF_UNSPEC, RTM_DELNEIGH, neigh_delete, NULL);

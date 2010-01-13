@@ -992,7 +992,7 @@ struct bus_type pci_bus_type = {
 	.pm		= PCI_PM_OPS_PTR,
 };
 
-static int __init pci_driver_init(void)
+int __init pci_driver_init(void)
 {
 	return bus_register(&pci_bus_type);
 }

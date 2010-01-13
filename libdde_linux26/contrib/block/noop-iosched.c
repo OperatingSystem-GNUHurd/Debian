@@ -101,7 +101,7 @@ static struct elevator_type elevator_noop = {
 	.elevator_owner = THIS_MODULE,
 };
 
-static int __init noop_init(void)
+int __init noop_init(void)
 {
 	DEBUG_MSG("here!");
 	elv_register(&elevator_noop);

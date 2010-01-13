@@ -263,7 +263,7 @@ int dma_supported(struct device *dev, u64 mask)
 }
 EXPORT_SYMBOL(dma_supported);
 
-static int __init pci_iommu_init(void)
+int __init pci_iommu_init(void)
 {
 	calgary_iommu_init();
 

@@ -792,7 +792,7 @@ static struct kobject *base_probe(dev_t devt, int *partno, void *data)
 	return NULL;
 }
 
-static int __init genhd_device_init(void)
+int __init genhd_device_init(void)
 {
 	int error;
 

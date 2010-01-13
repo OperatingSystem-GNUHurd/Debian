@@ -264,7 +264,7 @@ void *__init alloc_large_system_hash(const char *tablename,
 }
 
 
-static void __init dde_page_cache_init(void)
+void __init dde_page_cache_init(void)
 {
 	printk("Initializing DDE page cache\n");
 	int i=0;

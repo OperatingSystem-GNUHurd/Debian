@@ -100,7 +100,7 @@ static struct class pcibus_class = {
 	.dev_release	= &release_pcibus_dev,
 };
 
-static int __init pcibus_class_init(void)
+int __init pcibus_class_init(void)
 {
 	return class_register(&pcibus_class);
 }

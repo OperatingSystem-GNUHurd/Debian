@@ -159,7 +159,7 @@ static struct device_attribute bdi_dev_attrs[] = {
 	__ATTR_NULL,
 };
 
-static __init int bdi_class_init(void)
+__init int bdi_class_init(void)
 {
 	bdi_class = class_create(THIS_MODULE, "bdi");
 	bdi_class->dev_attrs = bdi_dev_attrs;
