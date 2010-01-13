@@ -102,8 +102,9 @@ do {							\
 
 #define DEFINE_MUTEX(mutexname) \
 	struct mutex mutexname = __MUTEX_INITIALIZER(mutexname)
+#define HIDDEN __attribute__ ((visibility("hidden")))
 
-extern void __mutex_init(struct mutex *lock, const char *name,
+extern void HIDDEN __mutex_init(struct mutex *lock, const char *name,
 			 struct lock_class_key *key);
 
 /**
