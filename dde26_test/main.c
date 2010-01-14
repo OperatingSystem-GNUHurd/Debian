@@ -17,13 +17,12 @@
 #include <linux/interrupt.h>
 //#include <linux/kthread.h>
 
-#include <l4/dde/dde.h>
-#include <l4/dde/ddekit/initcall.h>
-#include <l4/dde/linux26/dde26.h>
+#include <dde.h>
+//#include <ddekit/initcall.h>
+#include <dde26.h>
+#include <ddekit/timer.h>
 
-#include <l4/util/parse_cmd.h>
-#include <l4/util/util.h>
-#include <l4/log/l4log.h>
+int using_std = 1;
 
 /* We define 4 initcalls and see if these are executed
  * in the beginning.
@@ -32,10 +31,10 @@ static __init void foo(void) { printk("foo  module_init\n"); }
 static __init void bar(void) { printk("bar  device_initcall\n"); }
 static __init void bla(void) { printk("bla  arch_initcall\n"); }
 static __init void blub(void) { printk("blub subsys_initcall\n"); }
-module_init(foo);
-device_initcall(bar);
-arch_initcall(bla);
-subsys_initcall(blub);
+//module_init(foo);
+//device_initcall(bar);
+//arch_initcall(bla);
+//subsys_initcall(blub);
 
 /***********************************************************************
  ** Test 1: Check whether the current() macro works.                  **
@@ -236,7 +235,7 @@ static void timer_test(void)
 	l4dde26_init_timers();
 
 	printk("BEGIN TIMER TEST\n");
-	printk("jiffies(%p): %ld, HZ(%p): %ld\n", &jiffies, jiffies, &HZ, HZ);
+	printk("jiffies: %ld, HZ: %ld\n", jiffies, HZ);
 
 	setup_timer(&_timer, tick_func, 0);
 	_timer.expires = jiffies + HZ;
@@ -441,28 +440,8 @@ int main(int argc, const char **argv)
 	int test_pci = 1;
 
 	msleep(1000);
-
-	if (parse_cmdline(&argc, &argv,
-                'c', "current", "test current() function",
-                PARSE_CMD_SWITCH, 1, &test_current,
-                'k', "kernel-thread", "test startup of kernel threads",
-                PARSE_CMD_SWITCH, 1, &test_kernel_thread,
-                'w', "waitqueue", "test wait queues",
-                PARSE_CMD_SWITCH, 1, &test_wait,
-                't', "tasklet", "test tasklets",
-                PARSE_CMD_SWITCH, 1, &test_tasklet,
-                'T', "timer", "test timers",
-                PARSE_CMD_SWITCH, 1, &test_timer,
-                'm', "memory", "test memory management",
-                PARSE_CMD_SWITCH, 1, &test_memory,
-                'K', "kthread", "test kthreads",
-                PARSE_CMD_SWITCH, 1, &test_kthread,
-                'W', "workqueue", "test work queues",
-                PARSE_CMD_SWITCH, 1, &test_work,
-                'p', "pci", "test PCI stuff",
-                PARSE_CMD_SWITCH, 1, &test_pci,
-                0, 0))
-		return 1;
+	
+	l4dde26_do_initcalls ();
 
 	printk("DDEKit test. Carrying out tests:\n");
 	printk("\t* current()\n");
@@ -495,8 +474,6 @@ int main(int argc, const char **argv)
 	if (test_work) work_queue_test();
 //	if (test_pci) pci_test();
 	printk("Test done.\n");
-
-	l4_sleep_forever();
 
 	return 0;
 }
