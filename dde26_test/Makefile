@@ -1,21 +1,20 @@
-PKGDIR        ?= ../../..
-L4DIR         ?= $(PKGDIR)/../..
+PKGDIR        ?= ../libdde_linux26
+L4DIR         ?= $(PKGDIR)
 
 SYSTEMS        = x86-l4v2
 
 DEFAULT_RELOC  = 0x00a00000
 
--include $(PKGDIR_OBJ)/Makeconf
+include Makeconf.local
 
-ifeq ($(CONFIG_DDE26_COMMON),y)
 TARGET         = dde26_test
-endif
 
 SRC_C          = main.c
 
-LIBS          += -ldde_linux26.o -lddekit -lio -llist_alloc -lparsecmdline
+LIBS          += -ldde_linux26.o -ldde_linux26_block -ldde_linux26_char -ldde_linux26_net -lddekit
+CFLAGS        += -g
 
 # DDE configuration
-include $(PKGDIR)/linux26/Makeconf
+include $(L4DIR)/Makeconf
 
 include $(L4DIR)/mk/prog.mk
