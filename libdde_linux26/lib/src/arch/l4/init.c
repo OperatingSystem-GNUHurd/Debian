@@ -47,6 +47,7 @@ void l4dde26_do_initcalls(void)
 //	ddekit_do_initcalls();
 	/* 1000: pure_, core_ */
 	l4dde26_init ();
+	l4dde26_process_init ();
 	l4dde26_init_timers ();
 	net_ns_init ();
 	dde_page_cache_init ();
