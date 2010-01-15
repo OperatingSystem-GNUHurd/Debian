@@ -77,6 +77,7 @@ struct mutex_waiter {
 # include <linux/mutex-debug.h>
 #else
 # define __DEBUG_MUTEX_INITIALIZER(lockname)
+#define __mutex_init __dde_mutex_init
 # define mutex_init(mutex) \
 do {							\
 	static struct lock_class_key __key;		\
@@ -102,10 +103,9 @@ do {							\
 
 #define DEFINE_MUTEX(mutexname) \
 	struct mutex mutexname = __MUTEX_INITIALIZER(mutexname)
-#define HIDDEN __attribute__ ((visibility("hidden")))
 
-extern void HIDDEN __mutex_init(struct mutex *lock, const char *name,
-			 struct lock_class_key *key);
+extern void __dde_mutex_init(struct mutex *lock, const char *name,
+			     struct lock_class_key *key);
 
 /**
  * mutex_is_locked - is the mutex locked

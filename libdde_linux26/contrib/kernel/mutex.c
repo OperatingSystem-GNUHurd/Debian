@@ -41,7 +41,8 @@
  * It is not allowed to initialize an already locked mutex.
  */
 void
-__mutex_init(struct mutex *lock, const char *name, struct lock_class_key *key)
+__dde_mutex_init(struct mutex *lock, const char *name,
+		 struct lock_class_key *key)
 {
 	atomic_set(&lock->count, 1);
 	spin_lock_init(&lock->wait_lock);
@@ -50,7 +51,7 @@ __mutex_init(struct mutex *lock, const char *name, struct lock_class_key *key)
 	debug_mutex_init(lock, name, key);
 }
 
-EXPORT_SYMBOL(__mutex_init);
+EXPORT_SYMBOL(__dde_mutex_init);
 
 #ifndef CONFIG_DEBUG_LOCK_ALLOC
 /*

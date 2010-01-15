@@ -10,7 +10,7 @@
 
 #define __DEBUG_MUTEX_INITIALIZER(lockname)				\
 	, .magic = &lockname
-
+#define __mutex_init __dde_mutex_init
 #define mutex_init(mutex)						\
 do {									\
 	static struct lock_class_key __key;				\
