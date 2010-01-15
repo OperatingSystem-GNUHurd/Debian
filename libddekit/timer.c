@@ -34,7 +34,6 @@ typedef struct _timer
 
 static ddekit_timer_t  *timer_list          = NULL; ///< list of pending timers
 static ddekit_lock_t   timer_lock;		    ///< lock to access timer_list
-static cthread_t       timer_thread;                     ///< the timer thread
 static ddekit_thread_t *timer_thread_ddekit = NULL; ///< ddekit ID of timer thread
 static ddekit_sem_t    *notify_semaphore    = NULL; ///< timer thread's wait semaphore
 
@@ -77,7 +76,7 @@ static inline void __notify_timer_thread(void)
 	 * XXX: Perhaps we should better assert that there is a timer
 	 *      thread before allowing users to add a timer.
 	 */
-	if (timer_thread == NULL)
+	if (timer_thread_ddekit == NULL)
 		return;
 
 	ddekit_sem_up(notify_semaphore);
@@ -125,7 +124,7 @@ int ddekit_add_timer(void (*fn)(void *), void *args, unsigned long timeout)
 	 * necessary to notify the timer thread.
 	 */
 	if (t == timer_list) {
-		Assert(timer_thread);
+		Assert(timer_thread_ddekit);
 		__notify_timer_thread();
 	}
 
@@ -229,7 +228,7 @@ static ddekit_timer_t *get_next_timer(void)
 	ddekit_timer_t *t = NULL;
 
 	/* This function must be called with the timer_lock held. */
-	Assert(ddekit_lock_owner (&timer_lock) == (int) timer_thread);
+	Assert(ddekit_lock_owner (&timer_lock) == (int) timer_thread_ddekit);
 
 	if (timer_list &&
 	   (timer_list->expires <= jiffies)) {
@@ -279,8 +278,6 @@ static inline int __timer_sleep(unsigned to)
 
 static void ddekit_timer_thread(void *arg)
 {
-	timer_thread_ddekit = ddekit_thread_setup_myself("ddekit_timer");
-	
 	notify_semaphore = ddekit_sem_init(0);
 #if 0
 	l4thread_set_prio(l4thread_myself(), 0x11);
@@ -342,6 +339,6 @@ void ddekit_init_timers(void)
     + ((long long) tp.tv_usec * HZ) / 1000000;
 
   ddekit_lock_init (&timer_lock);
-  timer_thread = cthread_fork ((cthread_fn_t) ddekit_timer_thread, 0);
-  cthread_detach (timer_thread);
+  timer_thread_ddekit = ddekit_thread_create (ddekit_timer_thread,
+					      NULL, "ddekit_timer");
 }
