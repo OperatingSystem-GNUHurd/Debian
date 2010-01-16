@@ -101,7 +101,7 @@ static struct elevator_type elevator_noop = {
 	.elevator_owner = THIS_MODULE,
 };
 
-int __init noop_init(void)
+static int __init noop_init(void)
 {
 	DEBUG_MSG("here!");
 	elv_register(&elevator_noop);
@@ -114,7 +114,7 @@ static void __exit noop_exit(void)
 	elv_unregister(&elevator_noop);
 }
 
-//subsys_initcall(noop_init);
+subsys_initcall(noop_init);
 module_exit(noop_exit);
 
 

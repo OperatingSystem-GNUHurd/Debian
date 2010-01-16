@@ -2810,7 +2810,7 @@ EXPORT_SYMBOL(neigh_sysctl_unregister);
 
 #endif	/* CONFIG_SYSCTL */
 
-int __init neigh_init(void)
+static int __init neigh_init(void)
 {
 	rtnl_register(PF_UNSPEC, RTM_NEWNEIGH, neigh_add, NULL);
 	rtnl_register(PF_UNSPEC, RTM_DELNEIGH, neigh_delete, NULL);
@@ -2822,5 +2822,5 @@ int __init neigh_init(void)
 	return 0;
 }
 
-//subsys_initcall(neigh_init);
+subsys_initcall(neigh_init);
 

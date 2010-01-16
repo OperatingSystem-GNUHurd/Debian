@@ -1592,7 +1592,7 @@ static void __init biovec_init_slabs(void)
 	}
 }
 
-int __init init_bio(void)
+static int __init init_bio(void)
 {
 	bio_slab_max = 2;
 	bio_slab_nr = 0;
@@ -1615,7 +1615,7 @@ int __init init_bio(void)
 	return 0;
 }
 
-//subsys_initcall(init_bio);
+subsys_initcall(init_bio);
 
 EXPORT_SYMBOL(bio_alloc);
 EXPORT_SYMBOL(bio_kmalloc);

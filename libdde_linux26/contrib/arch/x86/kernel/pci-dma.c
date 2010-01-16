@@ -263,7 +263,7 @@ int dma_supported(struct device *dev, u64 mask)
 }
 EXPORT_SYMBOL(dma_supported);
 
-int __init pci_iommu_init(void)
+static int __init pci_iommu_init(void)
 {
 	calgary_iommu_init();
 
@@ -282,7 +282,7 @@ void pci_iommu_shutdown(void)
 	gart_iommu_shutdown();
 }
 /* Must execute after PCI subsystem */
-//fs_initcall(pci_iommu_init);
+fs_initcall(pci_iommu_init);
 
 #ifdef CONFIG_PCI
 /* Many VIA bridges seem to corrupt data for DAC. Disable it here */

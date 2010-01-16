@@ -792,7 +792,7 @@ static struct kobject *base_probe(dev_t devt, int *partno, void *data)
 	return NULL;
 }
 
-int __init genhd_device_init(void)
+static int __init genhd_device_init(void)
 {
 	int error;
 
@@ -812,7 +812,7 @@ int __init genhd_device_init(void)
 	return 0;
 }
 
-//subsys_initcall(genhd_device_init);
+subsys_initcall(genhd_device_init);
 
 static ssize_t disk_range_show(struct device *dev,
 			       struct device_attribute *attr, char *buf)

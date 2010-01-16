@@ -1034,5 +1034,5 @@ void __init init_workqueues(void)
 }
 
 #ifdef DDE_LINUX
-//core_initcall(init_workqueues);
+core_initcall(init_workqueues);
 #endif

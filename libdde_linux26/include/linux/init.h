@@ -2,7 +2,7 @@
 #define _LINUX_INIT_H
 
 #ifdef DDE_LINUX
-//#include <ddekit/initcall.h>
+#include <ddekit/initcall.h>
 #endif
 #include <linux/compiler.h>
 
@@ -184,7 +184,7 @@ extern void (*late_time_init)(void);
 #else // DDE_LINUX
 // XXX: DDE CTORs are executed in reverse order as was done by
 //      Linux' initcalls in earlier versions
-//#include <l4/dde/ddekit/initcall.h>
+#include <ddekit/initcall.h>
 #define __define_initcall(level,fn,id) DDEKIT_CTOR(fn,level)
 #endif
 

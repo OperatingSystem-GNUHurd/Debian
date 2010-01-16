@@ -100,11 +100,11 @@ static struct class pcibus_class = {
 	.dev_release	= &release_pcibus_dev,
 };
 
-int __init pcibus_class_init(void)
+static int __init pcibus_class_init(void)
 {
 	return class_register(&pcibus_class);
 }
-//postcore_initcall(pcibus_class_init);
+postcore_initcall(pcibus_class_init);
 
 /*
  * Translate the low bits of the PCI base

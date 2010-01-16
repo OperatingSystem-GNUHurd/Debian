@@ -556,7 +556,7 @@ void __init chrdev_init(void)
 }
 
 #ifndef LIBINPUT
-//core_initcall(chrdev_init);
+core_initcall(chrdev_init);
 #endif
 
 /* Let modules do char dev stuff */

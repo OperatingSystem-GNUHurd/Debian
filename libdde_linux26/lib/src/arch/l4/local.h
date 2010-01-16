@@ -6,7 +6,7 @@
 #include <ddekit/assert.h>
 #include <ddekit/condvar.h>
 #include <ddekit/debug.h>
-//#include <ddekit/initcall.h>
+#include <ddekit/initcall.h>
 #include <ddekit/interrupt.h>
 #include <ddekit/lock.h>
 #include <ddekit/memory.h>

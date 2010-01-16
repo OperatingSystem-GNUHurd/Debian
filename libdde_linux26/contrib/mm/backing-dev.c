@@ -159,7 +159,7 @@ static struct device_attribute bdi_dev_attrs[] = {
 	__ATTR_NULL,
 };
 
-__init int bdi_class_init(void)
+static __init int bdi_class_init(void)
 {
 	bdi_class = class_create(THIS_MODULE, "bdi");
 	bdi_class->dev_attrs = bdi_dev_attrs;
@@ -167,7 +167,7 @@ __init int bdi_class_init(void)
 	return 0;
 }
 
-//postcore_initcall(bdi_class_init);
+postcore_initcall(bdi_class_init);
 
 int bdi_register(struct backing_dev_info *bdi, struct device *parent,
 		const char *fmt, ...)
