@@ -80,6 +80,7 @@ endif
 LDFLAGS += -Wl,-gc-sections
 #endif
 #endif
+LDFLAGS += -Wl,-Tdefault.ld
 
 #include $(L4DIR)/mk/install.inc
 
