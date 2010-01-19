@@ -441,6 +441,8 @@ int main(int argc, const char **argv)
 
 	msleep(1000);
 	
+	l4dde26_init ();
+	l4dde26_process_init ();
 	l4dde26_do_initcalls ();
 
 	printk("DDEKit test. Carrying out tests:\n");
