@@ -10,7 +10,10 @@
 *.so
 *.a
 *.sdefsi
+Makefile.inc
+*.cpy
 
+dde26_test/dde26_test
 auth/auth
 boot/boot
 console-client/console
