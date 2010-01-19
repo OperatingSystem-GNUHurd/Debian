@@ -79,7 +79,7 @@ struct chunkhdr
 };
 
 static unsigned long __get_free_pages (unsigned long order, int dma);
-void free_pages (unsigned long addr, unsigned long order);
+static void free_pages (unsigned long addr, unsigned long order);
 
 static struct mutex mem_lock = MUTEX_INITIALIZER;
 
@@ -277,6 +277,8 @@ linux_kmalloc (unsigned int size, int priority)
 	if (pages_free[i].end == 0)
 	  break;
 
+      // TODO use a dynamically allocated memory to
+      // record directly allocated large memory.
       assert (i < MEM_CHUNKS_TOTAL);
       size = ROUND_UP (size);
       err = vm_dma_buff_alloc (priv_host, mach_task_self (), size,
