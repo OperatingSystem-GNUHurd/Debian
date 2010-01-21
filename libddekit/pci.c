@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <error.h>
 #include <pciaccess.h>
 
 #include "ddekit/assert.h"
@@ -37,8 +38,13 @@ void ddekit_pci_init(void)
 {
 	int slots_found = 0;
 	int i;
+	int err;
 	struct pci_device *pci_dev;
 	struct pci_device_iterator *dev_iter;
+
+	err = pci_system_init ();
+	if (err)
+		error (2, err, "pci_system_init");
 
 	/* Init device list */
 	for (i = 0; i < MAX_PCI_DEVS; i++)
