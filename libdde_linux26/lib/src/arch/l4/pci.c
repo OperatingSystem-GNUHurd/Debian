@@ -26,6 +26,7 @@ static LIST_HEAD(pcidev_mappings);
 
 /** PCI bus */
 static struct pci_bus *pci_bus = NULL;
+static struct pci_bus *pci_bus1 = NULL;
 
 static int l4dde26_pci_read(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
 static int l4dde26_pci_write(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
@@ -178,10 +179,17 @@ void __init l4dde26_init_pci(void)
 {
 	ddekit_pci_init();
 
+	// TODO it's a temporary solution to handle 2 buses.
+	// we need to find a way to detect buses.
 	pci_bus = pci_create_bus(NULL, 0, &dde_pcibus_ops, NULL);
 	Assert(pci_bus);
 
 	pci_do_scan_bus(pci_bus);
+
+	pci_bus1 = pci_create_bus(NULL, 2, &dde_pcibus_ops, NULL);
+	Assert(pci_bus1);
+
+	pci_do_scan_bus(pci_bus1);
 
 	INITIALIZE_INITVAR(dde26_pci);
 }
