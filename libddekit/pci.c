@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <error.h>
+#include <string.h>
 #include <pciaccess.h>
 
 #include "ddekit/assert.h"
@@ -9,22 +10,26 @@
 
 #define dbg_this 0
 
-#define MAX_PCI_DEVS 32
-
 /** PCI descriptor */
 typedef struct ddekit_pci_dev {
-	int bus;                      /**< bus ID */
-	int slot;                     /**< slot ID */
-	int func;                     /**< function */
 	struct pci_device *dev;
-	struct ddekit_pci_dev *next;  /**< chaining info */
 } ddekit_pci_dev_t;
 
-static ddekit_pci_dev_t ddekit_pci_bus[MAX_PCI_DEVS];
+typedef struct ddekit_pci_bus {
+	struct {
+		ddekit_pci_dev_t funs[8];
+	} devs[32];
+} ddekit_pci_bus_t;
+
+#define MAX_NUM_BUSES 256
+
+static int num_pci_devs;
+static ddekit_pci_dev_t *ddekit_pci_devs;
+static ddekit_pci_bus_t *ddekit_pci_buses[MAX_NUM_BUSES];
 
 static inline int invalid_device(ddekit_pci_dev_t *d)
 {
-	return d->slot == -1;
+	return d->dev == NULL;
 }
 
 
@@ -37,7 +42,6 @@ static inline int invalid_device(ddekit_pci_dev_t *d)
 void ddekit_pci_init(void)
 {
 	int slots_found = 0;
-	int i;
 	int err;
 	struct pci_device *pci_dev;
 	struct pci_device_iterator *dev_iter;
@@ -46,25 +50,35 @@ void ddekit_pci_init(void)
 	if (err)
 		error (2, err, "pci_system_init");
 
-	/* Init device list */
-	for (i = 0; i < MAX_PCI_DEVS; i++)
-		ddekit_pci_bus[i].slot = -1;
-
+	num_pci_devs = 32;
+	ddekit_pci_devs = malloc (sizeof (ddekit_pci_devs[0]) * num_pci_devs);
+	memset (ddekit_pci_devs, 0,
+		sizeof (ddekit_pci_devs[0]) * num_pci_devs);
 	dev_iter = pci_slot_match_iterator_create (NULL);
 	while ((pci_dev = pci_device_next (dev_iter)) != NULL) {
-		if (slots_found == MAX_PCI_DEVS) {
-			ddekit_printf ("find more than %d pci devices",
-				       slots_found);
-			break;
+		/* store the device in the structured array. */
+		if (ddekit_pci_buses[pci_dev->bus] == NULL) {
+			ddekit_pci_buses[pci_dev->bus] = calloc (1, sizeof (**ddekit_pci_buses));
+			assert(ddekit_pci_buses[pci_dev->bus] != NULL);
 		}
-		/* Pretend all our devices are chained to exactly one bus. */
-		ddekit_pci_bus[slots_found].bus   = 0; /*l4dev.bus;*/
-		ddekit_pci_bus[slots_found].slot  = slots_found;
-		ddekit_pci_bus[slots_found].func  = 0;
-		ddekit_pci_bus[slots_found].dev = pci_dev;
+		ddekit_pci_buses[pci_dev->bus]->devs[pci_dev->dev].funs[pci_dev->func].dev = pci_dev;
 
+		/* We also put the device in the flat array.
+		 * The array is increased dynamically. */
+		if (slots_found >= num_pci_devs) {
+			num_pci_devs *= 2;
+			ddekit_pci_devs = realloc (ddekit_pci_devs,
+						   sizeof (ddekit_pci_devs[0])
+						   * num_pci_devs);
+			assert (ddekit_pci_devs != NULL);
+			memset (&ddekit_pci_devs[slots_found], 0,
+				(num_pci_devs - slots_found)
+				* sizeof (ddekit_pci_devs[0]));
+		}
+		ddekit_pci_devs[slots_found].dev = pci_dev;
 		++slots_found;
 	}
+	num_pci_devs = slots_found;
 	pci_iterator_destroy (dev_iter);
 }
 
@@ -80,11 +94,12 @@ int ddekit_pci_get_device(int nr, int *bus, int *slot, int *func)
 
 	ddekit_printf ("searching for dev #%d", nr);
 
-	if (nr >= 0 && nr < MAX_PCI_DEVS && !invalid_device(&ddekit_pci_bus[nr])) {
-		dev = &ddekit_pci_bus[nr];
-		*bus = dev->bus;
-		*slot = dev->slot;
-		*func = dev->func;
+	if (nr >= 0 && nr < num_pci_devs
+	    && !invalid_device(&ddekit_pci_devs[nr])) {
+		dev = &ddekit_pci_devs[nr];
+		*bus = dev->dev->bus;
+		*slot = dev->dev->dev;
+		*func = dev->dev->func;
 		return 0;
 	}
 
@@ -99,19 +114,17 @@ ddekit_pci_dev_t *ddekit_pci_find_device(int *bus, int *slot, int *func,
 	Assert(slot);
 	Assert(func);
 
-	ddekit_printf ("start %p (slot %d)",
-		       start, start ? start->slot : -1);
-	int idx = start ? start->slot + 1 : 0;
+	int idx = start ? start->dev->dev + 1 : 0;
 	
-	for ( ; idx < MAX_PCI_DEVS; ++idx) {
-	    ddekit_pci_dev_t *dev = &ddekit_pci_bus[idx];
+	for ( ; idx < num_pci_devs; ++idx) {
+	    ddekit_pci_dev_t *dev = &ddekit_pci_devs[idx];
 		if (!invalid_device(dev) &&
-			(*bus == DDEKIT_PCI_ANY_ID || dev->bus == *bus) &&
-		    (*slot == DDEKIT_PCI_ANY_ID || dev->slot == *slot) &&
-		    (*func == DDEKIT_PCI_ANY_ID || dev->func == *func)) {
-			*bus = dev->bus;
-			*slot = dev->slot;
-			*func = dev->func;
+			(*bus == DDEKIT_PCI_ANY_ID || dev->dev->bus == *bus) &&
+		    (*slot == DDEKIT_PCI_ANY_ID || dev->dev->dev == *slot) &&
+		    (*func == DDEKIT_PCI_ANY_ID || dev->dev->func == *func)) {
+			*bus = dev->dev->bus;
+			*slot = dev->dev->dev;
+			*func = dev->dev->func;
 			return dev;
 		}
 	}
@@ -160,7 +173,16 @@ int ddekit_pci_write(int bus, int slot, int func, int pos, int len, ddekit_uint3
  */
 static inline ddekit_pci_dev_t *ddekit_pci_find_device_fixed(int bus, int slot, int func)
 {
-	return &ddekit_pci_bus[slot];
+	ddekit_pci_dev_t *dev;
+	
+	/* If the bus doesn't exist. */
+	if (ddekit_pci_buses[bus] == NULL)
+		return NULL;
+
+	dev = &ddekit_pci_buses[bus]->devs[slot].funs[func];
+	if (dev && dev->dev)
+		return dev;
+	return NULL;
 }
 
 
@@ -187,8 +209,10 @@ int ddekit_pci_readw (int bus, int slot, int func, int pos, ddekit_uint16_t *val
 int ddekit_pci_readl (int bus, int slot, int func, int pos, ddekit_uint32_t *val)
 {
 	ddekit_pci_dev_t *dev = ddekit_pci_find_device_fixed(bus, slot, func);
-	if (dev)
+	if (dev) {
+		assert (dev->dev != NULL);
 		return pci_device_cfg_read_u32 (dev->dev, val, pos);
+	}
 	else
 		return -1;
 }
