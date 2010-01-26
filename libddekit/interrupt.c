@@ -70,9 +70,14 @@ static void intloop(void *arg)
 {
 	kern_return_t ret;
 	struct intloop_params *params = arg;
-	mach_port_t delivery_port = mach_port_reply ();
+	mach_port_t delivery_port;
 	mach_port_t pset, psetcntl;
 	int my_index;
+
+	ret = mach_port_allocate (mach_task_self (), MACH_PORT_RIGHT_RECEIVE,
+				  &delivery_port);
+	if (ret)
+	  error (2, ret, "mach_port_allocate");
 
 	my_index = params->irq;
 	ddekit_irq_ctrl[my_index].mach_thread = mach_thread_self ();
