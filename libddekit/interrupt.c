@@ -60,6 +60,7 @@ static struct
 } ddekit_irq_ctrl[MAX_INTERRUPTS];
 
 static mach_port_t master_device;
+static mach_port_t master_host;
 
 /**
  * Interrupt service loop
@@ -69,11 +70,19 @@ static void intloop(void *arg)
 {
 	kern_return_t ret;
 	struct intloop_params *params = arg;
-	mach_port_t      delivery_port = mach_reply_port ();
+	mach_port_t delivery_port = mach_port_reply ();
+	mach_port_t pset, psetcntl;
 	int my_index;
 
 	my_index = params->irq;
 	ddekit_irq_ctrl[my_index].mach_thread = mach_thread_self ();
+	ret = thread_get_assignment (mach_thread_self (), &pset);
+	if (ret)
+		error (0, ret, "thread_get_assignment");
+	ret = host_processor_set_priv (master_host, pset, &psetcntl);
+	if (ret)
+		error (0, ret, "host_processor_set_priv");
+	thread_max_priority (mach_thread_self (), psetcntl, 0);
 	ret = thread_priority (mach_thread_self (), DDEKIT_IRQ_PRIO, 0);
 	if (ret)
 		error (0, ret, "thread_priority");
@@ -257,7 +266,7 @@ void interrupt_init ()
 	
 	error_t err;
 
-	err = get_privileged_ports (0, &master_device);
+	err = get_privileged_ports (&master_host, &master_device);
 	if (err)
 		error (1, err, "get_privileged_ports");
 }
