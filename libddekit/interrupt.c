@@ -103,6 +103,7 @@ static void intloop(void *arg)
 		params->start_err = ret;
 		ddekit_sem_up(params->started);
 	}
+	device_irq_enable (master_device, params->irq, TRUE);
 
 #if 0
 	/* 
@@ -140,6 +141,9 @@ static void intloop(void *arg)
 			ddekit_printf ("IRQ %x, handler %p",
 				       my_index,params->handler);
 			params->handler(params->priv);
+			/* If the irq has been disabled by the linux device,
+			 * we don't need to reenable the real one. */
+			device_irq_enable (master_device, my_index, TRUE);
 		}
 		else
 			ddekit_printf ("not handling IRQ %x, because it is disabled.",
