@@ -106,7 +106,6 @@ int main(int argc, char **argv)
 
 	close_nw_dev();
 
-	pci_unregister_driver(&ne2k_driver);
 	printk("shut down driver\n");
 
 	return 0;
