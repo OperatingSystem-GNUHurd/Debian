@@ -16,7 +16,7 @@
 #define ETH_ALEN          6
 
 /* configuration */
-int arping_verbose = 0;  // verbose
+int arping_verbose = 1;  // verbose
 
 #define VERBOSE_LOG(fmt, ...) \
 	do { \
@@ -150,7 +150,7 @@ static int handle_icmp_packet(struct sk_buff *skb)
 	snd_skb->len = skb->len;
 
 	VERBOSE_LOG("sending reply\n");
-	skb->dev->hard_start_xmit(snd_skb, skb->dev);
+	skb->dev->netdev_ops->ndo_start_xmit(snd_skb, skb->dev);
 	VERBOSE_LOG("done\n");
 
 	return 0;
