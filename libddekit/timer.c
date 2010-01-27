@@ -89,7 +89,6 @@ int ddekit_add_timer(void (*fn)(void *), void *args, unsigned long timeout)
 	ddekit_timer_t *t = ddekit_simple_malloc(sizeof(ddekit_timer_t));
 
 	Assert(t);
-	printf ("add a timer at %ld\n", timeout);
 
 	/* fill in values */
 	t->fn      = fn;
