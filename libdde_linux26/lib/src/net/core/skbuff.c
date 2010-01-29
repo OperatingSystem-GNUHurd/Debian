@@ -421,6 +421,11 @@ static void skb_release_all(struct sk_buff *skb)
 
 void __kfree_skb(struct sk_buff *skb)
 {
+#ifdef DDE_LINUX
+	if (skb->del_data && skb->pre_del_func
+	    && skb->pre_del_func(skb, skb->del_data))
+		return;
+#endif
 	skb_release_all(skb);
 	kfree_skbmem(skb);
 }
@@ -436,6 +441,12 @@ void kfree_skb(struct sk_buff *skb)
 {
 	if (unlikely(!skb))
 		return;
+#ifdef DDE_LINUX
+	if (atomic_read(&skb->users) == 0) {
+		__kfree_skb(skb);
+		return;
+	}
+#endif
 	if (likely(atomic_read(&skb->users) == 1))
 		smp_rmb();
 	else if (likely(!atomic_dec_and_test(&skb->users)))

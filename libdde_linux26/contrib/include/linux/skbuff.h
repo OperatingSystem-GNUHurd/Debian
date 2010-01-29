@@ -354,6 +354,11 @@ struct sk_buff {
 				*data;
 	unsigned int		truesize;
 	atomic_t		users;
+	
+#ifdef DDE_LINUX
+	void			*del_data;
+	int (*pre_del_func) (struct sk_buff *, void *);
+#endif
 };
 
 #ifdef __KERNEL__

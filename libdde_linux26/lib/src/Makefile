@@ -150,6 +150,7 @@ SRC_C_libdde_linux26.o.a += \
 ##################################################################
 SRC_C_libdde_linux26_net.a += \
                               arch/l4/net.c \
+			      arch/l4/mach_glue.c \
                               drivers/net/mii.c \
                               net/core/dev.c \
                               net/core/dev_mcast.c \
