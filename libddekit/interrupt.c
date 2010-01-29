@@ -138,8 +138,6 @@ static void intloop(void *arg)
 		/* only call registered handler function, if IRQ is not disabled */
 		ddekit_lock_lock (&ddekit_irq_ctrl[my_index].irqlock);
 		if (ddekit_irq_ctrl[my_index].handle_irq > 0) {
-			ddekit_printf ("IRQ %x, handler %p",
-				       my_index,params->handler);
 			params->handler(params->priv);
 			/* If the irq has been disabled by the linux device,
 			 * we don't need to reenable the real one. */
