@@ -326,8 +326,7 @@ device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
   nd = search_nd (dev);
   if (!nd)
     {
-      err = ports_create_port (dev_class, port_bucket,
-			       sizeof (*nd), &nd);
+      err = create_device_port (sizeof (*nd), &nd);
       if (err)
 	goto out;
 	
