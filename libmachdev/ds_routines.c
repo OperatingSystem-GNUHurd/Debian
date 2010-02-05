@@ -260,7 +260,10 @@ ds_device_write (device_t dev, mach_port_t reply_port,
   device = mach_convert_port_to_device (dev);
 
   if (! device->emul_ops->write)
-    return D_INVALID_OPERATION;
+    {
+      ports_port_deref (device_to_pi (device));
+      return D_INVALID_OPERATION;
+    }
 
   ret = (*device->emul_ops->write) (device->emul_data, reply_port,
 				    reply_port_type, mode, recnum,
@@ -290,7 +293,10 @@ ds_device_write_inband (device_t dev, mach_port_t reply_port,
   device = mach_convert_port_to_device (dev);
 
   if (! device->emul_ops->write_inband)
-    return D_INVALID_OPERATION;
+    {
+      ports_port_deref (device_to_pi (device));
+      return D_INVALID_OPERATION;
+    }
 
   ret = (*device->emul_ops->write_inband) (device->emul_data, reply_port,
 					   reply_port_type, mode, recnum,
@@ -316,7 +322,10 @@ ds_device_read (device_t dev, mach_port_t reply_port,
   device = mach_convert_port_to_device (dev);
 
   if (! device->emul_ops->read)
-    return D_INVALID_OPERATION;
+    {
+      ports_port_deref (device_to_pi (device));
+      return D_INVALID_OPERATION;
+    }
 
   ret = (*device->emul_ops->read) (device->emul_data, reply_port,
 				   reply_port_type, mode, recnum,
@@ -341,7 +350,10 @@ ds_device_read_inband (device_t dev, mach_port_t reply_port,
   device = mach_convert_port_to_device (dev);
 
   if (! device->emul_ops->read_inband)
-    return D_INVALID_OPERATION;
+    {
+      ports_port_deref (device_to_pi (device));
+      return D_INVALID_OPERATION;
+    }
 
   ret = (*device->emul_ops->read_inband) (device->emul_data, reply_port,
 					  reply_port_type, mode, recnum,
@@ -364,7 +376,10 @@ ds_device_set_status (device_t dev, dev_flavor_t flavor,
   device = mach_convert_port_to_device (dev);
 
   if (! device->emul_ops->set_status)
-    return D_INVALID_OPERATION;
+    {
+      ports_port_deref (device_to_pi (device));
+      return D_INVALID_OPERATION;
+    }
 
   ret = (*device->emul_ops->set_status) (device->emul_data, flavor,
 					 status, status_count);
@@ -386,7 +401,10 @@ ds_device_get_status (device_t dev, dev_flavor_t flavor, dev_status_t status,
   device = mach_convert_port_to_device (dev);
 
   if (! device->emul_ops->get_status)
-    return D_INVALID_OPERATION;
+    {
+      ports_port_deref (device_to_pi (device));
+      return D_INVALID_OPERATION;
+    }
 
   ret = (*device->emul_ops->get_status) (device->emul_data, flavor,
 					 status, status_count);
@@ -408,7 +426,10 @@ ds_device_set_filter (device_t dev, mach_port_t receive_port, int priority,
   device = mach_convert_port_to_device (dev);
 
   if (! device->emul_ops->set_filter)
-    return D_INVALID_OPERATION;
+    {
+      ports_port_deref (device_to_pi (device));
+      return D_INVALID_OPERATION;
+    }
 
   ret = (*device->emul_ops->set_filter) (device->emul_data, receive_port,
 					 priority, filter, filter_count);
