@@ -292,33 +292,12 @@ void ddekit_init_threads() {
 
 /* Block THREAD.  */
 static error_t _timedblock (struct _ddekit_private_data *data,
-			    const struct timespec *abstime)
+			    const int timeout)
 {
 	error_t err;
 	mach_msg_header_t msg;
-	mach_msg_timeout_t timeout;
-	struct timeval now;
 
-	/* We have an absolute time and now we have to convert it to a
-	   relative time.  Arg.  */
-
-	err = gettimeofday(&now, NULL);
-	assert (! err);
-
-	if (now.tv_sec > abstime->tv_sec
-	    || (now.tv_sec == abstime->tv_sec
-		&& now.tv_usec > ((abstime->tv_nsec + 999) / 1000)))
-		return ETIMEDOUT;
-
-	timeout = (abstime->tv_sec - now.tv_sec) * 1000;
-
-	if (((abstime->tv_nsec + 999) / 1000) >= now.tv_usec)
-		timeout -= (((abstime->tv_nsec + 999) / 1000)
-			    - now.tv_usec + 999) / 1000;
-	else
-		/* Need to do a carry.  */
-		timeout -= 1000 + ((abstime->tv_nsec + 999999) / 1000000)
-		  - (now.tv_usec + 999) / 1000;
+	assert (timeout > 0);
 
 	err = mach_msg (&msg, MACH_RCV_MSG | MACH_RCV_TIMEOUT, 0,
 			sizeof msg, data->wakeupmsg.msgh_remote_port,
@@ -343,7 +322,7 @@ static void _block (struct _ddekit_private_data *data)
 }
 
 static int _sem_timedwait_internal (ddekit_sem_t *restrict sem,
-				    const struct timespec *restrict timeout)
+				    const int timeout)
 {
 	struct _ddekit_private_data *self_private_data;
 
@@ -355,8 +334,7 @@ static int _sem_timedwait_internal (ddekit_sem_t *restrict sem,
 		return 0;
 	}
 
-	if (timeout && (timeout->tv_nsec < 0
-			|| timeout->tv_nsec >= 1000000000)) {
+	if (timeout < 0) {
 		errno = EINVAL;
 		return -1;
 	}
@@ -428,7 +406,7 @@ void ddekit_sem_deinit(ddekit_sem_t *sem) {
 }
 
 void ddekit_sem_down(ddekit_sem_t *sem) {
-	_sem_timedwait_internal (sem, NULL);
+	_sem_timedwait_internal (sem, 0);
 }
 
 /* returns 0 on success, != 0 when it would block */
@@ -448,11 +426,7 @@ int  ddekit_sem_down_try(ddekit_sem_t *sem) {
 /* returns 0 on success, != 0 on timeout */
 int  ddekit_sem_down_timed(ddekit_sem_t *sem, int timo) {
 	/* wait for up to timo milliseconds */
-	struct timespec timeout;
-
-	timeout.tv_sec = timo / 1000;
-	timeout.tv_nsec = (timo % 1000) * 1000 * 1000;
-	return _sem_timedwait_internal (sem, &timeout);
+	return _sem_timedwait_internal (sem, timo);
 }
 
 void ddekit_sem_up(ddekit_sem_t *sem) {
