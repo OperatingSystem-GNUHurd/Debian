@@ -12,6 +12,7 @@ void netif_rx_handle (char *data, int len, struct net_device *dev);
 
 int main(int argc, char **argv)
 {
+	extern void ds_server(void);
 	l4dde26_init();
 	l4dde26_process_init();
 	l4dde26_softirq_init();
@@ -23,6 +24,8 @@ int main(int argc, char **argv)
 
 	mach_device_init();
 	trivfs_init();
+
+	cthread_detach (cthread_fork (ds_server, NULL));
 	trivfs_server();
 
 	return 0;
