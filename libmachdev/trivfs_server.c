@@ -6,7 +6,7 @@
 #include <hurd/trivfs.h>
 #include <hurd.h>
 
-extern struct port_bucket *port_bucket;
+static struct port_bucket *port_bucket;
 
 /* Trivfs hooks.  */
 int trivfs_fstype = FSTYPE_MISC;
@@ -77,6 +77,7 @@ is_master_device (mach_port_t port)
 
 int trivfs_init()
 {
+  port_bucket = ports_create_bucket ();
   trivfs_cntl_portclasses[0] = ports_create_class (trivfs_clean_cntl, 0);
   trivfs_protid_portclasses[0] = ports_create_class (trivfs_clean_protid, 0);
   return 0;
@@ -115,10 +116,14 @@ trivfs_goaway (struct trivfs_control *fsys, int flags)
 static int
 demuxer (mach_msg_header_t *inp, mach_msg_header_t *outp)
 {
+  int ret;
   extern int device_server (mach_msg_header_t *, mach_msg_header_t *);
   extern int notify_server (mach_msg_header_t *, mach_msg_header_t *);
-  return device_server (inp, outp) || notify_server (inp, outp)
+  fprintf (stderr, "before trivfs demuxer\n");
+  ret = device_server (inp, outp) || notify_server (inp, outp)
     || trivfs_demuxer (inp, outp);
+  fprintf (stderr, "after trivfs demuxer\n");
+  return ret;
 }
 
 void
