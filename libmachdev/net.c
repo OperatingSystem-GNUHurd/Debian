@@ -204,6 +204,8 @@ pre_kfree_skb (struct sk_buff *skb, void *data)
       wakeup_io_done_thread ();
       return 1;
     }
+  /* deallocate skb_reply before freeing the packet. */
+  free (data);
   return 0;
 }
 
