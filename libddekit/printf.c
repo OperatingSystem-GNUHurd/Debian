@@ -74,7 +74,7 @@ int ddekit_vprintf(const char *fmt, va_list va)
 int log_init ()
 {
 	if (using_std) {
-		output = stdout;
+		output = stderr;
 	}
 	else {
 		char template[] = "/var/log/dde_log.XXXXXX";
