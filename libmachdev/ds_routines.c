@@ -68,8 +68,8 @@
 #include "util.h"
 #include "queue.h"
 
-struct port_bucket *port_bucket;
-struct port_class *dev_class;
+static struct port_bucket *port_bucket;
+static struct port_class *dev_class;
 
 extern struct device_emulation_ops linux_net_emulation_ops;
 
@@ -783,6 +783,12 @@ static any_t io_done_thread(any_t unused)
 	return 0;
 }
 
+int create_device_port (int size, void *result)
+{
+  return ports_create_port (dev_class, port_bucket,
+			    size, result);
+}
+
 void mach_device_init()
 {
 	int i;
@@ -799,4 +805,23 @@ void mach_device_init()
 	}
 
 	cthread_detach (cthread_fork (io_done_thread, 0));
+}
+
+static int
+demuxer (mach_msg_header_t *inp, mach_msg_header_t *outp)
+{
+  int ret;
+  extern int device_server (mach_msg_header_t *, mach_msg_header_t *);
+  extern int notify_server (mach_msg_header_t *, mach_msg_header_t *);
+  ret = device_server (inp, outp) || notify_server (inp, outp);
+  return ret;
+}
+
+void ds_server()
+{
+  /* Launch.  */
+  do
+    {
+      ports_manage_port_operations_one_thread (port_bucket, demuxer, 0);
+    } while (1);
 }
