@@ -1284,7 +1284,6 @@ static int pcnet32_tx(struct net_device *dev)
 	int delta;
 	int must_restart = 0;
 
-	printk("an interrupt for packet transmission\n");
 	while (dirty_tx != lp->cur_tx) {
 		int entry = dirty_tx & lp->tx_mod_mask;
 		int status = (short)le16_to_cpu(lp->tx_ring[entry].status);
@@ -2495,7 +2494,6 @@ static int pcnet32_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	int entry;
 	unsigned long flags;
 
-	printk("we are going to transmit a packet\n");
 	spin_lock_irqsave(&lp->lock, flags);
 
 	if (netif_msg_tx_queued(lp)) {
