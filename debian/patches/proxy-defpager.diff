@@ -1,0 +1,59 @@
+https://savannah.gnu.org/bugs/?26751
+
+2009-06-07  Zheng Da  <zhengda1936@gmail.com>
+
+	* Makefile: Use customized default_pager.defs.
+
+	* proxy-defpager.c: Include customized default_pager header.
+
+---
+ Makefile         |    7 +++++--
+ proxy-defpager.c |    5 +++--
+ 2 files changed, 8 insertions(+), 4 deletions(-)
+
+diff -u -a -r1.40 -r1.40.10.1
+--- a/trans/Makefile	6 Jun 2007 16:08:56 -0000	1.40
++++ b/trans/Makefile	7 Jun 2009 03:51:49 -0000	1.40.10.1
+@@ -26,13 +26,16 @@
+ 	fakeroot.c proxy-defpager.c
+ OBJS = $(SRCS:.c=.o) fsysServer.o ifsockServer.o passwordServer.o \
+ 	crashServer.o crash_replyUser.o msgServer.o \
+-	default_pagerServer.o default_pagerUser.o \
++	ourdefault_pagerServer.o ourdefault_pagerUser.o \
+ 	device_replyServer.o elfcore.o
+ HURDLIBS = threads ports netfs trivfs iohelp fshelp pipe ihash shouldbeinlibc
+ password-LDLIBS = $(LIBCRYPT)
+ 
+ include ../Makeconf
+ 
++ourdefault_pager.defs: default_pager.defs
++	$(CPP) $(CPPFLAGS) -x c $< | sed -e '/MACH_MSG_TYPE_MAKE_SEND;/s/MAKE/COPY/' | sed -e '/subsystem/iserverprefix S_;' > $@
++
+ vpath elfcore.c $(top_srcdir)/exec
+ 
+ symlink: fsysServer.o
+@@ -40,7 +43,7 @@
+ crash: crashServer.o crash_replyUser.o msgServer.o elfcore.o
+ password: passwordServer.o
+ streamio: device_replyServer.o
+-proxy-defpager: default_pagerServer.o default_pagerUser.o
++proxy-defpager: ourdefault_pagerServer.o ourdefault_pagerUser.o
+ 
+ proxy-defpager crash password streamio: ../libthreads/libthreads.a ../libports/libports.a ../libtrivfs/libtrivfs.a ../libthreads/libthreads.a ../libfshelp/libfshelp.a
+ fifo new-fifo: ../libpipe/libpipe.a
+diff -u -a -r1.5 -r1.5.10.1
+--- a/trans/proxy-defpager.c	6 Jun 2007 16:08:56 -0000	1.5
++++ b/trans/proxy-defpager.c	7 Jun 2009 03:51:49 -0000	1.5.10.1
+@@ -23,9 +23,10 @@
+ #include <error.h>
+ #include <version.h>
+ #include <hurd/paths.h>
++#include <string.h>
+ 
+-#include "default_pager_S.h"
+-#include "default_pager_U.h"
++#include "ourdefault_pager_S.h"
++#include "ourdefault_pager_U.h"
+ 
+ static mach_port_t real_defpager, dev_master;
+ 

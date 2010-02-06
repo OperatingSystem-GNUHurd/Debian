@@ -27,6 +27,7 @@ hurd (20090404-3) UNRELEASED; urgency=low
   * debian/rules: Do not ship *_pic.a, as mklibs breaks them.
   * debian/patches/MAKEDEV.patch: Make MAKEDEV bash-free.
   * debian/patches/tmpfs.patch: New patch to fix tmpfs crash.
+  * debian/patches/proxy-defpager.diff: New patch to fix proxying defpager.
 
   [ Guillem Jover ]
   * Update make-new-tarball.sh to exclude git instead of CVS paths.

@@ -33,3 +33,4 @@ libpthread_cancel_init.patch
 libpthread_kill_0.patch
 console_current_vcs.patch
 tmpfs.patch
+proxy-defpager.diff
