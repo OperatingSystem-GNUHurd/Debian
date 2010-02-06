@@ -613,7 +613,7 @@ Support for >2GB volumes
 -
 -  sblock = (struct ext2_super_block *) boffs_ptr (SBLOCK_OFFS);
 +  error_t err;
-+  size_t read;
++  size_t read = 0;
  
 +  assert (! sblock);
 +  err = store_read (store, SBLOCK_OFFS >> store->log2_block_size,
