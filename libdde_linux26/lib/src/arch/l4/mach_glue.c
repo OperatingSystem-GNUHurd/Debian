@@ -45,7 +45,6 @@ int linux_pkg_xmit (char *pkg_data, int len, void *del_data,
   /* Copy user data.  This is only required if it spans multiple pages.  */
   skb->len = len;
   skb->tail = skb->data + len;
-  skb->end = skb->tail;
 
   memcpy (skb->data, pkg_data, len);
 
