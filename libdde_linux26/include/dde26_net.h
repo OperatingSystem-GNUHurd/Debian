@@ -27,8 +27,11 @@ linux_rx_callback l4dde26_register_rx_callback(linux_rx_callback cb);
 static inline int l4dde26_do_rx_callback(struct sk_buff *s)
 {
 	if (l4dde26_rx_callback != NULL) {
+		int ret;
 		skb_push(s, s->dev->hard_header_len);
-		return l4dde26_rx_callback(s->data, s->len, s->dev);
+		ret = l4dde26_rx_callback(s->data, s->len, s->dev);
+		dev_kfree_skb_any(s);
+		return ret;
 	}
 
 	return 0;
