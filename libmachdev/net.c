@@ -399,6 +399,7 @@ device_write (void *d, mach_port_t reply_port,
   struct net_data *nd = d;
   struct net_device *dev = nd->dev;
   struct skb_reply *skb_reply = malloc (sizeof (*skb_reply));
+  error_t err;
 
   if (skb_reply == NULL)
     return D_NO_MEMORY;
@@ -407,8 +408,10 @@ device_write (void *d, mach_port_t reply_port,
   skb_reply->reply = reply_port;
   skb_reply->reply_type = reply_port_type;
 
-  linux_pkg_xmit (data, count, skb_reply, pre_kfree_skb, dev);
+  err = linux_pkg_xmit (data, count, skb_reply, pre_kfree_skb, dev);
   vm_deallocate (mach_task_self (), (vm_address_t) data, count);
+  if (err)
+    return err;
 
   /* Send packet to filters.  */
   // TODO should I deliver the packet to other network stacks?
