@@ -161,32 +161,6 @@ struct net_data *search_nd (struct net_device *dev)
 
 /* Linux kernel network support routines.  */
 
-/* Free all sk_buffs on the done list.
-   This routine is called by the iodone thread in ds_routines.c.  */
-void
-free_skbuffs ()
-{
-  struct sk_buff *skb;
-
-  while (1)
-    {
-      skb = skb_done_dequeue ();
-      if (skb)
-	{
-	  struct skb_reply *reply = skb_reply(skb);
-	  if (MACH_PORT_VALID (reply->reply))
-	    {
-	      ds_device_write_reply (reply->reply, reply->reply_type,
-				     0, reply->pkglen);
-	      reply->reply = MACH_PORT_NULL;
-	    }
-	  kfree_skb (skb);
-	}
-      else
-	break;
-    }
-}
-
 /* actions before freeing the sk_buff SKB.
  * If it returns 1, the packet will be deallocated later. */
 int 
@@ -200,9 +174,12 @@ pre_kfree_skb (struct sk_buff *skb, void *data)
      Wakeup the iodone thread to process the list.  */
   if (reply && MACH_PORT_VALID (reply->reply))
     {
-      skb_done_queue (skb);
-      wakeup_io_done_thread ();
-      return 1;
+      if (MACH_PORT_VALID (reply->reply))
+	{
+	  ds_device_write_reply (reply->reply, reply->reply_type,
+				 0, reply->pkglen);
+	  reply->reply = MACH_PORT_NULL;
+	}
     }
   /* deallocate skb_reply before freeing the packet. */
   free (data);
