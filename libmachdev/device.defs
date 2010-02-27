@@ -153,6 +153,7 @@ routine device_intr_notify(
 		master_port	: mach_port_t;
 	in	irq		: int;
 	in	id		: int;
+	in	flags		: int;
 	in	receive_port	: mach_port_send_t
 	);
 
