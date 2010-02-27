@@ -1777,8 +1777,6 @@ static struct netdev_queue *dev_pick_tx(struct net_device *dev,
 
 	if (ops->ndo_select_queue)
 		queue_index = ops->ndo_select_queue(dev, skb);
-	else if (dev->real_num_tx_queues > 1)
-		queue_index = simple_tx_hash(dev, skb);
 
 	skb_set_queue_mapping(skb, queue_index);
 	return netdev_get_tx_queue(dev, queue_index);
@@ -1813,7 +1811,6 @@ int dev_queue_xmit(struct sk_buff *skb)
 {
 	struct net_device *dev = skb->dev;
 	struct netdev_queue *txq;
-	struct Qdisc *q;
 	int rc = -ENOMEM;
 
 	/* GSO will handle the following emulations directly. */
@@ -1851,27 +1848,10 @@ gso:
 	rcu_read_lock_bh();
 
 	txq = dev_pick_tx(dev, skb);
-	q = rcu_dereference(txq->qdisc);
 
 #ifdef CONFIG_NET_CLS_ACT
 	skb->tc_verd = SET_TC_AT(skb->tc_verd,AT_EGRESS);
 #endif
-	if (q->enqueue) {
-		spinlock_t *root_lock = qdisc_lock(q);
-
-		spin_lock(root_lock);
-
-		if (unlikely(test_bit(__QDISC_STATE_DEACTIVATED, &q->state))) {
-			kfree_skb(skb);
-			rc = NET_XMIT_DROP;
-		} else {
-			rc = qdisc_enqueue_root(skb, q);
-			qdisc_run(q);
-		}
-		spin_unlock(root_lock);
-
-		goto out;
-	}
 
 	/* The device has no queue. Common case for software devices:
 	   loopback, all the sorts of tunnels...

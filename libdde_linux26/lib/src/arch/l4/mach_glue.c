@@ -50,7 +50,9 @@ int linux_pkg_xmit (char *pkg_data, int len, void *del_data,
 
   skb->dev = dev;
 
-  return dev->netdev_ops->ndo_start_xmit(skb, dev);
+  dev_queue_xmit(skb);
+  // TODO how should I return errors?
+  return 0;
 }
 
 char *netdev_addr(struct net_device *dev)
