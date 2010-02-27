@@ -92,10 +92,11 @@ static void intloop(void *arg)
 	if (ret)
 		error (0, ret, "thread_priority");
 
-	// TODO I should give another parameter to show whether
-	// the interrupt can be shared.
+	// TODO the flags for shared irq should be indicated by params->shared.
+	// Be careful. For now, we must use shared irq.
+	// Otherwise, the interrupt handler cannot be installed in the kernel.
 	ret = device_intr_notify (master_device, params->irq,
-				  0, delivery_port,
+				  0, 0x04000000, delivery_port,
 				  MACH_MSG_TYPE_MAKE_SEND);
 	if (!ret) {
 		/* inform thread creator of error */
