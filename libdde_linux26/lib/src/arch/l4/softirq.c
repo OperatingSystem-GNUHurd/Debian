@@ -172,6 +172,7 @@ static void tasklet_hi_action(struct softirq_action *a)
 	}
 }
 
+ddekit_lock_t cli_lock;
 
 #define MAX_SOFTIRQ_RETRIES	10
 
@@ -186,6 +187,8 @@ void __do_softirq(void)
 
 		/* reset softirq count */
 		set_softirq_pending(0);
+		ddekit_lock_unlock(&cli_lock);
+//		local_irq_enable();
 
 		/* While we have a softirq pending... */
 		while (pending) {
@@ -197,6 +200,8 @@ void __do_softirq(void)
 			/* remove pending flag for last softirq */
 			pending >>= 1;
 		}
+//		local_irq_disable();
+		ddekit_lock_lock(&cli_lock);
 
 	/* Somebody might have scheduled another softirq in between
 	 * (e.g., an IRQ thread or another tasklet). */
@@ -209,10 +214,14 @@ void do_softirq(void)
 {
 	unsigned long flags;
 
-	local_irq_save(flags);
+	if (cli_lock == NULL)
+		ddekit_lock_init_unlocked(&cli_lock);
+	ddekit_lock_lock(&cli_lock);
+//	local_irq_save(flags);
 	if (local_softirq_pending())
 		__do_softirq();
-	local_irq_restore(flags);
+//	local_irq_restore(flags);
+	ddekit_lock_unlock(&cli_lock);
 }
 
 /** Softirq thread function.
