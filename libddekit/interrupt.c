@@ -126,6 +126,7 @@ static void intloop(void *arg)
 	int irq_server (mach_msg_header_t *inp, mach_msg_header_t *outp) {
 		mach_irq_notification_t *irq_header = (mach_irq_notification_t *) inp;
 
+		((mig_reply_header_t *) outp)->RetCode = MIG_NO_REPLY;
 		if (inp->msgh_id != MACH_NOTIFY_IRQ)
 			return 0;
 
@@ -147,8 +148,6 @@ static void intloop(void *arg)
 		else
 			ddekit_printf ("not handling IRQ %x, because it is disabled.",
 				       my_index);
-
-		//  ((mig_reply_header_t *) outp)->RetCode = MIG_NO_REPLY;
 
 		if (ddekit_irq_ctrl[my_index].thread_exit) {
 			ddekit_lock_unlock (&ddekit_irq_ctrl[my_index].irqlock);
