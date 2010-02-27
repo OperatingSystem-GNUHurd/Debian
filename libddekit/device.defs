@@ -48,7 +48,6 @@ subsystem
 
 serverprefix	ds_;
 
-type pci_config_data_t	= array[*:4] of char;
 type reply_port_t = MACH_MSG_TYPE_MAKE_SEND_ONCE | polymorphic
 	ctype: mach_port_t;
 
@@ -154,6 +153,7 @@ routine device_intr_notify(
 		master_port	: mach_port_t;
 	in	irq		: int;
 	in	id		: int;
+	in	flags		: int;
 	in	receive_port	: mach_port_send_t
 	);
 
