@@ -48,7 +48,6 @@ subsystem
 
 serverprefix	ds_;
 
-type pci_config_data_t	= array[*:4] of char;
 type reply_port_t = MACH_MSG_TYPE_MAKE_SEND_ONCE | polymorphic
 	ctype: mach_port_t;
 
@@ -156,44 +155,6 @@ routine device_intr_notify(
 	in	id		: int;
 	in	receive_port	: mach_port_send_t
 	);
-
-/*
- *      Test whether IPC devices exist.
- */
-routine pci_present(
-		master_port	: mach_port_t);
-
-/*
- *      Find the specified PCI device.
- */
-routine pci_find_device(
-		master_port	: mach_port_t;
-		vendor		: short;
-		device_id	: short;
-		index		: short;
-	out	bus		: char;
-	out	device_fn	: char);
-
-/*
- *      Read the configuration space of a IPC device.
- */
-routine pci_read_config(
-		master_port	: mach_port_t;
-		bus		: char;
-		device_fn	: char;
-		where		: char;
-		bytes_wanted	: int;
-	out	result		: pci_config_data_t);
-
-/*
- *      Write the configuration space of a IPC device.
- */
-routine pci_write_config(
-		master_port	: mach_port_t;
-		bus		: char;
-		device_fn	: char;
-		where		: char;
-		data		: pci_config_data_t);
 
 /*
  *	enable/disable the specified irq.

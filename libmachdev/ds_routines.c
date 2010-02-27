@@ -155,35 +155,6 @@ ds_device_intr_notify (mach_port_t master_port, int irq,
 }
 
 kern_return_t
-ds_pci_write_config (mach_port_t master_port, char bus, char device_fn,
-		     char where, pci_config_data_t data,
-		     mach_msg_type_number_t dataCnt)
-{
-  return D_INVALID_OPERATION;
-}
-
-kern_return_t
-ds_pci_read_config (mach_port_t master_port, char bus, char device_fn,
-		    char where, int bytes_wanted, pci_config_data_t result,
-		    mach_msg_type_number_t *resultCnt)
-{
-  return D_INVALID_OPERATION;
-}
-
-kern_return_t
-ds_pci_find_device (mach_port_t master_port, short vendor, short device_id,
-		    short index, short *bus, char *device_fn)
-{
-  return D_INVALID_OPERATION;
-}
-
-kern_return_t
-ds_pci_present (mach_port_t master_port)
-{
-  return D_INVALID_OPERATION;
-}
-
-kern_return_t
 ds_device_irq_enable (mach_port_t master_port,
 		      int irq, char status)
 {
