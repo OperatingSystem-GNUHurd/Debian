@@ -39,9 +39,9 @@ int _ddekit_lock_try_lock(struct ddekit_lock **mtx) {
 }
 
 void _ddekit_lock_unlock(struct ddekit_lock **mtx) {
-	mutex_unlock (&(*mtx)->lock);
 	// TODO I wonder if it can cause any trouble.
 	(*mtx)->helder = NULL;
+	mutex_unlock (&(*mtx)->lock);
 }
 
 
