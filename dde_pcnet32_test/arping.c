@@ -122,7 +122,7 @@ static int handle_icmp_packet(struct sk_buff *skb)
 	memcpy(snd_skb->data, skb->data, skb->len);
 	
 	e = (struct ethernet_hdr *)snd_skb->data;
-	memcpy(e->src, eth->dest, ETH_ALEN);
+	memcpy(e->src, skb->dev->dev_addr, ETH_ALEN);
 	memcpy(e->dest, eth->src, ETH_ALEN);
 	VERBOSE_LOG("dest mac = %02x:%02x:%02x:%02x:%02x:%02x\n",
 	            e->dest[0], e->dest[1], e->dest[2],
