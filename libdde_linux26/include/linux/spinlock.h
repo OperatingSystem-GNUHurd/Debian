@@ -394,7 +394,7 @@ extern int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock);
 
 #define read_lock(lock) spin_lock(lock)
 #define write_lock(lock) spin_lock(lock)
-#define spin_lock_irq(lock) local_irq_disable(); spin_lock(lock)
+#define spin_lock_irq(lock) spin_lock(lock)
 #define spin_lock_bh(lock) spin_lock(lock)
 #define read_lock_irq(lock) spin_lock_irq(lock)
 #define read_lock_bh(lock) spin_lock_bh(lock)
@@ -411,7 +411,7 @@ extern int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock);
 #define read_unlock(lock) spin_unlock(lock)
 #define write_unlock(lock) spin_unlock(lock)
 
-#define spin_unlock_irq(lock) spin_unlock(lock); local_irq_enable()
+#define spin_unlock_irq(lock) spin_unlock(lock)
 #define spin_unlock_bh(lock) spin_unlock(lock)
 #define read_unlock_irq(lock) spin_unlock_irq(lock)
 #define read_unlock_bh(lock) spin_unlock_bh(lock)
@@ -420,7 +420,6 @@ extern int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock);
 
 #define spin_lock_irqsave(lock, flags) \
 	do { \
-		local_irq_save(flags); \
 		spin_lock(lock);\
 	} while (0);
 
@@ -430,7 +429,6 @@ extern int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock);
 #define spin_unlock_irqrestore(lock, flags) \
 	do { \
 		spin_unlock(lock); \
-		local_irq_restore(flags); \
 	} while (0);
 
 #define read_unlock_irqrestore(lock, flags) spin_unlock_irqrestore(lock, flags)
@@ -448,7 +446,6 @@ static int __lockfunc spin_trylock(spinlock_t *lock)
 
 #define spin_trylock_irqsave(lock, flags) \
 ({ \
-	local_irq_save(flags); \
 	spin_trylock(lock) ? \
 	1 : ({ local_irq_restore(flags); 0; }); \
 })

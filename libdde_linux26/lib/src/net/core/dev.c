@@ -2611,16 +2611,11 @@ out:
 void __napi_schedule(struct napi_struct *n)
 {
 	unsigned long flags;
-	extern ddekit_lock_t cli_lock;
 
-	if (cli_lock == NULL)
-		ddekit_lock_init_unlocked(&cli_lock);
-	ddekit_lock_lock(&cli_lock);
-//	local_irq_save(flags);
+	local_irq_save(flags);
 	list_add_tail(&n->poll_list, &__get_cpu_var(softnet_data).poll_list);
 	__raise_softirq_irqoff(NET_RX_SOFTIRQ);
-//	local_irq_restore(flags);
-	ddekit_lock_unlock(&cli_lock);
+	local_irq_restore(flags);
 }
 EXPORT_SYMBOL(__napi_schedule);
 
