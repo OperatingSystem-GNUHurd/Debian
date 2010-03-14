@@ -16,6 +16,7 @@ settrans -c /servers/crash-kill /hurd/crash --kill
 settrans -c /servers/password /hurd/password
 settrans -c /servers/crash-suspend /hurd/crash --suspend
 settrans -c /servers/crash-dump-core /hurd/crash --dump-core
+settrans -c /servers/default-pager /hurd/proxy-defpager
 settrans /proc /hurd/procfs
 ln -s crash-kill /servers/crash
 ln -s 1 /servers/socket/local
