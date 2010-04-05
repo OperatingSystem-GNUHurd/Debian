@@ -12,6 +12,7 @@
 *.sdefsi
 Makefile.inc
 *.cpy
+._*
 
 dde26_test/dde26_test
 auth/auth
@@ -26,6 +27,7 @@ devnode/devnode
 eth-multiplexer/eth-multiplexer
 ext2fs/ext2fs
 ext2fs/ext2fs.static
+dde_e1000/dde_e1000
 init/init
 pfinet/pfinet
 proc/proc
