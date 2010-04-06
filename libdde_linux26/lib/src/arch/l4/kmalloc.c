@@ -134,9 +134,12 @@ void *__kmalloc(size_t size, gfp_t flags)
 	if (cache)
 		/* allocate from cache */
 		p = kmem_cache_alloc(cache, flags);
-	else
+	else {
 		/* no cache for this size - use ddekit malloc */
 		p = ddekit_large_malloc(size);
+		if (flags & __GFP_ZERO)
+			memset (p, 0, size);
+	}
 
 	ddekit_log(DEBUG_MALLOC, "size=%d, cache=%p (%d) => %p",
 	           size, cache, cache ? kmem_cache_size(cache) : 0, p);
