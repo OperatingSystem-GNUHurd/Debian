@@ -1731,7 +1731,6 @@ int pci_request_regions(struct pci_dev *pdev, const char *res_name)
 	return pci_request_selected_regions(pdev, ((1 << 6) - 1), res_name);
 }
 
-#ifndef DDE_LINUX
 /**
  *	pci_request_regions_exclusive - Reserved PCI I/O and memory resources
  *	@pdev: PCI device whose resources are to be reserved
@@ -1792,7 +1791,6 @@ void pci_clear_master(struct pci_dev *dev)
 {
 	__pci_set_master(dev, false);
 }
-#endif /* DDE_LINUX */
 
 #ifdef PCI_DISABLE_MWI
 int pci_set_mwi(struct pci_dev *dev)

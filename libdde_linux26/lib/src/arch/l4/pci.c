@@ -132,12 +132,20 @@ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
 	//WARN_UNIMPL;
 }
 
-void pci_set_master(struct pci_dev *dev)
-{
-	CHECK_INITVAR(dde26_pci);
-	WARN_UNIMPL;
-}
+static unsigned int pcibios_max_latency = 255;
 
+void pcibios_set_master(struct pci_dev *dev)
+{
+	u8 lat;
+	pci_read_config_byte(dev, PCI_LATENCY_TIMER, &lat);
+	if (lat < 16)
+		lat = (64 <= pcibios_max_latency) ? 64 : pcibios_max_latency;
+	else if (lat > pcibios_max_latency)
+		lat = pcibios_max_latency;
+	else
+		return;
+	pci_write_config_byte(dev, PCI_LATENCY_TIMER, lat);
+}
 
 int pci_create_sysfs_dev_files(struct pci_dev *pdev)
 {
