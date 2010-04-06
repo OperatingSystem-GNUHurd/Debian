@@ -220,10 +220,6 @@ void do_exit(long code)
  ** Misc functions                                                          **
  *****************************************************************************/
 
-void dump_stack(void)
-{
-}
-
 
 char *get_task_comm(char *buf, struct task_struct *tsk)
 {

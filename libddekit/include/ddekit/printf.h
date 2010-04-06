@@ -18,6 +18,8 @@ int ddekit_printf(const char *fmt, ...);
  */
 int ddekit_vprintf(const char *fmt, va_list va);
 
+void dump_stack(void);
+
 /** Log function and message.
  * \ingroup DDEKit_util
  */

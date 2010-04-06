@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <mach.h>
+#include <execinfo.h>
 
 #include "ddekit/printf.h"
 
@@ -92,4 +93,15 @@ int log_init ()
 	}
 
 	return 0;
+}
+
+void dump_stack()
+{
+#define NUM_TRACES 16
+	void *trace[NUM_TRACES];
+	int trace_size = 0;
+
+	fprintf (stderr, "dump the stack\n");
+	trace_size = backtrace(trace, NUM_TRACES);
+	backtrace_symbols_fd(trace, trace_size, 2);
 }
