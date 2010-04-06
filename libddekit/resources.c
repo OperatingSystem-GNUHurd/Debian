@@ -54,7 +54,7 @@ static memory_object_t get_physmem_object(void)
 		error(2, err, "get_physmem_object() can't get master device port");
 
 	/* now use it to open iopl device */
-	err = device_open(master_device_port, VM_PROT_READ | VM_PROT_WRITE, "iopl", &iopl_dev);
+	err = device_open(master_device_port, VM_PROT_READ | VM_PROT_WRITE, "mem", &iopl_dev);
 	if (err)
 		error(2, err, "get_physmem_object() can't open iopl device");
 
