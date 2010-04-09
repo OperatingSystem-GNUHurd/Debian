@@ -1,6 +1,8 @@
 /* Set a file's translator.
 
-   Copyright (C) 1995,96,97,98,2001,02 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996, 1997, 1998, 2001, 2002, 2010
+     Free Software Foundation, Inc.
+
    Written by Miles Bader <miles@gnu.org>
 
    This program is free software; you can redistribute it and/or
@@ -35,6 +37,10 @@
 #include <hurd/lookup.h>
 #include <hurd/fsys.h>
 
+#include <mach/notify.h>
+#include <sys/wait.h>
+#include <cthreads.h> /* cthreads because we already link with it.  */
+
 
 const char *argp_program_version = STANDARD_HURD_VERSION (settrans);
 
@@ -47,6 +53,9 @@ static struct argp_option options[] =
 {
   {"active",      'a', 0, 0, "Set NODE's active translator" },
   {"passive",     'p', 0, 0, "Set NODE's passive translator" },
+  {"interactive", 'i', 0, 0, "Run TRANSLATOR as a regular command "
+			     "but still accept startup requests "
+			     "so that child translators gets set to NODE" },
   {"create",      'c', 0, 0, "Create NODE if it doesn't exist" },
   {"dereference", 'L', 0, 0, "If a translator exists, put the new one on top"},
   {"pause",       'P', 0, 0, "When starting an active translator, prompt and"
@@ -79,6 +88,164 @@ static char *doc = "Set the passive/active translator on NODE."
 
 /* ---------------------------------------------------------------- */
 
+/* Callback that should set the translator CONTROL to some file.
+   TASK is the task port to the translator.  */
+typedef error_t (*settrans_fn_t) (fsys_t control, mach_port_t task,
+				  void *cookie);
+
+/* Start a thread that services `fsys_startup' RPCs.
+   Calls UNDERLYING_OPEN_FN with UNDERLYING_OPEN_COOKIE to open the
+   underlying file, and SETTRANS_FN with SETTRANS_COOKIE to set the
+   translator.  Returns the thread in THREAD, and the bootstrap port
+   that should be passed to starting translators in BOOTSTRAP.  */
+static error_t
+start_interactive_translator_service (fshelp_open_fn_t underlying_open_fn,
+				      void *underlying_open_cookie,
+				      settrans_fn_t settrans_fn,
+				      void *settrans_cookie,
+				      cthread_t *thread,
+				      mach_port_t *bootstrap)
+{
+  struct thread_args
+    {
+      fshelp_open_fn_t underlying_open_fn;
+      void *underlying_open_cookie;
+      settrans_fn_t settrans_fn;
+      void *settrans_cookie;
+      mach_port_t bootstrap;
+    };
+
+  struct thread_args *thread_args;
+  mach_port_t prev_notify;
+  error_t err;
+
+  /* Create a bootstrap port for the translator.  */
+  err = mach_port_allocate (mach_task_self (), MACH_PORT_RIGHT_RECEIVE,
+			    bootstrap);
+  if (err)
+    return err;
+
+  /* Get a notification when there are no more send rights once 1 or
+     more has been allocated.  */
+  err =
+    mach_port_request_notification (mach_task_self (),
+				    *bootstrap, MACH_NOTIFY_NO_SENDERS, 1,
+				    *bootstrap, MACH_MSG_TYPE_MAKE_SEND_ONCE,
+				    &prev_notify);
+  if (err)
+    goto lose;
+
+  thread_args = malloc (sizeof (struct thread_args));
+  if (thread_args == NULL)
+    {
+      err = errno;
+      goto lose;
+    }
+
+  *thread_args = (struct thread_args)
+    {
+      underlying_open_fn, underlying_open_cookie,
+      settrans_fn, settrans_cookie,
+      *bootstrap
+    };
+
+  void *thread_routine (void *arg)
+    {
+      struct thread_args *args = arg;
+      fsys_t control = MACH_PORT_NULL; /* Only set to quiet gcc.  */
+      error_t err;
+
+      do
+	{
+	  /* Rendezvous with PID.  */
+	  err = fshelp_service_fsys_startup (args->underlying_open_fn,
+					     args->underlying_open_cookie,
+					     args->bootstrap, 0,
+					     MACH_PORT_NULL, &control);
+	  if (err)
+	    continue;
+
+	  settrans_fn (control, MACH_PORT_NULL, settrans_cookie);
+	  mach_port_deallocate (mach_task_self (), control);
+	}
+      while (err != EDIED);
+
+      free (args);
+      return (void *) err;
+    }
+  *thread = cthread_fork (thread_routine, thread_args);
+  if (*thread == NO_CTHREAD)
+    {
+      free (thread_args);
+      err = errno;
+    }
+
+lose:
+  if (err)
+    mach_port_destroy (mach_task_self (), *bootstrap);
+
+  return err;
+}
+
+/* Fork the process, pass BOOTSTRAP to the child, and store the child's
+   PID in PID.  BOOTSTRAP must have a receive right.  This call clears
+   the bootstrap special port as a side-effect.  */
+static error_t
+fork_interactive_translator (mach_port_t bootstrap, pid_t *pid)
+{
+  error_t err;
+
+  /* We can't just set _hurd_ports[INIT_PORT_BOOTSTRAP] since port names
+     with receive rights are recreated in the forked child, so it will
+     get a different port.  */
+
+  /* task_set_bootstrap_port needs a send right to copy.  */
+  err = mach_port_insert_right (mach_task_self (), bootstrap, bootstrap,
+				MACH_MSG_TYPE_MAKE_SEND);
+  if (err)
+    return err;
+
+  task_set_bootstrap_port (mach_task_self (), bootstrap);
+  mach_port_deallocate (mach_task_self (), bootstrap);
+
+  *pid = fork ();
+  if (*pid == -1)
+    err = errno;
+
+  if (*pid == 0)
+    {
+      /* Destroy recreated bootstrap port.  */
+      mach_port_destroy (mach_task_self (), bootstrap);
+
+      /* Use parent's instead.  */
+      task_get_bootstrap_port (mach_task_self (), &bootstrap);
+      _hurd_port_set (&_hurd_ports[INIT_PORT_BOOTSTRAP], bootstrap);
+      return 0;
+    }
+
+  task_set_bootstrap_port (mach_task_self (), MACH_PORT_NULL);
+  return err;
+}
+
+/* Exec the translator command stored in ARGZ and ARGZ_LEN.
+   Search PATH for exectutable.  */
+static error_t
+exec_interactive_translator (char *argz, int argz_len)
+{
+  char **argv;
+
+  argv = malloc ((argz_count (argz, argz_len) + 1) * sizeof (char *));
+  if (argv == NULL)
+    return errno;
+  argz_extract (argz, argz_len, argv);
+
+  execvp (argz, argv);
+
+  /* Only reached on error.  */
+  free (argv);
+  return errno;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -103,7 +270,7 @@ main(int argc, char *argv[])
 
   /* Various option flags.  */
   int passive = 0, active = 0, keep_active = 0, pause = 0, kill_active = 0,
-      orphan = 0;
+      orphan = 0, interactive = 0;
   int excl = 0;
   int timeout = DEFAULT_TIMEOUT * 1000; /* ms */
   char **chroot_command = 0;
@@ -132,6 +299,7 @@ main(int argc, char *argv[])
 
 	case 'a': active = 1; break;
 	case 'p': passive = 1; break;
+	case 'i': interactive = 1; break;
 	case 'k': keep_active = 1; break;
 	case 'g': kill_active = 1; break;
 	case 'x': excl = 1; break;
@@ -173,6 +341,20 @@ main(int argc, char *argv[])
 	  /* Use atof so the user can specifiy fractional timeouts.  */
 	case 't': timeout = atof (arg) * 1000.0; break;
 
+	case ARGP_KEY_SUCCESS:
+	  if (interactive)
+	    {
+	      if (argz == NULL)
+		argp_error (state, "--interactive must be given a command");
+	      else if (active)
+		argp_error (state, "both --active and --interactive");
+	      else if (passive)
+		argp_error (state, "both --passive and --interactive");
+	      else if (chroot_command)
+		argp_error (state, "both --chroot and --interactive");
+	    }
+	  break;
+
 	default:
 	  return ARGP_ERR_UNKNOWN;
 	}
@@ -182,16 +364,16 @@ main(int argc, char *argv[])
 
   argp_parse (&argp, argc, argv, ARGP_IN_ORDER, 0, 0);
 
-  if (!active && !passive && !chroot_command)
+  if (!active && !passive && !chroot_command && !interactive)
     passive = 1;		/* By default, set the passive translator.  */
 
   if (passive)
     passive_flags = FS_TRANS_SET | (excl ? FS_TRANS_EXCL : 0);
-  if (active)
+  if (active || interactive)
     active_flags = FS_TRANS_SET | (excl ? FS_TRANS_EXCL : 0)
 		   | (orphan ? FS_TRANS_ORPHAN : 0);
 
-  if (passive && !active)
+  if (passive && !active && !interactive)
     {
       /* When setting just the passive, decide what to do with any active.  */
       if (kill_active)
@@ -200,6 +382,80 @@ main(int argc, char *argv[])
       else if (! keep_active)
 	/* Ensure that there isn't one.  */
 	active_flags = FS_TRANS_SET | FS_TRANS_EXCL;
+    }
+
+  if (interactive)
+    /* Interactive translators require special care when starting and
+       setting the translator, so it is an exclusive mode.  */
+    {
+      mach_port_t bootstrap;
+      cthread_t thread;
+      pid_t pid;
+      int status;
+
+      /* The callback to start_translator opens NODE as a side effect.  */
+      error_t open_node (int flags, mach_port_t *underlying,
+			 mach_msg_type_name_t *underlying_type,
+			 task_t task, void *cookie)
+	{
+	  node = file_name_lookup (node_name, flags | lookup_flags, 0666);
+	  if (node == MACH_PORT_NULL)
+	    {
+	      error (0, errno, "%s", node_name);
+	      return errno;
+	    }
+
+	  *underlying = node;
+	  *underlying_type = MACH_MSG_TYPE_COPY_SEND;
+
+	  return 0;
+	}
+
+      error_t settrans (fsys_t control, task_t task, void *cookie)
+	{
+	  error_t err;
+
+	  err = file_set_translator (node, passive_flags, active_flags,
+				     goaway_flags, argz, argz_len,
+				     control, MACH_MSG_TYPE_COPY_SEND);
+	  if (err)
+	    error (0, err, "%s", node_name);
+
+	  mach_port_deallocate (mach_task_self (), node);
+	  return err;
+	}
+
+      err = start_interactive_translator_service (open_node, NULL,
+						  settrans, NULL,
+						  &thread, &bootstrap);
+      if (err)
+	error (9, err, "starting translator service");
+
+      err = fork_interactive_translator (bootstrap, &pid);
+      if (err)
+	error (9, err, "forking child process");
+
+      if (pid == 0)
+	{
+	  err = exec_interactive_translator (argz, argz_len);
+	  error (10, err, "%s", argz);
+	}
+
+      pid = waitpid (pid, &status, 0);
+      if (pid == -1)
+	error (10, errno, "waiting for child process");
+
+      mach_port_destroy (mach_task_self (), bootstrap);
+      cthread_join (thread);
+
+      if (err)
+	error (10, err, "%s", argz);
+      else if (WIFEXITED (status))
+	exit (WEXITSTATUS (status));
+      else if (WIFSIGNALED (status))
+	error (10, 0, "%s: %s", argz, strsignal (WTERMSIG (status)));
+      else
+	error (10, 0, "translator exited in an unknown fashion");
     }
 
   if ((active || chroot_command) && argz_len > 0)
