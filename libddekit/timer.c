@@ -54,7 +54,7 @@ static void dump_list(char *msg)
 #endif
 }
 
-long long fetch_jiffies ()
+unsigned long fetch_jiffies ()
 {
   struct timeval tv;
   long long j;
