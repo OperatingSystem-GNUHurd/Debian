@@ -31,7 +31,7 @@ LCLHDRS = include/ddekit/condvar.h include/ddekit/lock.h	\
 	  include/ddekit/interrupt.h include/ddekit/resources.h	\
 	  include/ddekit/memory.h include/ddekit/timer.h	\
 	  include/dde.h		\
-	  config.h list.h
+	  config.h list.h util.h
 installhdrs = 
 
 MIGSTUBS = deviceUser.o machUser.o

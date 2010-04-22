@@ -14,7 +14,7 @@
 #include <mach.h>
 
 #include "ddekit/pgtab.h"
-
+#include "util.h"
 #include "config.h"
 
 /*****************************
@@ -59,6 +59,7 @@ int ddekit_pgtab_get_type(const void *virtual)
 
 	return p->type;
 #endif
+	UNIMPL;
 	return 0;
 }
 
@@ -76,6 +77,7 @@ int ddekit_pgtab_get_size(const void *virtual)
 
 	return p->size;
 #endif
+	UNIMPL;
 	return 0;
 }
 
@@ -88,6 +90,7 @@ int ddekit_pgtab_get_size(const void *virtual)
  */
 void ddekit_pgtab_clear_region(void *virtual, int type)
 {
+	UNIMPL;
 }
 
 
@@ -101,9 +104,11 @@ void ddekit_pgtab_clear_region(void *virtual, int type)
  */
 void ddekit_pgtab_set_region(void *virtual, ddekit_addr_t physical, int pages, int type)
 {
+	UNIMPL;
 }
 
 void ddekit_pgtab_set_region_with_size(void *virt, ddekit_addr_t phys, int size, int type)
 {
+	UNIMPL;
 }
 

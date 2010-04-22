@@ -30,6 +30,7 @@
 #include <hurd.h>
 #include <cthreads.h>
 
+#include "util.h"
 #include "vm_param.h"
 
 #include "ddekit/panic.h"
@@ -286,7 +287,7 @@ linux_kmalloc (unsigned int size, int priority)
       if (!err)
 	pages_free[i].end = pages_free[i].start + size;
       mutex_unlock (&mem_lock);
-      printf ("allocate %d bytes at (virt: %x, phys: %x), slot %d\n",
+      fprintf (stderr, "allocate %d bytes at (virt: %x, phys: %x), slot %d\n",
 	      size, pages_free[i].start, pages_free[i].pstart, i);
 
       return err ? NULL : (void *) pages_free[i].start;

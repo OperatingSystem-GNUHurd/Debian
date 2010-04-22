@@ -11,7 +11,9 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 
+#include "util.h"
 #include "ddekit/memory.h"
 #include "ddekit/panic.h"
 
@@ -52,7 +54,6 @@ struct ddekit_pcache
 	int contig;
 };
 
-
 /**
  * Setup page cache for all slabs
  *
@@ -64,6 +65,7 @@ struct ddekit_pcache
  */
 void ddekit_slab_setup_page_cache(unsigned pages)
 {
+	UNIMPL;
 }
 
 /*******************************
@@ -109,6 +111,7 @@ void  ddekit_slab_set_data(struct ddekit_slab * slab, void *data)
 #if 0
 	l4slab_set_data(&slab->cache, data);
 #endif
+	UNIMPL;
 }
 
 
@@ -120,6 +123,7 @@ void *ddekit_slab_get_data(struct ddekit_slab * slab)
 #if 0
 	return l4slab_get_data(&slab->cache);
 #endif
+	UNIMPL;
 	return NULL;
 }
 
@@ -179,6 +183,7 @@ void ddekit_large_free(void *objp)
  */
 void *ddekit_large_malloc(int size)
 {
+	ddekit_printf("ddekit_large_malloc %d bytes\n", size);
 	return linux_kmalloc (size, 0);
 }
 
