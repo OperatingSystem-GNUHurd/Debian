@@ -1,1 +1,0 @@
-lockfile.o lockfile_pic.o lockfile_p.o lockfile.d: lockfile.c cthreads.h 
