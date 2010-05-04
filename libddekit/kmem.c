@@ -43,7 +43,7 @@ extern int printf (const char *, ...);
    We reserve 64K chunks to stay within DMA limits.
    Increase MEM_CHUNKS if the kernel is running out of memory.  */
 #define MEM_CHUNK_SIZE	(64 * 1024)
-#define MEM_CHUNKS	7
+#define MEM_CHUNKS	30
 #define MEM_CHUNKS_TOTAL (MEM_CHUNKS + 5)
 
 /* round up the size at alignment of page size. */
