@@ -131,14 +131,23 @@ void *__kmalloc(size_t size, gfp_t flags)
 	struct kmem_cache *cache = find_cache(size);
 
 	void **p;
-	if (cache)
+	if (cache) {
 		/* allocate from cache */
 		p = kmem_cache_alloc(cache, flags);
+		if (!p) {
+			printk("__kmalloc: kmem_cache_alloc %s fails\n",
+			       ((char **)cache)[0]);
+		}
+	}
 	else {
 		/* no cache for this size - use ddekit malloc */
 		p = ddekit_large_malloc(size);
 		if (flags & __GFP_ZERO)
 			memset (p, 0, size);
+		if (!p) {
+			printk("__kmalloc: ddekit_large_malloc %d fails\n",
+			       size);
+		}
 	}
 
 	ddekit_log(DEBUG_MALLOC, "size=%d, cache=%p (%d) => %p",

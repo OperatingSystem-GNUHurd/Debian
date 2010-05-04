@@ -328,13 +328,15 @@ static void e1000_update_mng_vlan(struct e1000_adapter *adapter)
 				E1000_MNG_DHCP_COOKIE_STATUS_VLAN_SUPPORT) {
 				e1000_vlan_rx_add_vid(netdev, vid);
 				adapter->mng_vlan_id = vid;
-			} else
+			} else {
 				adapter->mng_vlan_id = E1000_MNG_VLAN_NONE;
+			}
 
 			if ((old_vid != (u16)E1000_MNG_VLAN_NONE) &&
 					(vid != old_vid) &&
-			    !vlan_group_get_device(adapter->vlgrp, old_vid))
+			    !vlan_group_get_device(adapter->vlgrp, old_vid)) {
 				e1000_vlan_rx_kill_vid(netdev, old_vid);
+			}
 		} else
 			adapter->mng_vlan_id = vid;
 	}
@@ -937,7 +939,9 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 
 	/* do not allocate ioport bars when not needed */
 	need_ioport = e1000_is_need_ioport(pdev);
+	printk("do we need ioport? %d\n", need_ioport);
 	if (need_ioport) {
+		printk("pci_enable_device will be called\n");
 		bars = pci_select_bars(pdev, IORESOURCE_MEM | IORESOURCE_IO);
 		err = pci_enable_device(pdev);
 	} else {
@@ -947,6 +951,7 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 	if (err)
 		return err;
 
+	printk("bars: %x\n", bars);
 	if (!pci_set_dma_mask(pdev, DMA_64BIT_MASK) &&
 	    !pci_set_consistent_dma_mask(pdev, DMA_64BIT_MASK)) {
 		pci_using_dac = 1;
@@ -998,6 +1003,8 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 				continue;
 			if (pci_resource_flags(pdev, i) & IORESOURCE_IO) {
 				hw->io_base = pci_resource_start(pdev, i);
+				printk("io base: %p, i: %d\n",
+				       hw->io_base, i);
 				break;
 			}
 		}
@@ -1084,6 +1091,7 @@ static int __devinit e1000_probe(struct pci_dev *pdev,
 		 */
 		memset(hw->mac_addr, 0, netdev->addr_len);
 	} else {
+		printk("succeed to validate eeprom\n");
 		/* copy the MAC address out of the EEPROM */
 		if (e1000_read_mac_addr(hw))
 			DPRINTK(PROBE, ERR, "EEPROM Read Error\n");
@@ -1585,6 +1593,8 @@ static int e1000_setup_tx_resources(struct e1000_adapter *adapter,
 	txdr->size = ALIGN(txdr->size, 4096);
 
 	txdr->desc = pci_alloc_consistent(pdev, txdr->size, &txdr->dma);
+	printk("allocate %d bytes for transmit desc ring: %p\n",
+	       txdr->size, txdr->desc);
 	if (!txdr->desc) {
 setup_tx_desc_die:
 		vfree(txdr->buffer_info);
@@ -1804,6 +1814,7 @@ static int e1000_setup_rx_resources(struct e1000_adapter *adapter,
 	rxdr->size = rxdr->count * desc_len;
 	rxdr->size = ALIGN(rxdr->size, 4096);
 
+	printk("we allocate %d descriptors for rx\n", rxdr->count);
 	rxdr->desc = pci_alloc_consistent(pdev, rxdr->size, &rxdr->dma);
 
 	if (!rxdr->desc) {
@@ -3194,6 +3205,7 @@ static int e1000_xmit_frame(struct sk_buff *skb, struct net_device *netdev)
 	int tso;
 	unsigned int f;
 
+	printk("try to send a packet\n");
 	/* This goes back to the question of how to logically map a tx queue
 	 * to a flow.  Right now, performance is impacted slightly negatively
 	 * if using multiple tx queues.  If the stack breaks away from a
@@ -3671,6 +3683,7 @@ static irqreturn_t e1000_intr_msi(int irq, void *data)
 	struct e1000_hw *hw = &adapter->hw;
 	u32 icr = er32(ICR);
 
+	printk("e1000_intr_msi is called\n");
 	/* in NAPI mode read ICR disables interrupts using IAM */
 
 	if (icr & (E1000_ICR_RXSEQ | E1000_ICR_LSC)) {
@@ -3717,6 +3730,7 @@ static irqreturn_t e1000_intr(int irq, void *data)
 	if (unlikely((!icr) || test_bit(__E1000_RESETTING, &adapter->flags)))
 		return IRQ_NONE;  /* Not our interrupt */
 
+	printk("e1000 gets an interrupt\n");
 	/* IMS will not auto-mask if INT_ASSERTED is not set, and if it is
 	 * not set, then the adapter didn't send an interrupt */
 	if (unlikely(hw->mac_type >= e1000_82571 &&
@@ -3799,6 +3813,8 @@ static int e1000_clean(struct napi_struct *napi, int budget)
 		e1000_irq_enable(adapter);
 	}
 
+	printk("e1000_clean: budget: %d, work_done: %d, tx_cleaned: %d\n",
+	       budget, work_done, tx_cleaned);
 	return work_done;
 }
 
@@ -3823,6 +3839,7 @@ static bool e1000_clean_tx_irq(struct e1000_adapter *adapter,
 	eop_desc = E1000_TX_DESC(*tx_ring, eop);
 
 	while (eop_desc->upper.data & cpu_to_le32(E1000_TXD_STAT_DD)) {
+		printk("e1000_clean_tx_irq: check desc %d\n", eop);
 		for (cleaned = false; !cleaned; ) {
 			tx_desc = E1000_TX_DESC(*tx_ring, i);
 			buffer_info = &tx_ring->buffer_info[i];
@@ -4090,6 +4107,8 @@ next_desc:
 
 		/* return some buffers to hardware, one at a time is too slow */
 		if (unlikely(cleaned_count >= E1000_RX_BUFFER_WRITE)) {
+			printk("cleaned_count in the loop: %d\n",
+			       cleaned_count);
 			adapter->alloc_rx_buf(adapter, rx_ring, cleaned_count);
 			cleaned_count = 0;
 		}
@@ -4129,6 +4148,7 @@ static void e1000_alloc_rx_buffers(struct e1000_adapter *adapter,
 	unsigned int i;
 	unsigned int bufsz = adapter->rx_buffer_len + NET_IP_ALIGN;
 
+	printk("e1000_alloc_rx_buffers is called\n");
 	i = rx_ring->next_to_use;
 	buffer_info = &rx_ring->buffer_info[i];
 
@@ -4143,6 +4163,7 @@ static void e1000_alloc_rx_buffers(struct e1000_adapter *adapter,
 		if (unlikely(!skb)) {
 			/* Better luck next round */
 			adapter->alloc_rx_buff_failed++;
+			printk("check point 1\n");
 			break;
 		}
 
@@ -4156,6 +4177,7 @@ static void e1000_alloc_rx_buffers(struct e1000_adapter *adapter,
 			/* Failed allocation, critical failure */
 			if (!skb) {
 				dev_kfree_skb(oldskb);
+				printk("check point 2\n");
 				break;
 			}
 
@@ -4163,6 +4185,7 @@ static void e1000_alloc_rx_buffers(struct e1000_adapter *adapter,
 				/* give up */
 				dev_kfree_skb(skb);
 				dev_kfree_skb(oldskb);
+				printk("check point 3\n");
 				break; /* while !buffer_info->skb */
 			}
 
@@ -4198,6 +4221,7 @@ map_skb:
 					 adapter->rx_buffer_len,
 					 PCI_DMA_FROMDEVICE);
 
+			printk("check point 4\n");
 			break; /* while !buffer_info->skb */
 		}
 		rx_desc = E1000_RX_DESC(*rx_ring, i);
@@ -4208,7 +4232,10 @@ map_skb:
 		buffer_info = &rx_ring->buffer_info[i];
 	}
 
+	printk("cleaned_count: %d\n", cleaned_count);
 	if (likely(rx_ring->next_to_use != i)) {
+		printk("old rx_ring next_to_use: %d, new one: %d\n",
+		       rx_ring->next_to_use, i);
 		rx_ring->next_to_use = i;
 		if (unlikely(i-- == 0))
 			i = (rx_ring->count - 1);
@@ -4451,6 +4478,8 @@ static void e1000_vlan_rx_register(struct net_device *netdev,
 	struct e1000_adapter *adapter = netdev_priv(netdev);
 	struct e1000_hw *hw = &adapter->hw;
 	u32 ctrl, rctl;
+
+	printk ("********e1000_vlan_rx_register. grp: %p\n", grp);
 
 	if (!test_bit(__E1000_DOWN, &adapter->flags))
 		e1000_irq_disable(adapter);

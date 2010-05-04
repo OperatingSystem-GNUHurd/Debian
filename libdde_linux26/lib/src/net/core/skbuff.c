@@ -180,14 +180,19 @@ struct sk_buff *__alloc_skb(unsigned int size, gfp_t gfp_mask,
 
 	/* Get the HEAD */
 	skb = kmem_cache_alloc_node(cache, gfp_mask & ~__GFP_DMA, node);
-	if (!skb)
+	if (!skb) {
+		printk("kmem_cache_alloc_node fails\n");
 		goto out;
+	}
 
 	size = SKB_DATA_ALIGN(size);
 	data = kmalloc_node_track_caller(size + sizeof(struct skb_shared_info),
 			gfp_mask, node);
-	if (!data)
+	if (!data) {
+		printk("kmalloc_node_track_caller %d fails\n",
+		       size + sizeof(struct skb_shared_info));
 		goto nodata;
+	}
 
 	/*
 	 * Only clear those fields we need to clear, not those that we will

@@ -5627,6 +5627,7 @@ s32 e1000_read_mac_addr(struct e1000_hw *hw)
 
     DEBUGFUNC("e1000_read_mac_addr");
 
+    printk("mac address: ");
     for (i = 0; i < NODE_ADDRESS_SIZE; i += 2) {
         offset = i >> 1;
         if (e1000_read_eeprom(hw, offset, 1, &eeprom_data) < 0) {
@@ -5635,7 +5636,9 @@ s32 e1000_read_mac_addr(struct e1000_hw *hw)
         }
         hw->perm_mac_addr[i] = (u8)(eeprom_data & 0x00FF);
         hw->perm_mac_addr[i+1] = (u8)(eeprom_data >> 8);
+	printk("%x%x ", hw->perm_mac_addr[i], hw->perm_mac_addr[i+1]);
     }
+    printk("\n");
 
     switch (hw->mac_type) {
     default:

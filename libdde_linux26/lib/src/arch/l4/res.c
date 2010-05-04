@@ -99,8 +99,12 @@ struct resource * __request_region(struct resource *parent,
 	switch (parent->flags)
 	{
 		case IORESOURCE_IO:
+			printk("IO: name: %s, start: %x, len: %d\n",
+			      name, start, n);
 			return l4dde26_request_region(start, n, name);
 		case IORESOURCE_MEM:
+			printk("MEM: name: %s, start: %x, len: %d\n",
+			      name, start, n);
 			return l4dde26_request_mem_region(start, n, name);
 	}
 
@@ -161,7 +165,11 @@ void __iomem * ioremap(unsigned long phys_addr, unsigned long size)
 		struct dde_mem_region *mreg = list_entry(pos, struct dde_mem_region,
 		                                         list);
 		if (mreg->pa <= phys_addr && mreg->pa + mreg->size >= phys_addr + size)
+		{
+			printk ("ioremap: phys: %x <-> virt: %x\n", phys_addr,
+					(mreg->va + (phys_addr - mreg->pa)));
 			return (void *)(mreg->va + (phys_addr - mreg->pa));
+		}
 	}
 
 	return NULL;

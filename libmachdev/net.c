@@ -122,7 +122,7 @@ struct net_data *nd_head;
 
 extern struct device_emulation_ops linux_net_emulation_ops;
 
-static int print_packet_size = 0;
+static int print_packet_size = 1;
 
 mach_msg_type_t header_type = 
 {
@@ -299,7 +299,10 @@ device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
   /* Search for the device.  */
   dev = search_netdev (name);
   if (!dev)
-    return D_NO_SUCH_DEVICE;
+    {
+      fprintf (stderr, "after search_netdev: cannot find %s\n", name);
+      return D_NO_SUCH_DEVICE;
+    }
 
   /* Allocate and initialize device data if this is the first open.  */
   nd = search_nd (dev);
@@ -307,7 +310,10 @@ device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
     {
       err = create_device_port (sizeof (*nd), &nd);
       if (err)
-	goto out;
+	{
+	  fprintf (stderr, "after create_device_port: cannot create a port\n");
+	  goto out;
+	}
 	
       nd->dev = dev;
       nd->device.emul_data = nd;
@@ -333,7 +339,10 @@ device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
 #endif
 
       if (dev_open(dev) < 0)
-	err = D_NO_SUCH_DEVICE;
+	{
+	  fprintf (stderr, "after dev_open: cannot open the device\n");
+	  err = D_NO_SUCH_DEVICE;
+	}
 
     out:
       if (err)
