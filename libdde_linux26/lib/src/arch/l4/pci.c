@@ -174,7 +174,8 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
 
 	return pcibios_enable_irq(dev);
 #endif
-	return 0;
+	WARN_UNIMPL;
+	return -1;
 }
 
 /*******************************************************************************************
