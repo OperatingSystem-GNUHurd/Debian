@@ -10,19 +10,25 @@ static struct sk_buff_head skb_done_list;
 struct net_device *search_netdev (char *name)
 {
 	struct net_device *dev;
+	struct net_device *found = NULL;
 	struct net *net;
 
+	printk("search device %s\n", name);
 	read_lock(&dev_base_lock);
 	for_each_net(net) {
 		for_each_netdev(net, dev) {
-			if (!strcmp (name, dev->name)
-			    && dev->base_addr && dev->base_addr != 0xffe0)
+			printk("there is device %s, base addr: %x\n",
+			       dev->name, dev->base_addr);
+			if (!strcmp (name, dev->name))
+			{
+				found = dev;
 				goto end;
+			}
 		}
 	}
 end:
 	read_unlock(&dev_base_lock);
-	return dev;
+	return found;
 }
 
 int linux_pkg_xmit (char *pkg_data, int len, void *del_data,
