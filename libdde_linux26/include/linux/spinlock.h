@@ -444,11 +444,7 @@ static int __lockfunc spin_trylock(spinlock_t *lock)
 #define _raw_spin_unlock(l) spin_unlock(l)
 #define _raw_spin_trylock(l) spin_trylock(l)
 
-#define spin_trylock_irqsave(lock, flags) \
-({ \
-	spin_trylock(lock) ? \
-	1 : ({ local_irq_restore(flags); 0; }); \
-})
+#define spin_trylock_irqsave(lock, flags) spin_trylock(lock)
 
 #define read_trylock(l) spin_trylock(l)
 #define write_trylock(l) read_trylock(l)
