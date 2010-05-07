@@ -144,13 +144,10 @@ static void intloop(void *arg)
 		ddekit_lock_lock (&ddekit_irq_ctrl[my_index].irqlock);
 		if (ddekit_irq_ctrl[my_index].handle_irq > 0) {
 			params->handler(params->priv);
-			/* If the irq has been disabled by the linux device,
-			 * we don't need to reenable the real one. */
-			device_irq_enable (master_device, my_index, TRUE);
 		}
-		else
-			ddekit_printf ("not handling IRQ %x, because it is disabled.",
-				       my_index);
+		/* If the irq has been disabled by the linux device,
+		 * we don't need to reenable the real one. */
+		device_irq_enable (master_device, my_index, TRUE);
 
 		if (ddekit_irq_ctrl[my_index].thread_exit) {
 			ddekit_lock_unlock (&ddekit_irq_ctrl[my_index].irqlock);
