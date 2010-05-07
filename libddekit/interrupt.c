@@ -98,11 +98,14 @@ static void intloop(void *arg)
 	ret = device_intr_notify (master_device, params->irq,
 				  0, 0x04000000, delivery_port,
 				  MACH_MSG_TYPE_MAKE_SEND);
-	if (!ret) {
+	ddekit_printf ("device_intr_notify returns %d\n", ret);
+	if (ret) {
 		/* inform thread creator of error */
 		/* XXX does omega0 error code have any meaning to DDEKit users? */
 		params->start_err = ret;
 		ddekit_sem_up(params->started);
+		ddekit_printf ("cannot install irq %d\n", params->irq);
+		return;
 	}
 	device_irq_enable (master_device, params->irq, TRUE);
 
