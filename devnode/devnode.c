@@ -27,7 +27,6 @@
 #include <errno.h>
 #include <error.h>
 #include <stddef.h>
-#include <fcntl.h>
 
 #include <hurd.h>
 #include <mach.h>
@@ -68,7 +67,7 @@ int trivfs_fsid = 0;
 int trivfs_support_read = 0;
 int trivfs_support_write = 0;
 int trivfs_support_exec = 0;
-int trivfs_allow_open = O_READ | O_WRITE;
+int trivfs_allow_open = 0;
 
 struct port_class *trivfs_protid_portclasses[1];
 struct port_class *trivfs_cntl_portclasses[1];
