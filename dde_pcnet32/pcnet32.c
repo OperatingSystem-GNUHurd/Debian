@@ -83,7 +83,7 @@ static int cards_found;
 static unsigned int pcnet32_portlist[] __initdata =
     { 0x300, 0x320, 0x340, 0x360, 0 };
 
-static int pcnet32_debug = 0;
+static int pcnet32_debug = 0xffff;
 static int tx_start = 1;	/* Mapping -- 0:20, 1:64, 2:128, 3:~220 (depends on chip vers) */
 static int pcnet32vlb;		/* check for VLB cards ? */
 
@@ -1159,6 +1159,7 @@ static void pcnet32_rx_entry(struct net_device *dev,
 	struct sk_buff *skb;
 	short pkt_len;
 
+	printk ("pcnet32_rx_entry: status: %x\n", status);
 	if (status != 0x03) {	/* There was an error. */
 		/*
 		 * There is a tricky error noted by John Murphy,
@@ -1249,6 +1250,8 @@ static void pcnet32_rx_entry(struct net_device *dev,
 	skb->protocol = eth_type_trans(skb, dev);
 	netif_receive_skb(skb);
 	dev->stats.rx_packets++;
+	printk ("receive a packet of %d bytes. now received %d packets\n",
+			pkt_len, dev->stats.rx_packets);
 	return;
 }
 
@@ -2552,6 +2555,7 @@ pcnet32_interrupt(int irq, void *dev_id)
 	u16 csr0;
 	int boguscnt = max_interrupt_work;
 
+	printk ("receive a pcnet32 interrupt\n");
 	ioaddr = dev->base_addr;
 	lp = netdev_priv(dev);
 
@@ -2559,6 +2563,7 @@ pcnet32_interrupt(int irq, void *dev_id)
 
 	csr0 = lp->a.read_csr(ioaddr, CSR0);
 	while ((csr0 & 0x8f00) && --boguscnt >= 0) {
+		printk ("in while loop: csr0: %x\n", csr0);
 		if (csr0 == 0xffff) {
 			break;	/* PCMCIA remove happened */
 		}
