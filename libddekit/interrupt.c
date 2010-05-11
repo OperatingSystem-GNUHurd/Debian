@@ -17,6 +17,7 @@
 #include "ddekit/semaphore.h"
 #include "ddekit/printf.h"
 #include "ddekit/memory.h"
+#include "ddekit/condvar.h"
 
 #include "device_U.h"
 
@@ -54,6 +55,7 @@ static struct
 {
 	int              handle_irq; /* nested irq disable count */
 	ddekit_lock_t    irqlock;
+	struct ddekit_condvar	*cond;
 	ddekit_thread_t  *irq_thread; /* thread ID for detaching from IRQ later on */
 	boolean_t        thread_exit;
 	thread_t         mach_thread;
@@ -142,9 +144,12 @@ static void intloop(void *arg)
 
 		/* only call registered handler function, if IRQ is not disabled */
 		ddekit_lock_lock (&ddekit_irq_ctrl[my_index].irqlock);
-		if (ddekit_irq_ctrl[my_index].handle_irq > 0) {
-			params->handler(params->priv);
+		while (ddekit_irq_ctrl[my_index].handle_irq <= 0) {
+			ddekit_condvar_wait (ddekit_irq_ctrl[my_index].cond,
+					&ddekit_irq_ctrl[my_index].irqlock);
+			// TODO if it's edged-triggered irq, the interrupt will be lost.
 		}
+		params->handler(params->priv);
 		/* If the irq has been disabled by the linux device,
 		 * we don't need to reenable the real one. */
 		device_irq_enable (master_device, my_index, TRUE);
@@ -214,6 +219,7 @@ ddekit_thread_t *ddekit_interrupt_attach(int irq, int shared,
 	ddekit_irq_ctrl[irq].handle_irq = 1; /* IRQ nesting level is initially 1 */
 	ddekit_irq_ctrl[irq].irq_thread = thread;
 	ddekit_lock_init_unlocked (&ddekit_irq_ctrl[irq].irqlock);
+	ddekit_irq_ctrl[irq].cond = ddekit_condvar_init ();
 	ddekit_irq_ctrl[irq].thread_exit = FALSE;
 
 
@@ -235,6 +241,7 @@ ddekit_thread_t *ddekit_interrupt_attach(int irq, int shared,
 void ddekit_interrupt_detach(int irq)
 {
 	ddekit_interrupt_disable(irq);
+	// TODO  the code should be removed.
 	ddekit_lock_lock (&ddekit_irq_ctrl[irq].irqlock);
 	if (ddekit_irq_ctrl[irq].handle_irq == 0) {
 		ddekit_irq_ctrl[irq].thread_exit = TRUE;
@@ -264,6 +271,8 @@ void ddekit_interrupt_enable(int irq)
 	if (ddekit_irq_ctrl[irq].irqlock) {
 		ddekit_lock_lock (&ddekit_irq_ctrl[irq].irqlock);
 		++ddekit_irq_ctrl[irq].handle_irq;
+		if (ddekit_irq_ctrl[irq].handle_irq > 0)
+			ddekit_condvar_signal (ddekit_irq_ctrl[irq].cond);
 		ddekit_lock_unlock (&ddekit_irq_ctrl[irq].irqlock);
 	}
 }
