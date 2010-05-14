@@ -2,9 +2,9 @@ SYSTEMS = x86-l4v2
 ARCH = x86
 SYSTEM = x86-l4v2
 
-DDEKITLIBDIR = /root/hurd/libddekit/
-DDEKITINCDIR = /root/hurd/libddekit/include
-DDE26LIBDIR = /root/hurd/libdde_linux26/lib/src
-OBJ_BASE = /root/hurd/libdde_linux26/build
+DDEKITLIBDIR = $(PKGDIR)/../libddekit/
+DDEKITINCDIR = $(PKGDIR)/../libddekit/include
+DDE26LIBDIR = $(PKGDIR)/lib/src
+OBJ_BASE = $(PKGDIR)/build
 
 L4LIBDIR = .

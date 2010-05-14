@@ -233,7 +233,7 @@ VPATH_SRC_BASE ?= $(SRC_DIR)
 MAKECONFLOCAL ?= Makeconf.local
 -include $(MAKECONFLOCAL)
 
-DROPS_STDDIR	?= /root/hurd/libdde_linux26/build
+DROPS_STDDIR	?= $(PKGDIR)/build
 ifeq ($(STATICFILE),)
 STATICFILE	= $(OBJ_BASE)/pkg/STATIC $(L4DIR)/pkg/STATIC
 endif

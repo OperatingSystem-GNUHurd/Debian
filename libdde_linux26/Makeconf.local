@@ -8,4 +8,4 @@ SYSTEMS = x86-l4v2
 ARCH = x86
 SYSTEM = x86-l4v2
 
-OBJ_BASE = /root/hurd/libdde_linux26/build
+OBJ_BASE = $(PKGDIR)/build
