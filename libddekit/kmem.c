@@ -49,8 +49,9 @@ extern int printf (const char *, ...);
 /* round up the size at alignment of page size. */
 #define ROUND_UP(size) ((size) + __vm_page_size - 1) & (~(__vm_page_size - 1))
 
+#define CACHE_LINE	32
 /* Mininum amount that linux_kmalloc will allocate.  */
-#define MIN_ALLOC	12
+#define MIN_ALLOC	CACHE_LINE
 
 #ifndef NBPW
 #define NBPW		32
@@ -61,6 +62,7 @@ struct blkhdr
 {
   unsigned short free;	/* 1 if block is free */
   unsigned short size;	/* size of block */
+  char stuffing[28];
 };
 
 /* This structure heads a page allocated by linux_kmalloc.  */
@@ -68,6 +70,7 @@ struct pagehdr
 {
   unsigned size;		/* size (multiple of PAGE_SIZE) */
   struct pagehdr *next;	/* next header in list */
+  char stuffing[24];
 };
 
 /* This structure describes a memory chunk.  */
@@ -263,7 +266,7 @@ linux_kmalloc (unsigned int size, int priority)
   if (size < MIN_ALLOC)
     size = MIN_ALLOC;
   else
-    size = (size + sizeof (int) - 1) & ~(sizeof (int) - 1);
+    size = (size + CACHE_LINE - 1) & ~(CACHE_LINE - 1);
 
   mutex_lock (&mem_lock);
 
