@@ -24,7 +24,7 @@
 
 #include <errno.h>
 #include <stdbool.h>
-#include <pthread.h>
+#include <cthreads.h>
 
 
 /* Allocate a buffer in *PTR of size SIZE which must be a power of 2
@@ -67,7 +67,7 @@ struct hurd_slab_space
   
   /* Protects this structure, along with all the slabs.  No need to
      delay initialization of this field.  */
-  pthread_mutex_t lock;
+  struct mutex lock;
 
   /* The size and alignment of objects allocated using this slab
      space.  These to fields are used to calculate the final object
