@@ -16,16 +16,16 @@
 #include <error.h>
 #include <string.h>
 #include <sys/mman.h>
+
 #include "mach_U.h"
+#include "libhurd-slab/slab.h"
 
 #include "util.h"
 #include "ddekit/memory.h"
 #include "ddekit/panic.h"
 #include "ddekit/pgtab.h"
 
-extern void * linux_kmalloc (unsigned int size, int priority);
-extern void linux_kfree (void *p);
-
+#define CACHE_LINE_SIZE 32
 
 /****************
  ** Page cache **
@@ -81,8 +81,7 @@ void ddekit_slab_setup_page_cache(unsigned pages)
 /* ddekit slab facilitates l4slabs */
 struct ddekit_slab
 {
-	int            size;
-	int            contiguous;
+  struct hurd_slab_space space;
 };
 
 /**
@@ -90,10 +89,9 @@ struct ddekit_slab
  */
 void *ddekit_slab_alloc(struct ddekit_slab * slab)
 {
-	if (slab->contiguous)
-		return linux_kmalloc (slab->size, 0);
-	else
-		return ddekit_simple_malloc (slab->size);
+	void *buffer;
+	error_t err = hurd_slab_alloc (&slab->space, &buffer);
+	return err ? NULL : buffer;
 }
 
 
@@ -102,10 +100,7 @@ void *ddekit_slab_alloc(struct ddekit_slab * slab)
  */
 void  ddekit_slab_free(struct ddekit_slab * slab, void *objp)
 {
-	if (slab->contiguous)
-		linux_kfree (objp);
-	else
-		ddekit_simple_free (objp);
+	hurd_slab_dealloc (&slab->space, objp);
 }
 
 
@@ -141,9 +136,22 @@ void *ddekit_slab_get_data(struct ddekit_slab * slab)
  */
 void  ddekit_slab_destroy (struct ddekit_slab * slab)
 {
-	ddekit_simple_free(slab);
+	hurd_slab_free ((hurd_slab_space_t) slab);
 }
 
+error_t allocate_buffer (void *hook, size_t size, void **ptr)
+{
+	*ptr = ddekit_large_malloc (size);
+	if (*ptr == NULL)
+	  return ENOMEM;
+	return 0;
+}
+
+error_t deallocate_buffer (void *hook, void *buffer, size_t size)
+{
+	ddekit_large_free (buffer);
+	return 0;
+}
 
 /**
  * Initialize slab cache
@@ -156,10 +164,21 @@ void  ddekit_slab_destroy (struct ddekit_slab * slab)
 struct ddekit_slab * ddekit_slab_init(unsigned size, int contiguous)
 {
 	struct ddekit_slab * slab;
+	error_t err;
 
-	slab = (struct ddekit_slab *) ddekit_simple_malloc(sizeof(*slab));
-	slab->size = size;
-	slab->contiguous = contiguous;
+	if (contiguous)
+	  err = hurd_slab_create (size, CACHE_LINE_SIZE, allocate_buffer,
+				  deallocate_buffer, NULL, NULL, NULL,
+				  (hurd_slab_space_t *) &slab);
+	else
+	  /* If the object isn't used by DMA,
+	   * we can use all default settings. */
+	  err = hurd_slab_create (size, 0, NULL, NULL, NULL, NULL, NULL,
+				  (hurd_slab_space_t *) &slab);
+	if (err)
+	  {
+	    error (2, err, "hurd_slab_create");
+	  }
 	return slab;
 }
 

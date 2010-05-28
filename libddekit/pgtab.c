@@ -82,14 +82,14 @@ ddekit_addr_t ddekit_pgtab_get_physaddr(const void *virtual)
 	e = get_entry_from_virt ((ddekit_addr_t) virtual);
 	if (e)
 	{
-		ddekit_addr_t phys = e->physical;
+		ddekit_addr_t phys = e->physical + (virtual - e->virtual);
 		mutex_unlock (&lock);
 		return phys;
 	}
 	mutex_unlock (&lock);
 
-	extern int virt_to_phys (vm_address_t addr);
-	return virt_to_phys ((vm_address_t) virtual);
+	ddekit_printf ("a virtual address %p doesn't exist.\n", virtual);
+	return -1;
 }
 
 /**
@@ -106,14 +106,16 @@ ddekit_addr_t ddekit_pgtab_get_virtaddr(const ddekit_addr_t physical)
 	e = get_entry_from_phys (physical);
 	if (e)
 	{
-		ddekit_addr_t virt = (ddekit_addr_t) e->virtual;
+		ddekit_addr_t virt = (ddekit_addr_t) e->virtual 
+			+ (physical - e->physical);
 		mutex_unlock (&lock);
 		return virt;
 	}
 	mutex_unlock (&lock);
 
-	extern int phys_to_virt (vm_address_t addr);
-	return phys_to_virt (physical);
+
+	ddekit_printf ("a physical address %p doesn't exist.\n", physical);
+	return -1;
 }
 
 // TODO
