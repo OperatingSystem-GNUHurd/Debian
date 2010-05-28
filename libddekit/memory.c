@@ -12,10 +12,16 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
+#include <error.h>
+#include <string.h>
+#include <sys/mman.h>
+#include "mach_U.h"
 
 #include "util.h"
 #include "ddekit/memory.h"
 #include "ddekit/panic.h"
+#include "ddekit/pgtab.h"
 
 extern void * linux_kmalloc (unsigned int size, int priority);
 extern void linux_kfree (void *p);
@@ -172,7 +178,12 @@ struct ddekit_slab * ddekit_slab_init(unsigned size, int contiguous)
  */
 void ddekit_large_free(void *objp)
 {
-	linux_kfree (objp);
+  int err;
+  int size = ddekit_pgtab_get_size (objp);
+  ddekit_pgtab_clear_region (objp, 0);
+  err = munmap (objp, size);
+  if (err < 0)
+    error (0, errno, "munmap");
 }
 
 
@@ -183,8 +194,22 @@ void ddekit_large_free(void *objp)
  */
 void *ddekit_large_malloc(int size)
 {
-	ddekit_printf("ddekit_large_malloc %d bytes\n", size);
-	return linux_kmalloc (size, 0);
+  error_t err;
+  vm_address_t vstart, pstart;
+  extern mach_port_t priv_host;
+
+  /* Allocate memory.  */
+  err = vm_dma_buff_alloc (priv_host, mach_task_self (),
+			   size, &vstart, &pstart);
+  if (err)
+    {
+      error (0, err, "vm_dma_buff_alloc");
+      vstart = 0;
+    }
+  else
+    ddekit_pgtab_set_region_with_size ((void *) vstart, pstart, size, 0);
+
+  return (void *) vstart;
 }
 
 

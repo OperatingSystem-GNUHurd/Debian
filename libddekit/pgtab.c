@@ -11,15 +11,63 @@
  * For this to work, dataspaces must be attached to l4rm regions!
  */
 
+#include <unistd.h>
+#include <error.h>
+#include <errno.h>
 #include <mach.h>
+#include <cthreads.h>
 
 #include "ddekit/pgtab.h"
 #include "util.h"
 #include "config.h"
 
+/* A structure of recording a region of memory. */
+struct entry
+{
+	void *virtual;
+	ddekit_addr_t physical;
+	int size;
+	int type;
+};
+
+static struct entry *regions;
+/* The number of memory regions in the array REGIONS */
+static int num_regions;
+/* The size of the array REGIONS */
+static int capability;
+static struct mutex lock;
+#define INIT_SIZE 128
+
 /*****************************
  ** Page-table facility API **
  *****************************/
+
+static struct entry *get_entry_from_phys (const ddekit_addr_t phys)
+{
+	int i;
+
+	for (i = 0; i < num_regions; i++)
+	{
+		if (regions[i].physical <= phys
+		    && regions[i].physical + regions[i].size > phys)
+			return &regions[i];
+	}
+	return NULL;
+}
+
+static struct entry *get_entry_from_virt (const ddekit_addr_t virt)
+{
+	int i;
+
+	for (i = 0; i < num_regions; i++)
+	{
+		if ((ddekit_addr_t) regions[i].virtual <= virt
+		    && ((ddekit_addr_t) regions[i].virtual)
+		    + regions[i].size > virt)
+			return &regions[i];
+	}
+	return NULL;
+}
 
 /**
  * Get physical address for virtual address
@@ -29,6 +77,17 @@
  */
 ddekit_addr_t ddekit_pgtab_get_physaddr(const void *virtual)
 {
+	struct entry *e;
+	mutex_lock (&lock);
+	e = get_entry_from_virt ((ddekit_addr_t) virtual);
+	if (e)
+	{
+		ddekit_addr_t phys = e->physical;
+		mutex_unlock (&lock);
+		return phys;
+	}
+	mutex_unlock (&lock);
+
 	extern int virt_to_phys (vm_address_t addr);
 	return virt_to_phys ((vm_address_t) virtual);
 }
@@ -41,6 +100,18 @@ ddekit_addr_t ddekit_pgtab_get_physaddr(const void *virtual)
  */
 ddekit_addr_t ddekit_pgtab_get_virtaddr(const ddekit_addr_t physical)
 {
+	struct entry *e;
+
+	mutex_lock (&lock);
+	e = get_entry_from_phys (physical);
+	if (e)
+	{
+		ddekit_addr_t virt = (ddekit_addr_t) e->virtual;
+		mutex_unlock (&lock);
+		return virt;
+	}
+	mutex_unlock (&lock);
+
 	extern int phys_to_virt (vm_address_t addr);
 	return phys_to_virt (physical);
 }
@@ -63,21 +134,18 @@ int ddekit_pgtab_get_type(const void *virtual)
 	return 0;
 }
 
-//TODO
 int ddekit_pgtab_get_size(const void *virtual)
 {
-#if 0
-	/* find pgtab object */
-	struct pgtab_object *p = l4rm_get_userptr(virtual);
-	if (!p) {
-		/* XXX this is verbose */
-		LOG_Error("no virt->phys mapping for %p", virtual);
-		return -1;
+	struct entry *e;
+	mutex_lock (&lock);
+	e = get_entry_from_virt ((ddekit_addr_t) virtual);
+	if (e)
+	{
+		int size = e->size;
+		mutex_unlock (&lock);
+		return size;
 	}
-
-	return p->size;
-#endif
-	UNIMPL;
+	mutex_unlock (&lock);
 	return 0;
 }
 
@@ -90,7 +158,16 @@ int ddekit_pgtab_get_size(const void *virtual)
  */
 void ddekit_pgtab_clear_region(void *virtual, int type)
 {
-	UNIMPL;
+	struct entry *e;
+
+	mutex_lock (&lock);
+	e = get_entry_from_virt ((ddekit_addr_t) virtual);
+	if (e)
+	{
+		*e = regions[num_regions - 1];
+		num_regions--;
+	}
+	mutex_unlock (&lock);
 }
 
 
@@ -104,11 +181,33 @@ void ddekit_pgtab_clear_region(void *virtual, int type)
  */
 void ddekit_pgtab_set_region(void *virtual, ddekit_addr_t physical, int pages, int type)
 {
-	UNIMPL;
+	ddekit_pgtab_set_region (virtual, physical, pages * getpagesize (), type);
 }
 
 void ddekit_pgtab_set_region_with_size(void *virt, ddekit_addr_t phys, int size, int type)
 {
-	UNIMPL;
+	mutex_lock (&lock);
+	if (num_regions == capability)
+	{
+		capability *= 2;
+		regions = realloc (regions, capability * sizeof (struct entry));
+		if (regions == NULL)
+			error (2, errno, "realloc");
+	}
+	regions[num_regions].virtual = virt;
+	regions[num_regions].physical = phys;
+	regions[num_regions].size = size;
+	regions[num_regions].type = type;
+	num_regions++;
+	mutex_unlock (&lock);
+	ddekit_printf ("******there are %d regions (%d bytes)\n",
+		       num_regions, size);
 }
 
+int pgtab_init ()
+{
+	capability = INIT_SIZE;
+	regions = malloc (sizeof (struct entry) * capability);
+	mutex_init (&lock);
+	return 0;
+}
