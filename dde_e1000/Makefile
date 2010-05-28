@@ -9,7 +9,7 @@ TARGET         = dde_e1000
 
 SRC_C          = main.c e1000_ethtool.c e1000_hw.c e1000_main.c e1000_param.c
 
-LIBS          += ../libmachdev/libmachdev.a -ldde_linux26.o -ldde_linux26_net ../libddekit/libddekit.a -lfshelp -ltrivfs -lpciaccess -lthreads -lshouldbeinlibc -lports
+LIBS          += ../libmachdev/libmachdev.a -ldde_linux26.o -ldde_linux26_net ../libddekit/libddekit.a -lfshelp -ltrivfs -lpciaccess -lthreads -lshouldbeinlibc -lports -lhurd-slab
 CFLAGS        += -g
 
 # DDE configuration
