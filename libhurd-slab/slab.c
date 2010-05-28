@@ -33,6 +33,8 @@
 
 #include "slab.h"
 
+#define SLAB_PAGES 4
+
 
 /* Number of pages the slab allocator has allocated.  */
 static int __hurd_slab_nr_pages;
@@ -72,10 +74,10 @@ static error_t
 allocate_buffer (struct hurd_slab_space *space, size_t size, void **ptr)
 {
   if (space->allocate_buffer)
-    return space->allocate_buffer (space->hook, getpagesize (), ptr);
+    return space->allocate_buffer (space->hook, size, ptr);
   else
     {
-      *ptr = mmap (NULL, getpagesize (), PROT_READ|PROT_WRITE,
+      *ptr = mmap (NULL, size, PROT_READ|PROT_WRITE,
 		   MAP_PRIVATE|MAP_ANONYMOUS, 0, 0);
       if (*ptr == MAP_FAILED)
 	return errno;
@@ -178,8 +180,9 @@ reap (struct hurd_slab_space *space)
 	     This frees the slab and all its buffers, since they live on
 	     the same page.  */
 	  err = deallocate_buffer (space, (void *) (((uintptr_t) s)
-						    & ~(getpagesize () - 1)),
-				   getpagesize ());
+						    + sizeof (struct hurd_slab)
+						    - space->slab_size), 
+				   space->slab_size);
 	  if (err)
 	    break;
 	  __hurd_slab_nr_pages--;
@@ -211,7 +214,7 @@ init_space (hurd_slab_space_t space)
   /* If SIZE is so big that one object can not fit into a page
      something gotta be really wrong.  */ 
   size = (size + alignment - 1) & ~(alignment - 1);
-  assert (size <= (getpagesize () 
+  assert (size <= (space->slab_size 
 		   - sizeof (struct hurd_slab) 
 		   - sizeof (union hurd_bufctl)));
 
@@ -220,7 +223,7 @@ init_space (hurd_slab_space_t space)
   /* Number of objects that fit into one page.  Used to detect when
      there are no free objects left in a slab.  */
   space->full_refcount 
-    = ((getpagesize () - sizeof (struct hurd_slab)) / size);
+    = ((space->slab_size - sizeof (struct hurd_slab)) / size);
 
   /* FIXME: Notify pager's reap functionality about this slab
      space.  */
@@ -246,17 +249,17 @@ grow (struct hurd_slab_space *space)
   if (!space->initialized)
     init_space (space);
 
-  err = allocate_buffer (space, getpagesize (), &p);
+  err = allocate_buffer (space, space->slab_size, &p);
   if (err)
     return err;
 
   __hurd_slab_nr_pages++;
 
-  new_slab = (p + getpagesize () - sizeof (struct hurd_slab));
+  new_slab = (p + space->slab_size - sizeof (struct hurd_slab));
 
   /* Calculate the number of objects that the page can hold.
      SPACE->size should be adjusted to handle alignment.  */
-  nr_objs = ((getpagesize () - sizeof (struct hurd_slab))
+  nr_objs = ((space->slab_size - sizeof (struct hurd_slab))
 	     / space->size);
   
   for (i = 0; i < nr_objs; i++, p += space->size)
@@ -279,7 +282,7 @@ grow (struct hurd_slab_space *space)
 		  (*space->destructor) (space->hook, buffer);
 		}
 
-	      deallocate_buffer (space, p, getpagesize ());
+	      deallocate_buffer (space, p, space->slab_size);
 	      return err;
 	    }
 	}
@@ -324,11 +327,12 @@ hurd_slab_init (hurd_slab_space_t space, size_t size, size_t alignment,
 
   space->requested_size = size;
   space->requested_align = alignment;
+  space->slab_size = getpagesize () * SLAB_PAGES;
 
   /* Testing the size here avoids an assertion in init_space.  */
   size = size + sizeof (union hurd_bufctl);
   size = (size + alignment - 1) & ~(alignment - 1);
-  if (size > (getpagesize () - sizeof (struct hurd_slab)
+  if (size > (space->slab_size - sizeof (struct hurd_slab)
 	      - sizeof (union hurd_bufctl)))
     return EINVAL;
 

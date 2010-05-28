@@ -75,6 +75,9 @@ struct hurd_slab_space
   size_t requested_size;
   size_t requested_align;
 
+  /* The size of each slab. */
+  size_t slab_size;
+
   /* The buffer allocator.  */
   hurd_slab_allocate_buffer_t allocate_buffer;
 
