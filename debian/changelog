@@ -30,6 +30,7 @@ hurd (20090404-3) UNRELEASED; urgency=low
   * debian/patches/proxy-defpager.diff: New patch to fix proxying defpager.
   * debian/patches/ext2fs_large_stores.patch: Apply Alioth fix #312328 from
     Fredrik Hammar to fix random startup crash (Closes: Bug#576519).
+  * debian/patches/procfs.patch: Fix swap size printout.
 
   [ Guillem Jover ]
   * Update make-new-tarball.sh to exclude git instead of CVS paths.
