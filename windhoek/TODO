@@ -1,0 +1,8 @@
+* implement notifications (and tickets)
+* test and fix scatter-gather I/O
+* support multiple dataspaces per client
+  * clients can add dataspaces to an open connection
+  * SG I/O should be possible across all dataspaces
+    of a connection
+* replace IDE by libATA
+* add USB Storage
