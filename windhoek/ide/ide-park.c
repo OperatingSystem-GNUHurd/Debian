@@ -3,6 +3,8 @@
 #include <linux/jiffies.h>
 #include <linux/blkdev.h>
 
+#include <ddekit/timer.h>
+
 DECLARE_WAIT_QUEUE_HEAD(ide_park_wq);
 
 static void issue_park_cmd(ide_drive_t *drive, unsigned long timeout)

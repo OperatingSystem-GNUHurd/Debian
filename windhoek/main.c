@@ -26,28 +26,21 @@
 #include <linux/list.h>
 #include <linux/buffer_head.h>
 
-#include <l4/dde/dde.h>
-#include <l4/dde/ddekit/initcall.h>
-#include <l4/dde/ddekit/assert.h>
-#include <l4/dde/linux26/dde26.h>
-
-#include <l4/util/parse_cmd.h>
-#include <l4/util/util.h>
-#include <l4/log/l4log.h>
-#include <l4/names/libnames.h>
-
-#include "windhoek_local.h"
-#include <l4/windhoek/server-internal-server.h>
+#include <dde.h>
+#include <ddekit/initcall.h>
+#include <ddekit/assert.h>
+#include <dde26.h>
 
 extern int bdev_cache_init(void);
 extern int ide_generic_init(void);
 extern int ide_cdrom_init(void);
 extern int genhd_device_init(void);
 
-l4_threadid_t main_thread = L4_INVALID_ID;
+int using_std = 1;
 
 int main(int argc, const char **argv)
 {
+	extern void ds_server(void);
 	int err;
 
 	l4dde26_init();
@@ -59,7 +52,6 @@ int main(int argc, const char **argv)
 	printk("Initialized blockdev caches. (%x)\n", err);
 
 	gendisk_init();
-	client_state_init();
 	l4dde26_do_initcalls();
 
 	/* no generic driver, we use a dedicated one
@@ -69,20 +61,16 @@ int main(int argc, const char **argv)
 	printk("Initialized generic IDE driver. (%x)\n", err);
 #endif
 
-
-	err = names_register("windhoek");
-	printk("registered at names. \n", err);
-
-	main_thread = l4_myself();
-
 	printk("+----------------------------------------+\n");
 	printk("| Windhoek block server                  |\n");
 	printk("| ready to rumble....                    |\n");
 	printk("+----------------------------------------+\n");
 
-	windhoek_server_server_loop(NULL);
+	mach_device_init();
+	trivfs_init();
 
-	l4_sleep_forever();
+	cthread_detach (cthread_fork (ds_server, NULL));
+	trivfs_server();
 
 	return 0;
 }

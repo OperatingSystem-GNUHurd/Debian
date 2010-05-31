@@ -22,13 +22,15 @@ CDROMFILES = $(addprefix cdrom/, $(CDROM_SRC))
 PARTITION_SRC = msdos.c check.c
 PARTITIONFILES = $(addprefix partitions/, $(PARTITION_SRC))
 
-SRC_C          = main.c genhd.c components.c
+SRC_C          = main.c genhd.c
 SRC_C          += $(IDEFILES) \
 				 $(CDROMFILES) \
 				 $(PARTITIONFILES)
 
-LIBS          += --whole-archive -ldde_linux26_block --no-whole-archive -ldde_linux26.o \
-				 -lddekit
+LIBS          += --whole-archive -ldde_linux26_block --no-whole-archive	\
+		 -ldde_linux26.o -lddekit ../libmachdev/libmachdev.a	\
+		 -lfshelp -ltrivfs -lpciaccess -lthreads -lshouldbeinlibc \
+		 -lports -lhurd-slab
 
 # DDE configuration
 include $(L4DIR)/Makeconf

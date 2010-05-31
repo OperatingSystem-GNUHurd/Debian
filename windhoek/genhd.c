@@ -14,7 +14,8 @@
 #include <linux/hdreg.h>
 #include <linux/ide.h>
 
-#include "windhoek_local.h"
+#define MAX_GENDISKS 10
+#define DEBUG_MSG(msg, ...) printk("%s: \033[34m"msg"\033[0m\n", __FUNCTION__, ##__VA_ARGS__)
 
 /*
  * Array for storing all known block devices

@@ -41,6 +41,8 @@
 
 #include "local.h"
 
+#include <ddekit/timer.h>
+
 /**
  *	generic_id		-	add a generic drive id
  *	@drive:	drive to make an ID block for

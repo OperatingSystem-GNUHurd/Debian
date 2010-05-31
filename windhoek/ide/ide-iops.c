@@ -29,6 +29,8 @@
 
 #include "local.h"
 
+#include <ddekit/timer.h>
+
 /*
  *	Conventional PIO operations for ATA devices
  */
