@@ -102,7 +102,6 @@ struct skb_reply
 struct sk_buff;
 void skb_done_queue(struct sk_buff *skb);
 struct sk_buff *skb_done_dequeue();
-void linux_net_emulation_init ();
 void *skb_reply(struct sk_buff *skb);
 int netdev_flags(struct net_device *dev);
 char *netdev_addr(struct net_device *dev);
@@ -116,7 +115,7 @@ int dev_open(struct net_device *dev);
 void *l4dde26_register_rx_callback(void *cb);
 void skb_done_head_init();
 
-struct net_data *nd_head;
+static struct net_data *nd_head;
 
 /* Forward declarations.  */
 
@@ -124,7 +123,7 @@ extern struct device_emulation_ops linux_net_emulation_ops;
 
 static int print_packet_size = 1;
 
-mach_msg_type_t header_type = 
+static mach_msg_type_t header_type = 
 {
   MACH_MSG_TYPE_BYTE,
   8,
@@ -135,7 +134,7 @@ mach_msg_type_t header_type =
   0
 };
 
-mach_msg_type_t packet_type = 
+static mach_msg_type_t packet_type = 
 {
   MACH_MSG_TYPE_BYTE,	/* name */
   8,			/* size */
@@ -145,7 +144,7 @@ mach_msg_type_t packet_type =
   FALSE			/* deallocate */
 };
 
-struct net_data *search_nd (struct net_device *dev)
+static struct net_data *search_nd (struct net_device *dev)
 {
   struct net_data *nd = nd_head;
 
@@ -163,7 +162,7 @@ struct net_data *search_nd (struct net_device *dev)
 
 /* actions before freeing the sk_buff SKB.
  * If it returns 1, the packet will be deallocated later. */
-int 
+static int 
 pre_kfree_skb (struct sk_buff *skb, void *data)
 {
   struct skb_reply *reply = data;
@@ -190,7 +189,7 @@ pre_kfree_skb (struct sk_buff *skb, void *data)
  * Deliver the message to all right pfinet servers that
  * connects to the virtual network interface.
  */
-int
+static int
 deliver_msg(mach_port_t dest, struct net_rcv_msg *msg)
 {
   mach_msg_return_t err;
@@ -217,7 +216,7 @@ deliver_msg(mach_port_t dest, struct net_rcv_msg *msg)
 }
 
 /* Accept packet SKB received on an interface.  */
-void
+static void
 netif_rx_handle (char *data, int len, struct net_device *dev)
 {
   int pack_size;
@@ -438,7 +437,7 @@ device_write (void *d, mach_port_t reply_port,
 /*
  * Other network operations
  */
-io_return_t
+static io_return_t
 net_getstat(dev, flavor, status, count)
 	struct net_device	*dev;
 	dev_flavor_t	flavor;
@@ -641,7 +640,7 @@ device_set_filter (void *d, mach_port_t port, int priority,
 }
 
 /* Do any initialization required for network devices.  */
-void linux_net_emulation_init ()
+static void linux_net_emulation_init ()
 {
   skb_done_head_init();
   l4dde26_register_rx_callback(netif_rx_handle);
@@ -667,3 +666,9 @@ struct device_emulation_ops linux_net_emulation_ops =
   NULL,
   NULL
 };
+
+void register_net()
+{
+	extern void reg_dev_emul (struct device_emulation_ops *ops);
+	reg_dev_emul (&linux_net_emulation_ops);
+}

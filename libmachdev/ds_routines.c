@@ -73,13 +73,12 @@ static struct port_class *dev_class;
 
 extern struct device_emulation_ops linux_net_emulation_ops;
 
-#define NUM_EMULATION (sizeof (emulation_list) / sizeof (emulation_list[0]))
+#define NUM_EMULATION num_emul
+#define MAX_NUM_EMULATION 32
 
 /* List of emulations.  */
-static struct device_emulation_ops *emulation_list[] =
-{
-  &linux_net_emulation_ops,
-};
+static struct device_emulation_ops *emulation_list[MAX_NUM_EMULATION];
+static int num_emul;
 
 boolean_t is_master_device (mach_port_t port);
 
@@ -445,6 +444,11 @@ demuxer (mach_msg_header_t *inp, mach_msg_header_t *outp)
   extern int notify_server (mach_msg_header_t *, mach_msg_header_t *);
   ret = device_server (inp, outp) || notify_server (inp, outp);
   return ret;
+}
+
+void reg_dev_emul (struct device_emulation_ops *ops)
+{
+  emulation_list[num_emul++] = ops;
 }
 
 void ds_server()

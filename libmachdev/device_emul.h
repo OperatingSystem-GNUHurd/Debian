@@ -31,7 +31,7 @@
 /* Each emulation layer provides these operations.  */
 struct device_emulation_ops
 {
-  void (*init) ();
+  void (*init) (void);
   void (*reference) (void *);
   void (*dealloc) (void *);
   mach_port_t (*dev_to_port) (void *);

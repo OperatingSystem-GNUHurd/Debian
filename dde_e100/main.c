@@ -6,13 +6,12 @@
 #include <linux/init.h>  // initcall()
 #include <linux/delay.h> // msleep()
 
-int using_std = 1;
+#include <hurd/machdev.h>
 
-void netif_rx_handle (char *data, int len, struct net_device *dev);
+int using_std = 1;
 
 int main(int argc, char **argv)
 {
-	extern void ds_server(void);
 	l4dde26_init();
 	l4dde26_process_init();
 	l4dde26_softirq_init();
@@ -22,6 +21,7 @@ int main(int argc, char **argv)
 
 	l4dde26_do_initcalls();
 
+	register_net();
 	mach_device_init();
 	trivfs_init();
 
