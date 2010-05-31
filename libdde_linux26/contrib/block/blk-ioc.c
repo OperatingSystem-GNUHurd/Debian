@@ -10,6 +10,8 @@
 
 #include "blk.h"
 
+#include <ddekit/timer.h>
+
 /*
  * For io context allocations
  */

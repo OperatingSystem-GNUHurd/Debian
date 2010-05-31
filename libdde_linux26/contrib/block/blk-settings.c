@@ -10,6 +10,8 @@
 
 #include "blk.h"
 
+#include <ddekit/timer.h>
+
 unsigned long blk_max_low_pfn;
 EXPORT_SYMBOL(blk_max_low_pfn);
 

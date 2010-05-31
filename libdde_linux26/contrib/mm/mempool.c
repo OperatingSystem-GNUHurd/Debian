@@ -15,6 +15,8 @@
 #include <linux/blkdev.h>
 #include <linux/writeback.h>
 
+#include <ddekit/timer.h>
+
 static void add_element(mempool_t *pool, void *element)
 {
 	BUG_ON(pool->curr_nr >= pool->min_nr);

@@ -32,6 +32,8 @@
 
 #include "blk.h"
 
+#include <ddekit/timer.h>
+
 DEFINE_TRACE(block_plug);
 DEFINE_TRACE(block_unplug_io);
 DEFINE_TRACE(block_unplug_timer);

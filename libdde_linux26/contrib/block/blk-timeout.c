@@ -8,6 +8,8 @@
 
 #include "blk.h"
 
+#include <ddekit/timer.h>
+
 #ifdef CONFIG_FAIL_IO_TIMEOUT
 
 static DECLARE_FAULT_ATTR(fail_io_timeout);
