@@ -1,9 +1,6 @@
 #include <linux/netdevice.h>
 #include <linux/if.h>
 
-#define D_INVALID_SIZE 2507
-#define D_NO_MEMORY 2508
-
 /* List of sk_buffs waiting to be freed.  */
 static struct sk_buff_head skb_done_list;
 
@@ -38,12 +35,12 @@ int linux_pkg_xmit (char *pkg_data, int len, void *del_data,
   struct sk_buff *skb;
 
   if (len == 0 || len > dev->mtu + dev->hard_header_len)
-    return D_INVALID_SIZE;
+    return EINVAL;
 
   /* Allocate a sk_buff.  */
   skb = dev_alloc_skb (len);
   if (!skb)
-    return D_NO_MEMORY;
+    return ENOMEM;
 
   skb->del_data = del_data;
   skb->pre_del_func = del_func;
@@ -56,9 +53,7 @@ int linux_pkg_xmit (char *pkg_data, int len, void *del_data,
 
   skb->dev = dev;
 
-  dev_queue_xmit(skb);
-  // TODO how should I return errors?
-  return 0;
+  return dev_queue_xmit(skb);
 }
 
 char *netdev_addr(struct net_device *dev)
