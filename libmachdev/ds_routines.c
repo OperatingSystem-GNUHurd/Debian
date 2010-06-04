@@ -71,8 +71,6 @@
 static struct port_bucket *port_bucket;
 static struct port_class *dev_class;
 
-extern struct device_emulation_ops linux_net_emulation_ops;
-
 #define NUM_EMULATION num_emul
 #define MAX_NUM_EMULATION 32
 
