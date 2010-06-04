@@ -150,7 +150,7 @@ SRC_C_libdde_linux26.o.a += \
 ##################################################################
 SRC_C_libdde_linux26_net.a += \
 				arch/l4/net.c \
-				arch/l4/mach_glue.c \
+				mach_glue/net.c \
 				drivers/net/mii.c \
 				net/core/dev.c \
 				net/core/dev_mcast.c \
@@ -180,6 +180,7 @@ SRC_C_libdde_linux26_sound.a += \
 #
 SRC_C_libdde_linux26_block.a += \
 				arch/l4/inodes.c      \
+				mach_glue/block.c \
 				block/blk-barrier.c   \
 				block/blk-core.c      \
 				block/blk-exec.c      \

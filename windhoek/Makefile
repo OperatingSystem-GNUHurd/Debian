@@ -27,8 +27,8 @@ SRC_C          += $(IDEFILES) \
 				 $(CDROMFILES) \
 				 $(PARTITIONFILES)
 
-LIBS          += --whole-archive -ldde_linux26_block --no-whole-archive	\
-		 -ldde_linux26.o -lddekit ../libmachdev/libmachdev.a	\
+LIBS          += --whole-archive --no-whole-archive ../libmachdev/libmachdev.a \
+		 -ldde_linux26_block -ldde_linux26.o -lddekit	\
 		 -lfshelp -ltrivfs -lpciaccess -lthreads -lshouldbeinlibc \
 		 -lports -lhurd-slab
 

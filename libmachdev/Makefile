@@ -20,7 +20,7 @@ makemode := library
 libname = libmachdev
 
 SRCS = deviceUser.c machUser.c net.c ds_routines.c queue.c trivfs_server.c \
-       device_replyUser.c deviceServer.c notifyServer.c misc.c
+       device_replyUser.c deviceServer.c notifyServer.c misc.c block.c
 LCLHDRS = dev_hdr.h device_emul.h ds_routines.h vm_param.h \
 	  util.h queue.h io_req.h if_ether.h machdev.h linux-errno.h \
 	  errno-base.h

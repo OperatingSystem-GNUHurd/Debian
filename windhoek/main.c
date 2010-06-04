@@ -66,6 +66,7 @@ int main(int argc, const char **argv)
 	printk("| ready to rumble....                    |\n");
 	printk("+----------------------------------------+\n");
 
+	register_block ();
 	mach_device_init();
 	trivfs_init();
 

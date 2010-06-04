@@ -26,6 +26,7 @@
 void ds_server(void);
 void mach_device_init(void);
 void register_net(void);
+void register_block(void);
 void trivfs_server(void);
 int trivfs_init(void);
 

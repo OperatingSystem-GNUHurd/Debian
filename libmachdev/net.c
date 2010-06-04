@@ -74,6 +74,7 @@
 #include "dev_hdr.h"
 #include "if_ether.h"
 #include "util.h"
+#include "mach_glue.h"
 
 #define ether_header ethhdr
 
@@ -98,22 +99,6 @@ struct skb_reply
   mach_msg_type_name_t reply_type;
   int pkglen;
 };
-
-struct sk_buff;
-void skb_done_queue(struct sk_buff *skb);
-struct sk_buff *skb_done_dequeue();
-void *skb_reply(struct sk_buff *skb);
-int netdev_flags(struct net_device *dev);
-char *netdev_addr(struct net_device *dev);
-int dev_change_flags (struct net_device *dev, short flags);
-int linux_pkg_xmit (char *pkg_data, int len, void *del_data,
-		    int (*del_func) (struct sk_buff *, void *),
-		    struct net_device *dev);
-struct net_device *search_netdev (char *name);
-void kfree_skb (struct sk_buff *skb);
-int dev_open(struct net_device *dev);
-void *l4dde26_register_rx_callback(void *cb);
-void skb_done_head_init();
 
 static struct net_data *nd_head;
 
@@ -337,7 +322,7 @@ device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
       if_init_queues (ifp);
 #endif
 
-      if (err = dev_open(dev) < 0)
+      if ((err = dev_open(dev)) < 0)
 	{
 	  fprintf (stderr, "after dev_open: cannot open the device\n");
 	  err = linux_to_mach_error (err);
