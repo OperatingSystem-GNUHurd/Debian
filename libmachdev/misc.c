@@ -1,11 +1,12 @@
 #include <mach.h>
+#include <device/device.h>
 
 #include <ddekit/printf.h>
 
 #include "linux-errno.h"
 
 int
-linux_to_mach_error (int err);
+linux_to_mach_error (int err)
 {
   switch (err)
     {
