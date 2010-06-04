@@ -104,21 +104,6 @@ typedef struct emul_device *emul_device_t;
 struct mach_device {
 	struct port_info port;
 	struct emul_device	dev;		/* the real device structure */
-	struct mutex	lock;
-	short		state;		/* state: */
-#define	DEV_STATE_INIT		0	/* not open  */
-#define	DEV_STATE_OPENING	1	/* being opened */
-#define	DEV_STATE_OPEN		2	/* open */
-#define	DEV_STATE_CLOSING	3	/* being closed */
-	short		flag;		/* random flags: */
-#define	D_EXCL_OPEN		0x0001	/* open only once */
-	short		open_count;	/* number of times open */
-	short		io_in_progress;	/* number of IOs in progress */
-	boolean_t	io_wait;	/* someone waiting for IO to finish */
-
-	int		dev_number;	/* device number */
-	int		bsize;		/* replacement for DEV_BSIZE */
-	struct dev_ops	*dev_ops;	/* and operations vector */
 };
 typedef	struct mach_device *mach_device_t;
 #define	MACH_DEVICE_NULL ((mach_device_t)0)
