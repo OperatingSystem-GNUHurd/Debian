@@ -337,10 +337,10 @@ device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
       if_init_queues (ifp);
 #endif
 
-      if (dev_open(dev) < 0)
+      if (err = dev_open(dev) < 0)
 	{
 	  fprintf (stderr, "after dev_open: cannot open the device\n");
-	  err = D_NO_SUCH_DEVICE;
+	  err = linux_to_mach_error (err);
 	}
 
     out:
@@ -396,7 +396,7 @@ device_write (void *d, mach_port_t reply_port,
   err = linux_pkg_xmit (data, count, skb_reply, pre_kfree_skb, dev);
   vm_deallocate (mach_task_self (), (vm_address_t) data, count);
   if (err)
-    return err;
+    return linux_to_mach_error (err);
 
   /* Send packet to filters.  */
   // TODO should I deliver the packet to other network stacks?

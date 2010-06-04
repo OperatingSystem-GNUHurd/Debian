@@ -30,4 +30,6 @@
 
 #endif
 
+int linux_to_mach_error (int err);
+
 #endif
