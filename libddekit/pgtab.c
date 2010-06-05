@@ -202,8 +202,6 @@ void ddekit_pgtab_set_region_with_size(void *virt, ddekit_addr_t phys, int size,
 	regions[num_regions].type = type;
 	num_regions++;
 	mutex_unlock (&lock);
-	ddekit_printf ("******there are %d regions (%d bytes)\n",
-		       num_regions, size);
 }
 
 int pgtab_init ()
