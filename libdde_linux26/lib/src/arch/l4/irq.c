@@ -101,6 +101,7 @@ static int claim_irq(struct irqaction *action)
 		                                      irq_handler,
 		                                      (void *)irq);
 		if (!irq->thread) {
+			used_irqs = irq->next;
 			ddekit_simple_free(irq);
 			return -EBUSY;
 		}
