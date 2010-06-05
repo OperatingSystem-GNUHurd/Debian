@@ -430,7 +430,8 @@ void mach_device_init()
 	dev_class = ports_create_class (0, 0);
 
 	for (i = 0; i < NUM_EMULATION; i++) {
-		emulation_list[i]->init();
+		if (emulation_list[i]->init)
+			emulation_list[i]->init();
 	}
 }
 
