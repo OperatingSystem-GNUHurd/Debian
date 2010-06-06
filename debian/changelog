@@ -20,6 +20,7 @@ hurd (20090404-3) UNRELEASED; urgency=low
     - Add ${misc:Depends}.
     - Add dpkg (>= 1.15.4) | install-info dependency.
     - Drop -1 from gnumach-dev dependency.
+    - Bump Standards-Version to 3.8.4 (no change needed).
   * debian/local/runsystem.gnu: New runsystem file for the d-i case, incomplete
     for now.
   * debian/hurd-udeb.install: Remove getty, runttys, /etc/ttys ftpcp, ftpdir,
