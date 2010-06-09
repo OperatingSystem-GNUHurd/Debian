@@ -30,7 +30,7 @@ typedef void (*l4ddekit_initcall_t)(void);
 #define DDEKIT_INITCALL(fn)	DDEKIT_CTOR(fn, 1)
 
 #define DDEKIT_CTOR(fn, prio) \
-	static l4ddekit_initcall_t \
+	l4ddekit_initcall_t \
 	L4_STICKY(__l4ddekit_initcall_##fn) \
 	__l4ddekit_initcall(prio) = (void *)fn
 
