@@ -208,6 +208,11 @@ ddekit_thread_t *ddekit_interrupt_attach(int irq, int shared,
 	/* construct name */
 	snprintf(thread_name, 10, "irq%02X", irq);
 
+	ddekit_irq_ctrl[irq].handle_irq = 1; /* IRQ nesting level is initially 1 */
+	ddekit_lock_init_unlocked (&ddekit_irq_ctrl[irq].irqlock);
+	ddekit_irq_ctrl[irq].cond = ddekit_condvar_init ();
+	ddekit_irq_ctrl[irq].thread_exit = FALSE;
+
 	/* allocate irq */
 	/* create interrupt loop thread */
 	thread = ddekit_thread_create(intloop, params, thread_name);
@@ -215,12 +220,7 @@ ddekit_thread_t *ddekit_interrupt_attach(int irq, int shared,
 		ddekit_simple_free(params);
 		return NULL;
 	}
-
-	ddekit_irq_ctrl[irq].handle_irq = 1; /* IRQ nesting level is initially 1 */
 	ddekit_irq_ctrl[irq].irq_thread = thread;
-	ddekit_lock_init_unlocked (&ddekit_irq_ctrl[irq].irqlock);
-	ddekit_irq_ctrl[irq].cond = ddekit_condvar_init ();
-	ddekit_irq_ctrl[irq].thread_exit = FALSE;
 
 
 	/* wait for intloop initialization result */
