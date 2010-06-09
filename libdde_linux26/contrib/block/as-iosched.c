@@ -17,6 +17,8 @@
 #include <linux/rbtree.h>
 #include <linux/interrupt.h>
 
+#include <ddekit/timer.h>
+
 #define REQ_SYNC	1
 #define REQ_ASYNC	0
 

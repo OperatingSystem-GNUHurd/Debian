@@ -12,6 +12,7 @@
 #include <linux/rbtree.h>
 #include <linux/ioprio.h>
 #include <linux/blktrace_api.h>
+#include <ddekit/timer.h>
 
 /*
  * tunables

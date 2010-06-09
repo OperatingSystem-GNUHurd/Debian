@@ -119,6 +119,7 @@ SRC_C_libdde_linux26.o.a += \
 				lib/sha1.c \
 				lib/string.c \
 				lib/vsprintf.c \
+				lib/rbtree.c \
 				mm/dmapool.c \
 				mm/mempool.c \
 				mm/swap.c \
@@ -196,6 +197,9 @@ SRC_C_libdde_linux26_block.a += \
 				block/noop-iosched.c  \
 				block/ioctl.c         \
 				block/scsi_ioctl.c    \
+				block/as-iosched.c    \
+				block/cfq-iosched.c   \
+				block/deadline-iosched.c  \
 				mm/backing-dev.c      \
 				mm/bounce.c           \
 				mm/page-writeback.c   \

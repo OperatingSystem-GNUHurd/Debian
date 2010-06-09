@@ -13,6 +13,7 @@
 #include <linux/init.h>
 #include <linux/compiler.h>
 #include <linux/rbtree.h>
+#include <ddekit/timer.h>
 
 /*
  * See Documentation/block/deadline-iosched.txt
