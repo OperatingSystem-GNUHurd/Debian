@@ -32,6 +32,8 @@ LIBS          += --whole-archive --no-whole-archive ../libmachdev/libmachdev.a \
 		 -lfshelp -ltrivfs -lpciaccess -lthreads -lshouldbeinlibc \
 		 -lports -lhurd-slab
 
+LDFLAGS       += -Wl,-u,__l4ddekit_initcall_noop_init -Wl,-u,__l4ddekit_initcall_as_init -Wl,-u,__l4ddekit_initcall_deadline_init
+
 # DDE configuration
 include $(L4DIR)/Makeconf
 
