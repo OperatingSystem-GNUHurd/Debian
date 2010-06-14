@@ -32,15 +32,7 @@ LCLHDRS = include/ddekit/condvar.h include/ddekit/lock.h	\
 	  include/ddekit/memory.h include/ddekit/timer.h	\
 	  include/dde.h		\
 	  config.h list.h util.h
-installhdrs = include/ddekit/condvar.h include/ddekit/lock.h	\
-	  include/ddekit/semaphore.h include/ddekit/debug.h	\
-	  include/ddekit/inline.h include/ddekit/panic.h	\
-	  include/ddekit/thread.h include/ddekit/types.h	\
-	  include/ddekit/pgtab.h include/ddekit/printf.h	\
-	  include/ddekit/pci.h include/ddekit/assert.h		\
-	  include/ddekit/interrupt.h include/ddekit/resources.h	\
-	  include/ddekit/memory.h include/ddekit/timer.h	\
-	  include/dde.h
+installhdrs = 
 
 MIGSTUBS = deviceUser.o machUser.o
 OBJS = $(sort $(SRCS:.c=.o) $(MIGSTUBS))
@@ -52,4 +44,4 @@ MIGCOMSFLAGS = -prefix dde_
 include ../Makeconf
 
 LDFLAGS += -lpciaccess
-CFLAGS += -Iinclude
+CFLAGS += -I$(srcdir)/include

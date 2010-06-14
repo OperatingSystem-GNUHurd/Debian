@@ -24,10 +24,10 @@ SRCS = deviceUser.c machUser.c net.c ds_routines.c queue.c trivfs_server.c \
 LCLHDRS = dev_hdr.h device_emul.h ds_routines.h vm_param.h \
 	  util.h queue.h io_req.h if_ether.h machdev.h linux-errno.h \
 	  errno-base.h
-installhdrs = machdev.h device_emul.h
+installhdrs = 
 HURDLIBS = ports threads trivfs
 OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
 
 include ../Makeconf
 
-CFLAGS += -I../libddekit/include
+CFLAGS += -I$(top_srcdir)/libddekit/include
