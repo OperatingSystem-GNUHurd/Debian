@@ -9,5 +9,6 @@ int ddekit_request_io (ddekit_addr_t start, ddekit_addr_t count);
 int ddekit_release_io (ddekit_addr_t start, ddekit_addr_t count);
 int ddekit_request_mem(ddekit_addr_t start, ddekit_addr_t count, ddekit_addr_t *vaddr);
 int ddekit_release_mem(ddekit_addr_t start, ddekit_addr_t count);
+long ddekit_random (void);
 
 #endif

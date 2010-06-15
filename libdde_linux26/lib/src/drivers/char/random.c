@@ -223,6 +223,10 @@
  * Eastlake, Steve Crocker, and Jeff Schiller.
  */
 
+#ifdef DDE_LINUX
+#include <ddekit/resources.h>
+#else
+
 #include <linux/utsname.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
@@ -904,6 +908,8 @@ static ssize_t extract_entropy_user(struct entropy_store *r, void __user *buf,
 	return ret;
 }
 
+#endif
+
 /*
  * This function is the exported kernel interface.  It returns some
  * number of good random numbers, suitable for seeding TCP sequence
@@ -911,10 +917,20 @@ static ssize_t extract_entropy_user(struct entropy_store *r, void __user *buf,
  */
 void get_random_bytes(void *buf, int nbytes)
 {
+#ifndef DDE_LINUX
 	extract_entropy(&nonblocking_pool, buf, nbytes, 0, 0);
+#else
+	int i;
+	int nlwords = nbytes / sizeof (long);
+	for (i = 0; i < nlwords; i++)
+		((long *) buf)[i] = ddekit_random ();
+	for (i = nlwords * sizeof (long); i < nbytes; i++)
+		((char *) buf)[i] = (char) ddekit_random ();
+#endif
 }
 EXPORT_SYMBOL(get_random_bytes);
 
+#ifndef DDE_LINUX
 /*
  * init_std_data - initialize pool with system data
  *
@@ -1689,3 +1705,5 @@ randomize_range(unsigned long start, unsigned long end, unsigned long len)
 		return 0;
 	return PAGE_ALIGN(get_random_int() % range + start);
 }
+
+#endif

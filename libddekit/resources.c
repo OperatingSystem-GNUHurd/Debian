@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <error.h>
 #include <sys/io.h>
 #include <mach.h>
@@ -116,4 +117,9 @@ int ddekit_release_mem(ddekit_addr_t start, ddekit_addr_t count) {
 		return -1;
 	}
 	return 0;
+}
+
+long ddekit_random ()
+{
+	return random ();
 }

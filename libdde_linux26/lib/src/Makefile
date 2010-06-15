@@ -144,7 +144,8 @@ SRC_C_libdde_linux26.o.a += \
 				drivers/pci/probe.c \
 				drivers/pci/search.c \
 				drivers/pci/setup-bus.c \
-				drivers/pci/setup-res.c
+				drivers/pci/setup-res.c \
+				drivers/char/random.c
 
 ##################################################################
 # Sources for libdde_linux_net.a                                 #
