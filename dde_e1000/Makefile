@@ -1,16 +1,14 @@
 PKGDIR        ?= ../libdde_linux26
 L4DIR         ?= $(PKGDIR)
 
-SYSTEMS        = x86-l4v2
-
 include Makeconf.local
 
 TARGET         = dde_e1000
 
 SRC_C          = main.c e1000_ethtool.c e1000_hw.c e1000_main.c e1000_param.c
 
-LIBS          += ../libmachdev/libmachdev.a -ldde_linux26.o -ldde_linux26_net ../libddekit/libddekit.a -lfshelp -ltrivfs -lpciaccess -lthreads -lshouldbeinlibc -lports -lhurd-slab
-CFLAGS        += -g -I/include
+LIBS          += $(libmachdev_path) -ldde_linux26.o -ldde_linux26_net $(libddekit_path) -lfshelp -ltrivfs -lpciaccess -lthreads -lshouldbeinlibc -lports $(libslab_path)
+CFLAGS        += -g -I$(PKGDIR)/include -I../libmachdev
 
 # DDE configuration
 include $(L4DIR)/Makeconf
