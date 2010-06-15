@@ -24,6 +24,7 @@
 
 #include <stdlib.h>
 #include <errno.h>
+#include <sys/mman.h>
 #include <assert.h>
 #include <string.h>
 #include <unistd.h>
@@ -76,8 +77,9 @@ allocate_buffer (struct hurd_slab_space *space, size_t size, void **ptr)
     return space->allocate_buffer (space->hook, size, ptr);
   else
     {
-      *ptr = malloc (size);
-      if (*ptr == NULL)
+      *ptr = mmap (NULL, size, PROT_READ|PROT_WRITE,
+		   MAP_PRIVATE|MAP_ANONYMOUS, 0, 0);
+      if (*ptr == MAP_FAILED)
 	return errno;
       else
 	return 0;
@@ -93,8 +95,10 @@ deallocate_buffer (struct hurd_slab_space *space, void *buffer, size_t size)
     return space->deallocate_buffer (space->hook, buffer, size);
   else
     {
-      free (buffer);
-      return 0;
+      if (munmap (buffer, size) == -1)
+	return errno;
+      else
+	return 0;
     }
 }
 
