@@ -21,7 +21,7 @@ makemode := library
 libname = libhurd-slab
 SRCS= slab.c
 LCLHDRS = slab.h
-installhdrs = slab.h
+installhdrs = 
 
 MIGSTUBS = 
 OBJS = $(sort $(SRCS:.c=.o) $(MIGSTUBS))
