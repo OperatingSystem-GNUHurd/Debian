@@ -43,6 +43,7 @@
 static char *device_name;
 /* The device name used by the socket servers. */
 static char *user_device_name;
+static char *master_file;
 /* The master device port for opening the interface. */
 static mach_port_t master_device;
 
@@ -238,6 +239,28 @@ ds_device_set_filter (device_t device, mach_port_t receive_port,
   return D_INVALID_OPERATION;
 }
 
+error_t
+trivfs_append_args (struct trivfs_control *fsys, char **argz, size_t *argz_len)
+{
+  error_t err = 0;
+
+#define ADD_OPT(fmt, args...)						\
+  do { char buf[100];							\
+       if (! err) {							\
+         snprintf (buf, sizeof buf, fmt , ##args);			\
+         err = argz_add (argz, argz_len, buf); } } while (0)
+
+  if (user_device_name)
+    ADD_OPT ("--name=%s", user_device_name);
+  if (master_file)
+    ADD_OPT ("--master-device=%s", master_file);
+
+  ADD_OPT (device_name);
+
+#undef ADD_OPT
+  return err;
+}
+
 void
 trivfs_modify_stat (struct trivfs_protid *cred, io_statbuf_t *stat)
 {
@@ -275,6 +298,7 @@ parse_opt (int opt, char *arg, struct argp_state *state)
   switch (opt)
     {
     case 'M':
+      master_file = arg;
       master_device = file_name_lookup (arg, 0, 0);
       if (master_device == MACH_PORT_NULL)
 	error (1, errno, "file_name_lookup");
