@@ -75,6 +75,21 @@ is_master_device (mach_port_t port)
   return TRUE;
 }
 
+error_t
+trivfs_append_args (struct trivfs_control *fsys, char **argz, size_t *argz_len)
+{
+  error_t err = 0;
+
+#define ADD_OPT(fmt, args...)						\
+  do { char buf[100];							\
+       if (! err) {							\
+         snprintf (buf, sizeof buf, fmt , ##args);			\
+         err = argz_add (argz, argz_len, buf); } } while (0)
+
+#undef ADD_OPT
+  return err;
+}
+
 int trivfs_init()
 {
   port_bucket = ports_create_bucket ();
