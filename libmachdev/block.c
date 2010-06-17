@@ -227,6 +227,7 @@ struct device_emulation_ops linux_block_emulation_ops =
 {
   NULL,
   NULL,
+  NULL,
   dev_to_port,
   device_open,
   NULL,
