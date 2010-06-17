@@ -9,8 +9,12 @@ void dde_page_cache_add (struct page *);
 struct block_device *open_block_dev (char *name, int part, fmode_t mode)
 {
   struct gendisk *disk = find_disk_by_name (name);
-  dev_t devid = MKDEV (disk->major, disk->first_minor + part);
-  return open_by_devnum (devid, mode);
+  if (disk)
+    {
+      dev_t devid = MKDEV (disk->major, disk->first_minor + part);
+      return open_by_devnum (devid, mode);
+    }
+  return ERR_PTR(-ENXIO);
 }
 
 /* write a piece of data to a block device.
