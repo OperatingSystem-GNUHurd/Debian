@@ -115,6 +115,7 @@ device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
   struct block_data *bd = NULL;
   int slice, part;
   char *dev_name = NULL;
+  int dev_err;
 
   dev_name = translate_name (name, &slice, &part);
 
@@ -126,10 +127,11 @@ device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
       goto out;
     }
   bd->dev = open_block_dev (dev_name, slice, mode);
-  if (bd->dev < 0)
+  dev_err = (int) bd->dev;
+  if (dev_err < 0)
     {
-      ddekit_printf ("open_block_dev fails with %d\n", bd->dev);
-      err = linux_to_mach_error (err);
+      ddekit_printf ("open_block_dev %s fails with %d\n", dev_name, bd->dev);
+      err = linux_to_mach_error (dev_err);
       goto out;
     }
   bd->device.emul_data = bd;
