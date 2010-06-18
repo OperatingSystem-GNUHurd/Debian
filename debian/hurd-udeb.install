@@ -6,8 +6,6 @@ debian/local/runsystem.gnu /libexec
 debian/tmp/sbin/e2os
 debian/tmp/sbin/MAKEDEV
 debian/tmp/sbin/losetup
-debian/tmp/sbin/reboot
-debian/tmp/sbin/halt
 debian/tmp/sbin/swapon
 debian/tmp/sbin/swapoff
 debian/tmp/bin/boot
@@ -40,7 +38,6 @@ debian/tmp/bin/mount
 debian/tmp/dev/MAKEDEV
 debian/tmp/hurd/auth
 debian/tmp/hurd/console
-debian/tmp/hurd/crash
 debian/tmp/hurd/exec
 debian/tmp/hurd/ext2fs
 debian/tmp/hurd/ext2fs.static /boot
@@ -55,10 +52,10 @@ debian/tmp/hurd/mach-defpager
 debian/tmp/hurd/magic
 debian/tmp/hurd/new-fifo
 debian/tmp/hurd/null
-debian/tmp/hurd/password
 debian/tmp/hurd/pfinet
 debian/tmp/hurd/pflocal
 debian/tmp/hurd/proc
+debian/tmp/hurd/procfs
 debian/tmp/hurd/proxy-defpager
 debian/tmp/hurd/storeio
 debian/tmp/hurd/streamio
