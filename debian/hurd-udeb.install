@@ -1,8 +1,7 @@
+debian/local/runsystem libexec
 debian/tmp/lib/*.so.*
 debian/tmp/lib/hurd/console/*.so.* usr/lib/hurd/console
-debian/tmp/libexec/rc
 debian/tmp/libexec/console-run
-debian/local/runsystem.gnu /libexec
 debian/tmp/sbin/e2os
 debian/tmp/sbin/MAKEDEV
 debian/tmp/sbin/losetup
