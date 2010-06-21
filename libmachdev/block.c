@@ -149,7 +149,7 @@ out:
 	}
     }
   else
-    *devp = ports_get_right (bd);
+    *devp = ports_get_send_right (bd);
   return err;
 }
 
