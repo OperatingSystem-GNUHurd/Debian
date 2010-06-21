@@ -43,6 +43,7 @@ extern void md_autodetect_dev(dev_t dev);
 
 int warn_no_part = 1; /*This is ugly: should make genhd removable media aware*/
 
+#ifndef DDE_LINUX
 static int (*check_part[])(struct parsed_partitions *, struct block_device *) = {
 	/*
 	 * Probe partition formats with tables at disk address 0
@@ -112,6 +113,7 @@ static int (*check_part[])(struct parsed_partitions *, struct block_device *) = 
 #endif
 	NULL
 };
+#endif
  
 /*
  * disk_name() is used by partition check code and the genhd driver.
@@ -153,6 +155,7 @@ const char *__bdevname(dev_t dev, char *buffer)
 
 EXPORT_SYMBOL(__bdevname);
 
+#ifndef DDE_LINUX
 static struct parsed_partitions *
 check_partition(struct gendisk *hd, struct block_device *bdev)
 {
@@ -194,6 +197,7 @@ check_partition(struct gendisk *hd, struct block_device *bdev)
 	kfree(state);
 	return ERR_PTR(res);
 }
+#endif
 
 static ssize_t part_partition_show(struct device *dev,
 				   struct device_attribute *attr, char *buf)
