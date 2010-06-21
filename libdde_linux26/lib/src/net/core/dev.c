@@ -536,6 +536,7 @@ unsigned long netdev_boot_base(const char *prefix, int unit)
 	return 0;
 }
 
+#ifndef DDE_LINUX
 /*
  * Saves at boot time configured settings for any netdevice.
  */
@@ -562,6 +563,7 @@ int __init netdev_boot_setup(char *str)
 	/* Add new entry to the list */
 	return netdev_boot_setup_add(str, &map);
 }
+#endif
 
 __setup("netdev=", netdev_boot_setup);
 
