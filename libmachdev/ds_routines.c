@@ -161,7 +161,7 @@ ds_device_irq_enable (mach_port_t master_port,
 io_return_t
 ds_device_open (mach_port_t open_port, mach_port_t reply_port,
 		mach_msg_type_name_t reply_port_type, dev_mode_t mode,
-		char *name, device_t *devp)
+		char *name, device_t *devp, mach_msg_type_name_t *devicePoly)
 {
   int i;
   io_return_t err;
@@ -181,7 +181,7 @@ ds_device_open (mach_port_t open_port, mach_port_t reply_port,
   for (i = 0; i < NUM_EMULATION; i++)
     {
       err = (*emulation_list[i]->open) (reply_port, reply_port_type,
-					mode, name, devp);
+					mode, name, devp, devicePoly);
       if (err != D_NO_SUCH_DEVICE)
 	break;
     }

@@ -109,7 +109,8 @@ find_major:
 
 static io_return_t
 device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
-	     dev_mode_t mode, char *name, device_t *devp)
+	     dev_mode_t mode, char *name, device_t *devp,
+	     mach_msg_type_name_t *devicePoly)
 {
   io_return_t err = D_SUCCESS;
   struct block_data *bd = NULL;
@@ -149,7 +150,11 @@ out:
 	}
     }
   else
-    *devp = ports_get_send_right (bd);
+    {
+      *devp = ports_get_send_right (bd);
+      ports_port_deref (bd);
+      *devicePoly = MACH_MSG_TYPE_MOVE_SEND;
+    }
   return err;
 }
 

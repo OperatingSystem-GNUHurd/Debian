@@ -273,7 +273,8 @@ void if_init_queues(ifp)
 
 static io_return_t
 device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
-	     dev_mode_t mode, char *name, device_t *devp)
+	     dev_mode_t mode, char *name, device_t *devp,
+	     mach_msg_type_name_t *devicePoly)
 {
   io_return_t err = D_SUCCESS;
   struct net_device *dev;
@@ -357,6 +358,7 @@ device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
     }
 
   *devp = ports_get_right (nd);
+  *devicePoly = MACH_MSG_TYPE_COPY_SEND;
   return D_SUCCESS;
 }
 
