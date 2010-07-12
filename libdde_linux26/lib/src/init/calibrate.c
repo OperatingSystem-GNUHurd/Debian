@@ -43,6 +43,11 @@ static unsigned long __cpuinit calibrate_delay_direct(void)
 	unsigned long good_timer_count = 0;
 	int i;
 
+	/* TODO It's not a very good place to call this function
+	 * as TSC is very platform-dependant but calibrate_delay_direct
+	 * isn't that much. */
+	use_tsc_delay ();
+
 	if (read_current_timer(&pre_start) < 0 )
 		return 0;
 
