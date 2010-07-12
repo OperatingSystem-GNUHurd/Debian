@@ -12,7 +12,6 @@
 #include <ddekit/timer.h>
 
 unsigned long loops_per_jiffy = (1<<12);
-EXPORT_SYMBOL(loops_per_jiffy);
 
 unsigned long lpj_fine;
 unsigned long preset_lpj;
