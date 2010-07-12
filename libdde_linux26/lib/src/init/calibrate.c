@@ -123,11 +123,50 @@ static unsigned long __cpuinit calibrate_delay_direct(void) {return 0;}
  */
 #define LPS_PREC 8
 
-void __cpuinit calibrate_delay(void)
+static unsigned long __cpuinit calibrate_delay_estimate(void)
 {
 	unsigned long ticks, loopbit;
 	int lps_precision = LPS_PREC;
+	int loops_per_jiffy;
 
+	loops_per_jiffy = (1<<12);
+
+	while ((loops_per_jiffy <<= 1) != 0) {
+		/* wait for "start of" clock tick */
+		ticks = jiffies;
+		while (ticks == jiffies)
+			/* nothing */;
+		/* Go .. */
+		ticks = jiffies;
+		__delay(loops_per_jiffy);
+		ticks = jiffies - ticks;
+		if (ticks)
+			break;
+	}
+
+	/*
+	 * Do a binary approximation to get loops_per_jiffy set to
+	 * equal one clock (up to lps_precision bits)
+	 */
+	loops_per_jiffy >>= 1;
+	loopbit = loops_per_jiffy;
+	while (lps_precision-- && (loopbit >>= 1)) {
+		loops_per_jiffy |= loopbit;
+		ticks = jiffies;
+		while (ticks == jiffies)
+			/* nothing */;
+		ticks = jiffies;
+		__delay(loops_per_jiffy);
+		if (jiffies != ticks)	/* longer than 1 tick */
+			loops_per_jiffy &= ~loopbit;
+	}
+	return loops_per_jiffy;
+}
+
+#define NRETRIES 3
+
+void __cpuinit calibrate_delay(void)
+{
 	if (preset_lpj) {
 		loops_per_jiffy = preset_lpj;
 		printk(KERN_INFO
@@ -141,38 +180,17 @@ void __cpuinit calibrate_delay(void)
 		printk(KERN_INFO
 			"Calibrating delay using timer specific routine.. ");
 	} else {
-		loops_per_jiffy = (1<<12);
+		int i;
+		unsigned long result;
 
 		printk(KERN_INFO "Calibrating delay loop... ");
-		while ((loops_per_jiffy <<= 1) != 0) {
-			/* wait for "start of" clock tick */
-			ticks = jiffies;
-			while (ticks == jiffies)
-				/* nothing */;
-			/* Go .. */
-			ticks = jiffies;
-			__delay(loops_per_jiffy);
-			ticks = jiffies - ticks;
-			if (ticks)
-				break;
+		loops_per_jiffy = 0;
+		for (i = 0; i < NRETRIES; i++) {
+			result = calibrate_delay_estimate();
+			if (result > loops_per_jiffy)
+				loops_per_jiffy = result;
 		}
-
-		/*
-		 * Do a binary approximation to get loops_per_jiffy set to
-		 * equal one clock (up to lps_precision bits)
-		 */
-		loops_per_jiffy >>= 1;
-		loopbit = loops_per_jiffy;
-		while (lps_precision-- && (loopbit >>= 1)) {
-			loops_per_jiffy |= loopbit;
-			ticks = jiffies;
-			while (ticks == jiffies)
-				/* nothing */;
-			ticks = jiffies;
-			__delay(loops_per_jiffy);
-			if (jiffies != ticks)	/* longer than 1 tick */
-				loops_per_jiffy &= ~loopbit;
-		}
+		
 	}
 	printk(KERN_CONT "%lu.%02lu BogoMIPS (lpj=%lu)\n",
 			loops_per_jiffy/(500000/HZ),
