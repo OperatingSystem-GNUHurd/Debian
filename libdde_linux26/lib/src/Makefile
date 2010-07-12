@@ -58,6 +58,7 @@ SRC_C_libdde_linux26.o.a = $(addprefix arch/l4/, $(SRC_DDE))
 
 ifeq ($(ARCH), x86)
 SRC_S_libdde_linux26.o.a += $(ARCH_DIR)/lib/semaphore_32.S
+SRC_S_libdde_linux26.o.a += $(ARCH_DIR)/lib/delay.o
 SRC_C_libdde_linux26.o.a += lib/rwsem.c
 SRC_C_libdde_linux26.o.a += $(ARCH_DIR)/kernel/pci-dma.c
 SRC_C_libdde_linux26.o.a += $(ARCH_DIR)/kernel/pci-nommu.c
@@ -120,6 +121,7 @@ SRC_C_libdde_linux26.o.a += \
 				lib/string.c \
 				lib/vsprintf.c \
 				lib/rbtree.c \
+				init/calibrate.c \
 				mm/dmapool.c \
 				mm/mempool.c \
 				mm/swap.c \

@@ -126,25 +126,6 @@ void msleep(unsigned int msecs)
 	ddekit_thread_msleep(msecs);
 }
 
-
-void __const_udelay(unsigned long xloops)
-{
-	ddekit_thread_usleep(xloops);
-}
-
-
-void __udelay(unsigned long usecs)
-{
-	ddekit_thread_usleep(usecs);
-}
-
-
-void __ndelay(unsigned long nsecs)
-{
-	ddekit_thread_nsleep(nsecs);
-}
-
-
 void __init l4dde26_init_timers(void)
 {
 	ddekit_init_timers();
