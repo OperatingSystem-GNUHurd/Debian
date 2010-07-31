@@ -19,8 +19,8 @@ dir := libbpf
 makemode := library
 
 libname = libbpf
-SRCS= bpf_impl.c
-LCLHDRS = bpf_impl.h
+SRCS= bpf_impl.c queue.c
+LCLHDRS = bpf_impl.h queue.h
 installhdrs = 
 
 MIGSTUBS = 

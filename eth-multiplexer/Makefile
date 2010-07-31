@@ -20,14 +20,14 @@ makemode := server
 target = eth-multiplexer
 
 #CFLAGS += -DDEBUG
-SRCS = ethernet.c vdev.c multiplexer.c queue.c dev_stat.c netfs_impl.c notify_impl.c device_impl.c demuxer.c
+SRCS = ethernet.c vdev.c multiplexer.c dev_stat.c netfs_impl.c notify_impl.c device_impl.c demuxer.c
 MIGSTUBS = ourdeviceServer.o notifyServer.o
 OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
-LCLHDRS = ethernet.h queue.h util.h vdev.h netfs_impl.h
+LCLHDRS = ethernet.h util.h vdev.h netfs_impl.h
 DIST_FILES = ourdevice.defs notify.defs
 HURDLIBS=ports fshelp shouldbeinlibc netfs bpf
 
-CFLAGS += -I../libbpf
+CFLAGS += -I$(top_srcdir)/libbpf
 
 include ../Makeconf
 
