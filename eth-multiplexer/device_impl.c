@@ -276,7 +276,8 @@ ds_device_set_filter (device_t device, mach_port_t receive_port,
     goto out;
   if (tmp != MACH_PORT_NULL)
     mach_port_deallocate (mach_task_self (), tmp);
-  err = net_set_filter (vdev, receive_port, priority, filter, filterlen);
+  err = net_set_filter (&vdev->port_list, receive_port,
+			priority, filter, filterlen);
 out:
   ports_port_deref (vdev);
   return err;
