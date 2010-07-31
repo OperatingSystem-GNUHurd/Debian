@@ -1,4 +1,4 @@
-/* Copyright (C) 2000, 2002, 2005, 2006, 2007, 2008, 2009
+/* Copyright (C) 2000, 2002, 2005, 2006, 2007, 2008, 2009, 2010
      Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -313,6 +313,8 @@ extern int pthread_mutexattr_settype(pthread_mutexattr_t *attr,
 /* Static initializer for recursive mutexes.  */
 
 #ifdef __USE_GNU
+# define PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP \
+  __PTHREAD_ERRORCHECK_MUTEX_INITIALIZER
 # define PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP \
   __PTHREAD_RECURSIVE_MUTEX_INITIALIZER
 #endif
@@ -732,6 +734,14 @@ extern int pthread_setschedparam (pthread_t thread, int policy,
 
 /* Set thread THREAD's scheduling priority.  */
 extern int pthread_setschedprio (pthread_t thread, int prio);
+
+#ifdef __USE_GNU
+/* Yield the processor to another thread or process.
+   This function is similar to the POSIX `sched_yield' function but
+   might be differently implemented in the case of a m-on-n thread
+   implementation.  */
+extern int pthread_yield (void);
+#endif
 
 
 /* Kernel-specific interfaces.  */
