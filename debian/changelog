@@ -51,6 +51,7 @@ hurd (20100701-1) unstable; urgency=low
   * debian/rules: Remove debian/ChangeLog on clean.
   * debian/local/runsystem: Pass -g option to the console to maximize glyph
     usage for chinese.
+  * debian/patches/init_fix.patch: New upstream patch to fix halt/reboot.
 
   [ Guillem Jover ]
   * Update make-new-tarball.sh to exclude git instead of CVS paths.
