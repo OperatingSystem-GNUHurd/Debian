@@ -46,7 +46,9 @@ hurd (20100701-1) UNRELEASED; urgency=low
     when installed.
   * debian/source/options: Set compression to bzip2.
   * debian/control: Update Vcs fields to point to the new git repositories.
- 
+  * debian/patches/console_ignore_bdf_err.patch: New patch to ignore erroneous
+    number of glyphs in bdf files.
+
   [ Guillem Jover ]
   * Update make-new-tarball.sh to exclude git instead of CVS paths.
   * Refresh patches with -pab to allow migration to source format 3.0 (quilt).

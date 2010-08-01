@@ -1,0 +1,17 @@
+reduce-font overestimates the number of characters in the font.
+
+diff --git a/console-client/bdf.c b/console-client/bdf.c
+index 30501f4..ee8aa30 100644
+--- a/console-client/bdf.c
++++ b/console-client/bdf.c
+@@ -415,8 +415,10 @@ bdf_read (FILE *filep, bdf_font_t *font, int *linecount)
+ 	     glyphs.  */
+ 	  if (!strcmp (line, "ENDFONT"))
+ 	    {
++	      /*
+ 	      if (parser.glyphs != bdf->glyphs_count)
+ 		err = BDF_COUNT_MISMATCH;
++	      */
+ 	      done = 1;
+ 	    }
+ 	  else
