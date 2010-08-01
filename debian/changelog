@@ -42,16 +42,6 @@ hurd (20100701-1) UNRELEASED; urgency=low
   * debian/local/runsystem.gnu: Integrate jkoenig d-i changes, rename to
     debian/local/runsystem.
 
-  [ Jeremie Koenig ]
-  * debian/control: Build-Depend on libparted-dev.
-  * debian/rules: Enable parted stores, in a hackish way for now.
-  * debian/local/partman/commit.d/40hurd_reload-partitions: New file for
-    hurd-udeb, make partman restart the partition translators after the
-    partition table has been changed.
-  * debian/hurd-udeb.install: Install file above.
-  * debian/local/runsystem (hurd-udeb): Start mach-defpager.
-  * debian/hurd-udeb.dirs: Include /servers.
-
   [ Guillem Jover ]
   * Update make-new-tarball.sh to exclude git instead of CVS paths.
   * Refresh patches with -pab to allow migration to source format 3.0 (quilt).
@@ -61,6 +51,32 @@ hurd (20100701-1) UNRELEASED; urgency=low
 
   [ Michael Banck ]
   * debian/control (Uploaders): Removed Marcus Brinkmann. (Closes: #503564)
+
+  [ Jeremie Koenig ]
+  * debian/control: Build-Depend on libparted-dev.
+  * debian/rules: Enable parted stores, in a hackish way for now.
+  * debian/local/partman/commit.d/40hurd_reload-partitions: New file for
+    hurd-udeb, make partman restart the partition translators after the
+    partition table has been changed.
+  * debian/hurd-udeb.install: Install file above.
+  * debian/local/runsystem (hurd-udeb): Start mach-defpager.
+  * debian/hurd-udeb.dirs: Include /servers.
+  * Sort out the way device and server nodes are created:
+      - debian/patches/makedev_keep_options.patch: Introduces the -k and -K
+        options to MAKEDEV, respectively to keep active translators running or
+        leave existing files alone completely.
+      - debian/patches/makedev_parted_store.patch: MAKEDEV -p will use parted
+        instead of device stores for disk partitions.
+      - debian/local/setup-translators: New script installed in /usr/lib/hurd,
+        uses MAKEDEV's new options to create all the necessary device and
+        server nodes.
+      - debian/local/runsystem (hurd-udeb): Uses setup-translators in "minimal
+        mode" to prepare the initrd when the installer is started. Parted
+        stores are used to avoid problems when reloading the partition table.
+      - debian/hurd.postinst: Uses setup-translators to create missing nodes on
+        upgrades (on initial installs, debootstrap will use the
+        setup-translators script from the installed hurd package to setup the
+        devices and servers itself).
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 13 Oct 2009 01:20:44 +0200
 

@@ -3,64 +3,20 @@
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 export PATH
 
-# Usage: foldsubst <pat> xxxx yyyy zzzz ...
-# <pat> is substituted for every character of xxxx with sed, the character in
-# question being accessible as a '\0' in <pat>, and the result is used as the
-# new pattern to handle the remaining arguments.
-foldsubst () {
-	[ "$2" ] || { echo $1; return; }
-	expanded=$(echo "$2" | sed "s/./ $1/g"); shift 2
-	foldsubst "$expanded" $@;
-}
+# Create a minimal subset of device and server nodes
+/usr/lib/hurd/setup-translators -m -k -p
 
-# Verbosely attach a translator.
-st () {
-	echo -n " $1"
-	settrans -ck /servers/$1 /hurd/$2
-}
-
-# Verbosely create device nodes,
-# after the aguments are filtered through foldsubst.
-md () {
-	pattern=$1; shift
-	sedrepl=$(echo $pattern | sed -e 's/X/\\0/' -e 's/Y/\\\\0/')
-	devs=$(foldsubst "$sedrepl" $@)
-	(cd /dev; ./MAKEDEV $devs)
-	echo -n " $pattern"
-}
-
-
-echo -n "Setting up translators:"
-mkdir -p /servers/socket
-ln -s 1 /servers/socket/local
-ln -s 2 /servers/socket/inet
-st socket/1 pflocal
-st socket/2 pfinet
-st exec exec
-st default-pager proxy-defpager
 /hurd/mach-defpager
-echo .
 
-echo -n "Creating device nodes:"
-md 'fd std vcs'
-md ttyX 1234
-md ptypX 0123
-md loopX 0123
-md hdX 0123
-md hdXsY 0123 12345678
-echo .
-
-echo -n "Starting procfs"
-settrans -g /proc /hurd/procfs
-echo .
-
-echo -n "Starting the Hurd console..."
 # Touch the first tty so that the Hurd console is certain to pick it
 # and not some random other tty.
 sleep 1
 touch /dev/tty1
+
+echo -n "Starting the Hurd console..."
 console -d vga -d pc_kbd -c /dev/vcs &
 sleep 1
+
 # Switch over
 exec < /dev/tty1 > /dev/tty1 2>&1
 echo "Console started."

@@ -22,27 +22,8 @@ update-alternatives \
 
 #DEBHELPER#
 
-for i in vcs tty1 tty2 tty3 tty4 tty5 tty6; do
-	if ! [ -e /dev/$i ]; then
-		cd /dev
-		/sbin/MAKEDEV $i || true
-	fi
-done
-
-if [ ! -h /dev/mouse ]; then
-  ln -s /dev/cons/mouse /dev/mouse
+if [ "$1" = configure ] && [ "$2" ]; then
+	# Upgrade: create the missing device and server nodes
+	/usr/lib/hurd/setup-translators -K
 fi
 
-if [ ! -h /dev/kbd ]; then
-  ln -s /dev/cons/kbd /dev/kbd
-fi
-
-if [ ! -e /dev/shm ]; then
-  mkdir /dev/shm
-  chmod 1777 /dev/shm
-fi
-
-if [ ! -e /proc ]; then
-  mkdir /proc
-  settrans -c /proc /hurd/procfs
-fi

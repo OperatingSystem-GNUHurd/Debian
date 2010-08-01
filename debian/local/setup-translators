@@ -1,0 +1,148 @@
+#!/bin/sh
+# Set up device nodes and /servers translators.
+#
+# Use cases:
+#   - from d-i's /libexec/runsystem, to create a minimal set of device nodes
+#     and translators for the installer environment;
+#   - from debootstrap on initial installation, to create device and server
+#     nodes before /dev and /servers are firmlinked to the host system.
+#   - from hurd.postinst, on upgrade, where only non-existant nodes should be
+#     created, and the other ones should be left alone.
+
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+export PATH
+
+usage () {
+cat >&2 <<EOU
+Usage: $0 [OPTIONS]
+Set up device nodes and /servers translators.
+
+  -k, --keep-active      Keep active translators running
+  -K, --keep-all         Don't even set passive translators on existing files
+  -m, --minimal          Create a minimal subset of nodes only
+  -p, --parted           Prefer parted stores for partition devices
+
+At least one of -k or -K must be given.
+EOU
+}
+
+# Parse command-line arguments
+REPLACE=
+MDFLAGS=
+MINIMAL=
+while [ $# -gt 0 ]; do
+	case "$1" in
+	    -k|--keep-active)
+		MDFLAGS="$MDFLAGS -k"
+		REPLACE=y
+		shift;;
+	    -K|--keep-all)
+		MDFLAGS="$MDFLAGS -K"
+		REPLACE=n
+		shift;;
+	    -m|--minimal)
+		MINIMAL=y
+		shift;;
+	    -p|--parted)
+		MDFLAGS="$MDFLAGS -p"
+		shift;;
+	    *) 
+		usage
+		exit 1;;
+	esac
+done
+
+if [ -z "$REPLACE" ]; then
+	usage
+	exit 1
+fi
+
+# Usage: foldsubst <pat> xxxx yyyy zzzz ...
+# <pat> is substituted for every character of xxxx with sed, the character in
+# question being accessible as a '\0' in <pat>, and the result is used as the
+# new pattern to handle the remaining arguments.
+foldsubst () {
+	[ "$2" ] || { echo $1; return; }
+	expanded=$(echo "$2" | sed "s/./ $1/g"); shift 2
+	foldsubst "$expanded" $@;
+}
+
+# Verbosely attach a translator.
+st () {
+	node=$1
+	cmdl=$2
+	name=${3:-$cmdl}
+
+	echo -n " $name"
+	if [ "$REPLACE" = y ] || [ ! -e $1 ]; then
+		# Work around a bug in ext2fs, which crashes if a non-empty
+		# file is turned into a symlink through settrans, by clearing
+		# the passive translator first.
+		settrans -ck $node
+		settrans -ck $node /hurd/$cmdl
+	fi
+}
+
+# Verbosely create device nodes, with some help from foldsubst.
+md () {
+	pattern=$1; shift
+	sedrepl=$(echo $pattern | sed -e 's/X/\\0/' -e 's/Y/\\\\0/')
+	devs=$(foldsubst "$sedrepl" $@)
+
+	echo -n " $pattern"
+	/sbin/MAKEDEV $MDFLAGS $devs
+}
+
+
+echo -n "Setting up translators:"
+cd /servers
+mkdir -p socket
+
+st exec exec
+st default-pager proxy-defpager
+st socket/1 pflocal
+st socket/local 'symlink 1' '(+link)'
+st socket/2 pfinet
+st socket/inet  'symlink 2' '(+link)'
+st /proc procfs
+
+if [ -z "$MINIMAL" ]; then
+	st password password
+	st crash-kill 'crash --kill' crash-kill
+	st crash-suspend 'crash --suspend' crash-suspend
+	st crash-dump-core 'crash --dump-core' crash-dump-core
+	st crash 'symlink crash-kill' crash
+fi
+
+echo .
+
+
+echo -n "Creating device nodes:"
+cd /dev
+
+md fd
+md std
+md vcs
+md hdX 0123
+md hdXsY 0123 12345678
+md sdX 0123
+md sdXsY 0123 12345678
+
+if [ "$MINIMAL" ]; then
+	md loopX 0123
+	md ttyX 1234
+	md ptypX 0123
+else
+	md loopX 01234567
+	md ttyX 123456
+	md ptyp
+	md ptyq
+	md comX 0123
+	md lprX 0123
+	st kbd 'symlink cons/kbd' kbd
+	st mouse 'symlink cons/mouse' mouse
+fi
+
+echo .
+
