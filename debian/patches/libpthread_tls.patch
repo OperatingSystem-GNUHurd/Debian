@@ -2,8 +2,8 @@
  libpthread/pthread/pt-create.c                 |    7 ++++
  libpthread/pthread/pt-exit.c                   |    3 ++
  libpthread/pthread/pt-internal.h               |   19 ++++++++++++
- libpthread/sysdeps/mach/hurd/i386/pt-machdep.c |   37 ++++++++++++++++++++++---
- libpthread/sysdeps/mach/hurd/i386/pt-setup.c   |    7 +++-
+ libpthread/sysdeps/mach/hurd/ia32/pt-machdep.c |   37 ++++++++++++++++++++++---
+ libpthread/sysdeps/mach/hurd/ia32/pt-setup.c   |    7 +++-
  libpthread/sysdeps/mach/hurd/pt-docancel.c     |    4 +-
  libpthread/sysdeps/mach/hurd/pt-sysdep.h       |   10 ++++--
  libthreads/alpha/thread.c                      |    1 
@@ -120,8 +120,8 @@
  
  
  #endif /* pt-sysdep.h */
---- a/libpthread/sysdeps/mach/hurd/i386/pt-machdep.c
-+++ b/libpthread/sysdeps/mach/hurd/i386/pt-machdep.c
+--- a/libpthread/sysdeps/mach/hurd/ia32/pt-machdep.c
++++ b/libpthread/sysdeps/mach/hurd/ia32/pt-machdep.c
 @@ -21,12 +21,28 @@
  
  #include <mach.h>
@@ -185,8 +185,8 @@
  			    (thread_state_t) &state,
  			    i386_THREAD_STATE_COUNT);
    if (err)
---- a/libpthread/sysdeps/mach/hurd/i386/pt-setup.c
-+++ b/libpthread/sysdeps/mach/hurd/i386/pt-setup.c
+--- a/libpthread/sysdeps/mach/hurd/ia32/pt-setup.c
++++ b/libpthread/sysdeps/mach/hurd/ia32/pt-setup.c
 @@ -91,12 +91,15 @@ __pthread_setup (struct __pthread *threa
    thread->mcontext.pc = entry_point;
    thread->mcontext.sp = stack_setup (thread, start_routine, arg);
