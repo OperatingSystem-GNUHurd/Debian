@@ -31,6 +31,10 @@ DEB_DH_STRIP_ARGS := --dbg-package=hurd-dbg
 DEB_INSTALL_CHANGELOGS_ALL := $(CURDIR)/debian/ChangeLog
 DEB_DH_MAKESHLIBS_ARGS_hurd := --add-udeb="hurd-udeb"
 
+# Enable part store support (not yet in configure.in)
+HAVE_PARTED = yes
+export HAVE_PARTED
+
 build/hurd::
 	cd $(DEB_BUILDDIR)/doc && texi2html -split chapter ../../doc/hurd.texi
 

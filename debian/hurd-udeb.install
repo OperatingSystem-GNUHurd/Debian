@@ -1,4 +1,5 @@
 debian/local/runsystem libexec
+debian/local/partman lib
 debian/tmp/lib/*.so.*
 debian/tmp/lib/hurd/console/*.so.* usr/lib/hurd/console
 debian/tmp/libexec/console-run

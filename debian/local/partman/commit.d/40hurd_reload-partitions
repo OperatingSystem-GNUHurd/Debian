@@ -1,0 +1,5 @@
+#!/bin/sh
+
+for part in /dev/[hs]d?s*; do
+	settrans -ag $part
+done
