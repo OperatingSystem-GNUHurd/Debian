@@ -1,5 +1,5 @@
-/* Initialize a mutex.  Generic version.
-   Copyright (C) 2000, 2002, 2005, 2006, 2008 Free Software Foundation, Inc.
+/* Yield the processor to another thread or process.
+   Copyright (C) 2010 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -18,33 +18,9 @@
    Boston, MA 02111-1307, USA.  */
 
 #include <pthread.h>
-#include <string.h>
-#include <stdlib.h>
-#include <assert.h>
+#include <sched.h>
 
-#include <pt-internal.h>
-
-int
-_pthread_mutex_init (pthread_mutex_t *mutex,
-		     const pthread_mutexattr_t *attr)
+int pthread_yield(void)
 {
-  *mutex = (pthread_mutex_t) __PTHREAD_MUTEX_INITIALIZER;
-
-  if (! attr
-      || memcmp (attr, &__pthread_default_mutexattr, sizeof (*attr) == 0))
-    /* The default attributes.  */
-    return 0;
-
-  if (! mutex->attr
-      || mutex->attr == __PTHREAD_ERRORCHECK_MUTEXATTR
-      || mutex->attr == __PTHREAD_RECURSIVE_MUTEXATTR)
-    mutex->attr = malloc (sizeof *attr);
-
-  if (! mutex->attr)
-    return ENOMEM;
-
-  *mutex->attr = *attr;
-  return 0;
+  return sched_yield ();
 }
-
-strong_alias (_pthread_mutex_init, pthread_mutex_init);

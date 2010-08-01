@@ -29,11 +29,18 @@ __pthread_mutex_trylock (struct __pthread_mutex *mutex)
 {
   int err;
   struct __pthread *self;
+  const struct __pthread_mutexattr *attr = mutex->attr;
+
+  if (attr == __PTHREAD_ERRORCHECK_MUTEXATTR)
+    attr = &__pthread_errorcheck_mutexattr;
+  if (attr == __PTHREAD_RECURSIVE_MUTEXATTR)
+    attr = &__pthread_recursive_mutexattr;
 
   __pthread_spin_lock (&mutex->__lock);
   if (__pthread_spin_trylock (&mutex->__held) == 0)
     /* Acquired the lock.  */
     {
+#if defined(ALWAYS_TRACK_MUTEX_OWNER)
 #ifndef NDEBUG
       self = _pthread_self ();
       if (self)
@@ -45,9 +52,10 @@ __pthread_mutex_trylock (struct __pthread_mutex *mutex)
 	  mutex->owner = _pthread_self ();
 	}
 #endif
+#endif
 
-      if (mutex->attr)
-	switch (mutex->attr->mutex_type)
+      if (attr)
+	switch (attr->mutex_type)
 	  {
 	  case PTHREAD_MUTEX_NORMAL:
 	    break;
@@ -68,10 +76,10 @@ __pthread_mutex_trylock (struct __pthread_mutex *mutex)
 
   err = EBUSY;
 
-  if (mutex->attr)
+  if (attr)
     {
       self = _pthread_self ();
-      switch (mutex->attr->mutex_type)
+      switch (attr->mutex_type)
 	{
 	case PTHREAD_MUTEX_NORMAL:
 	  break;
