@@ -1,4 +1,4 @@
-hurd (20100701-1) UNRELEASED; urgency=low
+hurd (20100701-1) unstable; urgency=low
 
   [ Samuel Thibault ]
   * New upstream 20100701 snapshot.
