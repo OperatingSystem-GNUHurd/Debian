@@ -1,6 +1,7 @@
-hurd (20090404-3) UNRELEASED; urgency=low
+hurd (20090404.1-1) UNRELEASED; urgency=low
 
   [ Samuel Thibault ]
+  * Cleaned upstream 20090404 snapshot.
   * debian/rules: Really put debugging symbols into the hurd-dbg package.
   * debian/patches/libpthread_cancel_init.patch: New patch to fix portability
     of pthread.h
