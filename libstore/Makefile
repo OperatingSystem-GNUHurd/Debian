@@ -44,6 +44,11 @@ store-types = \
 	      task \
 	      zero
 
+ifeq (HAVE_PARTED,yes)
+store-types += part
+libstore.so-LDLIBS += -lparted
+endif
+
 libstore.so-LDLIBS += -ldl
 LCLHDRS=store.h
 installhdrs=store.h

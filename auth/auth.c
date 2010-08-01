@@ -327,7 +327,8 @@ S_auth_user_authenticate (struct authhandle *userauth,
 	  u.user = userauth;
 	  condition_init (&u.wakeup);
 	  ports_interrupt_self_on_port_death (userauth, rendezvous);
-	  if (hurd_condition_wait (&u.wakeup, &pending_lock))
+	  if (hurd_condition_wait (&u.wakeup, &pending_lock)
+	      && hurd_ihash_find (&pending_users, rendezvous))
 	    /* We were interrupted; remove our record.  */
 	    {
 	      hurd_ihash_locp_remove (&pending_users, u.locp);
@@ -367,6 +368,7 @@ S_auth_server_authenticate (struct authhandle *serverauth,
 {
   struct pending *u;
   struct authhandle *user;
+  error_t err;
 
   if (! serverauth)
     return EOPNOTSUPP;
@@ -399,7 +401,6 @@ S_auth_server_authenticate (struct authhandle *serverauth,
       /* No pending user RPC for this port.
 	 Create a pending server RPC record.  */
       struct pending s;
-      error_t err;
 
       err = hurd_ihash_add (&pending_servers, rendezvous, &s);
       if (! err)
@@ -408,7 +409,8 @@ S_auth_server_authenticate (struct authhandle *serverauth,
 	  s.passthrough = newport;
 	  condition_init (&s.wakeup);
 	  ports_interrupt_self_on_port_death (serverauth, rendezvous);
-	  if (hurd_condition_wait (&s.wakeup, &pending_lock))
+	  if (hurd_condition_wait (&s.wakeup, &pending_lock)
+	      && hurd_ihash_find (&pending_servers, rendezvous))
 	    /* We were interrupted; remove our record.  */
 	    {
 	      hurd_ihash_locp_remove (&pending_servers, s.locp);
@@ -428,11 +430,14 @@ S_auth_server_authenticate (struct authhandle *serverauth,
   /* Extract the ids.  We must use a separate reply stub so
      we can deref the user auth handle after the reply uses its
      contents.  */
-  auth_server_authenticate_reply (reply, reply_type, 0,
-				  user->euids.ids, user->euids.num,
-				  user->auids.ids, user->auids.num,
-				  user->egids.ids, user->egids.num,
-				  user->agids.ids, user->agids.num);
+  err = auth_server_authenticate_reply (reply, reply_type, 0,
+					user->euids.ids, user->euids.num,
+					user->auids.ids, user->auids.num,
+					user->egids.ids, user->egids.num,
+					user->agids.ids, user->agids.num);
+
+  if (err)
+    mach_port_deallocate (mach_task_self (), reply);
   ports_port_deref (user);
   mach_port_deallocate (mach_task_self (), rendezvous);
   return MIG_NO_REPLY;
