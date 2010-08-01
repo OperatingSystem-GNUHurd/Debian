@@ -35,6 +35,9 @@ DEB_DH_MAKESHLIBS_ARGS_hurd := --add-udeb="hurd-udeb"
 HAVE_PARTED = yes
 export HAVE_PARTED
 
+clean::
+	rm -f $(CURDIR)/debian/ChangeLog
+
 build/hurd::
 	cd $(DEB_BUILDDIR)/doc && texi2html -split chapter ../../doc/hurd.texi
 
