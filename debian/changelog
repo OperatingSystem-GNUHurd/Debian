@@ -41,6 +41,9 @@ hurd (20100701-1) UNRELEASED; urgency=low
     busybox), remove crash and password (not useful), add procfs, remove rc.
   * debian/local/runsystem.gnu: Integrate jkoenig d-i changes, rename to
     debian/local/runsystem.
+  * debian/hurd.links: Add symlink to /usr/src/unifont.bdf from the unifont
+    package to /usr/share/hurd/vga-system.bdf so the console can pick it up
+    when installed.
 
   [ Guillem Jover ]
   * Update make-new-tarball.sh to exclude git instead of CVS paths.
