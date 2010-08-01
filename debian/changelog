@@ -10,6 +10,7 @@ hurd (20100701-1) UNRELEASED; urgency=low
     - debian/patches/libpthread_setcancel.patch: Likewise.
     - debian/patches/pfinet-gcc-4.3-fix.patch: Likewise.
     - debian/patches/procfs.patch: Likewise.
+    - debian/patches/ext2fs_large_stores.patch: Resync.
     - debian/patches/libpthread_procfs.patch: New patch, to enable libpthread
       and procfs build.
   * debian/rules: Really put debugging symbols into the hurd-dbg package.

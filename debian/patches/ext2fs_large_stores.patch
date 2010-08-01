@@ -1907,17 +1907,6 @@ Support for >2GB volumes
    if (control != p->memobjcntl)
      {
        printf ("incg data request: wrong control port\n");
-@@ -67,9 +67,7 @@ _pager_seqnos_memory_object_data_request
-   if (p->pager_state != NORMAL)
-     {
-       printf ("pager in wrong state for read\n");
--      _pager_release_seqno (p, seqno);
--      mutex_unlock (&p->interlock);
--      goto allow_term_out;
-+      goto allow_release_out;
-     }
- 
-   err = _pager_pagemap_resize (p, offset + length);
 @@ -121,7 +123,8 @@ _pager_seqnos_memory_object_data_request
      goto error_read;
  
