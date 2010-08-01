@@ -1008,10 +1008,13 @@ finish (struct execdata *e, int dealloc_file)
 #ifdef EXECDATA_STREAM
       fclose (&e->stream);
 #else
-      if (e->file_data != NULL)
+      if (e->file_data != NULL) {
 	free (e->file_data);
-      else if (map_buffer (e) != NULL)
+	e->file_data = NULL;
+      } else if (map_buffer (e) != NULL) {
 	munmap (map_buffer (e), map_vsize (e));
+	map_buffer (e) = NULL;
+      }
 #endif
     }
   if (dealloc_file && e->file != MACH_PORT_NULL)
@@ -1881,8 +1884,6 @@ do_exec (file_t file,
 	  proc_reassign (proc, newtask);
 	  mach_port_deallocate (mach_task_self (), proc);
 	}
-
-      mach_port_deallocate (mach_task_self (), oldtask);
     }
 
   /* Make sure the proc server has the right idea of our identity. */
