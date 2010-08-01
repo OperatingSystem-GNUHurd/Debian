@@ -49,6 +49,8 @@ hurd (20100701-1) unstable; urgency=low
   * debian/patches/console_ignore_bdf_err.patch: New patch to ignore erroneous
     number of glyphs in bdf files.
   * debian/rules: Remove debian/ChangeLog on clean.
+  * debian/local/runsystem: Pass -g option to the console to maximize glyph
+    usage for chinese.
 
   [ Guillem Jover ]
   * Update make-new-tarball.sh to exclude git instead of CVS paths.
