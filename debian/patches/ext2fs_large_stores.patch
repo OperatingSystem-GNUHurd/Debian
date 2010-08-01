@@ -1907,27 +1907,17 @@ Support for >2GB volumes
    if (control != p->memobjcntl)
      {
        printf ("incg data request: wrong control port\n");
-@@ -67,14 +67,16 @@ _pager_seqnos_memory_object_data_request
+@@ -67,9 +67,7 @@ _pager_seqnos_memory_object_data_request
    if (p->pager_state != NORMAL)
      {
        printf ("pager in wrong state for read\n");
 -      _pager_release_seqno (p, seqno);
 -      mutex_unlock (&p->interlock);
 -      goto allow_term_out;
-+      _pager_allow_termination (p);
-+      goto release_out;
++      goto allow_release_out;
      }
  
    err = _pager_pagemap_resize (p, offset + length);
-   if (err)
--    goto release_out;		/* Can't do much about the actual error.  */
-+    {
-+      _pager_allow_termination (p);
-+      goto release_out;	  /* Can't do much about the actual error.  */
-+    }
- 
-   /* If someone is paging this out right now, the disk contents are
-      unreliable, so we have to wait.  It is too expensive (right now) to
 @@ -121,7 +123,8 @@ _pager_seqnos_memory_object_data_request
      goto error_read;
  

@@ -1,4 +1,6 @@
 Also try /tmp/exec as it's used for installation.
+
+TODO: not used by d-i. Is it used by crosshurd?
 ---
  libdiskfs/boot-start.c |   24 ++++++++++++++++++++----
  1 file changed, 20 insertions(+), 4 deletions(-)

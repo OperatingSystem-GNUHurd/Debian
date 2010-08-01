@@ -1,14 +1,18 @@
-hurd (20090404.1-1) UNRELEASED; urgency=low
+hurd (20100701-1) UNRELEASED; urgency=low
 
   [ Samuel Thibault ]
-  * Cleaned upstream 20090404 snapshot.
+  * New upstream 20100701 snapshot.
+    - debian/patches/dir_acces_fix.patch: Remove patch, merged upstream.
+    - debian/patches/exec_fix.patch: Likewise.
+    - debian/patches/libdiskfs-rename.patch: Likewise.
+    - debian/patches/libpthread_mutex_owner.patch: Likewise.
+    - debian/patches/libpthread_recursive_mutex_initializer.patch: Likewise.
+    - debian/patches/libpthread_setcancel.patch: Likewise.
+    - debian/patches/pfinet-gcc-4.3-fix.patch: Likewise.
+    - debian/patches/procfs.patch: Likewise.
+    - debian/patches/libpthread_procfs.patch: New patch, to enable libpthread
+      and procfs build.
   * debian/rules: Really put debugging symbols into the hurd-dbg package.
-  * debian/patches/libpthread_cancel_init.patch: New patch to fix portability
-    of pthread.h
-  * debian/patches/libpthread_kill_0.patch: New patch to fix pthread_kill(th,
-    0);
-  * debian/patches/console_current_vcs.patch: Cherry-pick patch to fix
-    loading the current_vcs driver.
   * debian/patches/hurd_console_startup.patch: Add -d current_vcs to enable
     /dev/cons/vcs by default.
   * debian/copyright: Reference /usr/share/common-licenses/GPL-2 instead of
@@ -28,8 +32,6 @@ hurd (20090404.1-1) UNRELEASED; urgency=low
     ftpfs, hostmux, usermux, nfs, isofs.static, rpctrace, gcore, forks. Install
     local/runsystem.gnu in /libexec, install ext2fs.static in /boot
   * debian/rules: Do not ship *_pic.a, as mklibs breaks them.
-  * debian/patches/MAKEDEV.patch: Make MAKEDEV bash-free.
-  * debian/patches/tmpfs.patch: New patch to fix tmpfs crash.
   * debian/patches/proxy-defpager.diff: New patch to fix proxying defpager.
   * debian/patches/ext2fs_large_stores.patch: Apply Alioth fix #312328 from
     Fredrik Hammar to fix random startup crash (Closes: Bug#576519).
