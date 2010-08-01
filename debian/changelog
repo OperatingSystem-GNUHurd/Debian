@@ -49,6 +49,7 @@ hurd (20100701-1) UNRELEASED; urgency=low
     hurd-udeb, make partman restart the partition translators after the
     partition table has been changed.
   * debian/hurd-udeb.install: Install file above.
+  * debian/local/runsystem (hurd-udeb): Start mach-defpager.
 
   [ Guillem Jover ]
   * Update make-new-tarball.sh to exclude git instead of CVS paths.

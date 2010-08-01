@@ -38,6 +38,7 @@ st socket/1 pflocal
 st socket/2 pfinet
 st exec exec
 st default-pager proxy-defpager
+/hurd/mach-defpager
 echo .
 
 echo -n "Creating device nodes:"
