@@ -66,6 +66,31 @@ int netdev_flags(struct net_device *dev)
   return dev->flags;
 }
 
+char *netdev_name (struct net_device *dev)
+{
+  return dev->name;
+}
+
+unsigned int netdev_mtu (struct net_device *dev)
+{
+  return dev->mtu;
+}
+
+unsigned short netdev_header_len (struct net_device *dev)
+{
+  return dev->hard_header_len;
+}
+
+unsigned short netdev_type (struct net_device *dev)
+{
+  return dev->type;
+}
+
+unsigned char netdev_addr_len (struct net_device *dev)
+{
+  return dev->addr_len;
+}
+
 void *skb_reply(struct sk_buff *skb)
 {
   return skb->del_data;

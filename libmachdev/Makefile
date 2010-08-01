@@ -30,7 +30,7 @@ OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
 
 include ../Makeconf
 
-CFLAGS += -I$(top_srcdir)/libddekit/include
+CFLAGS += -I$(top_srcdir)/libddekit/include -I$(top_srcdir)/libbpf
 
 ourdevice.defs: device.defs
 	$(CPP) $(CPPFLAGS) -x c $< | sed -e '/out[ 	]*device[ 	]*:[ 	]*device_t/s/device_t/mach_port_send_t/' > $@

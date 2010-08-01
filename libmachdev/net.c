@@ -61,6 +61,7 @@
 #include <assert.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <error.h>
 
 #include "mach_U.h"
 
@@ -75,6 +76,7 @@
 #include "if_ether.h"
 #include "util.h"
 #include "mach_glue.h"
+#include "if_hdr.h"
 
 #define ether_header ethhdr
 
@@ -86,9 +88,8 @@ extern struct port_class *dev_class;
 struct net_data
 {
   struct port_info port;	/* device port */
-//  struct ifnet ifnet;		/* Mach ifnet structure (needed for filters) */
   struct emul_device device;	/* generic device structure */
-  mach_port_t delivery_port;
+  struct ifnet ifnet;		/* Mach ifnet structure (needed for filters) */
   struct net_device *dev;	/* Linux network device structure */
   struct net_data *next;
 };
@@ -174,10 +175,12 @@ pre_kfree_skb (struct sk_buff *skb, void *data)
  * Deliver the message to all right pfinet servers that
  * connects to the virtual network interface.
  */
-static int
-deliver_msg(mach_port_t dest, struct net_rcv_msg *msg)
+int
+deliver_msg(struct net_rcv_msg *msg, if_filter_list_t *ifp)
 {
   mach_msg_return_t err;
+  queue_head_t *if_port_list;
+  net_rcv_port_t infp, nextfp;
 
   msg->msg_hdr.msgh_bits = MACH_MSGH_BITS (MACH_MSG_TYPE_COPY_SEND, 0);
   /* remember message sizes must be rounded up */
@@ -185,19 +188,42 @@ deliver_msg(mach_port_t dest, struct net_rcv_msg *msg)
   msg->msg_hdr.msgh_kind = MACH_MSGH_KIND_NORMAL;
   msg->msg_hdr.msgh_id = NET_RCV_MSG_ID;
 
-  msg->msg_hdr.msgh_remote_port = dest;
-  err = mach_msg ((mach_msg_header_t *)msg,
-		  MACH_SEND_MSG|MACH_SEND_TIMEOUT,
-		  msg->msg_hdr.msgh_size, 0, MACH_PORT_NULL,
-		  0, MACH_PORT_NULL);
-  if (err != MACH_MSG_SUCCESS)
+  if_port_list = &ifp->if_rcv_port_list;
+  FILTER_ITERATE (if_port_list, infp, nextfp, &infp->input) 
     {
-      mach_port_deallocate(mach_task_self (),
-			   ((mach_msg_header_t *)msg)->msgh_remote_port);
-      return err;
-    }
+      mach_port_t dest;
+      net_hash_entry_t entp, *hash_headp;
+      int ret_count;
 
-  return MACH_MSG_SUCCESS;
+      entp = (net_hash_entry_t) 0;
+      ret_count = bpf_do_filter (infp,
+				 msg->packet + sizeof (struct packet_header),
+				 msg->net_rcv_msg_packet_count, msg->header,
+				 sizeof (struct ethhdr), &hash_headp, &entp);
+      if (entp == (net_hash_entry_t) 0)
+	dest = infp->rcv_port;
+      else
+	dest = entp->rcv_port;
+
+      if (ret_count) 
+	{
+	  msg->msg_hdr.msgh_remote_port = dest;
+	  err = mach_msg ((mach_msg_header_t *)msg,
+			  MACH_SEND_MSG|MACH_SEND_TIMEOUT,
+			  msg->msg_hdr.msgh_size, 0, MACH_PORT_NULL,
+			  0, MACH_PORT_NULL);
+	  if (err != MACH_MSG_SUCCESS)
+	    {
+	      mach_port_deallocate(mach_task_self (),
+				   ((mach_msg_header_t *)msg)->msgh_remote_port);
+	      error (0, err, "mach_msg");
+	      return -1;
+	    }
+	}
+    }
+  FILTER_ITERATE_END
+
+    return 0;
 }
 
 /* Accept packet SKB received on an interface.  */
@@ -241,7 +267,7 @@ netif_rx_handle (char *data, int len, struct net_device *dev)
   net_msg->header_type = header_type;
   net_msg->packet_type = packet_type;
   net_msg->net_rcv_msg_packet_count = ph->length;
-  deliver_msg (nd->delivery_port, net_msg);
+  deliver_msg (net_msg, &nd->ifnet.port_list);
   free (net_msg);
 }
 
@@ -256,20 +282,18 @@ dev_to_port (void *nd)
 	  : MACH_PORT_NULL);
 }
 
-#if 0     
 /*    
  * Initialize send and receive queues on an interface.
  */   
 void if_init_queues(ifp)
      register struct ifnet *ifp;
 {     
-  IFQ_INIT(&ifp->if_snd);
-  queue_init(&ifp->if_rcv_port_list);
-  queue_init(&ifp->if_snd_port_list);
-  simple_lock_init(&ifp->if_rcv_port_list_lock);
-  simple_lock_init(&ifp->if_snd_port_list_lock);
+//  IFQ_INIT(&ifp->if_snd);
+  queue_init(&ifp->port_list.if_rcv_port_list);
+  queue_init(&ifp->port_list.if_snd_port_list);
+  mutex_init(&ifp->if_rcv_port_list_lock);
+  mutex_init(&ifp->if_snd_port_list_lock);
 }
-#endif
 
 static io_return_t
 device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
@@ -279,7 +303,7 @@ device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
   io_return_t err = D_SUCCESS;
   struct net_device *dev;
   struct net_data *nd;
-//  struct ifnet *ifp;
+  struct ifnet *ifp;
 
   /* Search for the device.  */
   dev = search_netdev (name);
@@ -293,6 +317,8 @@ device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
   nd = search_nd (dev);
   if (!nd)
     {
+      char *name;
+
       err = create_device_port (sizeof (*nd), &nd);
       if (err)
 	{
@@ -305,23 +331,17 @@ device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
       nd->device.emul_ops = &linux_net_emulation_ops;
       nd->next = nd_head;
       nd_head = nd;
-#if 0
-      ipc_kobject_set (nd->port, (ipc_kobject_t) & nd->device, IKOT_DEVICE);
-      notify = ipc_port_make_sonce (nd->port);
-      ip_lock (nd->port);
-      ipc_port_nsrequest (nd->port, 1, notify, &notify);
-      assert (notify == IP_NULL);
 
       ifp = &nd->ifnet;
-      ifp->if_unit = dev->name[strlen (dev->name) - 1] - '0';
+      name = netdev_name (dev);
+      ifp->if_unit = name[strlen (name) - 1] - '0';
       ifp->if_flags = IFF_UP | IFF_RUNNING;
-      ifp->if_mtu = dev->mtu;
-      ifp->if_header_size = dev->hard_header_len;
-      ifp->if_header_format = dev->type;
-      ifp->if_address_size = dev->addr_len;
-      ifp->if_address = dev->dev_addr;
+      ifp->if_mtu = netdev_mtu (dev);
+      ifp->if_header_size = netdev_header_len (dev);
+      ifp->if_header_format = netdev_type (dev);
+      ifp->if_address_size = netdev_addr_len (dev);
+      ifp->if_address = netdev_addr (dev);
       if_init_queues (ifp);
-#endif
 
       if ((err = dev_open(dev)) < 0)
 	{
@@ -425,8 +445,8 @@ device_write (void *d, mach_port_t reply_port,
  * Other network operations
  */
 static io_return_t
-net_getstat(dev, flavor, status, count)
-	struct net_device	*dev;
+net_getstat(ifp, flavor, status, count)
+	struct ifnet	*ifp;
 	dev_flavor_t	flavor;
 	dev_status_t	status;		/* pointer to OUT array */
 	natural_t	*count;		/* OUT */
@@ -440,12 +460,12 @@ net_getstat(dev, flavor, status, count)
 		if (*count < NET_STATUS_COUNT)
 		    return (D_INVALID_OPERATION);
 		
-		ns->min_packet_size = 60;
-		ns->max_packet_size = ETH_HLEN + ETHERMTU;
-		ns->header_format   = HDR_ETHERNET;
-		ns->header_size	    = ETH_HLEN;
-		ns->address_size    = ETH_ALEN;
-		ns->flags	    = 0;
+		ns->min_packet_size = ifp->if_header_size;
+		ns->max_packet_size = ifp->if_header_size + ifp->if_mtu;
+		ns->header_format   = ifp->if_header_format;
+		ns->header_size	    = ifp->if_header_size;
+		ns->address_size    = ifp->if_address_size;
+		ns->flags	    = ifp->if_flags;
 		ns->mapped_size	    = 0;
 
 		*count = NET_STATUS_COUNT;
@@ -469,7 +489,7 @@ net_getstat(dev, flavor, status, count)
 		  return (D_INVALID_OPERATION);
 		}
 
-		memcpy(status, netdev_addr(dev), addr_byte_count);
+		memcpy(status, ifp->if_address, addr_byte_count);
 		if (addr_byte_count < addr_int_count * sizeof(int))
 		    memset((char *)status + addr_byte_count, 0, 
 			  (addr_int_count * sizeof(int)
@@ -556,7 +576,7 @@ device_get_status (void *d, dev_flavor_t flavor, dev_status_t status,
 #endif
     {
       /* common get_status request */
-      return net_getstat (net->dev, flavor, status, count);
+      return net_getstat (&net->ifnet, flavor, status, count);
     }
 }
 
@@ -618,12 +638,8 @@ static io_return_t
 device_set_filter (void *d, mach_port_t port, int priority,
 		   filter_t * filter, unsigned filter_count)
 {
-  ((struct net_data *) d)->delivery_port = port;
-  return 0;
-#if 0
-  return net_set_filter (&((struct net_data *) d)->ifnet,
+  return net_set_filter (&((struct net_data *) d)->ifnet.port_list,
 			 port, priority, filter, filter_count);
-#endif
 }
 
 /* Do any initialization required for network devices.  */
