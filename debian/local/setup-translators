@@ -133,12 +133,12 @@ if [ "$MINIMAL" ]; then
 	md loopX 0123
 	md ttyX 1234
 	md ptypX 0123
+	md comX 0123
 else
 	md loopX 01234567
 	md ttyX 123456
 	md ptyp
 	md ptyq
-	md comX 0123
 	md lprX 0123
 	st kbd 'symlink cons/kbd' kbd
 	st mouse 'symlink cons/mouse' mouse
