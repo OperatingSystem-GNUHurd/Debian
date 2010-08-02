@@ -51,7 +51,6 @@ hurd (20100802-1) unstable; urgency=low
   * debian/rules: Remove debian/ChangeLog generation.
   * debian/local/runsystem: Pass -g option to the console to maximize glyph
     usage for chinese.
-  * debian/patches/init_fix.patch: New upstream patch to fix halt/reboot.
   * debian/hurd.lintian-overrides: New overrides to announce which servers are
     supposed to be statically linked, and accept hurd to be essential.
   * debian/hurd-udeb.lintian-overrides: New overrides to validate
