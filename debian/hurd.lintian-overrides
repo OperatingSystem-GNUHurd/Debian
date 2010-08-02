@@ -1,0 +1,5 @@
+new-essential-package
+statically-linked-binary ./hurd/mach-defpager
+statically-linked-binary ./hurd/ext2fs.static
+statically-linked-binary ./hurd/iso9660fs.static
+statically-linked-binary ./hurd/ufs.static
