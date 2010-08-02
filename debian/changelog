@@ -95,7 +95,7 @@ hurd (20100701-1) unstable; urgency=low
         setup-translators script from the installed hurd package to setup the
         devices and servers itself).
 
- -- Samuel Thibault <sthibault@debian.org>  Tue, 13 Oct 2009 01:20:44 +0200
+ -- Samuel Thibault <sthibault@debian.org>  Mon, 02 Aug 2010 10:06:06 +0200
 
 hurd (20090404-2) unstable; urgency=low
 
