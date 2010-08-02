@@ -26,6 +26,7 @@
  * to the right pfinet.
  */
 
+#include <argz.h>
 #include <argp.h>
 #include <errno.h>
 #include <error.h>
@@ -186,4 +187,20 @@ main (int argc, char *argv[])
 
   netfs_server_loop ();         /* Never returns.  */
   return 0;
+}
+
+error_t
+netfs_append_args (char **argz, size_t *argz_len)
+{
+  error_t err = 0;
+
+#define ADD_OPT(fmt, args...)						\
+  do { char buf[100];							\
+       if (! err) {							\
+         snprintf (buf, sizeof buf, fmt , ##args);			\
+         err = argz_add (argz, argz_len, buf); } } while (0)
+  if (device_file)
+    ADD_OPT ("--interface=%s", device_file);
+#undef ADD_OPT
+  return err;
 }
