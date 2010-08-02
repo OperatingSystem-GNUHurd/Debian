@@ -45,16 +45,15 @@ mach_port_t ether_port;
 /* Port for receiving messages from the interface. */
 static mach_port_t readptname;
 
-/* Accept ARP and IP packets. */
-static short ether_filter[] =
+/* The BPF instruction allows IP and ARP packets */
+static struct bpf_insn ether_filter[] =
 {
-#ifdef NETF_IN
-  /* We have to tell the packet filtering code that we're interested in
-     incoming packets.  */
-  NETF_IN, /* Header.  */
-#endif
-  NETF_PUSHLIT | NETF_NOP,
-  1
+    {NETF_IN|NETF_BPF, /* Header. */ 0, 0, 0},
+    {40, 0, 0, 12},
+    {21, 1, 0, 2054},
+    {21, 0, 1, 2048},
+    {6, 0, 0, 1500},
+    {6, 0, 0, 0}
 };
 static int ether_filter_len = sizeof (ether_filter) / sizeof (short);
 
