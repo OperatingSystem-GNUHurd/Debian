@@ -1,7 +1,7 @@
-hurd (20100701-1) unstable; urgency=low
+hurd (20100802-1) unstable; urgency=low
 
   [ Samuel Thibault ]
-  * New upstream 20100701 snapshot.
+  * New upstream 20100802 snapshot.
     - debian/patches/dir_acces_fix.patch: Remove patch, merged upstream.
     - debian/patches/exec_fix.patch: Likewise.
     - debian/patches/libdiskfs-rename.patch: Likewise.
