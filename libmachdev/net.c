@@ -216,7 +216,6 @@ deliver_msg(struct net_rcv_msg *msg, if_filter_list_t *ifp)
 	    {
 	      mach_port_deallocate(mach_task_self (),
 				   ((mach_msg_header_t *)msg)->msgh_remote_port);
-	      error (0, err, "mach_msg");
 	      return -1;
 	    }
 	}
