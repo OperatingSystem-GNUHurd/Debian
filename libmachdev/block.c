@@ -118,9 +118,14 @@ device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
   char *dev_name = NULL;
   int dev_err;
 
+  // TODO I need to check whether the device has been opened before.
+  // if it has been opened with the same `flag', return the same port,
+  // otherwise, return a different port.
+  // I need to have a reference to count the number of open.
   dev_name = translate_name (name, &slice, &part);
+  if (dev_name == NULL)
+    return D_NO_SUCH_DEVICE;
 
-  // TODO when the port isn't used by clients, it should be destroyed.
   err = create_device_port (sizeof (*bd), &bd);
   if (err)
     {
