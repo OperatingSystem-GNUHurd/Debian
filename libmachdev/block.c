@@ -198,12 +198,12 @@ device_write (void *d, mach_port_t reply_port,
   for (i = 0; i < npages; i++)
     {
       int size = PAGE_SIZE - ((int) data &~PAGE_MASK) > count ?
-	PAGE_SIZE - ((int) data &~PAGE_MASK) : count;
+	count : PAGE_SIZE - ((int) data &~PAGE_MASK);
 
-      err = block_dev_write (bd->dev, bn, data, count, write_done);
+      err = block_dev_write (bd->dev, bn, data, size, write_done);
       if (err)
 	break;
-      bn += count >> 9;
+      bn += size >> 9;
       data += size;
       count -= size;
       writes++;
