@@ -33,8 +33,8 @@ void skb_done_head_init();
 /* block device */
 struct block_device;
 struct block_device *open_block_dev (char *name, int part, dev_mode_t mode);
-int block_dev_write (struct block_device *dev, int sectornr,
-		     char *data, int count, void (*write_done) (int err));
+int block_dev_rw (struct block_device *dev, int sectornr,
+		  char *data, int count, int rw, void (*write_done) (int err));
 
 int l4dde26_process_from_ddekit(ddekit_thread_t *t);
 

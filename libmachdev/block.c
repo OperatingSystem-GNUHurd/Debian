@@ -24,6 +24,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/mman.h>
 
 #include "mach_U.h"
 
@@ -39,6 +40,11 @@
 #include "dev_hdr.h"
 #include "util.h"
 #include "mach_glue.h"
+
+/* for submit_bio(). But it might not be very proper to keep
+ * my own definitions of these macros. */
+#define READ 0
+#define WRITE 1
 
 /* One of these is associated with each open instance of a device.  */
 struct block_data
@@ -180,6 +186,7 @@ device_write (void *d, mach_port_t reply_port,
   void write_done (int err)
     {
       int len = err ? 0 : count;
+      // TODO maybe I should send the reply as long as there is an error.
       writes--;
       if (writes == 0)
 	{
@@ -200,7 +207,7 @@ device_write (void *d, mach_port_t reply_port,
       int size = PAGE_SIZE - ((int) data &~PAGE_MASK) > count ?
 	count : PAGE_SIZE - ((int) data &~PAGE_MASK);
 
-      err = block_dev_write (bd->dev, bn, data, size, write_done);
+      err = block_dev_rw (bd->dev, bn, data, size, WRITE, write_done);
       if (err)
 	break;
       bn += size >> 9;
@@ -220,11 +227,53 @@ device_read (void *d, mach_port_t reply_port,
 	     unsigned *bytes_read)
 {
   struct block_data *bd = d;
+  io_return_t err = D_SUCCESS;
+  int i;
+  int reads = 0;
+  char *buf;
+  int npages = (count + PAGE_SIZE - 1) / PAGE_SIZE;
+
+  void read_done (int err)
+    {
+      int len = err ? 0 : count;
+      reads--;
+      if (reads == 0)
+	{
+	  err = linux_to_mach_error (err);
+	  ds_device_read_reply (reply_port, reply_port_type, err, buf, len);
+	}
+    }
 
   if ((bd->mode & D_READ) == 0)
     return D_INVALID_OPERATION;
-  *bytes_read = 0;
-  return D_SUCCESS;
+
+  if (count == 0)
+    return 0;
+
+  *data = 0;
+  buf = mmap (NULL, npages * PAGE_SIZE, PROT_READ|PROT_WRITE,
+	      MAP_PRIVATE|MAP_ANONYMOUS, 0, 0);
+  if (buf == MAP_FAILED)
+    return errno;
+
+  ddekit_printf ("read %d pages.\n", npages);
+  for (i = 0; i < npages; i++)
+    {
+      int size = count > PAGE_SIZE ? PAGE_SIZE : count;
+      ddekit_printf ("read %d bytes starting from %d\n", size, bn);
+
+      err = block_dev_rw (bd->dev, bn, buf + i * PAGE_SIZE,
+			  size, READ, read_done);
+      if (err)
+	break;
+      bn += size >> 9;
+      count -= size;
+      reads++;
+    }
+  // TODO when should I deallocate the buffer?
+  if (reads)
+    return MIG_NO_REPLY;
+  return linux_to_mach_error (err);
 }
 
 static io_return_t

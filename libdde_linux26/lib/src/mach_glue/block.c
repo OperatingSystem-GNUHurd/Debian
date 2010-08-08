@@ -20,8 +20,8 @@ struct block_device *open_block_dev (char *name, int part, fmode_t mode)
 /* write a piece of data to a block device.
  * DATA must be in one page.
  * SECTORNR: the writing location in sectors. */
-int block_dev_write (struct block_device *dev, int sectornr,
-		     char *data, int count, void (*write_done (int err)))
+int block_dev_rw (struct block_device *dev, int sectornr,
+		  char *data, int count, int rw, void (*write_done (int err)))
 {
   int err = 0;
   struct bio *bio;
@@ -63,7 +63,7 @@ int block_dev_write (struct block_device *dev, int sectornr,
   bio->bi_end_io = end_bio;
   bio->bi_private = NULL;
   bio_get (bio);
-  submit_bio (WRITE, bio);
+  submit_bio (rw, bio);
   if (bio_flagged (bio, BIO_EOPNOTSUPP))
     {
       err = -EOPNOTSUPP;
