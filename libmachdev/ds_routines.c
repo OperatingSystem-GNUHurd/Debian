@@ -61,12 +61,15 @@
 #include <mach.h>
 #include <cthreads.h>
 
+#include <ddekit/thread.h>
+
 #include "vm_param.h"
 #include "device_reply_U.h"
 #include "io_req.h"
 #include "dev_hdr.h"
 #include "util.h"
 #include "queue.h"
+#include "mach_glue.h"
 
 static struct port_bucket *port_bucket;
 static struct port_class *dev_class;
@@ -466,6 +469,10 @@ void reg_dev_emul (struct device_emulation_ops *ops)
 
 void ds_server()
 {
+  /* This thread calls Linux functions,
+   * so I need to make it known to the Linux environment. */
+  l4dde26_process_from_ddekit (ddekit_thread_myself ());
+
   /* Launch.  */
   do
     {

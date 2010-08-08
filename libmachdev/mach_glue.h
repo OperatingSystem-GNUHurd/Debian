@@ -4,6 +4,8 @@
 /* network */
 #include <arpa/inet.h>
 
+#include <ddekit/thread.h>
+
 struct sk_buff;
 struct net_device;
 void skb_done_queue(struct sk_buff *skb);
@@ -33,5 +35,7 @@ struct block_device;
 struct block_device *open_block_dev (char *name, int part, dev_mode_t mode);
 int block_dev_write (struct block_device *dev, int sectornr,
 		     char *data, int count, void (*write_done) (int err));
+
+int l4dde26_process_from_ddekit(ddekit_thread_t *t);
 
 #endif
