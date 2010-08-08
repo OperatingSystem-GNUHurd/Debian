@@ -226,6 +226,8 @@ ds_device_write (device_t dev, mach_port_t reply_port,
     return D_INVALID_SIZE;
 
   device = mach_convert_port_to_device (dev);
+  if (device == NULL)
+    return D_INVALID_OPERATION;
 
   if (! device->emul_ops->write)
     {
@@ -259,6 +261,8 @@ ds_device_write_inband (device_t dev, mach_port_t reply_port,
     return D_INVALID_SIZE;
 
   device = mach_convert_port_to_device (dev);
+  if (device == NULL)
+    return D_INVALID_OPERATION;
 
   if (! device->emul_ops->write_inband)
     {
@@ -288,6 +292,8 @@ ds_device_read (device_t dev, mach_port_t reply_port,
     return D_NO_SUCH_DEVICE;
 
   device = mach_convert_port_to_device (dev);
+  if (device == NULL)
+    return D_INVALID_OPERATION;
 
   if (! device->emul_ops->read)
     {
@@ -316,6 +322,8 @@ ds_device_read_inband (device_t dev, mach_port_t reply_port,
     return D_NO_SUCH_DEVICE;
 
   device = mach_convert_port_to_device (dev);
+  if (device == NULL)
+    return D_INVALID_OPERATION;
 
   if (! device->emul_ops->read_inband)
     {
@@ -342,6 +350,8 @@ ds_device_set_status (device_t dev, dev_flavor_t flavor,
     return D_NO_SUCH_DEVICE;
 
   device = mach_convert_port_to_device (dev);
+  if (device == NULL)
+    return D_INVALID_OPERATION;
 
   if (! device->emul_ops->set_status)
     {
@@ -367,6 +377,8 @@ ds_device_get_status (device_t dev, dev_flavor_t flavor, dev_status_t status,
     return D_NO_SUCH_DEVICE;
 
   device = mach_convert_port_to_device (dev);
+  if (device == NULL)
+    return D_INVALID_OPERATION;
 
   if (! device->emul_ops->get_status)
     {
@@ -392,6 +404,8 @@ ds_device_set_filter (device_t dev, mach_port_t receive_port, int priority,
     return D_NO_SUCH_DEVICE;
 
   device = mach_convert_port_to_device (dev);
+  if (device == NULL)
+    return D_INVALID_OPERATION;
 
   if (! device->emul_ops->set_filter)
     {
