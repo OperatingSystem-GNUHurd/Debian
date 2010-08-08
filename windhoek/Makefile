@@ -13,13 +13,13 @@ TARGET         = windhoek
 IDE_SRC = ide.c ide-disk.c ide-generic.c ide-io.c ide-park.c \
 		  ide-iops.c ide-lib.c ide-pm.c ide-pnp.c ide-probe.c ide-taskfile.c  \
 		  setup-pci.c ide-pci-generic.c ide-pio-blacklist.c ide-sysfs.c \
-		  piix.c ide-dma.c ide-gd.c
+		  ide-dma.c ide-gd.c
 IDEFILES = $(addprefix ide/, $(IDE_SRC))
 
 CDROM_SRC = #cdrom.c
 CDROMFILES = $(addprefix cdrom/, $(CDROM_SRC))
 
-PARTITION_SRC = msdos.c check.c
+PARTITION_SRC = check.c
 PARTITIONFILES = $(addprefix partitions/, $(PARTITION_SRC))
 
 SRC_C          = main.c genhd.c

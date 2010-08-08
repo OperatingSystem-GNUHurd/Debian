@@ -30,7 +30,7 @@
 
 #define DRV_NAME	"ide_generic"
 
-static int probe_mask;
+static int probe_mask = 0x3f;
 module_param(probe_mask, int, 0);
 MODULE_PARM_DESC(probe_mask, "probe mask for legacy ISA IDE ports");
 
@@ -158,7 +158,7 @@ static int __init ide_generic_init(void)
 		printk(KERN_INFO DRV_NAME ": enforcing probing of I/O ports "
 			"upon user request\n");
 
-	for (i = 0; i < ARRAY_SIZE(legacy_bases); i++) {
+	i = 1;
 		io_addr = legacy_bases[i];
 
 		if ((probe_mask & (1 << i)) && io_addr) {
@@ -166,7 +166,7 @@ static int __init ide_generic_init(void)
 				printk(KERN_ERR "%s: I/O resource 0x%lX-0x%lX "
 						"not free.\n",
 						DRV_NAME, io_addr, io_addr + 7);
-				continue;
+				goto out;
 			}
 
 			if (!request_region(io_addr + 0x206, 1, DRV_NAME)) {
@@ -174,7 +174,7 @@ static int __init ide_generic_init(void)
 						"not free.\n",
 						DRV_NAME, io_addr + 0x206);
 				release_region(io_addr, 8);
-				continue;
+				goto out;
 			}
 
 			memset(&hw, 0, sizeof(hw));
@@ -192,8 +192,8 @@ static int __init ide_generic_init(void)
 				release_region(io_addr, 8);
 			}
 		}
-	}
 
+out:
 	if (ide_generic_sysfs_init())
 		printk(KERN_ERR DRV_NAME ": failed to create ide_generic "
 					 "class\n");

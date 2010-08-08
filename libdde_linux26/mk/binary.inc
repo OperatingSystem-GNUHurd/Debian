@@ -244,7 +244,7 @@ LDFLAGS += --hash-style=sysv
 endif
 endif
 
-OPTS	?= -g -O2 -fno-strict-aliasing
+OPTS	?= -g -fno-strict-aliasing
 WARNINGS?= -Wall -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations $(WARNINGS_$@)
 
 ifeq ($(MODE),host)
