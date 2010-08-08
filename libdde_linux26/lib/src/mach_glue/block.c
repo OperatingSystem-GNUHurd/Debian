@@ -17,11 +17,11 @@ struct block_device *open_block_dev (char *name, int part, fmode_t mode)
   return ERR_PTR(-ENXIO);
 }
 
-/* write a piece of data to a block device.
+/* read or write a piece of data to a block device.
  * DATA must be in one page.
  * SECTORNR: the writing location in sectors. */
 int block_dev_rw (struct block_device *dev, int sectornr,
-		  char *data, int count, int rw, void (*write_done (int err)))
+		  char *data, int count, int rw, void (*done (int err)))
 {
   int err = 0;
   struct bio *bio;
@@ -30,7 +30,7 @@ int block_dev_rw (struct block_device *dev, int sectornr,
 
   void end_bio (struct bio *bio, int err)
     {
-      write_done (err);
+      done (err);
     }
 
   assert (count <= PAGE_SIZE);
