@@ -39,6 +39,21 @@ static int nested_lock(ddekit_lock_t lock)
 	return do_lock;
 }
 
+unsigned long fake_local_irq_disable_flags(void)
+{
+	return atomic_add_return (1, &_refcnt) - 1;
+}
+
+void fake_local_irq_enable(void)
+{
+	atomic_set(&_refcnt, 0);
+}
+
+void fake_local_irq_restore(unsigned long flags)
+{
+	atomic_set(&_refcnt, flags);
+}
+
 /* Store the current flags state.
  *
  * This is done by returning the current refcnt.
