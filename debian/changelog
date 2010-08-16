@@ -72,7 +72,6 @@ hurd (20100821-1) UNRELEASED; urgency=low
 
   [ Jeremie Koenig ]
   * debian/control: Build-Depend on libparted-dev.
-  * debian/rules: Enable parted stores, in a hackish way for now.
   * debian/local/partman/commit.d/40hurd_reload-partitions: New file for
     hurd-udeb, make partman restart the partition translators after the
     partition table has been changed.
