@@ -80,21 +80,21 @@ hurd (20100802-1) UNRELEASED; urgency=low
   * debian/local/runsystem (hurd-udeb): Start mach-defpager.
   * debian/hurd-udeb.dirs: Include /servers.
   * Sort out the way device and server nodes are created:
-      - debian/patches/makedev_keep_options.patch: Introduces the -k and -K
-        options to MAKEDEV, respectively to keep active translators running or
-        leave existing files alone completely.
-      - debian/patches/makedev_parted_store.patch: MAKEDEV -p will use parted
-        instead of device stores for disk partitions.
-      - debian/local/setup-translators: New script installed in /usr/lib/hurd,
-        uses MAKEDEV's new options to create all the necessary device and
-        server nodes.
-      - debian/local/runsystem (hurd-udeb): Uses setup-translators in "minimal
-        mode" to prepare the initrd when the installer is started. Parted
-        stores are used to avoid problems when reloading the partition table.
-      - debian/hurd.postinst: Uses setup-translators to create missing nodes on
-        upgrades (on initial installs, debootstrap will use the
-        setup-translators script from the installed hurd package to setup the
-        devices and servers itself).
+    - debian/patches/makedev_keep_options.patch: Introduces the -k and -K
+      options to MAKEDEV, respectively to keep active translators running or
+      leave existing files alone completely.
+    - debian/patches/makedev_parted_store.patch: MAKEDEV -p will use parted
+      instead of device stores for disk partitions.
+    - debian/local/setup-translators: New script installed in /usr/lib/hurd,
+      uses MAKEDEV's new options to create all the necessary device and
+      server nodes.
+    - debian/local/runsystem (hurd-udeb): Uses setup-translators in "minimal
+      mode" to prepare the initrd when the installer is started. Parted
+      stores are used to avoid problems when reloading the partition table.
+    - debian/hurd.postinst: Uses setup-translators to create missing nodes on
+      upgrades (on initial installs, debootstrap will use the
+      setup-translators script from the installed hurd package to setup the
+      devices and servers itself).
 
  -- Samuel Thibault <sthibault@debian.org>  Mon, 02 Aug 2010 10:06:06 +0200
 
