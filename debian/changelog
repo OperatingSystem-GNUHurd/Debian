@@ -97,6 +97,7 @@ hurd (20100802-1) UNRELEASED; urgency=low
       devices and servers itself).
   * debian/local/finish-install.d/51hurd_config-target-network: copy the
     /servers/socket/2 translator settings into the target system.
+  * debian/hurd-udeb.links: Include the unifont.bdf link in hurd-udeb too.
 
  -- Samuel Thibault <sthibault@debian.org>  Mon, 02 Aug 2010 10:06:06 +0200
 
