@@ -1,6 +1,7 @@
 debian/local/runsystem libexec
 debian/local/setup-translators usr/lib/hurd
 debian/local/partman lib
+debian/local/finish-install.d usr/lib
 debian/tmp/lib/*.so.*
 debian/tmp/lib/hurd/console/*.so.* usr/lib/hurd/console
 debian/tmp/libexec/console-run
