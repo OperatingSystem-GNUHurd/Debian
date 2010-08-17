@@ -57,6 +57,8 @@ hurd (20100802-1) UNRELEASED; urgency=low
     hurd-i386-specific paths.
   * debian/hurd-dev.lintian-overrides: New overrides to allow libstore_* not
     being stripped (they wouldn't work, else).
+  * debian/local/runsystem: Export kernel parameters into environment, like
+    Linux does.
 
   [ Guillem Jover ]
   * Update make-new-tarball.sh to exclude git instead of CVS paths.
