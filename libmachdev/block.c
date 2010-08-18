@@ -232,6 +232,7 @@ device_read (void *d, mach_port_t reply_port,
   int reads = 0;
   char *buf;
   int npages = (count + PAGE_SIZE - 1) / PAGE_SIZE;
+  int rest = count;
 
   void read_done (int err)
     {
@@ -259,7 +260,7 @@ device_read (void *d, mach_port_t reply_port,
   ddekit_printf ("read %d pages.\n", npages);
   for (i = 0; i < npages; i++)
     {
-      int size = count > PAGE_SIZE ? PAGE_SIZE : count;
+      int size = rest > PAGE_SIZE ? PAGE_SIZE : rest;
       ddekit_printf ("read %d bytes starting from %d\n", size, bn);
 
       err = block_dev_rw (bd->dev, bn, buf + i * PAGE_SIZE,
@@ -267,7 +268,7 @@ device_read (void *d, mach_port_t reply_port,
       if (err)
 	break;
       bn += size >> 9;
-      count -= size;
+      rest -= size;
       reads++;
     }
   // TODO when should I deallocate the buffer?
