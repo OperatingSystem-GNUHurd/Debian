@@ -2154,7 +2154,7 @@ EXPORT_SYMBOL_GPL(blk_lld_busy);
 
 int kblockd_schedule_work(struct request_queue *q, struct work_struct *work)
 {
-	return queue_work(kblockd_workqueue, work);
+	return schedule_work (work);
 }
 EXPORT_SYMBOL(kblockd_schedule_work);
 
