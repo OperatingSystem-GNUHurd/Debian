@@ -55,7 +55,7 @@ Description: The GNU Hurd manual
  This package includes the manual in info and HTML format.
 
 Package: hurd-udeb
-XC-Package-Type: udeb
+Package-Type: udeb
 Priority: optional
 Section: debian-installer
 Architecture: hurd-i386

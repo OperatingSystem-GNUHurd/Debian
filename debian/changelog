@@ -59,6 +59,7 @@ hurd (20100821-1) UNRELEASED; urgency=low
     being stripped (they wouldn't work, else).
   * debian/local/runsystem: Export kernel parameters into environment, like
     Linux does.
+  * debian/control: Use Package-Type instead of XC-Package-Type.
 
   [ Guillem Jover ]
   * Update make-new-tarball.sh to exclude git instead of CVS paths.
