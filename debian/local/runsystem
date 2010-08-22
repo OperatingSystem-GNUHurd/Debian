@@ -24,22 +24,26 @@ echo "Console started."
 # Set the console device used by /sbin/reopen-console
 echo /dev/tty1 >/var/run/console-device
 
-export TERM=hurd
-
-# Preset the terminal type for /lib/debian-installer/detect-console
-export TERM_TYPE=virtual
-
-# Export kernel parameters into environment, like Linux does.
-for i in $*
-do
-  var=$(echo $i | sed "s/=.*$//")
-  [ $var != $i ] || continue
-  [ $var != root ] || continue
-  val=$(echo $i | sed "s/^$var=//")
-  echo $var is $val
-  eval export $var=\$val
-done
+# Get all kernel parameters that can be exported as environment variables
+envvars="$(echo $* | tr ' ' '\012' | egrep '^[-_/[:alnum:]]+=.*$')"
 
 # Invoke init as linuxrc to work around pid != 1
-exec /bin/busybox linuxrc
+init='/bin/busybox linuxrc'
 
+# Parse kernel parameters
+for i in $envvars ; do
+    case "$i" in
+        init="/sbin/init"|init="init")
+            # Avoid endless loop
+            : ;;
+        init=*)
+            init=${i#init=}
+            ;;
+        noshell=*)
+            sed -i '/^tty[12]/s/^/#/' /etc/inittab
+            ;;
+    esac
+done
+
+# Preset the terminal type for /lib/debian-installer/detect-console
+eval exec env - $envvars TERM=hurd TERM_TYPE=virtual $init
