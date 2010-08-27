@@ -1,7 +1,7 @@
-hurd (20100821-1) UNRELEASED; urgency=low
+hurd (20100827-1) UNRELEASED; urgency=low
 
   [ Samuel Thibault ]
-  * New upstream 20100802 snapshot.
+  * New upstream 20100827 snapshot.
     - debian/patches/dir_acces_fix.patch: Remove patch, merged upstream.
     - debian/patches/exec_fix.patch: Likewise.
     - debian/patches/libdiskfs-rename.patch: Likewise.
@@ -99,7 +99,7 @@ hurd (20100821-1) UNRELEASED; urgency=low
     /servers/socket/2 translator settings into the target system.
   * debian/hurd-udeb.links: Include the unifont.bdf link in hurd-udeb too.
 
- -- Samuel Thibault <sthibault@debian.org>  Mon, 02 Aug 2010 10:06:06 +0200
+ -- Samuel Thibault <sthibault@debian.org>  Fri, 27 Aug 2010 13:12:12 +0200
 
 hurd (20090404-2) unstable; urgency=low
 
