@@ -58,9 +58,6 @@ diskfs_get_directs (struct node *dp, int entry, int n,
   struct dirent *entp;
   int i;
 
-  assert (offsetof (struct tmpfs_dirent, name)
-	  >= offsetof (struct dirent, d_name));
-
   if (bufsiz == 0)
     bufsiz = dp->dn_stat.st_size
 	     + 2 * ((offsetof (struct dirent, d_name[3]) + 7) & ~7);
@@ -247,7 +244,7 @@ diskfs_direnter_hard (struct node *dp, const char *name,
       > tmpfs_page_limit)
     return ENOSPC;
 
-  new = malloc (entsize);
+  new = malloc (offsetof (struct tmpfs_dirent, name) + namelen + 1);
   if (new == 0)
     return ENOSPC;
 

@@ -47,6 +47,7 @@ struct disknode
     struct
     {
       mach_port_t memobj;
+      vm_address_t memref;
       unsigned int allocpages;	/* largest size while memobj was live */
     } reg;
     struct
@@ -64,7 +65,6 @@ struct tmpfs_dirent
 {
   struct tmpfs_dirent *next;
   struct disknode *dn;
-  uint32_t pad;
   uint8_t namelen;
   char name[0];
 };
