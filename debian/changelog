@@ -52,7 +52,8 @@ hurd (20100827-1) UNRELEASED; urgency=low
   * debian/local/runsystem: Pass -g option to the console to maximize glyph
     usage for chinese.
   * debian/hurd.lintian-overrides: New overrides to announce which servers are
-    supposed to be statically linked, and accept hurd to be essential.
+    supposed to be statically linked, accept hurd to be essential, and accept
+    some setuid binaries.
   * debian/hurd-udeb.lintian-overrides: New overrides to validate
     hurd-i386-specific paths.
   * debian/hurd-dev.lintian-overrides: New overrides to allow libstore_* not
