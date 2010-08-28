@@ -12,3 +12,4 @@ unstripped-binary-or-object ./lib/libstore_nbd.a
 unstripped-binary-or-object ./lib/libstore_remap.a
 unstripped-binary-or-object ./lib/libstore_task.a
 unstripped-binary-or-object ./lib/libstore_zero.a
+unstripped-binary-or-object ./lib/libstore_part.a
