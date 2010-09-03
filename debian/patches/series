@@ -25,3 +25,4 @@ libpthread_procfs.patch
 makedev_keep_options.patch
 makedev_parted_store.patch
 console_ignore_bdf_err.patch
+libpthread_sigmask.patch
