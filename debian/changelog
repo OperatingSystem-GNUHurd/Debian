@@ -3,12 +3,15 @@ hurd (20100829-2) unreleased; urgency=low
   [ Samuel Thibault ]
   * debian/control: Depend on gcc-4.4 instead of gcc-4.3. Thanks Emilio!
   * debian/rules: Fix back debugging symbols into the hurd-dbg package.
+  * debian/local/runsystem: Do not start the Hurd console if the TERM variable
+    is given.  Should permit mach-console install for better debugging as well
+    as Xen or sub-hurd support.
 
   [ Jeremie Koenig ]
   * debian/patches/libpthread_sigmask.patch: New patch to fix missed signals
     when using pthread_sigmask.
 
- -- Samuel Thibault <sthibault@debian.org>  Fri, 03 Sep 2010 02:18:29 +0200
+ -- Samuel Thibault <sthibault@debian.org>  Mon, 20 Sep 2010 23:55:18 +0200
 
 hurd (20100829-1) unstable; urgency=low
 

@@ -8,22 +8,6 @@ export PATH
 
 /hurd/mach-defpager
 
-# Touch the first tty so that the Hurd console is certain to pick it
-# and not some random other tty.
-sleep 1
-touch /dev/tty1
-
-echo -n "Starting the Hurd console..."
-console -d vga -g -d pc_kbd -c /dev/vcs &
-sleep 1
-
-# Switch over
-exec < /dev/tty1 > /dev/tty1 2>&1
-echo "Console started."
-
-# Set the console device used by /sbin/reopen-console
-echo /dev/tty1 >/var/run/console-device
-
 # Get all kernel parameters that can be exported as environment variables
 envvars="$(echo $* | tr ' ' '\012' | egrep '^[-_/[:alnum:]]+=.*$')"
 
@@ -42,8 +26,33 @@ for i in $envvars ; do
         noshell=*)
             sed -i '/^tty[12]/s/^/#/' /etc/inittab
             ;;
+        TERM=*)
+            term=yes
+            ;;
     esac
 done
 
+if [ "$term" != yes ]
+then
+        # No terminal type set, assume we can start the Hurd console
+
+        # Touch the first tty so that the Hurd console is certain to pick it
+        # and not some random other tty.
+        sleep 1
+        touch /dev/tty1
+
+        echo -n "Starting the Hurd console..."
+        console -d vga -g -d pc_kbd -c /dev/vcs &
+        sleep 1
+
+        # Switch over
+        envvars="$envvars TERM=hurd"
+        exec < /dev/tty1 > /dev/tty1 2>&1
+        echo "Console started."
+
+        # Set the console device used by /sbin/reopen-console
+        echo /dev/tty1 >/var/run/console-device
+fi
+
 # Preset the terminal type for /lib/debian-installer/detect-console
-eval exec env - $envvars TERM=hurd TERM_TYPE=virtual $init
+eval exec env - $envvars TERM_TYPE=virtual $init
