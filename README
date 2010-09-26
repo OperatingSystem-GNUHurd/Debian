@@ -13,6 +13,7 @@ $ git pull upstream-procfs-jkoenig
 $ git tag -a upstream/procfs/<date>
 $ git checkout procfs-moved
 $ git pull . procfs-jkoenig
+# Check that no new file has appeared, else move them.
 $ git checkout upstream
 $ git pull upstream
 $ git tag -a upstream/hurd/<date>
