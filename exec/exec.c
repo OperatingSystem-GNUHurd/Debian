@@ -233,11 +233,12 @@ load_section (void *section, struct execdata *u)
 	      u->error = (page == -1) ? errno : 0;
 	      if (! u->error)
 		{
-		  memcpy ((void *) page, /* XXX/fault */
+		  u->error = hurd_safe_copyin ((void *) page, /* XXX/fault */
 			  (void *) (contents + (size - off)),
 			  off);
-		  u->error = vm_write (u->task, mapstart + (size - off),
-				       page, vm_page_size);
+		  if (! u->error)
+		    u->error = vm_write (u->task, mapstart + (size - off),
+				         page, vm_page_size);
 		  munmap ((caddr_t) page, vm_page_size);
 		}
 	    }
@@ -339,7 +340,10 @@ load_section (void *section, struct execdata *u)
 	      const void *contents = map (u, filepos, readsize);
 	      if (!contents)
 		goto maplose;
-	      memcpy (readaddr, contents, readsize); /* XXX/fault */
+	      u->error = hurd_safe_copyin (readaddr, contents,
+	                                   readsize); /* XXX/fault */
+	      if (u->error)
+	        goto maplose;
 	    }
 	  u->error = vm_write (u->task, overlap_page, ourpage, size);
 	  if (u->error == KERN_PROTECTION_FAILURE)
@@ -443,7 +447,9 @@ map (struct execdata *e, off_t posn, size_t len)
   else if (posn + len > size)
     /* The requested data wouldn't fit in the file.  */
     return NULL;
-  else if (e->filemap == MACH_PORT_NULL)
+  else if (e->file_data != NULL) {
+    return e->file_data + posn;
+  } else if (e->filemap == MACH_PORT_NULL)
     {
       /* No mapping for the file.  Read the data by RPC.  */
       char *buffer = map_buffer (e);
@@ -519,7 +525,10 @@ prepare_stream (struct execdata *e)
   e->map_filepos = 0;
 }
 
-static void prepare_in_memory (struct execdata *e) {}
+static void prepare_in_memory (struct execdata *e)
+{
+  prepare_stream(e);
+}
 
 #else
 
@@ -1145,7 +1154,11 @@ check_gzip (struct execdata *earg)
 	  return -1;
 	}
       n = MIN (maxread, map_buffer (e) + map_fsize (e) - contents);
-      memcpy (buf, contents, n); /* XXX/fault */
+      errno = hurd_safe_copyin (buf, contents, n); /* XXX/fault */
+      if (errno)
+        longjmp (ziperr, 2);
+        
+      zipread_pos += n;
       return n;
     }
   void zipwrite (const char *buf, size_t nwrite)
@@ -1205,8 +1218,6 @@ check_gzip (struct execdata *earg)
   /* The output is complete.  Clean up the stream and store its resultant
      buffer and size in the execdata as the file contents.  */
   fclose (zipout);
-  e->file_data = zipdata;
-  e->file_size = zipdatasz;
 
   /* Clean up the old exec file stream's state.
      Now that we have the contents all in memory (in E->file_data),
@@ -1214,6 +1225,8 @@ check_gzip (struct execdata *earg)
   finish (e, 0);
 
   /* Prepare the stream state to use the file contents already in memory.  */
+  e->file_data = zipdata;
+  e->file_size = zipdatasz;
   prepare_in_memory (e);
 }
 #endif
@@ -1251,7 +1264,11 @@ check_bzip2 (struct execdata *earg)
 	  return -1;
 	}
       n = MIN (maxread, map_buffer (e) + map_fsize (e) - contents);
-      memcpy (buf, contents, n); /* XXX/fault */
+      errno = hurd_safe_copyin (buf, contents, n); /* XXX/fault */
+      if (errno)
+        longjmp (ziperr, 2);
+
+      zipread_pos += n;
       return n;
     }
   void zipwrite (const char *buf, size_t nwrite)
@@ -1300,8 +1317,6 @@ check_bzip2 (struct execdata *earg)
   /* The output is complete.  Clean up the stream and store its resultant
      buffer and size in the execdata as the file contents.  */
   fclose (zipout);
-  e->file_data = zipdata;
-  e->file_size = zipdatasz;
 
   /* Clean up the old exec file stream's state.
      Now that we have the contents all in memory (in E->file_data),
@@ -1309,6 +1324,8 @@ check_bzip2 (struct execdata *earg)
   finish (e, 0);
 
   /* Prepare the stream state to use the file contents already in memory.  */
+  e->file_data = zipdata;
+  e->file_size = zipdatasz;
   prepare_in_memory (e);
 }
 #endif
