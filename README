@@ -8,11 +8,11 @@ $ git tag upstream/libpthread/<date>
 $ git checkout libpthread-moved
 $ git pull . libpthread
 # Check that no new file has appeared, else move them.
-$ git checkout procfs
-$ git pull upstream-procfs
+$ git checkout procfs-jkoenig
+$ git pull upstream-procfs-jkoenig
 $ git tag upstream/procfs/<date>
 $ git checkout procfs-moved
-$ git pull . procfs
+$ git pull . procfs-jkoenig
 $ git checkout upstream
 $ git pull upstream
 $ git tag upstream/hurd/<date>
