@@ -19,6 +19,8 @@ $ git pull upstream
 $ git tag -a upstream/hurd/<date>
 $ git checkout upstream-merged
 $ git pull . upstream
+$ git pull . libpthread-moved
+$ git pull . procfs-moved
 $ git tag -a upstream/<date>
 $ git checkout master
 $ git pull . upstream-merged
