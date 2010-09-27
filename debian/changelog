@@ -1,7 +1,7 @@
 hurd (20100926-1) unreleased; urgency=low
 
   [ Samuel Thibault ]
-  * New upstream snapshot.
+  * New upstream snapshot. Switch to jkoenig's procfs.
   * debian/control: Depend on gcc-4.4 instead of gcc-4.3. Thanks Emilio!
   * debian/rules: Fix back debugging symbols into the hurd-dbg package.
   * debian/local/runsystem: Do not start the Hurd console if the TERM variable
@@ -9,6 +9,8 @@ hurd (20100926-1) unreleased; urgency=low
     as Xen or sub-hurd support.
   * debian/patches/disable-proc_getnports.patch: New patch to disable
     usage of proc_getnports until libc0.3 provides it.
+  * debian/patches/libpthread_procfs.patch: Update patch to integrate procfs
+    build.
 
   [ Jeremie Koenig ]
   * debian/patches/libpthread_sigmask.patch: New patch to fix missed signals
