@@ -7,6 +7,8 @@ hurd (20100926-1) unreleased; urgency=low
   * debian/local/runsystem: Do not start the Hurd console if the TERM variable
     is given.  Should permit mach-console install for better debugging as well
     as Xen or sub-hurd support.
+  * debian/patches/disable-proc_getnports.patch: New patch to disable
+    usage of proc_getnports until libc0.3 provides it.
 
   [ Jeremie Koenig ]
   * debian/patches/libpthread_sigmask.patch: New patch to fix missed signals
