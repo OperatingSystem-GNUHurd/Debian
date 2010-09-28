@@ -1,4 +1,4 @@
-hurd (20100926-1) unreleased; urgency=low
+hurd (20100926-1) unstable; urgency=low
 
   [ Samuel Thibault ]
   * New upstream snapshot. Switch to jkoenig's procfs.
