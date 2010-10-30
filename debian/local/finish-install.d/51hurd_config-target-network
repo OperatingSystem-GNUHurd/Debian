@@ -4,5 +4,6 @@
 settrans -ag /target/servers
 
 # Transfer the network configuration to /target
-settrans -pk /target/servers/socket/2 $(showtrans /servers/socket/2)
+settrans -pk /target/servers/socket/2 $(showtrans /servers/socket/2) -6 /servers/socket/26
+settrans -pk /target/servers/socket/26 $(showtrans /servers/socket/2) -4 /servers/socket/2
 

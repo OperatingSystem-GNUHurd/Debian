@@ -104,7 +104,8 @@ st default-pager proxy-defpager
 st socket/1 pflocal
 st socket/local 'symlink 1' '(+link)'
 st socket/2 pfinet
-st socket/inet  'symlink 2' '(+link)'
+st socket/inet  'symlink 2'  '(+link)'
+st socket/inet6 'symlink 26' '(+link)'
 st /proc procfs
 
 if [ -z "$MINIMAL" ]; then
