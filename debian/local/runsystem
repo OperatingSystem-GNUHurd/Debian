@@ -48,7 +48,7 @@ then
         # Switch over
         envvars="$envvars TERM=hurd"
         exec < /dev/tty1 > /dev/tty1 2>&1
-        echo "Console started."
+        echo "Console started, initializing installer environment, please wait..."
 
         # Set the console device used by /sbin/reopen-console
         echo /dev/tty1 >/var/run/console-device
