@@ -8,6 +8,17 @@ export PATH
 
 /hurd/mach-defpager
 
+mem=`vmstat-hurd --size -k`
+if [ "$mem" -lt 190000 ]
+then
+	echo "You only have ${mem}KiB memory."
+	echo "Debian GNU/Hurd installation currently needs at least 200MiB memory, sorry."
+	while true
+	do
+		sleep 60
+	done
+fi
+
 # Get all kernel parameters that can be exported as environment variables
 envvars="$(echo $* | tr ' ' '\012' | egrep '^[-_/[:alnum:]]+=.*$')"
 
