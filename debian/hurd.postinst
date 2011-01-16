@@ -20,6 +20,15 @@ update-alternatives \
 update-alternatives \
 	--install /usr/bin/w w /usr/bin/w-hurd 60
 
+if [ "$1" = configure ]; then
+  add-shell /bin/loginpr || true
+  if ! getent passwd login >/dev/null; then
+    adduser --disabled-password  --quiet --system \
+      --home /etc/login --no-create-home --shell /bin/loginpr \
+      --gecos "login user" --group login
+  fi
+fi
+
 #DEBHELPER#
 
 if [ "$1" = configure ] && [ "$2" ]; then

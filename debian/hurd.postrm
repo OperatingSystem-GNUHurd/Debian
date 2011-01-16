@@ -1,0 +1,20 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = purge ]; then
+  remove-shell /bin/loginpr
+  if ! deluser --quiet --system login > /dev/null; then
+    echo "
+Removing the user 'login' failed, most likely because the user is still
+logged in. To remove the user and group terminate the session in question
+and execute
+
+    deluser --quiet --system login
+    delgroup --quiet --system login
+"
+  else
+    delgroup --quiet --system login > /dev/null || true
+  fi
+fi
+
+#DEBHELPER#
