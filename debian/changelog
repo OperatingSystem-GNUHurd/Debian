@@ -13,6 +13,7 @@ hurd (20101029-1) UNRELEASED; urgency=low
   * debian/hurd.{postinst,postrm}: Add/remove loginpr shell and login user with
     loginpr shell, to drop the login shell in order to match common Debian
     convention, in particular for remote telnet access...
+    (Closes: Bug#556522)
 
  -- Samuel Thibault <sthibault@debian.org>  Sun, 16 Jan 2011 14:34:16 +0100
 
