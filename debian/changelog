@@ -8,6 +8,8 @@ hurd (20101029-1) UNRELEASED; urgency=low
   * debian/local/runsystem: Don't let d-i start if there is less then 256MiB
     memory.  Tell the user he needs to be patient while the d-i templates get
     loaded.
+  * debian/patches/ext2fs_nowait.patch: Avoid systematically waiting for all
+    disk writes, as it slows us down awfully.
 
   [ Justus Winter ]
   * debian/hurd.{postinst,postrm}: Add/remove loginpr shell and login user with
