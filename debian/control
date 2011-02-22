@@ -17,6 +17,7 @@ Vcs-Git: git://git.debian.org/pkg-hurd/hurd.git
 Package: hurd
 Essential: yes
 Depends: ${misc:Depends}, gnumach (>= 2:1.3.99.dfsg.cvs20070526-1), sysv-rc, ${shlibs:Depends}
+Recommends: random-egd
 Suggests: hurd-doc
 Provides: makedev, login
 Replaces: makedev, login

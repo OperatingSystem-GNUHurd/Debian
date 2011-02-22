@@ -10,6 +10,7 @@ hurd (20101029-1) UNRELEASED; urgency=low
     loaded.
   * debian/patches/ext2fs_nowait.patch: Avoid systematically waiting for all
     disk writes, as it slows us down awfully.
+  * debian/control: Recommend random-egd, to provide /dev/*random.
 
   [ Justus Winter ]
   * debian/hurd.{postinst,postrm}: Add/remove loginpr shell and login user with
