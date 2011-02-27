@@ -12,7 +12,8 @@ hurd (20110227-1) UNRELEASED; urgency=low
   * debian/patches/ext2fs_nowait.patch: Avoid systematically waiting for all
     disk writes, as it slows us down awfully.
   * debian/control: Recommend random-egd, to provide /dev/*random
-    (Closes: Bug#558664).
+    (Closes: Bug#558664). Break old gnumach packages, instead of depending on
+    them.
 
   [ Justus Winter ]
   * debian/hurd.{postinst,postrm}: Add/remove loginpr shell and login user with
@@ -20,7 +21,7 @@ hurd (20110227-1) UNRELEASED; urgency=low
     convention, in particular for remote telnet access...
     (Closes: Bug#556522)
 
- -- Samuel Thibault <sthibault@debian.org>  Sun, 16 Jan 2011 14:34:16 +0100
+ -- Samuel Thibault <sthibault@debian.org>  Sun, 27 Feb 2011 15:15:57 +0100
 
 hurd (20100926-1) unstable; urgency=low
 
