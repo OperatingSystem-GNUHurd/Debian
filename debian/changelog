@@ -5,6 +5,7 @@ hurd (20110227-1) UNRELEASED; urgency=low
   * debian/local/setup-translators: Add inet6 -> 26 symlink.
   * debian/local/finish-install.d/51hurd_config-target-network: Set pfinet
     translator on /servers/socket/26 too, add +x permission.
+  * debian/local/partman/commit.d/40hurd_reload-partitions: Add +x permission.
   * debian/local/runsystem: Don't let d-i start if there is less then 256MiB
     memory.  Tell the user he needs to be patient while the d-i templates get
     loaded.
