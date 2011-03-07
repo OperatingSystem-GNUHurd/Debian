@@ -17,6 +17,8 @@ hurd (20110303-1) UNRELEASED; urgency=low
     correct response.
   * debian/patches/auth-intr-cure.patch: Add patch to mitigate
     reauthentication issue triggered by sudo.
+  * debian/patches/libpager_deadlock.patch: Add patch to fix a known
+    synchronization deadlock.
 
   [ Justus Winter ]
   * debian/hurd.{postinst,postrm}: Add/remove loginpr shell and login user with
