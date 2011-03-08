@@ -19,6 +19,9 @@ hurd (20110303-1) UNRELEASED; urgency=low
     reauthentication issue triggered by sudo.
   * debian/patches/libpager_deadlock.patch: Add patch to fix a known
     synchronization deadlock.
+  * debian/local/finish-install.d/51hurd_config-target-network: Record active
+    network configuration, not only passive. Create /servers/socket/26 node if
+    it doesn't exist yet.
 
   [ Justus Winter ]
   * debian/hurd.{postinst,postrm}: Add/remove loginpr shell and login user with
