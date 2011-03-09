@@ -75,7 +75,7 @@ st () {
 	name=${3:-$cmdl}
 
 	echo -n " $name"
-	if [ "$REPLACE" = y ] || [ ! -e $1 ]; then
+	if [ "$REPLACE" = y ] || ! showtrans $1 > /dev/null 2>&1 ; then
 		# Work around a bug in ext2fs, which crashes if a non-empty
 		# file is turned into a symlink through settrans, by clearing
 		# the passive translator first.

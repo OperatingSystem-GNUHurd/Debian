@@ -43,7 +43,7 @@ Index: hurd/sutils/MAKEDEV.sh
    local PERM="$3"
    shift 3
 -  if cmd settrans -cg "$NODE"; then
-+  if [ "$KEEP" ] && [ -e "$NODE" ]; then
++  if [ "$KEEP" ] && showtrans "$NODE" > /dev/null 2>&1 ; then
 +    return;
 +  fi
 +  if cmd settrans $STFLAGS -c "$NODE"; then
