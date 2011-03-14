@@ -31,6 +31,9 @@ hurd (20110303-1) UNRELEASED; urgency=low
     convention, in particular for remote telnet access...
     (Closes: Bug#556522)
 
+  [ Samuel Thibault ]
+  * debian/NEWS: Add a notice about that.
+
  -- Samuel Thibault <sthibault@debian.org>  Sun, 27 Feb 2011 19:02:04 +0100
 
 hurd (20100926-1) unstable; urgency=low

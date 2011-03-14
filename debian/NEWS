@@ -1,3 +1,11 @@
+hurd (20110303-1) unstable; urgency=low
+
+  * To harmonize with Debian security conventions, the Debian
+    GNU/Hurd login prompt is now a standard login/password prompt,
+    and not a login shell any more.
+
+ -- Samuel Thibault <sthibault@debian.org>  Tue, 15 Mar 2011 00:15:55 +0100
+
 hurd (20050513-4) unstable; urgency=low
 
   * The Hurd console may now be started automatically on bootup.  The
