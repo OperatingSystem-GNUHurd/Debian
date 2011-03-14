@@ -24,6 +24,8 @@ hurd (20110303-1) UNRELEASED; urgency=low
     it doesn't exist yet.
   * debian/local/setup-translators, debian/patches/makedev_keep_options.patch:
     Fix -K option into not starting existing translators.
+  * debian/patches/libdiskfs_self-reauth.patch: Add patch to fix one of the
+    spurious mach port deallocation issues.
 
   [ Justus Winter ]
   * debian/hurd.{postinst,postrm}: Add/remove loginpr shell and login user with
