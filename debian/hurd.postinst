@@ -20,12 +20,36 @@ update-alternatives \
 update-alternatives \
 	--install /usr/bin/w w /usr/bin/w-hurd 60
 
+ADDUSERCONF='/etc/adduser.conf'
+
+if test -f $ADDUSERCONF; then
+    FIRST_SYSTEM_UID=$(sed -n "s/^[[:space:]]*FIRST_SYSTEM_UID[[:space:]]*=[[:space:]]*[\"']\?\([^\"']*\)[\"']\?/\1/p" $ADDUSERCONF)
+    LAST_SYSTEM_UID=$(sed -n "s/^[[:space:]]*LAST_SYSTEM_UID[[:space:]]*=[[:space:]]*[\"']\?\([^\"']*\)[\"']\?/\1/p" $ADDUSERCONF)
+    FIRST_SYSTEM_GID=$(sed -n "s/^[[:space:]]*FIRST_SYSTEM_GID[[:space:]]*=[[:space:]]*[\"']\?\([^\"']*\)[\"']\?/\1/p" $ADDUSERCONF)
+    LAST_SYSTEM_GID=$(sed -n "s/^[[:space:]]*LAST_SYSTEM_GID[[:space:]]*=[[:space:]]*[\"']\?\([^\"']*\)[\"']\?/\1/p" $ADDUSERCONF)
+fi
+
+if test -z "$FIRST_SYSTEM_UID"; then
+    FIRST_SYSTEM_UID=100
+fi
+if test -z "$LAST_SYSTEM_UID"; then
+    LAST_SYSTEM_UID=999
+fi
+if test -z "$FIRST_SYSTEM_GID"; then
+    FIRST_SYSTEM_GID=100
+fi
+if test -z "$LAST_SYSTEM_GID"; then
+    LAST_SYSTEM_GID=999
+fi
+
 if [ "$1" = configure ]; then
   add-shell /bin/loginpr || true
   if ! getent passwd login >/dev/null; then
-    adduser --disabled-password  --quiet --system \
-      --home /etc/login --no-create-home --shell /bin/loginpr \
-      --gecos "login user" --group login
+    useradd -K UID_MIN=$FIRST_SYSTEM_UID -K UID_MAX=$LAST_SYSTEM_UID \
+      -K GID_MIN=$FIRST_SYSTEM_GID -K GID_MAX=$LAST_SYSTEM_GID \
+      --home-dir /etc/login --no-create-home \
+      --shell /bin/loginpr --comment "login user" \
+      --user-group login
   fi
 fi
 

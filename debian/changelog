@@ -1,3 +1,11 @@
+hurd (20110319-2) unstable; urgency=low
+
+  * debian/hurd.postinst: use useradd from required passwd package instead of
+    adduser, which is not required and thus not available at debootstrap.
+  * debian/control: Bump Standards-Version to 3.9.1 (no change needed).
+
+ -- Samuel Thibault <sthibault@debian.org>  Mon, 21 Mar 2011 17:33:19 +0100
+
 hurd (20110319-1) unstable; urgency=low
 
   [ Samuel Thibault ]
