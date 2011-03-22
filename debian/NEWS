@@ -2,7 +2,8 @@ hurd (20110319-1) unstable; urgency=low
 
   * To harmonize with Debian security conventions, the Debian
     GNU/Hurd login prompt is now a standard login/password prompt,
-    and not a login shell any more.
+    and not a login shell any more. To revert to a standard login, set the
+    shell of the login user to /bin/bash.
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 15 Mar 2011 00:15:55 +0100
 
