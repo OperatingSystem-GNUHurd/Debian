@@ -1,6 +1,9 @@
 hurd (20110319-3) UNRELEASED; urgency=low
 
-  * Bump Standards-Version to 3.9.2 (no change needed)
+  * debian/control:
+    - Depend on gcc-4.5 instead of gcc-4.4.
+    - Bump Standards-Version to 3.9.2 (no change needed)
+  * debian/rules: Build with gcc-4.5.
 
  -- Samuel Thibault <sthibault@debian.org>  Sun, 10 Apr 2011 20:42:45 +0200
 
