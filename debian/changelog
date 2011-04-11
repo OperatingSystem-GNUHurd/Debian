@@ -4,6 +4,8 @@ hurd (20110319-3) UNRELEASED; urgency=low
     - Depend on gcc-4.5 instead of gcc-4.4.
     - Bump Standards-Version to 3.9.2 (no change needed)
   * debian/rules: Build with gcc-4.5.
+  * debian/local/runsystem, setup-translators: Enable mouse and keyboard
+    repeaters for g-i support.
 
  -- Samuel Thibault <sthibault@debian.org>  Sun, 10 Apr 2011 20:42:45 +0200
 

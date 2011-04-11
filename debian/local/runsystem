@@ -53,7 +53,7 @@ then
         touch /dev/tty1
 
         echo -n "Starting the Hurd console..."
-        console -d vga -g -d pc_kbd -c /dev/vcs &
+        console -d vga -g -d pc_mouse --repeat=mouse -d pc_kbd --repeat=kbd -c /dev/vcs &
         sleep 1
 
         # Switch over

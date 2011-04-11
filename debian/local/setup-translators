@@ -141,9 +141,10 @@ else
 	md ptyp
 	md ptyq
 	md lprX 0123
-	st kbd 'symlink cons/kbd' kbd
-	st mouse 'symlink cons/mouse' mouse
 fi
+
+st kbd 'symlink cons/kbd' kbd
+st mouse 'symlink cons/mouse' mouse
 
 echo .
 
