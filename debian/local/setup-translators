@@ -106,7 +106,7 @@ st socket/local 'symlink 1' '(+link)'
 st socket/2 pfinet
 st socket/inet  'symlink 2'  '(+link)'
 st socket/inet6 'symlink 26' '(+link)'
-st /proc procfs
+st /proc 'procfs -c'
 
 if [ -z "$MINIMAL" ]; then
 	st password password

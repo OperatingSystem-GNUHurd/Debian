@@ -6,6 +6,8 @@ hurd (20110319-3) UNRELEASED; urgency=low
   * debian/rules: Build with gcc-4.5.
   * debian/local/runsystem, setup-translators: Enable mouse and keyboard
     repeaters for g-i support.
+  * debian/local/setup-translators: Pass the --compatible option to procfs to
+    tweak it a bit to get proc-related tools working without too much patching.
 
  -- Samuel Thibault <sthibault@debian.org>  Sun, 10 Apr 2011 20:42:45 +0200
 
