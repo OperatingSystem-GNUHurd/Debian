@@ -8,6 +8,8 @@ hurd (20110319-3) UNRELEASED; urgency=low
     repeaters for g-i support.
   * debian/local/setup-translators: Pass the --compatible option to procfs to
     tweak it a bit to get proc-related tools working without too much patching.
+  * debian/patches/disable-proc_getnports.patch: Remove patch, libc0.3 now
+    has proc_getnports, and the hurd package already breaks older versions.
 
  -- Samuel Thibault <sthibault@debian.org>  Sun, 10 Apr 2011 20:42:45 +0200
 

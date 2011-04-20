@@ -26,7 +26,6 @@ makedev_keep_options.patch
 makedev_parted_store.patch
 console_ignore_bdf_err.patch
 libpthread_sigmask.patch
-disable-proc_getnports.patch
 ext2fs_nowait.patch
 auth-intr-cure.patch
 libpager_deadlock.patch
