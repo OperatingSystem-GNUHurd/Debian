@@ -760,7 +760,7 @@ routine vm_machine_attribute(
 		attribute	: vm_machine_attribute_t;
 	inout	value		: vm_machine_attribute_val_t);
 
-/*skip;*/	/* old host_fpa_counters_reset */
+skip;	/* old host_fpa_counters_reset */
 
 /*
  *	This routine is created for allocating DMA buffers.
