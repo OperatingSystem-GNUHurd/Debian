@@ -1,1 +1,0 @@
-nfsd: libhurdbugaddr libthreads libshouldbeinlibc

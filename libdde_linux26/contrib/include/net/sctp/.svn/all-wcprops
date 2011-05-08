@@ -1,0 +1,71 @@
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/net/sctp
+END
+sctp.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/net/sctp/sctp.h
+END
+constants.h
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/net/sctp/constants.h
+END
+command.h
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/net/sctp/command.h
+END
+user.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/net/sctp/user.h
+END
+sm.h
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/net/sctp/sm.h
+END
+auth.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/net/sctp/auth.h
+END
+checksum.h
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/net/sctp/checksum.h
+END
+tsnmap.h
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/net/sctp/tsnmap.h
+END
+ulpevent.h
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/net/sctp/ulpevent.h
+END
+ulpqueue.h
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/net/sctp/ulpqueue.h
+END
+structs.h
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/net/sctp/structs.h
+END

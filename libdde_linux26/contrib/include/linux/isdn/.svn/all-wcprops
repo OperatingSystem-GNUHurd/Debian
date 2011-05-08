@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/isdn
+END
+capiutil.h
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/isdn/capiutil.h
+END
+capilli.h
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/linux26/contrib/include/linux/isdn/capilli.h
+END
+capicmd.h
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/linux26/contrib/include/linux/isdn/capicmd.h
+END
+Kbuild
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/linux26/contrib/include/linux/isdn/Kbuild
+END

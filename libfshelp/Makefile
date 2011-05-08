@@ -20,6 +20,7 @@ makemode := library
 
 libname = libfshelp
 SRCS =	lock-acquire.c lock-init.c \
+	service-fsys-startup.c \
 	start-translator-long.c start-translator.c \
 	fetch-root.c transbox-init.c set-active.c fetch-control.c \
 	drop-transbox.c translated.c \

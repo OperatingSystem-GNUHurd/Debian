@@ -1,0 +1,125 @@
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86
+END
+i387.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/i387.h
+END
+hardirq.h
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/hardirq.h
+END
+dma-mapping.h
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/dma-mapping.h
+END
+uaccess_32.h
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/uaccess_32.h
+END
+percpu.h
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/percpu.h
+END
+hardirq_32.h
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/hardirq_32.h
+END
+delay.h
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/delay.h
+END
+smp.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/smp.h
+END
+param.h
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/param.h
+END
+checksum.h
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/checksum.h
+END
+checksum_32.h
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/checksum_32.h
+END
+irqflags.h
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/irqflags.h
+END
+pci.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/pci.h
+END
+page.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/page.h
+END
+bug.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/bug.h
+END
+pci_32.h
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/pci_32.h
+END
+current.h
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/current.h
+END
+thread_info.h
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/thread_info.h
+END
+pci_64.h
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/pci_64.h
+END
+uaccess.h
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/include/ARCH-x86/asm-x86/uaccess.h
+END

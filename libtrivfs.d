@@ -1,1 +1,0 @@
-libtrivfs: libiohelp libports libshouldbeinlibc

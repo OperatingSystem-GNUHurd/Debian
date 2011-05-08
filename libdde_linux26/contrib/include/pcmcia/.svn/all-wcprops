@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/pcmcia
+END
+ciscode.h
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/pcmcia/ciscode.h
+END
+cs_types.h
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/pcmcia/cs_types.h
+END
+device_id.h
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/pcmcia/device_id.h
+END
+cisreg.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/linux26/contrib/include/pcmcia/cisreg.h
+END
+mem_op.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/linux26/contrib/include/pcmcia/mem_op.h
+END
+cistpl.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/pcmcia/cistpl.h
+END
+cs.h
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/pcmcia/cs.h
+END
+ss.h
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/pcmcia/ss.h
+END
+ds.h
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/pcmcia/ds.h
+END

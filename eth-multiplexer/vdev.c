@@ -112,8 +112,10 @@ remove_dead_port_from_dev (mach_port_t dead_port)
   mutex_lock (&dev_list_lock);
   for (vdev = dev_head; vdev; vdev = vdev->next)
     {
-      remove_dead_filter (vdev, &vdev->if_rcv_port_list, dead_port);
-      remove_dead_filter (vdev, &vdev->if_snd_port_list, dead_port);
+      remove_dead_filter (&vdev->port_list,
+			  &vdev->port_list.if_rcv_port_list, dead_port);
+      remove_dead_filter (&vdev->port_list,
+			  &vdev->port_list.if_snd_port_list, dead_port);
     }
   mutex_unlock (&dev_list_lock);
   return 0;
@@ -145,8 +147,8 @@ add_vdev (char *name, int size,
   vdev->if_address[1] = 0x54;
   *(int *)(vdev->if_address + 2) = random ();
 
-  queue_init (&vdev->if_rcv_port_list);
-  queue_init (&vdev->if_snd_port_list);
+  queue_init (&vdev->port_list.if_rcv_port_list);
+  queue_init (&vdev->port_list.if_snd_port_list);
 
   mutex_lock (&dev_list_lock);
   vdev->next = dev_head;
@@ -177,7 +179,7 @@ destroy_vdev (void *port)
 
   /* TODO Delete all filters in the interface,
    * there shouldn't be any filters left */
-  destroy_filters (vdev);
+  destroy_filters (&vdev->port_list);
 }
 
 /* Test if there are devices existing in the list */
@@ -265,7 +267,7 @@ deliver_msg(struct net_rcv_msg *msg, struct vether_device *vdev)
   msg->msg_hdr.msgh_kind = MACH_MSGH_KIND_NORMAL;
   msg->msg_hdr.msgh_id = NET_RCV_MSG_ID;
 
-  if_port_list = &vdev->if_rcv_port_list;
+  if_port_list = &vdev->port_list.if_rcv_port_list;
   FILTER_ITERATE (if_port_list, infp, nextfp, &infp->input) 
     {
       mach_port_t dest;

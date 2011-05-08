@@ -1,1 +1,0 @@
-ufs-fsck: libhurdbugaddr libshouldbeinlibc

@@ -1,0 +1,30 @@
+SYSTEMS = x86-l4v2
+ARCH = x86
+SYSTEM = x86-l4v2
+
+BUILDDIR       ?=
+
+libmachdev_path := ../libmachdev/libmachdev.a
+has_libmachdev := $(wildcard $(libmachdev_path))
+ifeq ($(strip $(has_libmachdev)),)
+  libmachdev_path := $(BUILDDIR)/libmachdev/libmachdev.a
+endif
+
+libddekit_path := ../libddekit/libddekit.a
+has_libddekit := $(wildcard $(libddekit_path))
+ifeq ($(strip $(has_libddekit)),)
+  libddekit_path := $(BUILDDIR)/libddekit/libddekit.a
+endif
+
+libslab_path := ../libhurd-slab/libhurd-slab.a
+has_libslab := $(wildcard $(libslab_path))
+ifeq ($(strip $(has_libslab)),)
+  libslab_path := $(BUILDDIR)/libhurd-slab/libhurd-slab.a
+endif
+
+DDEKITLIBDIR = $(PKGDIR)/../libddekit/
+DDEKITINCDIR = $(PKGDIR)/../libddekit/include
+DDE26LIBDIR = $(PKGDIR)/lib/src
+OBJ_BASE = $(PKGDIR)/build
+
+L4LIBDIR = .

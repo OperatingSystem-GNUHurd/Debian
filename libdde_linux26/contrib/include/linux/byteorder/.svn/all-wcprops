@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/byteorder
+END
+little_endian.h
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/byteorder/little_endian.h
+END
+generic.h
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/byteorder/generic.h
+END
+big_endian.h
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/byteorder/big_endian.h
+END
+Kbuild
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/linux/byteorder/Kbuild
+END

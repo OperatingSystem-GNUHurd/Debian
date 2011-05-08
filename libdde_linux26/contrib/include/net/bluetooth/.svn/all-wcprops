@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/net/bluetooth
+END
+hci_core.h
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/net/bluetooth/hci_core.h
+END
+l2cap.h
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/net/bluetooth/l2cap.h
+END
+hci.h
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/net/bluetooth/hci.h
+END
+rfcomm.h
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/net/bluetooth/rfcomm.h
+END
+sco.h
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/linux26/contrib/include/net/bluetooth/sco.h
+END
+bluetooth.h
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/net/bluetooth/bluetooth.h
+END

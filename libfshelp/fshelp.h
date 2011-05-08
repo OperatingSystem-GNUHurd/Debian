@@ -74,6 +74,16 @@ fshelp_start_translator (fshelp_open_fn_t underlying_open_fn, void *cookie,
 			 char *name, char *argz, int argz_len,
 			 int timeout, fsys_t *control);
 
+/* Wait around for an fsys_startup message on the port PORT from the
+   translator on NODE (timing out after TIMEOUT milliseconds), and return a
+   send right for the resulting fsys control port in CONTROL.  If a no-senders
+   notification is received on PORT, then it will be assumed that the
+   translator died, and EDIED will be returned.  If an error occurs, the
+   error code is returned, otherwise 0.  */
+error_t
+fshelp_service_fsys_startup (fshelp_open_fn_t underlying_open_fn,
+			     void *cookie, mach_port_t port, long timeout,
+			     task_t task, fsys_t *control);
 
 /* Active translator linkage */
 

@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/lib/src/net/core
+END
+dev.c
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/lib/src/net/core/dev.c
+END
+skbuff.c
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/lib/src/net/core/skbuff.c
+END
+utils.c
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/lib/src/net/core/utils.c
+END
+net_namespace.c
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/lib/src/net/core/net_namespace.c
+END
+link_watch.c
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/lib/src/net/core/link_watch.c
+END
+rtnetlink.c
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/lib/src/net/core/rtnetlink.c
+END

@@ -1,0 +1,125 @@
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rdma
+END
+ib_user_verbs.h
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rdma/ib_user_verbs.h
+END
+ib_verbs.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rdma/ib_verbs.h
+END
+iw_cm.h
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rdma/iw_cm.h
+END
+rdma_user_cm.h
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rdma/rdma_user_cm.h
+END
+ib_smi.h
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rdma/ib_smi.h
+END
+rdma_cm.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rdma/rdma_cm.h
+END
+ib_user_cm.h
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rdma/ib_user_cm.h
+END
+ib_user_mad.h
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rdma/ib_user_mad.h
+END
+ib_cm.h
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rdma/ib_cm.h
+END
+ib_user_sa.h
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/linux26/contrib/include/rdma/ib_user_sa.h
+END
+ib_mad.h
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rdma/ib_mad.h
+END
+rdma_cm_ib.h
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rdma/rdma_cm_ib.h
+END
+ib_umem.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rdma/ib_umem.h
+END
+ib_sa.h
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rdma/ib_sa.h
+END
+ib_marshall.h
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repos/tudos/!svn/ver/188/trunk/l4/pkg/dde/linux26/contrib/include/rdma/ib_marshall.h
+END
+ib_cache.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rdma/ib_cache.h
+END
+ib_addr.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rdma/ib_addr.h
+END
+Kbuild
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/tudos/!svn/ver/174/trunk/l4/pkg/dde/linux26/contrib/include/rdma/Kbuild
+END
+ib_fmr_pool.h
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rdma/ib_fmr_pool.h
+END
+ib_pack.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/include/rdma/ib_pack.h
+END

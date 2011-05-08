@@ -174,16 +174,6 @@ ethernet_open (struct device *dev)
   if (master_device == MACH_PORT_NULL)
     error (2, errno, "file_name_lookup %s", dev->name);
 
-  /* Only save the device name. */
-  char *name_p = strrchr (dev->name, '/');
-  if (name_p) {
-      char *buf_p = dev->name;
-      name_p++;
-      for (; *name_p; name_p++, buf_p++) 
-	*buf_p = *name_p;
-      *buf_p = *name_p;
-  }
-
   err = device_open (master_device, D_WRITE | D_READ, "eth", &edev->ether_port);
   mach_port_deallocate (mach_task_self (), master_device);
   if (err)

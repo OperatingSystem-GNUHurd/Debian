@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/arch/x86/include/asm/mach-generic
+END
+mach_ipi.h
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/arch/x86/include/asm/mach-generic/mach_ipi.h
+END
+gpio.h
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/arch/x86/include/asm/mach-generic/gpio.h
+END
+mach_mpparse.h
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/arch/x86/include/asm/mach-generic/mach_mpparse.h
+END
+mach_mpspec.h
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/arch/x86/include/asm/mach-generic/mach_mpspec.h
+END
+mach_apicdef.h
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/arch/x86/include/asm/mach-generic/mach_apicdef.h
+END
+mach_apic.h
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/arch/x86/include/asm/mach-generic/mach_apic.h
+END
+mach_wakecpu.h
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/repos/tudos/!svn/ver/455/trunk/l4/pkg/dde/linux26/contrib/arch/x86/include/asm/mach-generic/mach_wakecpu.h
+END

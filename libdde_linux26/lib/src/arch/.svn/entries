@@ -1,0 +1,34 @@
+9
+
+dir
+465
+http://svn.tudos.org/repos/tudos/trunk/l4/pkg/dde/linux26/lib/src/arch
+http://svn.tudos.org/repos/tudos
+
+
+
+2009-05-23T02:50:17.774710Z
+457
+l4check
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+a704ac0b-3a55-4d43-a2a9-7be6f07c34fb
+
+l4
+dir
+
+x86
+dir
+

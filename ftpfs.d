@@ -1,1 +1,0 @@
-ftpfs: libhurdbugaddr libnetfs libfshelp libiohelp libthreads libports libihash libftpconn libshouldbeinlibc

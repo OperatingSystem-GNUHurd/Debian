@@ -28,6 +28,8 @@
 #include <hurd/ports.h>
 #include <device/net_status.h>
 
+#include <bpf_impl.h>
+
 #include "queue.h"
 #include "util.h"
 
@@ -52,8 +54,7 @@ struct vether_device
   struct vether_device *next;
   struct vether_device **pprev;
 
-  queue_head_t if_rcv_port_list;	/* input filter list */
-  queue_head_t if_snd_port_list;	/* output filter list */
+  if_filter_list_t port_list;
 };
 
 typedef int (*dev_act_func) (struct vether_device *);
