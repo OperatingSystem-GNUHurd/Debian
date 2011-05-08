@@ -1,1 +1,0 @@
-libps: libihash libshouldbeinlibc

@@ -1,1 +1,0 @@
-libpipe: libthreads libports
