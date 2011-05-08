@@ -767,7 +767,7 @@ skip;	/* old host_fpa_counters_reset */
  *	We are going to get a contiguous physical memory
  *	and its physical address in addition to the virtual address.
  */
-routine vm_dma_buff_alloc(
+routine vm_allocate_contiguous(
 		host_priv	: host_priv_t;
 		target_task	: vm_task_t;
 		size		: vm_size_t;

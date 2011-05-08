@@ -218,11 +218,11 @@ void *ddekit_large_malloc(int size)
   extern mach_port_t priv_host;
 
   /* Allocate memory.  */
-  err = vm_dma_buff_alloc (priv_host, mach_task_self (),
+  err = vm_allocate_contiguous (priv_host, mach_task_self (),
 			   size, &vstart, &pstart);
   if (err)
     {
-      error (0, err, "vm_dma_buff_alloc");
+      error (0, err, "vm_allocate_contiguous");
       vstart = 0;
     }
   else
