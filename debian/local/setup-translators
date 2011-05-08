@@ -123,6 +123,7 @@ echo -n "Creating device nodes:"
 cd /dev
 
 md fd
+md fdX 01
 md std
 md vcs
 md hdX 0123
