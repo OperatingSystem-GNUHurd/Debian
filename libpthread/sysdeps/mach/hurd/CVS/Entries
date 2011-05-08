@@ -1,9 +1,0 @@
-/pt-attr-setstackaddr.c/1.1/Thu Oct 10 23:05:05 2002//Tzhengda-soc2008-virt-branch
-/pt-attr-setstacksize.c/1.1/Thu Oct 10 23:05:05 2002//Tzhengda-soc2008-virt-branch
-/pt-docancel.c/1.3/Tue May 27 18:37:29 2008//Tzhengda-soc2008-virt-branch
-/pt-sigstate-destroy.c/1.1/Thu Oct 10 23:05:05 2002//Tzhengda-soc2008-virt-branch
-/pt-sigstate-init.c/1.1/Thu Oct 10 23:05:05 2002//Tzhengda-soc2008-virt-branch
-/pt-sigstate.c/1.1/Thu Oct 10 23:05:05 2002//Tzhengda-soc2008-virt-branch
-/pt-sysdep.c/1.2/Wed May  4 16:04:05 2005//Tzhengda-soc2008-virt-branch
-/pt-sysdep.h/1.3/Tue Jan 18 10:08:52 2005//Tzhengda-soc2008-virt-branch
-D/i386////
