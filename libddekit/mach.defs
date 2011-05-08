@@ -770,9 +770,9 @@ skip;	/* old host_fpa_counters_reset */
 routine vm_allocate_contiguous(
 		host_priv	: host_priv_t;
 		target_task	: vm_task_t;
-		size		: vm_size_t;
 	out	vaddr		: vm_address_t;
-	out	paddr		: vm_address_t);
+	out	paddr		: vm_address_t;
+		size		: vm_size_t);
 
 /*
  *	There is no more room in this interface for additional calls.

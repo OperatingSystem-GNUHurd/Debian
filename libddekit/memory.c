@@ -219,7 +219,7 @@ void *ddekit_large_malloc(int size)
 
   /* Allocate memory.  */
   err = vm_allocate_contiguous (priv_host, mach_task_self (),
-			   size, &vstart, &pstart);
+			   &vstart, &pstart, size);
   if (err)
     {
       error (0, err, "vm_allocate_contiguous");
