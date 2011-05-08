@@ -1,1 +1,0 @@
-swapon.prof: ../libstore/libstore.a default_pagerUser_p.o swapon_p.o ../libshouldbeinlibc/libshouldbeinlibc.a

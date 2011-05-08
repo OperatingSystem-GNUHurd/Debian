@@ -1,1 +1,0 @@
-ps.prof: parse_p.o pids_p.o psout_p.o ../libps/libps.a ../libihash/libihash.a ../libshouldbeinlibc/libshouldbeinlibc.a ps_p.o

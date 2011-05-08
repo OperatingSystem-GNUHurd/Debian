@@ -1,1 +1,0 @@
-syncfs.prof: ../libshouldbeinlibc/libshouldbeinlibc.a syncfs_p.o

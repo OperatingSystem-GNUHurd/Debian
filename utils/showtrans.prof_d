@@ -1,1 +1,0 @@
-showtrans.prof: ../libshouldbeinlibc/libshouldbeinlibc.a showtrans_p.o

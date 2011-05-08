@@ -1,1 +1,0 @@
-swapoff.prof: ../libstore/libstore.a default_pagerUser_p.o swapoff_p.o ../libshouldbeinlibc/libshouldbeinlibc.a

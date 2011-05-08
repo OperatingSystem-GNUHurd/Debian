@@ -1,1 +1,0 @@
-login.prof: nonsugid_p.o ../libshouldbeinlibc/libshouldbeinlibc.a login_p.o

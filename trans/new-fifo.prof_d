@@ -1,1 +1,0 @@
-new-fifo.prof: ../libpipe/libpipe.a ../libtrivfs/libtrivfs.a ../libfshelp/libfshelp.a ../libthreads/libthreads.a ../libports/libports.a ../libihash/libihash.a ../libshouldbeinlibc/libshouldbeinlibc.a new-fifo_p.o

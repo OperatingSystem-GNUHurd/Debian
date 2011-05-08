@@ -1,1 +1,0 @@
-auth.prof: auth_p.o authServer_p.o auth_replyUser_p.o ../libthreads/libthreads_p.a ../libports/libports_p.a ../libihash/libihash_p.a ../libshouldbeinlibc/libshouldbeinlibc_p.a

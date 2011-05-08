@@ -1,1 +1,0 @@
-devnode.prof: devnode_p.o ourdeviceServer_p.o notifyServer_p.o ../libports/libports_p.a ../libtrivfs/libtrivfs_p.a ../libfshelp/libfshelp_p.a ../libshouldbeinlibc/libshouldbeinlibc_p.a

@@ -1,1 +1,0 @@
-crash.prof: crashServer_p.o crash_replyUser_p.o msgServer_p.o elfcore_p.o ../libthreads/libthreads.a ../libports/libports.a ../libtrivfs/libtrivfs.a ../libthreads/libthreads.a ../libfshelp/libfshelp.a ../libshouldbeinlibc/libshouldbeinlibc.a crash_p.o

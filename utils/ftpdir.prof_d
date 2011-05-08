@@ -1,1 +1,0 @@
-ftpdir.prof: ../libftpconn/libftpconn.a ../libshouldbeinlibc/libshouldbeinlibc.a ftpdir_p.o

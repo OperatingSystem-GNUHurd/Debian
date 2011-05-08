@@ -1,1 +1,0 @@
-proxy-defpager.prof: ourdefault_pagerServer_p.o ourdefault_pagerUser_p.o ../libthreads/libthreads.a ../libports/libports.a ../libtrivfs/libtrivfs.a ../libthreads/libthreads.a ../libfshelp/libfshelp.a ../libshouldbeinlibc/libshouldbeinlibc.a proxy-defpager_p.o

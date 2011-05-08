@@ -1,1 +1,0 @@
-console.prof: console_p.o display_p.o fs_notifyUser_p.o input_p.o notifyServer_p.o pager_p.o tioctlServer_p.o ../libnetfs/libnetfs_p.a ../libfshelp/libfshelp_p.a ../libiohelp/libiohelp_p.a ../libpager/libpager_p.a ../libthreads/libthreads_p.a ../libports/libports_p.a ../libihash/libihash_p.a ../libshouldbeinlibc/libshouldbeinlibc_p.a

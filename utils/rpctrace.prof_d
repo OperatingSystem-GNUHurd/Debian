@@ -1,1 +1,0 @@
-rpctrace.prof: rpctrace_p.o ../libthreads/libthreads.a ../libports/libports.a ../libihash/libihash.a

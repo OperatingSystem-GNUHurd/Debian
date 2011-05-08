@@ -1,1 +1,0 @@
-proc.prof: wait_p.o hash_p.o host_p.o info_p.o main_p.o mgt_p.o notify_p.o pgrp_p.o msg_p.o cpu-types_p.o stubs_p.o processServer_p.o notifyServer_p.o ourmsgUser_p.o proc_excUser_p.o proc_excServer_p.o ../libthreads/libthreads_p.a ../libihash/libihash_p.a ../libports/libports_p.a ../libshouldbeinlibc/libshouldbeinlibc_p.a

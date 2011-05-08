@@ -1,1 +1,0 @@
-ftpcp.prof: ../libftpconn/libftpconn.a ../libshouldbeinlibc/libshouldbeinlibc.a ftpcp_p.o

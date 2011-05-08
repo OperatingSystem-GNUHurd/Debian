@@ -1,1 +1,0 @@
-reboot.prof: reboot_p.o ../libshouldbeinlibc/libshouldbeinlibc.a

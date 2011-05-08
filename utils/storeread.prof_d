@@ -1,1 +1,0 @@
-storeread.prof: ../libstore/libstore.a ../libshouldbeinlibc/libshouldbeinlibc.a storeread_p.o

@@ -1,1 +1,0 @@
-devprobe.prof: ../libshouldbeinlibc/libshouldbeinlibc.a devprobe_p.o

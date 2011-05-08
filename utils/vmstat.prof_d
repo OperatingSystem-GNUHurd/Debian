@@ -1,1 +1,0 @@
-vmstat.prof: ../libshouldbeinlibc/libshouldbeinlibc.a vmstat_p.o
