@@ -1,4 +1,4 @@
-Debian has a real /usr
+Debian has a real /usr and uses w-hurd file name
 ---
  utils/uptime.sh |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
@@ -10,7 +10,7 @@ Debian has a real /usr
  DOC="Show system uptime, number of users, and load"
  
 -W=${W-/bin/w}
-+W=${W-/usr/bin/w}
++W=${W-/usr/bin/w-hurd}
  
  while :; do
    case "$1" in

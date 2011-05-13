@@ -11,6 +11,8 @@ hurd (20110319-3) UNRELEASED; urgency=low
     Add fd[01].
   * debian/patches/disable-proc_getnports.patch: Remove patch, libc0.3 now
     has proc_getnports, and the hurd package already breaks older versions.
+  * debian/patches/uptime_w_path_fix.patch: Fix /usr/bin/w-hurd command name,
+    thanks harish badrinath for the notice.
 
  -- Samuel Thibault <sthibault@debian.org>  Sun, 10 Apr 2011 20:42:45 +0200
 
