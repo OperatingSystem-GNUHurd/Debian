@@ -1,5 +1,6 @@
-hurd (20110319-3) UNRELEASED; urgency=low
+hurd (20110519-1) UNRELEASED; urgency=low
 
+  * New upstream snapshot.
   * debian/control:
     - Depend on gcc-4.5 instead of gcc-4.4.
     - Bump Standards-Version to 3.9.2 (no change needed)
