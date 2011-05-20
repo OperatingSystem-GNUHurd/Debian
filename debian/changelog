@@ -1,4 +1,4 @@
-hurd (20110519-1) UNRELEASED; urgency=low
+hurd (20110519-1) unstable; urgency=low
 
   * New upstream snapshot.
   * debian/control:
