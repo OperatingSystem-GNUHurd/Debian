@@ -2,9 +2,9 @@ hurd (20110519-1) UNRELEASED; urgency=low
 
   * New upstream snapshot.
   * debian/control:
-    - Depend on gcc-4.5 instead of gcc-4.4.
+    - Depend on gcc-4.6 instead of gcc-4.4.
     - Bump Standards-Version to 3.9.2 (no change needed)
-  * debian/rules: Build with gcc-4.5.
+  * debian/rules: Build with gcc-4.6.
   * debian/local/runsystem, setup-translators: Enable mouse and keyboard
     repeaters for g-i support.
   * debian/local/setup-translators: Pass the --compatible option to procfs to

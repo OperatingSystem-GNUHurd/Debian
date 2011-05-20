@@ -19,7 +19,7 @@
 
 DEB_BUILDDIR = $(DEB_SRCDIR)/build
 
-CC=gcc-4.5
+CC=gcc-4.6
 
 include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/autotools.mk
