@@ -1,3 +1,10 @@
+hurd (20110519-2) UNRELEASED; urgency=low
+
+  * Make the hurd package depend on random-egd, to get /dev/*random working as
+    early as d-i's base install.
+
+ -- Samuel Thibault <sthibault@debian.org>  Mon, 23 May 2011 15:03:43 +0200
+
 hurd (20110519-1) unstable; urgency=low
 
   * New upstream snapshot.
