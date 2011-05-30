@@ -24,13 +24,13 @@ KBD='-d pc_kbd'
 #KBD='-d xkb'
 
 # The keyboard repeater.  Required for running X11.
-#KBD_REPEAT='--repeat=kbd'
+KBD_REPEAT='--repeat=kbd'
 
 # The mouse driver.  Optional.
-#MOUSE='-d pc_mouse --protocol=ps/2'
+MOUSE='-d pc_mouse --protocol=ps/2'
 
 # The mouse repeater.  Required for running X11.
-#MOUSE_REPEAT='--repeat=mouse'
+MOUSE_REPEAT='--repeat=mouse'
 
 # The pc speaker.  Optional.
 #SPEAKER='-d generic_speaker'

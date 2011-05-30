@@ -4,6 +4,8 @@ hurd (20110519-2) UNRELEASED; urgency=low
     /dev/*random working as early as d-i's base install.
   * debian/local/setup-translators: Add entries for partitions 9-16 too, as the
     full partman layout at least uses slice 9.
+  * debian/hurd-console.default: Enable keyboard and mouse repeaters by
+    default for X11.
 
  -- Samuel Thibault <sthibault@debian.org>  Mon, 23 May 2011 15:03:43 +0200
 
