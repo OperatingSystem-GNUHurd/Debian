@@ -128,8 +128,10 @@ md std
 md vcs
 md hdX 0123
 md hdXsY 0123 12345678
+md hdXs1Y 0123 123456
 md sdX 0123
 md sdXsY 0123 12345678
+md sdXs1Y 0123 123456
 
 if [ "$MINIMAL" ]; then
 	md loopX 0123
