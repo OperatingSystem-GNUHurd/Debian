@@ -1,5 +1,5 @@
 new-essential-package
-statically-linked-binary ./hurd/mach-defpager
+statically-linked-binary hurd/mach-defpager
 setuid-binary bin/ids 4755 root/root
 setuid-binary bin/login 4755 root/root
 setuid-binary bin/ps-hurd 4755 root/root

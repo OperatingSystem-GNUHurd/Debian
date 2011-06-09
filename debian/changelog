@@ -7,6 +7,8 @@ hurd (20110519-2) unstable; urgency=low
     on installed system.
   * debian/hurd-console.default: Enable keyboard and mouse repeaters by
     default for X11.
+  * debian/hurd.lintian-overrides, debian/hurd-dev.lintian-overrides: Update to
+    newer lintian format.
 
  -- Samuel Thibault <sthibault@debian.org>  Wed, 08 Jun 2011 22:26:15 +0000
 
