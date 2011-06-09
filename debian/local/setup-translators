@@ -145,8 +145,8 @@ else
 	md ptyq
 	md lprX 0123
 	md comX 0123
-	st random '/hurd/random /tmp/entropy.sock' random
-	st urandom '/hurd/random -u /tmp/entropy.sock' urandom
+	st random 'random /tmp/entropy.sock' random
+	st urandom 'random -u /tmp/entropy.sock' urandom
 fi
 
 st kbd 'symlink cons/kbd' kbd
