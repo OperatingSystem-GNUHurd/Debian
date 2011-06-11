@@ -3,6 +3,8 @@
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 export PATH
 
+umask 022
+
 # Create a minimal subset of device and server nodes
 /usr/lib/hurd/setup-translators -m -k -p
 
