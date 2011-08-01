@@ -1,3 +1,5 @@
+Add TLS support
+TODO: drop threadvar support
 ---
  libpthread/pthread/pt-create.c                 |    7 ++++
  libpthread/pthread/pt-exit.c                   |    3 ++

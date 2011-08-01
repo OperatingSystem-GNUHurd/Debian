@@ -1,3 +1,4 @@
+Add warnings about non-implemented functions.
 ---
  config.make.in                                           |    1 +
  libpthread/Makefile                                      |   14 +++++++++++++-

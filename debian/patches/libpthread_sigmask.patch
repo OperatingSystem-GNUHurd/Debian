@@ -1,5 +1,7 @@
 * libpthread/sysdeps/mach/hurd/pt-sigstate.c (__pthread_sigstate): Wake up the message
 thread if any pending signals have been unblocked (code grabbed from glibc).
+
+Will be replaced by proper global signal support from Jeremie
 ---
  libpthread/sysdeps/mach/hurd/pt-sigstate.c |    9 +++++++++
  1 files changed, 9 insertions(+), 0 deletions(-)

@@ -1,5 +1,7 @@
 Add options -k and -K to MAKEDEV.sh to chose not to overwrite existing entries.
 
+TODO: submit to bug-hurd
+
 Index: hurd/sutils/MAKEDEV.sh
 ===================================================================
 --- hurd.orig/sutils/MAKEDEV.sh	2010-07-01 18:14:22.000000000 +0200
