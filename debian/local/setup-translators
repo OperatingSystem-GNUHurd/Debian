@@ -152,5 +152,10 @@ fi
 st kbd 'symlink cons/kbd' kbd
 st mouse 'symlink cons/mouse' mouse
 
+if [ ! -e shm ]; then
+	mkdir shm
+	chmod 1777 shm
+fi
+
 echo .
 
