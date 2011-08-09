@@ -1,0 +1,16 @@
+Set diskfs stores as readonly on shutdown before enabling RPCs again.
+
+diff --git a/libdiskfs/init-startup.c b/libdiskfs/init-startup.c
+index bf1acf2..700a26e 100644
+--- a/libdiskfs/init-startup.c
++++ b/libdiskfs/init-startup.c
+@@ -148,6 +148,9 @@ diskfs_S_startup_dosync (mach_port_t handle)
+ 	  diskfs_set_hypermetadata (1, 1);
+ 	  _diskfs_diskdirty = 0;
+ 
++	  diskfs_readonly = 1;
++	  diskfs_readonly_changed (1);
++
+ 	  ports_resume_class_rpcs (diskfs_protid_class);
+ 	}
+ 

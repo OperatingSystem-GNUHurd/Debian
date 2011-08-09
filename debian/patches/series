@@ -30,3 +30,4 @@ ext2fs_nowait.patch
 auth-intr-cure.patch
 libpager_deadlock.patch
 libdiskfs_self-reauth.patch
+libdiskfs_sync.patch
