@@ -31,3 +31,4 @@ auth-intr-cure.patch
 libpager_deadlock.patch
 libdiskfs_self-reauth.patch
 libdiskfs_sync.patch
+proc_exception.patch

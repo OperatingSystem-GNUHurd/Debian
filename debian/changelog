@@ -2,6 +2,7 @@ hurd (20110519-4) UNRELEASED; urgency=low
 
   * local/setup-translators: Restore /dev/shm creation.
   * patches/libdiskfs_sync.patch: New patch to fix sync at shutdown.
+  * patches/proc_exception.patch: New patch to fix spurious port deallocation.
 
  -- Samuel Thibault <sthibault@debian.org>  Mon, 01 Aug 2011 22:53:23 +0200
 

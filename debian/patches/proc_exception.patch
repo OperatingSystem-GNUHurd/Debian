@@ -1,0 +1,19 @@
+If proc_exception_raise() actually managed to sent its message, the reply port
+has already been consumed, so we can't send a reply to the requester any more...
+
+TODO: this introduces leaks in some cases ; check in which error cases
+proc_exception_raise() has consumed the reply port anyway.
+
+diff --git a/proc/mgt.c b/proc/mgt.c
+index 5373d10..1180c70 100644
+--- a/proc/mgt.c
++++ b/proc/mgt.c
+@@ -499,7 +499,7 @@ S_proc_exception_raise (mach_port_t excport,
+ 
+       mach_port_destroy (mach_task_self (), thread);
+ 
+-      return 0;
++      return MIG_NO_REPLY;
+     }
+ 
+ }
