@@ -151,11 +151,11 @@ fi
 
 st kbd 'symlink cons/kbd' kbd
 st mouse 'symlink cons/mouse' mouse
+st shm 'symlink /run/shm' shm
 
-if [ ! -e shm ]; then
-	mkdir shm
-	chmod 1777 shm
-fi
+# until we properly start /etc/rcS.d
+mkdir -p /run/lock /run/shm
+chmod 1777 /run/lock /run/shm
 
 echo .
 
