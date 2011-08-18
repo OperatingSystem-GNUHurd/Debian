@@ -57,6 +57,12 @@ fi
 
 if [ "$1" = configure ] && [ "$2" ]; then
 	# Upgrade: create the missing device and server nodes
+	if showtrans /dev/random 2> /dev/null | grep -q /tmp/entropy.sock
+	then
+		# old random-egd translator, remove
+		settrans -g /dev/random
+		settrans -g /dev/urandom
+	fi
 	/usr/lib/hurd/setup-translators -K
 fi
 
