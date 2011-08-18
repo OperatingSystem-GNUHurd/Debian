@@ -145,7 +145,7 @@ else
 	md ptyq
 	md lprX 0123
 	md comX 0123
-	st random 'random --seed-file /var/run/random-seed --secure' random
+	st random 'random --seed-file /var/run/random-seed --fast' random
 	st urandom 'random --seed-file /var/run/random-seed --fast' urandom
 fi
 
