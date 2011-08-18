@@ -19,7 +19,7 @@ Index: hurd-debian/Makefile
  	       hostmux usermux ftpfs trans \
  	       console-client utils sutils ufs-fsck ufs-utils \
 -	       benchmarks fstests
-+	       benchmarks fstests procfs
++	       benchmarks fstests procfs random
  
  # Other directories
  other-subdirs = hurd doc config release include
