@@ -8,8 +8,10 @@ hurd (20110519-4) UNRELEASED; urgency=low
   * local/setup-translators: Set up entropy socket in /var/run instead of
     /tmp, as the latter is world-writable.
   * patches/libpthread_procfs.patch: Add random server.
+  * debian/control, debian/local/setup-translators: Use native random server
+    instead of random-egd.
 
- -- Samuel Thibault <sthibault@debian.org>  Thu, 18 Aug 2011 02:43:35 +0200
+ -- Samuel Thibault <sthibault@debian.org>  Thu, 18 Aug 2011 01:15:04 +0000
 
 hurd (20110519-3) unstable; urgency=low
 
