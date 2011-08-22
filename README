@@ -9,7 +9,6 @@ $ git checkout libpthread-moved
 $ git pull . libpthread
 # Check that no new file has appeared, else move them.
 $ git checkout random
-$ git pull upstream-random
 $ git tag -a upstream/random/<date>
 $ git checkout random-moved
 $ git pull . random
@@ -26,6 +25,7 @@ $ git tag -a upstream/hurd/<date>
 $ git checkout upstream-merged
 $ git pull . upstream
 $ git pull . libpthread-moved
+$ git pull . random
 $ git pull . procfs-jkoenig-moved
 $ git tag -a upstream/<date>
 $ git checkout master
