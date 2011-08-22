@@ -14,7 +14,6 @@ rc.patch
 runsystem_setup_pflocal.patch
 startup-usr-support.patch
 tmp_exec_startup.patch
-ttys.patch
 uptime_w_path_fix.patch
 stat_round.patch
 libports_stability.patch
