@@ -8,6 +8,12 @@ $ git tag -a upstream/libpthread/<date>
 $ git checkout libpthread-moved
 $ git pull . libpthread
 # Check that no new file has appeared, else move them.
+$ git checkout random
+$ git pull upstream-random
+$ git tag -a upstream/random/<date>
+$ git checkout random-moved
+$ git pull . random
+# Check that no new file has appeared, else move them.
 $ git checkout procfs-jkoenig
 $ git pull upstream-procfs-jkoenig
 $ git tag -a upstream/procfs/<date>
