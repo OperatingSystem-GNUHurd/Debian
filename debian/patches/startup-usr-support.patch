@@ -24,4 +24,4 @@ Debian GNU/Hurd has a real /usr
 +PATH=/bin:/sbin:/usr/bin:/usr/sbin
  export PATH
  
- # If we lose badly, try to exec each of these in turn.
+ umask 022
