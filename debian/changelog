@@ -1,5 +1,6 @@
-hurd (20110519-4) UNRELEASED; urgency=low
+hurd (20110821-1) UNRELEASED; urgency=low
 
+  * New upstream snapshot.
   * local/setup-translators:
     - Restore /dev/shm creation.
     - create /run/shm and /run/lock, to fix locking until we properly start
