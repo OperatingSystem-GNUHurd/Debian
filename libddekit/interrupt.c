@@ -27,7 +27,7 @@
 
 #define BLOCK_IRQ         0
 
-#define MACH_NOTIFY_IRQ 100
+#define MACH_INTR_NOTIFY 100
 
 typedef struct
 {
@@ -132,7 +132,7 @@ static void intloop(void *arg)
 		mach_intr_notification_t *intr_header = (mach_irq_notification_t *) inp;
 
 		((mig_reply_header_t *) outp)->RetCode = MIG_NO_REPLY;
-		if (inp->msgh_id != MACH_NOTIFY_IRQ)
+		if (inp->msgh_id != MACH_INTR_NOTIFY)
 			return 0;
 
 		/* It's an interrupt not for us. It shouldn't happen. */
