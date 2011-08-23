@@ -148,7 +148,7 @@ ds_xxx_device_set_filter (device_t device, mach_port_t rec,
 }
 
 io_return_t
-ds_device_intr_notify (mach_port_t master_port, int irq,
+ds_device_intr_register (mach_port_t master_port, int irq,
 		       int id, mach_port_t receive_port)
 {
   return D_INVALID_OPERATION;

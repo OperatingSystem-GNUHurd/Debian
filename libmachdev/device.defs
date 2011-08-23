@@ -149,7 +149,7 @@ routine device_set_filter(
 	in	filter		: filter_array_t
 	);
 
-routine device_intr_notify(
+routine device_intr_register(
 		master_port	: mach_port_t;
 	in	irq		: int;
 	in	id		: int;

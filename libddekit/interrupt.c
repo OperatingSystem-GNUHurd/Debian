@@ -97,10 +97,10 @@ static void intloop(void *arg)
 	// TODO the flags for shared irq should be indicated by params->shared.
 	// Be careful. For now, we must use shared irq.
 	// Otherwise, the interrupt handler cannot be installed in the kernel.
-	ret = device_intr_notify (master_device, params->irq,
+	ret = device_intr_register (master_device, params->irq,
 				  0, 0x04000000, delivery_port,
 				  MACH_MSG_TYPE_MAKE_SEND);
-	ddekit_printf ("device_intr_notify returns %d\n", ret);
+	ddekit_printf ("device_intr_register returns %d\n", ret);
 	if (ret) {
 		/* inform thread creator of error */
 		/* XXX does omega0 error code have any meaning to DDEKit users? */
