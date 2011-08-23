@@ -31,10 +31,10 @@
 
 typedef struct
 {
-  mach_msg_header_t irq_header;
-  mach_msg_type_t   irq_type;
-  int		    irq;
-} mach_irq_notification_t;
+  mach_msg_header_t intr_header;
+  mach_msg_type_t   intr_type;
+  int		    line;
+} mach_intr_notification_t;
 
 /*
  * Internal type for interrupt loop parameters
@@ -129,16 +129,16 @@ static void intloop(void *arg)
 	ddekit_sem_up(params->started);
 
 	int irq_server (mach_msg_header_t *inp, mach_msg_header_t *outp) {
-		mach_irq_notification_t *irq_header = (mach_irq_notification_t *) inp;
+		mach_intr_notification_t *intr_header = (mach_irq_notification_t *) inp;
 
 		((mig_reply_header_t *) outp)->RetCode = MIG_NO_REPLY;
 		if (inp->msgh_id != MACH_NOTIFY_IRQ)
 			return 0;
 
 		/* It's an interrupt not for us. It shouldn't happen. */
-		if (irq_header->irq != params->irq) {
+		if (intr_header->line != params->irq) {
 			ddekit_printf ("We get interrupt %d, %d is expected",
-				       irq_header->irq, params->irq);
+				       intr_header->line, params->irq);
 			return 1;
 		}
 
