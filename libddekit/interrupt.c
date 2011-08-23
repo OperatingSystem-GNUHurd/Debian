@@ -129,7 +129,7 @@ static void intloop(void *arg)
 	ddekit_sem_up(params->started);
 
 	int irq_server (mach_msg_header_t *inp, mach_msg_header_t *outp) {
-		mach_intr_notification_t *intr_header = (mach_irq_notification_t *) inp;
+		mach_intr_notification_t *intr_header = (mach_intr_notification_t *) inp;
 
 		((mig_reply_header_t *) outp)->RetCode = MIG_NO_REPLY;
 		if (inp->msgh_id != MACH_INTR_NOTIFY)
