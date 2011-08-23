@@ -151,14 +151,14 @@ routine device_set_filter(
 
 routine device_intr_register(
 		master_port	: mach_port_t;
-	in	irq		: int;
+	in	line		: int;
 	in	id		: int;
 	in	flags		: int;
 	in	receive_port	: mach_port_send_t
 	);
 
 /*
- *	enable/disable the specified irq.
+ *	enable/disable the specified line.
  */
 routine device_intr_enable(
 		master_port	: mach_port_t;
