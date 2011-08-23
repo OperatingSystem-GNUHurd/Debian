@@ -155,8 +155,8 @@ ds_device_intr_notify (mach_port_t master_port, int irq,
 }
 
 kern_return_t
-ds_device_irq_enable (mach_port_t master_port,
-		      int irq, char status)
+ds_device_intr_enable (mach_port_t master_port,
+		       int line, char status)
 {
   return D_INVALID_OPERATION;
 }

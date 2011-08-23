@@ -109,7 +109,7 @@ static void intloop(void *arg)
 		ddekit_printf ("cannot install irq %d\n", params->irq);
 		return;
 	}
-	device_irq_enable (master_device, params->irq, TRUE);
+	device_intr_enable (master_device, params->irq, TRUE);
 
 #if 0
 	/* 
@@ -152,7 +152,7 @@ static void intloop(void *arg)
 		params->handler(params->priv);
 		/* If the irq has been disabled by the linux device,
 		 * we don't need to reenable the real one. */
-		device_irq_enable (master_device, my_index, TRUE);
+		device_intr_enable (master_device, my_index, TRUE);
 
 		if (ddekit_irq_ctrl[my_index].thread_exit) {
 			ddekit_lock_unlock (&ddekit_irq_ctrl[my_index].irqlock);

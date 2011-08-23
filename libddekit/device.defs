@@ -160,7 +160,7 @@ routine device_intr_notify(
 /*
  *	enable/disable the specified irq.
  */
-routine device_irq_enable(
+routine device_intr_enable(
 		master_port	: mach_port_t;
-		irq		: int;
+		line		: int;
 		status		: char);
