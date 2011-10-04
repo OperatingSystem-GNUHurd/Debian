@@ -60,8 +60,8 @@ if [ "$1" = configure ] && [ "$2" ]; then
 	if showtrans /dev/random 2> /dev/null | grep -q /tmp/entropy.sock
 	then
 		# old random-egd translator, remove
-		settrans -g /dev/random
-		settrans -g /dev/urandom
+		settrans -go /dev/random
+		settrans -go /dev/urandom
 	fi
 	/usr/lib/hurd/setup-translators -K
 fi
