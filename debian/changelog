@@ -7,6 +7,7 @@ hurd (20110821-1) UNRELEASED; urgency=low
     - Restore /dev/shm creation.
     - create /run/shm and /run/lock, to fix locking until we properly start
     rcS.d scripts.
+    - Add cd[01] SCSI CD-ROMs.
   * patches/libdiskfs_sync.patch: New patch to fix sync at shutdown.
   * local/setup-translators: Set up entropy socket in /var/run instead of
     /tmp, as the latter is world-writable.
