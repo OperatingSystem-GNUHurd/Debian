@@ -1,5 +1,5 @@
 /* Setup thread stack.  Hurd/i386 version.
-   Copyright (C) 2000, 2002, 2005, 2008 Free Software Foundation, Inc.
+   Copyright (C) 2000, 2002, 2005, 2007, 2008 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -64,7 +64,7 @@ stack_setup (struct __pthread *thread,
     {
       /* And then the call frame.  */
       top -= 2;
-      top = (uintptr_t) top & ~0xf;
+      top = (uintptr_t *) ((uintptr_t) top & ~0xf);
       top[1] = (uintptr_t) arg;	/* Argument to START_ROUTINE.  */
       top[0] = (uintptr_t) start_routine;
       *--top = 0;		/* Fake return address.  */
@@ -91,12 +91,15 @@ __pthread_setup (struct __pthread *thread,
   thread->mcontext.pc = entry_point;
   thread->mcontext.sp = stack_setup (thread, start_routine, arg);
 
+  thread->tcb->self = thread->kernel_thread;
+
   ktid = __mach_thread_self ();
   if (thread->kernel_thread != ktid)
     {
-      err = __thread_set_pcsp (thread->kernel_thread,
+      err = __thread_set_pcsptp (thread->kernel_thread,
 			       1, thread->mcontext.pc,
-			       1, thread->mcontext.sp);
+			       1, thread->mcontext.sp,
+			       1, thread->tcb);
       assert_perror (err);
     }
   __mach_port_deallocate (__mach_task_self (), ktid);
