@@ -14,6 +14,7 @@ hurd (20110821-1) UNRELEASED; urgency=low
   * patches/libpthread_procfs.patch: Add random server.
   * debian/control, debian/local/setup-translators: Use native random server
     instead of random-egd.
+  * debian/local/cdrom.h: Add header for basic CD-ROM ioctl support.
 
  -- Samuel Thibault <sthibault@debian.org>  Thu, 18 Aug 2011 01:15:04 +0000
 

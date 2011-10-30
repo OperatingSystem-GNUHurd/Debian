@@ -53,6 +53,7 @@ install/hurd::
 
 install/hurd-dev::
 	install -m644 debian/local/soundcard.h debian/tmp/include/sys
+	install -m644 debian/local/cdrom.h debian/tmp/include/sys
 
 SUID_PROGRAMS = /bin/ids /bin/login /bin/ps-hurd /usr/bin/w-hurd
 
