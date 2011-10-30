@@ -14,11 +14,19 @@ hurd (20111030-1) UNRELEASED; urgency=low
     /tmp, as the latter is world-writable.
   * patches/libpthread_procfs.patch: Add random server.
   * debian/control, debian/local/setup-translators: Use native random server
-    instead of random-egd.
+    set on /dev/u?random-hurd instead of random-egd on /dev/u?random.
+  * debian/hurd.{postinst,prerm}: Handle alternative for /dev/u?random,
+    default to u?random-hurd.
+  * debian/hurd.lintian-overrides: Override warnings about the /dev/u?random
+    mangling.
   * debian/local/cdrom.h: Add header for basic CD-ROM ioctl support.
   * debian/patches/libpthread_globsigdisp.patch,posix-sigcodes.patch: New
     patches from Jeremie Koenig to enable global signal support.
   * debian/patches/libpthread_sigmask.patch: Update to global signal support.
+  * debian/copyright: Fix copyright notice.
+  * debian/control:
+    - Drop article from synopsis.
+    - Tighten hurd-dev dependency on hurd to the same version.
 
  -- Samuel Thibault <sthibault@debian.org>  Thu, 18 Aug 2011 01:15:04 +0000
 

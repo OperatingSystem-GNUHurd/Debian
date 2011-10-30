@@ -6,9 +6,7 @@ reached via <debian-hurd@lists.debian.org>.
 
 Sources are available from http://savannah.gnu.org/projects/hurd
 
-Copyright statement:
-
-The GNU Hurd is copyrighted by the Free Software Foundation, Inc.
+Copyright 1992-2011 the Free Software Foundation, Inc.
 
 Note that the libraries distributed with the GNU Hurd are placed under
 the standard GNU General Public License (*not* the Library General
