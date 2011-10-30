@@ -1,8 +1,9 @@
-hurd (20110821-1) UNRELEASED; urgency=low
+hurd (20111030-1) UNRELEASED; urgency=low
 
   * New upstream snapshot.
     - Drop debian/patches/ttys.patch.patch, applied upstream.
     - Drop debian/patches/auth-intr-cure.patch, applied upstream.
+    - Drop debian/libpthread_tls.patch, applied upstream.
   * local/setup-translators:
     - Restore /dev/shm creation.
     - create /run/shm and /run/lock, to fix locking until we properly start

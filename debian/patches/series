@@ -6,7 +6,6 @@ init_try_runsystem.gnu.patch
 install-msgids.diff
 libpager_update_seqno.patch
 libpthread_stubs.patch
-libpthread_tls.patch
 makedev.diff
 pfinet_dhcp.patch
 pflocal.patch
