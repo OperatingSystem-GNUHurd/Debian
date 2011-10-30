@@ -1,15 +1,13 @@
 * libpthread/sysdeps/mach/hurd/pt-sigstate.c (__pthread_sigstate): Wake up the message
 thread if any pending signals have been unblocked (code grabbed from glibc).
-
-Will be replaced by proper global signal support from Jeremie
 ---
  libpthread/sysdeps/mach/hurd/pt-sigstate.c |    9 +++++++++
  1 files changed, 9 insertions(+), 0 deletions(-)
 
-diff --git a/libpthread/sysdeps/mach/hurd/pt-sigstate.c b/libpthread/sysdeps/mach/hurd/pt-sigstate.c
-index 68c79c5..51263ac 100644
---- a/libpthread/sysdeps/mach/hurd/pt-sigstate.c
-+++ b/libpthread/sysdeps/mach/hurd/pt-sigstate.c
+Index: hurd/libpthread/sysdeps/mach/hurd/pt-sigstate.c
+===================================================================
+--- hurd.orig/libpthread/sysdeps/mach/hurd/pt-sigstate.c	2011-05-29 15:23:30.000000000 +0000
++++ hurd/libpthread/sysdeps/mach/hurd/pt-sigstate.c	2011-06-10 04:53:53.000000000 +0000
 @@ -21,6 +21,7 @@
  #include <assert.h>
  #include <signal.h>
@@ -18,7 +16,7 @@ index 68c79c5..51263ac 100644
  
  #include <pt-internal.h>
  
-@@ -31,6 +32,7 @@ __pthread_sigstate (struct __pthread *thread, int how,
+@@ -31,11 +32,12 @@
  {
    error_t err = 0;
    struct hurd_sigstate *ss;
@@ -26,23 +24,24 @@ index 68c79c5..51263ac 100644
  
    ss = _hurd_thread_sigstate (thread->kernel_thread);
    assert (ss);
-@@ -63,7 +65,14 @@ __pthread_sigstate (struct __pthread *thread, int how,
+ 
+-  __pthread_spin_lock (&ss->lock);
++  _hurd_sigstate_lock (ss);
+ 
+   if (oset)
+     *oset = ss->blocked;
+@@ -63,7 +65,13 @@
    if (! err && clear_pending)
      __sigemptyset (&ss->pending);
  
-+  pending = ss->pending & ~ss->blocked;
+-  __pthread_spin_unlock (&ss->lock);
++  pending = _hurd_sigstate_pending (ss) & ~ss->blocked;
++  _hurd_sigstate_unlock (ss);
 +
-   __pthread_spin_unlock (&ss->lock);
- 
 +  if (! err && pending)
 +    /* Send a message to the signal thread so it
 +       will wake up and check for pending signals.  */
 +    __msg_sig_post (_hurd_msgport, 0, 0, __mach_task_self ());
-+
+ 
    return err;
  }
--- 
-1.7.1
-
-
-

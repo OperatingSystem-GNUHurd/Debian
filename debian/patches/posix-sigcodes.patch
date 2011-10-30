@@ -1,0 +1,270 @@
+commit 2a54ebafd46a26d537ac38d46dc82568f751cc42
+Author: Jeremie Koenig <jk@jk.fr.eu.org>
+Date:   Wed Jun 8 03:00:37 2011 +0000
+
+    proc: send signals with POSIX sigcodes
+    
+    * proc/stubs.c (send_signal): Add a sigcode argument.
+    * proc/proc.h (send_signal): Declare the sigcode argument.
+    * proc/pgrp.c (leave_pgrp): Specify a null sigcode.
+    * proc/wait.c (alert_parent): Use CLD_EXITED for SIGCHLD on exit.
+    (S_proc_mark_stop): Use CLD_STOPPED for SIGCHLD on stop.
+
+diff --git a/proc/pgrp.c b/proc/pgrp.c
+index 2d6ca93..72c09ba 100644
+--- a/proc/pgrp.c
++++ b/proc/pgrp.c
+@@ -399,42 +399,42 @@ leave_pgrp (struct proc *p)
+   else if (p->p_parent->p_pgrp != pg
+ 	   && p->p_parent->p_pgrp->pg_session == pg->pg_session
+ 	   && !--pg->pg_orphcnt)
+     {
+       /* We were the last process keeping this from being
+ 	 an orphaned process group -- do the orphaning gook */
+       struct proc *ip;
+       int dosignal = 0;
+ 
+       for (ip = pg->pg_plist; ip; ip = ip->p_gnext)
+ 	{
+ 	  if (ip->p_stopped)
+ 	    dosignal = 1;
+ 	  if (ip->p_msgport != MACH_PORT_NULL)
+ 	    nowait_msg_proc_newids (ip->p_msgport, ip->p_task, ip->p_parent->p_pid,
+ 				ip->p_pid, 1);
+ 	}
+       if (dosignal)
+ 	for (ip = pg->pg_plist; ip; ip = ip->p_gnext)
+ 	  {
+-	    send_signal (ip->p_msgport, SIGHUP, ip->p_task);
+-	    send_signal (ip->p_msgport, SIGCONT, ip->p_task);
++	    send_signal (ip->p_msgport, SIGHUP, 0, ip->p_task);
++	    send_signal (ip->p_msgport, SIGCONT, 0, ip->p_task);
+ 	  }
+     }
+ }
+ 
+ /* Cause process P to join its process group. */
+ void
+ join_pgrp (struct proc *p)
+ {
+   struct pgrp *pg = p->p_pgrp;
+   struct proc *tp;
+   int origorphcnt;
+ 
+   p->p_gnext = pg->pg_plist;
+   p->p_gprevp = &pg->pg_plist;
+   if (pg->pg_plist)
+     pg->pg_plist->p_gprevp = &p->p_gnext;
+   pg->pg_plist = p;
+ 
+   origorphcnt = !!pg->pg_orphcnt;
+   if (p->p_parent->p_pgrp != pg
+diff --git a/proc/proc.h b/proc/proc.h
+index 7943e0b..b52ca1d 100644
+--- a/proc/proc.h
++++ b/proc/proc.h
+@@ -192,24 +192,24 @@ void exc_clean (void *);
+ 
+ struct proc *add_tasks (task_t);
+ int pidfree (pid_t);
+ 
+ struct proc *create_startup_proc (void);
+ struct proc *allocate_proc (task_t);
+ void proc_death_notify (struct proc *);
+ void complete_proc (struct proc *, pid_t);
+ 
+ void leave_pgrp (struct proc *);
+ void join_pgrp (struct proc *);
+ void boot_setsid (struct proc *);
+ 
+ void process_has_exited (struct proc *);
+ void alert_parent (struct proc *);
+ void reparent_zombies (struct proc *);
+ void complete_exit (struct proc *);
+ 
+ void initialize_version_info (void);
+ 
+-void send_signal (mach_port_t, int, mach_port_t);
++void send_signal (mach_port_t, int, int, mach_port_t);
+ 
+ 
+ #endif
+diff --git a/proc/stubs.c b/proc/stubs.c
+index de3a9b1..ee8e578 100644
+--- a/proc/stubs.c
++++ b/proc/stubs.c
+@@ -59,40 +59,41 @@ blocking_message_send (any_t arg)
+     case MACH_SEND_INTERRUPTED:
+     case MACH_SEND_INVALID_NOTIFY:
+     case MACH_SEND_NO_NOTIFY:
+     case MACH_SEND_NOTIFY_IN_PROGRESS:
+       assert_perror (err);
+       break;
+ 
+     default:			/* Other errors are safe to ignore.  */
+       break;
+     }
+ 
+ 
+   return 0;
+ }
+ 
+ /* Send signal SIGNO to MSGPORT with REFPORT as reference.  Don't
+    block in any fashion.  */
+ void
+ send_signal (mach_port_t msgport,
+ 	     int signal,
++	     int sigcode,
+ 	     mach_port_t refport)
+ {
+   error_t err;
+ 
+   /* This message buffer might be modified by mach_msg in some error cases,
+      so we cannot safely use a shared static buffer.  */
+   struct msg_sig_post_request message =
+   {
+     {
+       /* Message header: */
+       (MACH_MSGH_BITS_COMPLEX
+        | MACH_MSGH_BITS (MACH_MSG_TYPE_COPY_SEND,
+ 			 MACH_MSG_TYPE_MAKE_SEND_ONCE)), /* msgh_bits */
+       sizeof message,		/* msgh_size */
+       msgport,			/* msgh_remote_port */
+       MACH_PORT_NULL,		/* msgh_local_port */
+       0,			/* msgh_seqno */
+       RPCID_SIG_POST,		/* msgh_id */
+     },
+     {
+@@ -101,41 +102,41 @@ send_signal (mach_port_t msgport,
+       32,			/* msgt_size */
+       1,			/* msgt_number */
+       1,			/* msgt_inline */
+       0,			/* msgt_longform */
+       0,			/* msgt_deallocate */
+       0,			/* msgt_unused */
+     },
+     /* Signal number */
+     signal,
+     /* Type descriptor for sigcode */
+     {
+       MACH_MSG_TYPE_INTEGER_32, /* msgt_name */
+       32,			/* msgt_size */
+       1,			/* msgt_number */
+       1,			/* msgt_inline */
+       0,			/* msgt_longform */
+       0,			/* msgt_deallocate */
+       0,			/* msgt_unused */
+     },
+     /* Sigcode */
+-    0,
++    sigcode,
+     {
+       /* Type descriptor for refport */
+       MACH_MSG_TYPE_COPY_SEND, /* msgt_name */
+       32,			/* msgt_size */
+       1,			/* msgt_number */
+       1,			/* msgt_inline */
+       0,			/* msgt_longform */
+       0,			/* msgt_deallocate */
+       0,			/* msgt_unused */
+     },
+     refport
+   };
+ 
+   err = mach_msg ((mach_msg_header_t *)&message,
+ 		  MACH_SEND_MSG|MACH_SEND_TIMEOUT, sizeof message, 0,
+ 		  MACH_PORT_NULL, 0, MACH_PORT_NULL);
+   switch (err)
+     {
+     case MACH_SEND_TIMED_OUT:
+       /* The send could not complete immediately, and we do not want to
+diff --git a/proc/wait.c b/proc/wait.c
+index 6fc94e8..332aaf6 100644
+--- a/proc/wait.c
++++ b/proc/wait.c
+@@ -127,41 +127,41 @@ sample_rusage (struct proc *p)
+ /* Return nonzero if a `waitpid' on WAIT_PID by a process
+    in MYPGRP cares about the death of PID/PGRP.  */
+ static inline int
+ waiter_cares (pid_t wait_pid, pid_t mypgrp,
+ 	      pid_t pid, pid_t pgrp)
+ {
+   return (wait_pid == pid ||
+ 	  wait_pid == -pgrp ||
+ 	  wait_pid == WAIT_ANY ||
+ 	  (wait_pid == WAIT_MYPGRP && pgrp == mypgrp));
+ }
+ 
+ /* A process is dying.  Send SIGCHLD to the parent.
+    Wake the parent if it is waiting for us to exit. */
+ void
+ alert_parent (struct proc *p)
+ {
+   /* We accumulate the aggregate usage stats of all our dead children.  */
+   rusage_add (&p->p_parent->p_child_rusage, &p->p_rusage);
+ 
+-  send_signal (p->p_parent->p_msgport, SIGCHLD, p->p_parent->p_task);
++  send_signal (p->p_parent->p_msgport, SIGCHLD, CLD_EXITED, p->p_parent->p_task);
+ 
+   if (!p->p_exiting)
+     {
+       p->p_status = W_EXITCODE (0, SIGKILL);
+       p->p_sigcode = -1;
+     }
+ 
+   if (p->p_parent->p_waiting)
+     {
+       condition_broadcast (&p->p_parent->p_wakeup);
+       p->p_parent->p_waiting = 0;
+     }
+ }
+ 
+ kern_return_t
+ S_proc_wait (struct proc *p,
+ 	     mach_port_t reply_port,
+ 	     mach_msg_type_name_t reply_port_type,
+ 	     pid_t pid,
+ 	     int options,
+@@ -240,41 +240,41 @@ S_proc_wait (struct proc *p,
+ kern_return_t
+ S_proc_mark_stop (struct proc *p,
+ 		  int signo,
+ 		  int sigcode)
+ {
+   if (!p)
+     return EOPNOTSUPP;
+ 
+   p->p_stopped = 1;
+   p->p_status = W_STOPCODE (signo);
+   p->p_sigcode = sigcode;
+   p->p_waited = 0;
+ 
+   if (p->p_parent->p_waiting)
+     {
+       condition_broadcast (&p->p_parent->p_wakeup);
+       p->p_parent->p_waiting = 0;
+     }
+ 
+   if (!p->p_parent->p_nostopcld)
+-    send_signal (p->p_parent->p_msgport, SIGCHLD, p->p_parent->p_task);
++    send_signal (p->p_parent->p_msgport, SIGCHLD, CLD_STOPPED, p->p_parent->p_task);
+ 
+   return 0;
+ }
+ 
+ /* Implement proc_mark_exit as described in <hurd/process.defs>. */
+ kern_return_t
+ S_proc_mark_exit (struct proc *p,
+ 		  int status,
+ 		  int sigcode)
+ {
+   if (!p)
+     return EOPNOTSUPP;
+ 
+   if (WIFSTOPPED (status))
+     return EINVAL;
+ 
+   sample_rusage (p);		/* See comments above sample_rusage.  */
+ 
+   if (p->p_exiting)
+     return EBUSY;

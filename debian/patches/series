@@ -29,3 +29,5 @@ ext2fs_nowait.patch
 libpager_deadlock.patch
 libdiskfs_self-reauth.patch
 libdiskfs_sync.patch
+libpthread_globsigdisp.patch
+posix-sigcodes.patch

@@ -15,6 +15,9 @@ hurd (20110821-1) UNRELEASED; urgency=low
   * debian/control, debian/local/setup-translators: Use native random server
     instead of random-egd.
   * debian/local/cdrom.h: Add header for basic CD-ROM ioctl support.
+  * debian/patches/libpthread_globsigdisp.patch,posix-sigcodes.patch: New
+    patches from Jeremie Koenig to enable global signal support.
+  * debian/patches/libpthread_sigmask.patch: Update to global signal support.
 
  -- Samuel Thibault <sthibault@debian.org>  Thu, 18 Aug 2011 01:15:04 +0000
 
