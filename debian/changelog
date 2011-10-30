@@ -15,6 +15,7 @@ hurd (20111030-1) UNRELEASED; urgency=low
   * patches/libpthread_procfs.patch: Add random server.
   * debian/control, debian/local/setup-translators: Use native random server
     set on /dev/u?random-hurd instead of random-egd on /dev/u?random.
+    (Closes: bug#637231)
   * debian/hurd.{postinst,prerm}: Handle alternative for /dev/u?random,
     default to u?random-hurd.
   * debian/hurd.lintian-overrides: Override warnings about the /dev/u?random
