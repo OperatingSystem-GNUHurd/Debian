@@ -19,6 +19,7 @@ hurd (20111030-1) UNRELEASED; urgency=low
   * debian/patches/libpthread_globsigdisp.patch,posix-sigcodes.patch: New
     patches from Jeremie Koenig to enable global signal support.
   * debian/patches/libpthread_sigmask.patch: Update to global signal support.
+  * debian/hurd-udeb.install: Only include the necessary console drivers.
 
  -- Samuel Thibault <sthibault@debian.org>  Thu, 18 Aug 2011 01:15:04 +0000
 
