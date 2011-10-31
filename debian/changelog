@@ -28,7 +28,6 @@ hurd (20111030-1) UNRELEASED; urgency=low
   * debian/control:
     - Drop article from synopsis.
     - Tighten hurd-dev dependency on hurd to the same version.
-  * debian/local/dmesg: Add script which cat /var/log/dmesg.
   * debian/hurd-udeb.install: Only include the necessary console drivers.
 
  -- Samuel Thibault <sthibault@debian.org>  Thu, 18 Aug 2011 01:15:04 +0000
