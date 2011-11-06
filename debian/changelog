@@ -18,7 +18,7 @@ hurd (20111030-1) UNRELEASED; urgency=low
     set on /dev/u?random-hurd instead of random-egd on /dev/u?random.
     (Closes: bug#637231)
   * debian/hurd.{postinst,prerm}: Handle alternative for /dev/u?random,
-    default to u?random-hurd.
+    default to u?random-hurd, generate an initial pseudo-random seed.
   * debian/hurd.lintian-overrides: Override warnings about the /dev/u?random
     mangling.
   * debian/local/cdrom.h: Add header for basic CD-ROM ioctl support.
