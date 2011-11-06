@@ -5,5 +5,3 @@ setuid-binary bin/login 4755 root/root
 setuid-binary bin/ps-hurd 4755 root/root
 setuid-binary usr/bin/w-hurd 4755 root/root
 possibly-insecure-handling-of-tmp-files-in-maintainer-script postinst:65
-maintainer-script-removes-device-files postinst:69
-maintainer-script-removes-device-files postinst:71

@@ -61,9 +61,8 @@ if [ "$1" = configure ] && [ "$2" ]; then
 	then
 		# old random-egd translator, remove
 		settrans -go /dev/random
-		rm -f /dev/random
 		settrans -go /dev/urandom
-		rm -f /dev/urandom
+		( cd /dev ; rm -f random urandom )
 	fi
 	/usr/lib/hurd/setup-translators -K
 	update-alternatives --install /dev/random random /dev/random-hurd 10 \
