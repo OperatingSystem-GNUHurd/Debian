@@ -4,6 +4,8 @@
 
 /* IRQ lock reference counter */
 static atomic_t      _refcnt   = ATOMIC_INIT(0);
+/* Refcnt value at which unlocking the cli_lock (it's not always 0) */
+static int unlock_refcnt;
 static ddekit_lock_t cli_lock;
 
 /* Check whether IRQs are currently disabled.
@@ -57,9 +59,6 @@ void fake_local_irq_restore(unsigned long flags)
 /* Store the current flags state.
  *
  * This is done by returning the current refcnt.
- *
- * XXX: Up to now, flags was always 0 at this point and
- *      I assume that this is always the case. Prove?
  */
 unsigned long __raw_local_save_flags(void)
 {
@@ -82,8 +81,10 @@ void raw_local_irq_restore(unsigned long flags)
 {
 	Assert(cli_lock != NULL);
 	atomic_set(&_refcnt, flags);
-	if (flags == 0)
+	if (flags == unlock_refcnt) {
 		ddekit_lock_unlock(&cli_lock);
+		unlock_refcnt = 0;
+	}
 }
 
 /* Disable IRQs by grabbing the IRQ lock. */
@@ -95,7 +96,22 @@ void raw_local_irq_disable(void)
 	if (cli_lock == NULL)
 		ddekit_lock_init_unlocked(&cli_lock);
 
-	nested_lock(cli_lock);
+	if (nested_lock(cli_lock)) {
+		/* Tell the corresponding restorer to release cli_lock,
+		 * but do not update the value if there has been a re-enable in
+		 * between, that would store a bogus value.
+		 * XXX: scenario that will still break:
+		 * save
+		 *   disable
+		 *   enable
+		 *   save
+		 *     disable
+		 *   restore
+		 * restore
+		 */
+		if (unlock_refcnt < atomic_read(&_refcnt))
+			unlock_refcnt = atomic_read(&_refcnt);
+	}
 	atomic_inc(&_refcnt);
 }
 
