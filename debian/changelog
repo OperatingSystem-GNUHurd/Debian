@@ -30,6 +30,8 @@ hurd (20111030-1) UNRELEASED; urgency=low
     - Drop article from synopsis.
     - Tighten hurd-dev dependency on hurd to the same version.
   * debian/hurd-udeb.install: Only include the necessary console drivers.
+  * debian/patches/random-default-fast.patch: Set default randomness to fast,
+    until we set up a daemon to feed /dev/random with entropy.
 
  -- Samuel Thibault <sthibault@debian.org>  Thu, 18 Aug 2011 01:15:04 +0000
 

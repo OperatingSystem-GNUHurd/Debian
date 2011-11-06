@@ -1,0 +1,13 @@
+diff --git a/random/random.c b/random/random.c
+index 0ae31f5..c732356 100644
+--- a/random/random.c
++++ b/random/random.c
+@@ -50,7 +50,7 @@ struct condition select_alert;	/* For read and select.  */
+    numbers.
+    2: Strong random numbers with a somewhat guaranteed entropy.
+ */
+-#define DEFAULT_LEVEL 2
++#define DEFAULT_LEVEL 1
+ static int level = DEFAULT_LEVEL;
+ 
+ /* Name of file to use as seed.  */

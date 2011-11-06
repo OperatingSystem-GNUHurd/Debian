@@ -30,3 +30,4 @@ libdiskfs_self-reauth.patch
 libdiskfs_sync.patch
 libpthread_globsigdisp.patch
 posix-sigcodes.patch
+random-default-fast.patch
