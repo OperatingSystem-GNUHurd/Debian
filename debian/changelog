@@ -1,4 +1,4 @@
-hurd (20111030-1) UNRELEASED; urgency=low
+hurd (20111106-1) UNRELEASED; urgency=low
 
   * New upstream snapshot.
     - Drop debian/patches/ttys.patch.patch, applied upstream.
