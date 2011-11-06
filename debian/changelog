@@ -11,9 +11,9 @@ hurd (20111030-1) UNRELEASED; urgency=low
     rcS.d scripts.
     - Add cd[01] SCSI CD-ROMs.
   * patches/libdiskfs_sync.patch: New patch to fix sync at shutdown.
-  * local/setup-translators: Set up entropy socket in /var/run instead of
-    /tmp, as the latter is world-writable.
   * patches/libpthread_procfs.patch: Add random server.
+  * local/setup-translators: Use random server, set up its entropy pool in
+    /var/spool.
   * debian/control, debian/local/setup-translators: Use native random server
     set on /dev/u?random-hurd instead of random-egd on /dev/u?random.
     (Closes: bug#637231)
