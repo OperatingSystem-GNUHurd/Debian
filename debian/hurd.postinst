@@ -69,6 +69,9 @@ if [ "$1" = configure ] && [ "$2" ]; then
 	update-alternatives --install /dev/random random /dev/random-hurd 10 \
 	                    --slave /dev/urandom urandom /dev/urandom-hurd
 
+	# Generate initial pool
 	[ -f /var/spool/random-seed ] || dd < /dev/urandom > /var/spool/random-seed bs=1 count=600
+        # TODO: will need to run settrans -ga /dev/random at system stop to make
+        # it save it back
 fi
 
