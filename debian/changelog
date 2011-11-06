@@ -1,3 +1,9 @@
+hurd (20111106-2) UNRELEASED; urgency=low
+
+  * debian/control: Use hurd-any instead of hurd-i386.
+
+ -- Samuel Thibault <sthibault@debian.org>  Sun, 06 Nov 2011 19:51:54 +0100
+
 hurd (20111106-1) unstable; urgency=low
 
   * New upstream snapshot.
