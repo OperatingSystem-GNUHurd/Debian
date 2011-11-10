@@ -65,15 +65,17 @@ if [ "$1" = configure ] && [ "$2" ]; then
 		( cd /dev ; rm -f random urandom )
 	fi
 	/usr/lib/hurd/setup-translators -K
-	update-alternatives --install /dev/random random /dev/random-hurd 10 \
-	                    --slave /dev/urandom urandom /dev/urandom-hurd
+fi
 
+update-alternatives --install /dev/random random /dev/random-hurd 10 \
+		    --slave /dev/urandom urandom /dev/urandom-hurd
+
+if [ "$1" = configure ] ; then
 	# Generate initial pool
 	UMASK=`umask`
 	umask 077
-	[ -f /var/spool/random-seed ] || dd < /dev/urandom > /var/spool/random-seed bs=1 count=600
+	[ -f /var/spool/random-seed ] || dd < /dev/urandom > /var/spool/random-seed bs=1 count=600 2> /dev/null
         # TODO: will need to run settrans -ga /dev/random at system stop to make
         # it save it back
 	umask $UMASK
 fi
-
