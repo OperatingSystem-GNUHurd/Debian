@@ -34,7 +34,7 @@ build/hurd::
 
 install/hurd::
 	# runsystem is managed by update-alternatives
-	mv debian/tmp/etc/hurd/runsystem debian/tmp/etc/hurd/runsystem.gnu
+	mv debian/tmp/lib/hurd/runsystem debian/tmp/lib/hurd/runsystem.gnu
 
 	# move away fakeroot, ps, uptime, vmstat and w to not conflict with the
 	# ones  from other packages

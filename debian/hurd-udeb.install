@@ -6,7 +6,7 @@ debian/tmp/lib/*.so.*
 debian/tmp/lib/hurd/console/pc_kbd.so.* usr/lib/hurd/console
 debian/tmp/lib/hurd/console/pc_mouse.so.* usr/lib/hurd/console
 debian/tmp/lib/hurd/console/vga.so.* usr/lib/hurd/console
-debian/tmp/libexec/console-run sbin
+debian/tmp/lib/hurd/console-run sbin
 debian/tmp/sbin/e2os
 debian/tmp/sbin/MAKEDEV
 debian/tmp/sbin/losetup
