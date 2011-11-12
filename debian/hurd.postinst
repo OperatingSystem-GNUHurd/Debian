@@ -2,8 +2,13 @@
 
 set -e
 
+if [ "$1" = configure ] && [ "$2" ]; then
+	# Upgrade from old version: drop /libexec/runsystem
+	update-alternatives --quiet \
+		--remove runsystem /libexec/runsystem.gnu
+fi
 update-alternatives --quiet \
-	--install /libexec/runsystem runsystem /libexec/runsystem.gnu 20
+	--install /etc/hurd/runsystem runsystem /etc/hurd/runsystem.gnu 20
 
 update-alternatives \
 	--install /usr/bin/fakeroot fakeroot /usr/bin/fakeroot-hurd 30

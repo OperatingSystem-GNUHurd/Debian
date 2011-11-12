@@ -24,7 +24,6 @@ CC=gcc-4.6
 include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/autotools.mk
 
-DEB_CONFIGURE_LIBEXECDIR ="\$${prefix}/libexec"
 DEB_CONFIGURE_USER_FLAGS := --disable-profile --enable-static-progs='ext2fs,ufs,iso9660fs'
 DEB_MAKE_INSTALL_TARGET = install prefix=$(DEB_DESTDIR) sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var
 DEB_DH_STRIP_ARGS := --dbg-package=hurd
@@ -35,7 +34,7 @@ build/hurd::
 
 install/hurd::
 	# runsystem is managed by update-alternatives
-	mv debian/tmp/libexec/runsystem debian/tmp/libexec/runsystem.gnu
+	mv debian/tmp/etc/hurd/runsystem debian/tmp/etc/hurd/runsystem.gnu
 
 	# move away fakeroot, ps, uptime, vmstat and w to not conflict with the
 	# ones  from other packages

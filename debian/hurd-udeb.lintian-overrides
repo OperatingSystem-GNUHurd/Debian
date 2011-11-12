@@ -1,3 +1,2 @@
 non-standard-toplevel-dir hurd/
-non-standard-toplevel-dir libexec/
 non-standard-toplevel-dir servers/

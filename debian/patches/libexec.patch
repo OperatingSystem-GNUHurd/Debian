@@ -1,0 +1,103 @@
+diff --git a/config/ttys b/config/ttys
+index 6a548d5..d10bfcc 100644
+--- a/config/ttys
++++ b/config/ttys
+@@ -4,11 +4,11 @@
+ 
+ # name	program				type		status	comments
+ 
+-console	"/libexec/getty 9600"		mach-color	on	secure trusted console
+-tty1	"/libexec/getty 38400"		hurd		on	secure trusted console
+-tty2	"/libexec/getty 38400"		hurd		on	secure trusted console
+-tty3	"/libexec/getty 38400"		hurd		on	secure trusted console
+-tty4	"/libexec/getty 38400"		hurd		on	secure trusted console
+-tty5	"/libexec/getty 38400"		hurd		on	secure trusted console
+-tty6	"/libexec/getty 38400"		hurd		on	secure trusted console
+-#com0	"/libexec/getty 9600"		dialup		on	secure
++console	"/sbin/getty 9600"		mach-color	on	secure trusted console
++tty1	"/sbin/getty 38400"		hurd		on	secure trusted console
++tty2	"/sbin/getty 38400"		hurd		on	secure trusted console
++tty3	"/sbin/getty 38400"		hurd		on	secure trusted console
++tty4	"/sbin/getty 38400"		hurd		on	secure trusted console
++tty5	"/sbin/getty 38400"		hurd		on	secure trusted console
++tty6	"/sbin/getty 38400"		hurd		on	secure trusted console
++#com0	"/sbin/getty 9600"		dialup		on	secure
+diff --git a/daemons/runsystem.sh b/daemons/runsystem.sh
+index c3cb2d6..0ce4f59 100644
+--- a/daemons/runsystem.sh
++++ b/daemons/runsystem.sh
+@@ -23,8 +23,8 @@ fallback_shells='/bin/sh /bin/bash /bin/csh /bin/ash /bin/shd'
+ SHELL=/bin/sh
+ 
+ # Programs that do multi-user startup.
+-RUNCOM=/libexec/rc
+-RUNTTYS=/libexec/runttys
++RUNCOM=/etc/hurd/rc
++RUNTTYS=/sbin/runttys
+ # Signals that we should pass down to runttys.
+ runttys_sigs='TERM INT HUP TSTP'
+ 
+diff --git a/doc/hurd.texi b/doc/hurd.texi
+index ea73a4c..7d7af39 100644
+--- a/doc/hurd.texi
++++ b/doc/hurd.texi
+@@ -570,7 +570,7 @@ The @option{--multiboot-command-line} option tells the file system server that
+ it is a root filesystem, which triggers it to run @command{/hurd/init} as PID
+ 1.  @command{/hurd/init} starts the @command{/hurd/proc} and
+ @command{/hurd/auth} servers.  After the servers are launched
+-@command{/hurd/init} starts the @command{/libexec/runsystem.sh} script to
++@command{/hurd/init} starts the @command{/etc/hurd/runsystem.sh} script to
+ finish booting.
+ 
+ After the Hurd has been booted, other sets of core Hurd servers can be
+diff --git a/init/init.c b/init/init.c
+index d66bee0..14d822e 100644
+--- a/init/init.c
++++ b/init/init.c
+@@ -888,7 +888,7 @@ frob_kernel_process (void)
+ /** Running userland.  **/
+ 
+ /* In the "split-init" setup, we just run a single program (usually
+-   /libexec/runsystem) that is not expected to ever exit (or stop).
++   /etc/hurd/runsystem) that is not expected to ever exit (or stop).
+    If it does exit (or can't be started), we go to an emergency single-user
+    shell as a fallback.  */
+ 
+@@ -1004,7 +1004,7 @@ process_signal (int signo)
+     }
+ }
+ 
+-/* Start the child program PROG.  It is run via /libexec/console-run
++/* Start the child program PROG.  It is run via /sbin/console-run
+    with the given additional arguments.  */
+ static int
+ start_child (const char *prog, char **progargs)
+@@ -1016,7 +1016,7 @@ start_child (const char *prog, char **progargs)
+ 
+   if (progargs == 0)
+     {
+-      const char *argv[] = { "/libexec/console-run", prog, 0 };
++      const char *argv[] = { "/sbin/console-run", prog, 0 };
+       err = argz_create ((char **) argv, &args, &arglen);
+     }
+   else
+@@ -1026,7 +1026,7 @@ start_child (const char *prog, char **progargs)
+ 	++argc;
+       {
+ 	const char *argv[2 + argc + 1];
+-	argv[0] = "/libexec/console-run";
++	argv[0] = "/sbin/console-run";
+ 	argv[1] = prog;
+ 	argv[2 + argc] = 0;
+ 	while (argc-- > 0)
+@@ -1086,8 +1086,8 @@ launch_something (const char *why)
+   static unsigned int try;
+   static const char *const tries[] =
+   {
+-    "/libexec/runsystem",
+-    "/libexec/runsystem.gnu",
++    "/etc/hurd/runsystem",
++    "/etc/hurd/runsystem.gnu",
+     _PATH_BSHELL,
+     "/bin/shd",			/* XXX */
+   };

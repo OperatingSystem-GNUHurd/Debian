@@ -31,3 +31,4 @@ libdiskfs_sync.patch
 libpthread_globsigdisp.patch
 posix-sigcodes.patch
 random-default-fast.patch
+libexec.patch

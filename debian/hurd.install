@@ -2,11 +2,11 @@ debian/local/setup-translators usr/lib/hurd
 debian/tmp/lib/*.so.*
 debian/tmp/lib/hurd/console/*.so.* usr/lib/hurd/console
 debian/tmp/hurd/*
-debian/tmp/libexec/rc
-debian/tmp/libexec/getty
-debian/tmp/libexec/console-run
-debian/tmp/libexec/runttys
-debian/tmp/libexec/runsystem.gnu
+debian/tmp/libexec/rc etc/hurd/rc
+debian/tmp/libexec/getty sbin
+debian/tmp/libexec/console-run sbin
+debian/tmp/libexec/runttys sbin
+debian/tmp/libexec/runsystem.gnu etc/hurd/rc
 debian/tmp/sbin/nfsd
 debian/tmp/sbin/e2os
 debian/tmp/sbin/MAKEDEV
