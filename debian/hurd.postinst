@@ -60,6 +60,9 @@ fi
 
 #DEBHELPER#
 
+# Remove alternative introduced by 20111106-1
+update-alternatives --remove random /dev/random-hurd
+
 if [ "$1" = configure ] && [ "$2" ]; then
 	# Upgrade: create the missing device and server nodes
 	if showtrans /dev/random 2> /dev/null | grep -q /tmp/entropy.sock
@@ -72,8 +75,8 @@ if [ "$1" = configure ] && [ "$2" ]; then
 	/usr/lib/hurd/setup-translators -K
 fi
 
-update-alternatives --install /dev/random random /dev/random-hurd 10 \
-		    --slave /dev/urandom urandom /dev/urandom-hurd
+update-alternatives --install /hurd/random.sh random.sh /hurd/random-hurd.sh 10 \
+		    --slave /hurd/urandom.sh urandom.sh /hurd/urandom-hurd.sh
 
 if [ "$1" = configure ] ; then
 	# Generate initial pool

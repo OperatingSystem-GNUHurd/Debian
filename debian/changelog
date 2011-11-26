@@ -10,6 +10,13 @@ hurd (20111126-1) UNRELEASED; urgency=low
     rules: Move getty, console-run, and runttys to /sbin, runsystem and rc to
     /etc/hurd (Closes: Bug#556526).
   * hurd-udeb.lintian-overrides: Drop override about /libexec
+  * local/random-hurd.sh, urandom-hurd.sh: Add scripts to be used as
+    hurd-provided translators for /dev/*random.
+  * hurd.postinst: Remove "random" alternative introduced by 20111106-1, as it
+    makes rgrep in /etc not working any more. Install random.sh alternative
+    instead, which sets /hurd/u?random.sh scripts.
+  * local/setup-translators: Set /dev/u?random translator from
+    /hurd/u?random.sh instead of making them alternatives.
 
  -- Samuel Thibault <sthibault@debian.org>  Sun, 06 Nov 2011 19:51:54 +0100
 
