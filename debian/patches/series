@@ -4,7 +4,6 @@ ext2fs_large_stores.patch
 hurd_console_startup.patch
 init_try_runsystem.gnu.patch
 install-msgids.diff
-libpager_update_seqno.patch
 libpthread_stubs.patch
 makedev.diff
 pfinet_dhcp.patch
