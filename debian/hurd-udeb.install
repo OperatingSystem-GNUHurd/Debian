@@ -61,6 +61,7 @@ debian/tmp/hurd/pflocal
 debian/tmp/hurd/proc
 debian/tmp/hurd/procfs
 debian/tmp/hurd/proxy-defpager
+debian/tmp/hurd/random
 debian/tmp/hurd/storeio
 debian/tmp/hurd/streamio
 debian/tmp/hurd/symlink

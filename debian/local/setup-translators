@@ -139,6 +139,8 @@ if [ "$MINIMAL" ]; then
 	md ttyX 1234
 	md ptypX 0123
 	md comX 0123
+	st random /hurd/random random
+	st urandom /hurd/random urandom
 else
 	md loopX 01234567
 	md ttyX 123456

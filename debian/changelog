@@ -17,7 +17,9 @@ hurd (20111126-1~0) UNRELEASED; urgency=low
     makes rgrep in /etc not working any more. Install random.sh alternative
     instead, which sets /hurd/u?random.sh scripts.
   * local/setup-translators: Set /dev/u?random translator from
-    /hurd/u?random.sh instead of making them alternatives.
+    /hurd/u?random.sh instead of making them alternatives. Set up
+    /dev/u?random in hurd-udeb too.
+  * hurd-udeb.install: Add /hurd/random.
 
  -- Samuel Thibault <sthibault@debian.org>  Sun, 06 Nov 2011 19:51:54 +0100
 
