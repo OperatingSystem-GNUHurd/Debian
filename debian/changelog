@@ -20,6 +20,7 @@ hurd (20111126-1~0) UNRELEASED; urgency=low
     /hurd/u?random.sh instead of making them alternatives. Set up
     /dev/u?random in hurd-udeb too.
   * hurd-udeb.install: Add /hurd/random.
+  * hurd.install: Add /etc/securetty.
 
  -- Samuel Thibault <sthibault@debian.org>  Sun, 06 Nov 2011 19:51:54 +0100
 

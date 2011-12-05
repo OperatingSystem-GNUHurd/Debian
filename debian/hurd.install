@@ -1,6 +1,7 @@
 debian/local/setup-translators usr/lib/hurd
 debian/local/random-hurd.sh hurd
 debian/local/urandom-hurd.sh hurd
+debian/local/securetty etc
 debian/tmp/lib/*.so.*
 debian/tmp/lib/hurd/console/*.so.* usr/lib/hurd/console
 debian/tmp/hurd/*
