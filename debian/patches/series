@@ -31,3 +31,4 @@ libpthread_globsigdisp.patch
 posix-sigcodes.patch
 random-default-fast.patch
 libexec.patch
+run.patch

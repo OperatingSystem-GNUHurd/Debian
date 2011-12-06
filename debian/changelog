@@ -21,6 +21,8 @@ hurd (20111126-1~0) UNRELEASED; urgency=low
     /dev/u?random in hurd-udeb too.
   * hurd-udeb.install: Add /hurd/random.
   * hurd.install: Add /etc/securetty.
+  * local/setup-translators: Move /run initialization to...
+  * patches/run.patch: ... boot time.
 
  -- Samuel Thibault <sthibault@debian.org>  Sun, 06 Nov 2011 19:51:54 +0100
 
