@@ -1,4 +1,4 @@
-hurd (20111206-1~0) UNRELEASED; urgency=low
+hurd (20111206-1~0) unstable; urgency=low
 
   * New upstream snapshot.
     - Drop debian/patches/libpager_update_seqno.patch, applied upstream.
@@ -25,7 +25,7 @@ hurd (20111206-1~0) UNRELEASED; urgency=low
   * local/setup-translators: Move /run initialization to...
   * patches/run.patch: ... boot time.
 
- -- Samuel Thibault <sthibault@debian.org>  Sun, 06 Nov 2011 19:51:54 +0100
+ -- Samuel Thibault <sthibault@debian.org>  Tue, 06 Dec 2011 01:49:34 +0100
 
 hurd (20111106-1) unstable; urgency=low
 
