@@ -1,4 +1,4 @@
-hurd (20111206-1~0) unstable; urgency=low
+hurd (20111206-1) unstable; urgency=low
 
   * New upstream snapshot.
     - Drop debian/patches/libpager_update_seqno.patch, applied upstream.
