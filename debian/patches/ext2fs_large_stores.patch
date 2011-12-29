@@ -1949,31 +1949,32 @@ Support for >2GB volumes
    _pager_block_termination (p);	/* until we are done with the pagemap
  				   when the write completes. */
  
-@@ -90,6 +93,23 @@ _pager_do_write_request (mach_port_t obj
+@@ -90,6 +93,24 @@ _pager_do_write_request (mach_port_t obj
  
    pm_entries = &p->pagemap[offset / __vm_page_size];
  
-+  if (! dirty && ! kcopy)
-+    {
-+      /* Prepare notified array.  */
-+      for (i = 0; i < npages; i++)
-+	notified[i] = (p->notify_on_evict
-+		       && ! (pm_entries[i] & PM_PAGEINWAIT));
-+
-+      _pager_release_seqno (p, seqno);
-+      goto notify;
-+    }
-+
 +  if (! dirty)
 +    {
-+      _pager_allow_termination (p);
-+      goto release_out;
++      munmap ((caddr_t) data, length);
++      if (!kcopy) {
++        /* Prepare notified array.  */
++        for (i = 0; i < npages; i++)
++          notified[i] = (p->notify_on_evict
++                         && ! (pm_entries[i] & PM_PAGEINWAIT));
++
++        _pager_release_seqno (p, seqno);
++        goto notify;
++      }
++      else {
++        _pager_allow_termination (p);
++        goto release_out;
++      }
 +    }
 +
    /* Make sure there are no other in-progress writes for any of these
       pages before we begin.  This imposes a little more serialization
       than we really have to require (because *all* future writes on
-@@ -120,10 +140,6 @@ _pager_do_write_request (mach_port_t obj
+@@ -120,10 +141,6 @@ _pager_do_write_request (mach_port_t obj
      for (i = 0; i < npages; i++)
        pm_entries[i] |= PM_PAGINGOUT | PM_INIT;
  
@@ -1984,7 +1985,7 @@ Support for >2GB volumes
    /* If this write occurs while a lock is pending, record
       it.  We have to keep this list because a lock request
       might come in while we do the I/O; in that case there
-@@ -163,7 +179,10 @@ _pager_do_write_request (mach_port_t obj
+@@ -163,7 +180,10 @@ _pager_do_write_request (mach_port_t obj
    for (i = 0; i < npages; i++)
      {
        if (omitdata & (1 << i))
@@ -1996,7 +1997,7 @@ Support for >2GB volumes
  
        if (pm_entries[i] & PM_WRITEWAIT)
  	wakeup = 1;
-@@ -179,14 +198,22 @@ _pager_do_write_request (mach_port_t obj
+@@ -179,14 +199,22 @@ _pager_do_write_request (mach_port_t obj
  	pm_entries[i] |= PM_INVALID;
  
        if (pm_entries[i] & PM_PAGEINWAIT)
@@ -2026,7 +2027,7 @@ Support for >2GB volumes
  
        pm_entries[i] &= ~(PM_PAGINGOUT | PM_PAGEINWAIT | PM_WRITEWAIT);
      }
-@@ -198,10 +225,29 @@ _pager_do_write_request (mach_port_t obj
+@@ -198,10 +226,29 @@ _pager_do_write_request (mach_port_t obj
    if (wakeup)
      condition_broadcast (&p->wakeup);
  
