@@ -1,7 +1,7 @@
 # Options to start the Hurd console.
 
-# Set this to 'true' to run the Hurd console on bootup.
-ENABLE='false'
+# Set this to 'false' to avoid running the Hurd console on bootup.
+ENABLE='true'
 
 # The display driver, mandatory.  Either `vga' or `ncursesw'.
 DISPLAY='-d vga'
