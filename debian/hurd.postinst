@@ -8,7 +8,9 @@ if [ "$1" = configure ] && [ "$2" ]; then
 		--remove runsystem /libexec/runsystem.gnu
 fi
 update-alternatives --quiet \
-	--install /etc/hurd/runsystem runsystem /etc/hurd/runsystem.gnu 20
+	--install /etc/hurd/runsystem runsystem /etc/hurd/runsystem.gnu 20 \
+	--slave /sbin/halt halt /sbin/halt-hurd \
+	--slave /sbin/reboot reboot /sbin/reboot-hurd
 
 update-alternatives \
 	--install /usr/bin/fakeroot fakeroot /usr/bin/fakeroot-hurd 30

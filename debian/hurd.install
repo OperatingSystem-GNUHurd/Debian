@@ -14,8 +14,8 @@ debian/tmp/sbin/nfsd
 debian/tmp/sbin/e2os
 debian/tmp/sbin/MAKEDEV
 debian/tmp/sbin/losetup
-debian/tmp/sbin/reboot
-debian/tmp/sbin/halt
+debian/tmp/sbin/reboot-hurd
+debian/tmp/sbin/halt-hurd
 debian/tmp/sbin/swapon
 debian/tmp/sbin/swapoff
 debian/tmp/sbin/fsck.ufs
