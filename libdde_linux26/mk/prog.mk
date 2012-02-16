@@ -71,7 +71,7 @@ LDFLAGS += -L$(DDEKITLIBDIR)
 LDFLAGS	+= $(LIBS) #$(addprefix -T, $(LDSCRIPT)) $(L4LIBS) $(LIBCLIBS) $(LDFLAGS_$@)
 # Not all host linkers understand this option
 ifneq ($(HOST_LINK),1)
-LDFLAGS += --warn-common
+LDFLAGS += -Wl,--warn-common
 endif
 
 #ifeq ($(notdir $(LDSCRIPT)),main_stat.ld)
