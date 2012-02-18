@@ -27,7 +27,7 @@
 
 #define BLOCK_IRQ         0
 
-#define MACH_INTR_NOTIFY 100
+#define MACH_INTR_NOTIFY 424242
 
 typedef struct
 {
