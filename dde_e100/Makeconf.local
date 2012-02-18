@@ -22,6 +22,12 @@ ifeq ($(strip $(has_libslab)),)
   libslab_path := $(BUILDDIR)/libhurd-slab/libhurd-slab.a
 endif
 
+libbpf_path := ../libbpf/libbpf.a
+has_libbpf := $(wildcard $(libbpf_path))
+ifeq ($(strip $(has_libbpf)),)
+  libbpf_path := $(BUILDDIR)/libbpf/libbpf.a
+endif
+
 DDEKITLIBDIR = $(PKGDIR)/../libddekit/
 DDEKITINCDIR = $(PKGDIR)/../libddekit/include
 DDE26LIBDIR = $(PKGDIR)/lib/src
