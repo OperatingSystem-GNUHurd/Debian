@@ -34,7 +34,7 @@ LCLHDRS = include/ddekit/condvar.h include/ddekit/lock.h	\
 	  config.h list.h util.h
 installhdrs = 
 
-MIGSTUBS = deviceUser.o machUser.o
+MIGSTUBS = experimentalUser.o
 OBJS = $(sort $(SRCS:.c=.o) $(MIGSTUBS))
 
 HURDLIBS = threads ports shouldbeinlibc hurd-slab
