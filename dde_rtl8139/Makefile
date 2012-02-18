@@ -9,7 +9,7 @@ TARGET         = dde_rtl8139
 
 SRC_C          = main.c 8139cp.c
 
-LIBS          += $(libmachdev_path) -ldde_linux26.o -ldde_linux26_net $(libddekit_path) -lfshelp -ltrivfs -lpciaccess -lthreads -lshouldbeinlibc -lports $(libslab_path) -lbpf
+LIBS          += $(libmachdev_path) -ldde_linux26.o -ldde_linux26_net $(libddekit_path) -lfshelp -ltrivfs -lpciaccess -lthreads -lshouldbeinlibc -lports $(libslab_path) $(libbpf_path)
 CFLAGS        += -g -I$(PKGDIR)/include -I../libmachdev
 
 # DDE configuration
