@@ -1,0 +1,10 @@
+SYSTEMS = x86-l4v2
+ARCH = x86
+SYSTEM = x86-l4v2
+
+DDEKITLIBDIR = $(PKGDIR)/../libddekit/
+DDEKITINCDIR = $(PKGDIR)/../libddekit/include
+DDE26LIBDIR = $(PKGDIR)/lib/src
+OBJ_BASE = $(PKGDIR)/build
+
+L4LIBDIR = .
