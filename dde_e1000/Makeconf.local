@@ -5,9 +5,9 @@ SYSTEM = x86-l4v2
 BUILDDIR       ?= ..
 
 libmachdev_path := $(BUILDDIR)/libmachdev/libmachdev.a
-libddekit_path := $(BUILDDIR)/libddekit/libddekit.a
-libslab_path := $(BUILDDIR)/libhurd-slab/libhurd-slab.a
-libbpf_path := $(BUILDDIR)/libbpf/libbpf.a
+libddekit_path := -L$(BUILDDIR)/libddekit -lddekit
+libslab_path := -L$(BUILDDIR)/libhurd-slab -lhurd-slab
+libbpf_path := -L$(BUILDDIR)/libbpf -lbpf
 
 DDEKITLIBDIR = $(PKGDIR)/../libddekit/
 DDEKITINCDIR = $(PKGDIR)/../libddekit/include
