@@ -5,6 +5,8 @@ for, i.e. the merge process is:
 $ git checkout dde
 $ git pull upstream-dde
 $ git tag -a upstream/dde/<date>
+$ git checkou dde-clean
+$ git pull . dde
 $ git checkout libpthread
 $ git pull upstream-libpthread
 $ git tag -a upstream/libpthread/<date>
