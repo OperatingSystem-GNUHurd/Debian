@@ -2,6 +2,9 @@ In order to merge the upstream libpthread and procfs into the hurd sources, the
 files have to be moved to subdirectories. This is what '*-moved' branches are
 for, i.e. the merge process is:
 
+$ git checkout dde
+$ git pull upstream-dde
+$ git tag -a upstream/dde/<date>
 $ git checkout libpthread
 $ git pull upstream-libpthread
 $ git tag -a upstream/libpthread/<date>
@@ -24,6 +27,7 @@ $ git pull upstream
 $ git tag -a upstream/hurd/<date>
 $ git checkout upstream-merged
 $ git pull . upstream
+$ git pull . dde
 $ git pull . libpthread-moved
 $ git pull . random
 $ git pull . procfs-jkoenig-moved
