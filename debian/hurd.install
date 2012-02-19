@@ -54,7 +54,6 @@ debian/tmp/bin/rpctrace
 debian/tmp/bin/mount
 debian/tmp/bin/gcore
 debian/tmp/bin/fakeauth
-debian/tmp/bin/devnode
 debian/tmp/usr/bin/fakeroot-hurd
 debian/tmp/bin/forks
 debian/tmp/bin/timertest
