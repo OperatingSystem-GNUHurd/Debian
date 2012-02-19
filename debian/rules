@@ -39,12 +39,13 @@ build/hurd::
 	$(MAKE) -C dde_ne2k_pci BUILDDIR=$(PWD)/build
 
 clean::
-	$(MAKE) -C libdde_linux26 clean
-	$(MAKE) -C dde_e100 clean
-	$(MAKE) -C dde_e1000 clean
-	$(MAKE) -C dde_pcnet32 clean
-	$(MAKE) -C dde_rtl8139 clean
-	$(MAKE) -C dde_ne2k_pci clean
+	$(MAKE) -C libdde_linux26 cleanall
+	rm -f $$(find libdde_linux26 -name \*.d)
+	$(MAKE) -C dde_e100 cleanall
+	$(MAKE) -C dde_e1000 cleanall
+	$(MAKE) -C dde_pcnet32 cleanall
+	$(MAKE) -C dde_rtl8139 cleanall
+	$(MAKE) -C dde_ne2k_pci cleanall
 
 install/hurd::
 	# runsystem is managed by update-alternatives
