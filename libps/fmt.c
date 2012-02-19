@@ -194,7 +194,9 @@ _fmt_create (char *src, int posix, struct ps_fmt_specs *fmt_specs,
 		  while (*src != '\0' && *src != stop)
 		    src++;
 		}
-	      *src++ = '\0';	/* NUL terminhate NAME. */
+
+	      if (*src)
+	        *src++ = '\0';	/* NUL terminate NAME. */
 	    }
 	  else
 	    /* A gnu-style field spec: `NAME' or `NAME:TITLE'.  */
@@ -368,8 +370,8 @@ ps_fmt_clone (struct ps_fmt *fmt, struct ps_fmt **copy)
   return 0;
 }
 
-/* Write an appropiate header line for FMT, containing the titles of all its
-   fields appropiately aligned with where the values would be printed, to
+/* Write an appropriate header line for FMT, containing the titles of all its
+   fields appropriately aligned with where the values would be printed, to
    STREAM (without a trailing newline).  If count is non-NULL, the total
    number number of characters output is added to the integer it points to.
    If any fatal error occurs, the error code is returned, otherwise 0.  */
@@ -459,9 +461,9 @@ ps_fmt_write_proc_stat (struct ps_fmt *fmt, struct proc_stat *ps, struct ps_stre
 }
 
 /* Remove those fields from FMT for which the function FN, when called on the
-   field, returns true.  Appropiate inter-field characters are also removed:
+   field, returns true.  Appropriate inter-field characters are also removed:
    those *following* deleted fields at the beginning of the fmt, and those
-   *preceeding* deleted fields *not* at the beginning. */
+   *preceding* deleted fields *not* at the beginning. */
 void
 ps_fmt_squash (struct ps_fmt *fmt, int (*fn)(struct ps_fmt_field *field))
 {
@@ -538,8 +540,8 @@ ps_fmt_squash (struct ps_fmt *fmt, int (*fn)(struct ps_fmt_field *field))
 }
 
 /* Remove those fields from FMT which would need the proc_stat flags FLAGS.
-   Appropiate inter-field characters are also removed: those *following*
-   deleted fields at the beginning of the fmt, and those *preceeding* deleted
+   Appropriate inter-field characters are also removed: those *following*
+   deleted fields at the beginning of the fmt, and those *preceding* deleted
    fields *not* at the beginning.  */
 void
 ps_fmt_squash_flags (struct ps_fmt *fmt, ps_flags_t flags)

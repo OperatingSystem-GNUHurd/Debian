@@ -1,6 +1,6 @@
 #
 #   Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2001, 2002, 2004,
-#   2006 Free Software Foundation, Inc.
+#   2006, 2009, 2011 Free Software Foundation, Inc.
 #
 #   This program is free software; you can redistribute it and/or
 #   modify it under the terms of the GNU General Public License as
@@ -21,7 +21,7 @@ makemode := misc
 
 include ./Makeconf
 
-DIST_FILES = COPYING Makeconf config.make.in configure.in configure \
+DIST_FILES = ChangeLog COPYING Makeconf config.make.in configure.in configure \
 	     move-if-change hurd.boot build.mk.in build.mkcf.in aclocal.m4 \
 	     README NEWS tasks INSTALL INSTALL-cross version.h.in
 
@@ -32,16 +32,20 @@ DIST_FILES = COPYING Makeconf config.make.in configure.in configure \
 lib-subdirs = libshouldbeinlibc libihash libiohelp libports libthreads \
 	      libpager libfshelp libdiskfs libtrivfs libps \
 	      libnetfs libpipe libstore libhurdbugaddr libftpconn libcons \
-	      libpthread libmachdev libddekit libhurd-slab
+	      libmachdev libddekit libhurd-slab
 
 # Hurd programs
 prog-subdirs = auth proc exec init term \
-	       ufs ext2fs isofs nfs tmpfs fatfs \
+	       ufs ext2fs isofs tmpfs fatfs \
 	       storeio pflocal pfinet defpager mach-defpager \
-	       login daemons nfsd boot console \
+	       login daemons boot console \
 	       hostmux usermux ftpfs trans \
 	       console-client utils sutils ufs-fsck ufs-utils \
 	       benchmarks fstests eth-multiplexer proc_proxy devnode
+
+ifeq ($(HAVE_SUN_RPC),yes)
+prog-subdirs += nfs nfsd
+endif
 
 # Other directories
 other-subdirs = hurd doc config release include

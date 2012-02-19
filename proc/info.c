@@ -228,8 +228,6 @@ get_vector (task_t task,
       if (err)
 	return err;
 
-      /* XXX fault bad here */
-
       /* Scan for a null.  */
       for (t = (vm_address_t *) (data + (scanned - readaddr));
 	   t < (vm_address_t *) (data + readlen);
@@ -248,7 +246,7 @@ get_vector (task_t task,
 
       /* If we didn't find the null terminator, then we will loop
 	 to read an additional page.  */
-      scanned = data + readlen;
+      scanned = readaddr + readlen;
       munmap ((caddr_t) data, readlen);
     } while (!err && *vec == NULL);
 
@@ -426,7 +424,11 @@ S_proc_getprocinfo (struct proc *callerp,
 	{
 	  err = errno;
 	  if (*flags & PI_FETCH_THREADS)
-	    munmap (thds, nthreads * sizeof (thread_t));
+	    {
+	      for (i = 0; i < nthreads; i++)
+		mach_port_deallocate (mach_task_self (), thds[i]);
+	      munmap (thds, nthreads * sizeof (thread_t));
+	    }
 	  return err;
 	}
       pi_alloced = 1;
@@ -495,6 +497,12 @@ S_proc_getprocinfo (struct proc *callerp,
 		       (task_info_t) &pi->taskevents, &tkcount);
       if (err == MACH_SEND_INVALID_DEST)
 	err = ESRCH;
+      if (err)
+	{
+	  /* Something screwy, give up on this bit of info.  */
+	  *flags &= ~PI_FETCH_TASKEVENTS;
+	  err = 0;
+	}
     }
 
   for (i = 0; i < nthreads; i++)
@@ -758,4 +766,36 @@ S_proc_get_tty (struct proc *p, pid_t pid,
 		mach_port_t *tty, mach_msg_type_name_t *tty_type)
 {
   return EOPNOTSUPP;		/* XXX */
+}
+
+/* Implement proc_getnports as described in <hurd/process.defs>. */
+kern_return_t
+S_proc_getnports (struct proc *callerp,
+		    pid_t pid,
+		    mach_msg_type_number_t *nports)
+{
+  struct proc *p = pid_find (pid);
+  mach_port_array_t names;
+  mach_msg_type_number_t ncount;
+  mach_port_type_array_t types;
+  mach_msg_type_number_t tcount;
+  error_t err = 0;
+
+  /* No need to check CALLERP here; we don't use it. */
+
+  if (!p)
+    return ESRCH;
+
+  err = mach_port_names (p->p_task, &names, &ncount, &types, &tcount);
+  if (err == KERN_INVALID_TASK)
+    err = ESRCH;
+
+  if (!err) {
+    *nports = ncount;
+
+    munmap (names, ncount * sizeof (mach_port_t));
+    munmap (types, tcount * sizeof (mach_port_type_t));
+  }
+
+  return err;
 }

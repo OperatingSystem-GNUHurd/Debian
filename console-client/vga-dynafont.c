@@ -1,5 +1,5 @@
 /* vga-dynafont.c - Dynamic font handling for VGA cards.
-   Copyright (C) 2002 Free Software Foundation, Inc.
+   Copyright (C) 2002, 2010 Free Software Foundation, Inc.
    Written by Marcus Brinkmann.
 
    This file is part of the GNU Hurd.
@@ -60,9 +60,9 @@ struct mapped_character
   /* Remember the character this glyph belongs to, so the glyph can be
      reloaded when the font is changed.  This is actually a wchar_t
      with some text attributes mixed into the high bits.  */
-#define WCHAR_BOLD	((wchar_t) 0x40000000)
-#define WCHAR_ITALIC	((wchar_t) 0x20000000)
-#define WCHAR_MASK	((wchar_t) 0x001fffff)
+#define WCHAR_BOLD	((wchar_t) 0x20000000)
+#define WCHAR_ITALIC	((wchar_t) 0x10000000)
+#define WCHAR_MASK	CONS_WCHAR_MASK
   wchar_t character;
 
   /* Used by libihash for fast removal of elements.  */
@@ -529,6 +529,31 @@ dynafont_new (bdf_font_t font, bdf_font_t font_italic, bdf_font_t font_bold,
       df->vga_font_last_free_index_lgc = 0;
     }
 
+  /* Ensure that ASCII is always available 1-to-1, for kernel messages.  */
+  for (int c = ' '; c <= '~'; c++)
+    {
+      glyph = bdf_find_glyph (df->font, c, 0);
+      if (!glyph)
+	glyph = bdf_find_glyph (df->font, -1, c);
+      if (glyph)
+	{
+	  struct mapped_character *chr = &df->charmap_data[c];
+	  df->vga_font_free_indices--;
+	  chr->refs = 1;
+
+	  for (int i = 0; i < ((glyph->bbox.height > 32)
+			       ? 32 : glyph->bbox.height); i++)
+	    df->vga_font[c][i]
+	      = glyph->bitmap[i * ((glyph->bbox.width + 7) / 8)];
+	  if (glyph->bbox.height < 32)
+	    memset (((char *) df->vga_font[c])
+		    + glyph->bbox.height, 0, 32 - glyph->bbox.height);
+
+	  /* Update the hash table.  */
+	  hurd_ihash_add (&df->charmap, c, chr);
+	}
+    }
+
   /* Ensure that we always have the replacement character
      available.  */
   {
@@ -541,14 +566,13 @@ dynafont_new (bdf_font_t font, bdf_font_t font_italic, bdf_font_t font_bold,
       glyph = bdf_find_glyph (df->font, -1, UNICODE_REPLACEMENT_CHARACTER);
     if (glyph)
       {
-	/* XXX Take glyph size into account.  */
-	for (int i = 0; i < ((df->font->bbox.height > 32)
-			     ? 32 : df->font->bbox.height); i++)
+	for (int i = 0; i < ((glyph->bbox.height > 32)
+			     ? 32 : glyph->bbox.height); i++)
 	  df->vga_font[FONT_INDEX_UNKNOWN][i]
-	    = glyph->bitmap[i * ((df->font->bbox.width + 7) / 8)];
-	if (df->font->bbox.height < 32)
+	    = glyph->bitmap[i * ((glyph->bbox.width + 7) / 8)];
+	if (glyph->bbox.height < 32)
 	  memset (((char *) df->vga_font[FONT_INDEX_UNKNOWN])
-		  + df->font->bbox.height, 0, 32 - df->font->bbox.height);
+		  + glyph->bbox.height, 0, 32 - glyph->bbox.height);
 
 	/* Update the hash table.  */
 	hurd_ihash_add (&df->charmap, UNICODE_REPLACEMENT_CHARACTER, chr);
@@ -780,9 +804,9 @@ dynafont_lookup_internal (dynafont_t df, bdf_font_t font,
       || (!lgc && !df->vga_font_free_indices))
     return 0;
 
-  glyph = bdf_find_glyph (font, (int) wide_chr, 0);
+  glyph = bdf_find_glyph (font, (int) (wide_chr & ~CONS_WCHAR_CONTINUED), 0);
   if (!glyph)
-    glyph = bdf_find_glyph (font, -1, (int) wide_chr);
+    glyph = bdf_find_glyph (font, -1, (int) (wide_chr & ~CONS_WCHAR_CONTINUED));
   if (!glyph)
     return 0;
 
@@ -847,14 +871,17 @@ dynafont_lookup_internal (dynafont_t df, bdf_font_t font,
   chr->refs = 1;
   chr->character = (wide_chr | attr);
 
-  /* XXX Should look at glyph bbox.  */
-  for (int i = 0; i < ((font->bbox.height > 32)
-		       ? 32 : font->bbox.height); i++)
-    df->vga_font[pos][i]
-      = glyph->bitmap[i * ((font->bbox.width + 7) / 8)];
-  if (font->bbox.height < 32)
-    memset (((char *) df->vga_font[pos])
-	    + font->bbox.height, 0, 32 - font->bbox.height);
+  /* Copy the glyph bitmap, taking into account double-width characters.  */
+  {
+    int height = (glyph->bbox.height > 32) ? 32 : glyph->bbox.height;
+    int bwidth = (glyph->bbox.width + 7) / 8;
+    int ofs = (bwidth >= 2) && (wide_chr & CONS_WCHAR_CONTINUED);
+
+    for (int i = 0; i < height; i++)
+      df->vga_font[pos][i] = glyph->bitmap[i * bwidth + ofs];
+    if (height < 32)
+      memset (&df->vga_font[pos][height], 0, 32 - height);
+  }
   
   if (active_dynafont == df)
     vga_write_font_buffer (0, pos, df->vga_font[pos],
@@ -958,7 +985,7 @@ dynafont_activate (dynafont_t df)
      display problems for the user if we don't also program the video
      mode timings.  The standard font height for 80x25 is 16.  */
   vga_set_font_height (height);
-  vga_set_font_width (df->font->bbox.width <= 8 ? 8 : 9);
+  vga_set_font_width (df->font->bbox.width % 8 ? 9 : 8);
 
   active_dynafont = df;
   dynafont_set_cursor (df, df->cursor_standout);
@@ -1027,13 +1054,13 @@ dynafont_change_font (dynafont_t df, bdf_font_t font)
 	  else
 	    {
 	      /* XXX Take font size and glyph size into account.  */
-	      for (int j = 0; j < ((df->font->bbox.height > 32)
-				   ? 32 : df->font->bbox.height); j++)
+	      for (int j = 0; j < ((glyph->bbox.height > 32)
+				   ? 32 : glyph->bbox.height); j++)
 		df->vga_font[i][j]
-		  = glyph->bitmap[j * ((df->font->bbox.width + 7) / 8)];
-	      if (df->font->bbox.height < 32)
-		memset (((char *) df->vga_font[i]) + df->font->bbox.height,
-			0, 32 - df->font->bbox.height);
+		  = glyph->bitmap[j * ((glyph->bbox.width + 7) / 8)];
+	      if (glyph->bbox.height < 32)
+		memset (((char *) df->vga_font[i]) + glyph->bbox.height,
+			0, 32 - glyph->bbox.height);
 	    }
 	}
     }

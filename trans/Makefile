@@ -1,6 +1,6 @@
 #
-#   Copyright (C) 1994, 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2006, 2007
-#   Free Software Foundation, Inc.
+#   Copyright (C) 1994, 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2006, 2007,
+#   2008 Free Software Foundation, Inc.
 #
 #   This program is free software; you can redistribute it and/or
 #   modify it under the terms of the GNU General Public License as
@@ -28,7 +28,7 @@ OBJS = $(SRCS:.c=.o) fsysServer.o ifsockServer.o passwordServer.o \
 	crashServer.o crash_replyUser.o msgServer.o \
 	ourdefault_pagerServer.o ourdefault_pagerUser.o \
 	device_replyServer.o elfcore.o
-HURDLIBS = threads ports netfs trivfs fshelp pipe ihash shouldbeinlibc
+HURDLIBS = threads ports netfs trivfs iohelp fshelp pipe ihash shouldbeinlibc
 password-LDLIBS = $(LIBCRYPT)
 
 include ../Makeconf
@@ -49,6 +49,7 @@ proxy-defpager crash password streamio: ../libthreads/libthreads.a ../libports/l
 fifo new-fifo: ../libpipe/libpipe.a
 fwd: ../libfshelp/libfshelp.a ../libports/libports.a
 hello-mt magic null ifsock fifo new-fifo firmlink: ../libtrivfs/libtrivfs.a ../libfshelp/libfshelp.a ../libthreads/libthreads.a ../libports/libports.a ../libihash/libihash.a
+magic: ../libiohelp/libiohelp.a
 hello: ../libtrivfs/libtrivfs.a ../libfshelp/libfshelp.a ../libports/libports.a ../libihash/libihash.a
 fakeroot: ../libnetfs/libnetfs.a ../libfshelp/libfshelp.a ../libiohelp/libiohelp.a ../libthreads/libthreads.a ../libports/libports.a ../libihash/libihash.a
 $(targets): ../libshouldbeinlibc/libshouldbeinlibc.a

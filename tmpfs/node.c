@@ -61,8 +61,10 @@ diskfs_free_node (struct node *np, mode_t mode)
   switch (np->dn->type)
     {
     case DT_REG:
-      if (np->dn->u.reg.memobj != MACH_PORT_NULL)
+      if (np->dn->u.reg.memobj != MACH_PORT_NULL) {
+	vm_deallocate (mach_task_self (), np->dn->u.reg.memref, 4096);
 	mach_port_deallocate (mach_task_self (), np->dn->u.reg.memobj);
+      }	
       break;
     case DT_DIR:
       assert (np->dn->u.dir.entries == 0);
@@ -96,9 +98,9 @@ diskfs_node_norefs (struct node *np)
       np->dn->uid = np->dn_stat.st_uid;
       np->dn->author = np->dn_stat.st_author;
       np->dn->gid = np->dn_stat.st_gid;
-      np->dn->atime = np->dn_stat.st_atime;
-      np->dn->mtime = np->dn_stat.st_mtime;
-      np->dn->ctime = np->dn_stat.st_ctime;
+      np->dn->atime = np->dn_stat.st_atim;
+      np->dn->mtime = np->dn_stat.st_mtim;
+      np->dn->ctime = np->dn_stat.st_ctim;
       np->dn->flags = np->dn_stat.st_flags;
 
       switch (np->dn->type)
@@ -200,9 +202,9 @@ diskfs_cached_lookup (ino_t inum, struct node **npp)
       st->st_uid = dn->uid;
       st->st_author = dn->author;
       st->st_gid = dn->gid;
-      st->st_atime = dn->atime;
-      st->st_mtime = dn->mtime;
-      st->st_ctime = dn->ctime;
+      st->st_atim = dn->atime;
+      st->st_mtim = dn->mtime;
+      st->st_ctim = dn->ctime;
       st->st_flags = dn->flags;
 
       st->st_rdev = 0;
@@ -330,6 +332,7 @@ static error_t
 create_symlink_hook (struct node *np, const char *target)
 {
   assert (np->dn->u.lnk == 0);
+  np->dn_stat.st_size = strlen (target);
   if (np->dn_stat.st_size > 0)
     {
       const size_t size = np->dn_stat.st_size + 1;
@@ -337,6 +340,7 @@ create_symlink_hook (struct node *np, const char *target)
       if (np->dn->u.lnk == 0)
 	return ENOSPC;
       memcpy (np->dn->u.lnk, target, size);
+      np->dn->type = DT_LNK;
       adjust_used (size);
       recompute_blocks (np);
     }
@@ -380,9 +384,6 @@ diskfs_node_reload (struct node *node)
 error_t
 diskfs_truncate (struct node *np, off_t size)
 {
-  if (np->allocsize <= size)
-    return 0;
-
   if (np->dn->type == DT_LNK)
     {
       free (np->dn->u.lnk);
@@ -391,6 +392,9 @@ diskfs_truncate (struct node *np, off_t size)
       np->dn_stat.st_size = size;
       return 0;
     }
+
+  if (np->allocsize <= size)
+    return 0;
 
   assert (np->dn->type == DT_REG);
 
@@ -496,10 +500,18 @@ diskfs_get_filemap (struct node *np, vm_prot_t prot)
 	  return MACH_PORT_NULL;
 	}
       assert (np->dn->u.reg.memobj != MACH_PORT_NULL);
+      
+      /* XXX we need to keep a reference to the object, or GNU Mach
+	 will terminate it when we release the map. */
+      vm_map (mach_task_self (), &np->dn->u.reg.memref, 4096, 0, 1,
+	      np->dn->u.reg.memobj, 0, 0, VM_PROT_NONE, VM_PROT_NONE,
+	      VM_INHERIT_NONE);
+
       /* A new-fangled default pager lets us prevent user accesses
 	 past the specified size of the file.  */
       err = default_pager_object_set_size (np->dn->u.reg.memobj,
 					   np->allocsize);
+      assert_perror (err);
     }
 
   /* XXX always writable */

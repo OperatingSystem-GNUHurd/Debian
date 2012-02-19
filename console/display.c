@@ -1,6 +1,6 @@
 /* display.c - The display component of a virtual console.
    Copyright (C) 1999 Kalle Olavi Niemitalo (emu.c from colortext 0.3).
-   Copyright (C) 2002, 2003 Free Software Foundation, Inc.
+   Copyright (C) 2002, 2003, 2010 Free Software Foundation, Inc.
    Written by Marcus Brinkmann and Kalle Olavi Niemitalo.
 
    This file is part of the GNU Hurd.
@@ -458,7 +458,7 @@ do_mach_notify_msg_accepted (mach_port_t notify, mach_port_t send)
 	  mutex_unlock (&display->lock);
 	  return 0;
 	}
-      /* The message was succesfully queued, fall through.  */
+      /* The message was successfully queued, fall through.  */
     }
   /* Remove request from pending queue.  */
   *preq = req->next;
@@ -797,7 +797,7 @@ user_create (display_t display, uint32_t width, uint32_t height,
 
   user = display->user;
   user->magic = CONS_MAGIC;
-  user->version = CONS_VERSION_MAJ << 16 | CONS_VERSION_AGE;
+  user->version = CONS_VERSION_MAJ << CONS_VERSION_MAJ_SHIFT | CONS_VERSION_AGE;
   user->changes.buffer = offsetof (struct cons_display, changes._buffer)
     / sizeof (uint32_t);
   user->changes.length = _CONS_CHANGES_LENGTH;
@@ -1599,30 +1599,54 @@ display_output_one (display_t display, wchar_t chr)
 	  break;
 	default:
 	  {
-	    int line = (user->screen.cur_line + user->cursor.row)
+	    int line;
+	    int idx;
+
+	    if (user->cursor.col >= user->screen.width)
+	      {
+	        user->cursor.col = 0;
+	        linefeed (display);
+	      }
+
+	    line = (user->screen.cur_line + user->cursor.row)
 	      % user->screen.lines;
-	    int idx = line * user->screen.width + user->cursor.col;
+	    idx = line * user->screen.width + user->cursor.col;
+	    int width, i;
+
+	    width = wcwidth (chr);
+	    if (width < 0)
+	      width = 1;
 
 	    if (display->insert_mode
-		&& user->cursor.col != user->screen.width - 1)
+		&& user->cursor.col < user->screen.width - width)
 	      {
 		/* If in insert mode, do the same as <ich1>.  */
 		screen_shift_right (display, user->cursor.col,
 				    user->cursor.row,
 				    user->screen.width - 1, user->cursor.row,
-				    1, L' ', display->attr.current);
+				    width, L' ', display->attr.current);
 	      }
 
-	    user->_matrix[idx].chr = display->attr.altchar
-	      ? altchar_to_ucs4 (chr) : chr;
-	    user->_matrix[idx].attr = display->attr.current;
+	    if (display->attr.altchar)
+	      chr = altchar_to_ucs4 (chr);
 
-	    display_record_filechange (display, idx, idx);
-	    user->cursor.col++;
-	    if (user->cursor.col == user->screen.width)
+	    for (i = 0; i < width; i++)
 	      {
-		user->cursor.col = 0;
-		linefeed (display);
+		if (user->cursor.col >= user->screen.width)
+		  break;
+		user->_matrix[idx+i].chr = chr;
+		user->_matrix[idx+i].attr = display->attr.current;
+		user->cursor.col++;
+		chr |= CONS_WCHAR_CONTINUED;
+	      }
+
+	    if (i > 0)
+	      display_record_filechange (display, idx, idx + i - 1);
+
+	    if (user->cursor.col > user->screen.width)
+	      {
+	        user->cursor.col = 0;
+	        linefeed (display);
 	      }
 	  }
 	  break;

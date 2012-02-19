@@ -28,6 +28,10 @@ SRCS = create.c derive.c make.c rdwr.c set.c \
        open.c xinl.c typed.c map.c url.c unknown.c \
        stripe.c $(filter-out ileave.c concat.c,$(store-types:=.c))
 
+# This has to be evaluated after config.make has been included;
+# as a consequence, using 'ifneq' or similar is not an option.
+maybe_part = $(and $(PARTED_LIBS),part)
+
 store-types = \
 	      bunzip2 \
 	      concat \
@@ -40,11 +44,12 @@ store-types = \
 	      module \
 	      mvol \
 	      nbd \
+	      $(maybe_part) \
 	      remap \
 	      task \
 	      zero
 
-libstore.so-LDLIBS += -ldl
+libstore.so-LDLIBS += $(PARTED_LIBS) -ldl
 LCLHDRS=store.h
 installhdrs=store.h
 

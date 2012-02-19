@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_REVISION([$Id: configure.in,v 1.37.8.2 2008/10/03 22:35:49 zhengda Exp $])
+AC_REVISION([$Id: configure.in,v 1.38 2008/11/17 11:34:18 tschwinge Exp $])
 AC_PREREQ(2.54)			dnl Minimum Autoconf version required.
-AC_INIT
+AC_INIT([GNU Hurd], [0.3], [bug-hurd@gnu.org])
 AC_CONFIG_SRCDIR([hurd/hurd_types.h])	dnl File to look for in srcdir.
 
 AC_PREFIX_DEFAULT()		dnl Default to empty prefix, not /usr/local.
@@ -73,6 +73,13 @@ esac
 enable_static_progs=`echo "$enable_static_progs" | sed 's/[[, ]][[, ]]*/ /g'`
 AC_SUBST(enable_static_progs)
 
+[# Don't needlessly overwrite files that whose contents haven't changed.  This
+# helps for avoinding unneccessary recompilation cycles when keeping
+# cross-compilation toolchains up-to-date.  Thus, unconditionally use the
+# supplied `install-sh', as the GNU Coreutils one doesn't provide this
+# functionality yet (TODO: change that).  TODO: $ac_abs_top_builddir et al. are
+# not yet available here, that's why we use `readlink' (but only if available).
+INSTALL="$SHELL $(readlink -f "$ac_install_sh")"\ -C || unset INSTALL]
 AC_PROG_INSTALL
 AC_PROG_AWK
 
@@ -183,9 +190,26 @@ fi
 AC_SUBST(libc_cv_gnu89_inline)
 
 
-AC_ARG_WITH(parted, dnl
-[  --without-parted        don't try to use GNU Parted libraries],
-	    , with_parted=yes)
+# Insist on libparted unless the user declines explicitely
+AC_ARG_WITH([parted],
+  [AS_HELP_STRING([--without-parted], [disable user-space partition stores])],
+  [],
+  [with_parted=yes])
+
+PARTED_LIBS=
+AC_DEFUN([PARTED_FAIL], [
+  AC_MSG_FAILURE([Please install required libraries or use --without-parted.])
+])
+AS_IF([test "x$with_parted" != xno], [
+  AC_CHECK_HEADER([parted/parted.h],
+    [AC_DEFINE(HAVE_PARTED_PARTED_H)],
+    [PARTED_FAIL])
+  AC_CHECK_LIB([parted], [ped_device_read], [], [PARTED_FAIL])
+  AC_CHECK_LIB([uuid], [uuid_generate], [], [PARTED_FAIL])
+  AC_CHECK_LIB([dl], [dlopen], [], [PARTED_FAIL])
+  PARTED_LIBS="-lparted -luuid -ldl"
+])
+AC_SUBST([PARTED_LIBS])
 
 AC_ARG_ENABLE(boot-store-types,
 [  --enable-boot-store-types=TYPES...
@@ -193,15 +217,7 @@ AC_ARG_ENABLE(boot-store-types,
 			  linked filesystems used for booting])dnl
 if test -z "$enable_boot_store_types"; then
   boot_store_types='device remap gunzip bunzip2'
-
-  # Check for Parted's static store module.
-  if test "x$with_parted" != xno; then
-    save_LDFLAGS="$LDFLAGS"
-    LDFLAGS="$LDFLAGS -static"
-    AC_CHECK_LIB(store_part, store_part_open, [dnl
-		 boot_store_types="$boot_store_types part"], , -luuid -lstore)
-    LDFLAGS="$save_LDFLAGS"
-  fi
+  test -z "$PARTED_LIBS" || boot_store_types="$boot_store_types part"
 elif test "x$enable_boot_store_types" = xno; then
   AC_MSG_WARN([you probably wanted --disable-static-progs])
 else
@@ -234,6 +250,11 @@ fi
 
 # Check for ncursesw, which is needed for the console-curses client.
 hurd_LIB_NCURSESW
+
+# Check for Sun RPC headers and library.
+AC_CHECK_HEADER([rpc/types.h], [HAVE_SUN_RPC=yes], [HAVE_SUN_RPC=no])
+AC_SEARCH_LIBS([clnt_create], [], [:], [HAVE_SUN_RPC=no])
+AC_SUBST([HAVE_SUN_RPC])
 
 if test -f ./$ac_unique_file; then
   # Configuring in source directory; don't create any Makefiles.

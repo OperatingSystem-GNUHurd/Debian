@@ -35,7 +35,7 @@ struct disknode
   nlink_t nlink;
   uid_t uid, author;
   gid_t gid;
-  time_t atime, mtime, ctime;
+  struct timespec atime, mtime, ctime;
   unsigned int flags;
 
   char *trans;
@@ -47,6 +47,7 @@ struct disknode
     struct
     {
       mach_port_t memobj;
+      vm_address_t memref;
       unsigned int allocpages;	/* largest size while memobj was live */
     } reg;
     struct

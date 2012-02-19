@@ -35,9 +35,6 @@
 # Put this first so it's the default
 all:
 
-# What version of the Hurd is this?
-hurd-version := 0.3
-
 # Figure out how to locate the parent directory from here.
 ifeq (.,$(dir))
 .. =
@@ -246,17 +243,12 @@ $(includedir)/$(installhdrsubdir): $(includedir)
 # Arrange to have the headers installed locally anytime we build the library.
 # Not quite perfect, but at least it does end up getting done; and once done
 # it never needs to be repeated for a particular header.
-ifeq ($(installhdrsubdir),.)
-local-installhdrsubdir = include
-else
-local-installhdrsubdir = $(installhdrsubdir)
-endif
-ifneq ($(local-installhdrsubdir),$(dir))
+local-installhdrsubdir = include/$(installhdrsubdir)
 INSTALLED_LOCAL_HEADERS := $(installhdrs:%=../$(local-installhdrsubdir)/%)
 $(INSTALLED_LOCAL_HEADERS): ../$(local-installhdrsubdir)/%: ../config.make
 	@rm -f $@
+	@test -d $(@D)/ || $(MKINSTALLDIRS) $(@D)
 	echo '#include "../$(dir)/$*"' > $@
-endif
 libs: $(INSTALLED_LOCAL_HEADERS)
 # Make sure we make those before compiling, since -MG will be unhelpful.
 $(patsubst %.o,%.d,$(filter %.o,$(OBJS))): $(INSTALLED_LOCAL_HEADERS)
@@ -277,6 +269,15 @@ $(libdir)/$(libname).so: $(libdir)/$(libname).so.$(hurd-version)
 
 $(addprefix $(includedir)/$(installhdrsubdir)/,$(installhdrs)): $(includedir)/$(installhdrsubdir)/%: %
 	$(INSTALL_DATA) $< $@
+
+# Arrange to have the shared libraries available locally in one single
+# directory.  This is not used by the build system itself, but is just for easy
+# testing.
+local-libdir = lib
+../$(local-libdir)/$(libname).so.$(hurd-version): $(libname).so.$(hurd-version)
+	@test -d $(@D)/ || $(MKINSTALLDIRS) $(@D)
+	ln -sf ../$(dir)/$< $@
+libs: ../$(local-libdir)/$(libname).so.$(hurd-version)
 
 endif
 
@@ -330,7 +331,8 @@ $(progtarg): %$(target-suffix): $(BUGADDR)
 $(addsuffix .static,$(progtarg)): %$(target-suffix).static: $(BUGADDR)
 	$(link-executable) -static \
 	      '-Wl,-(' $(patsubst %.so,%.a,$^) $($*-LDLIBS) $(LDLIBS) \
-	      '-Wl,-)'
+	      '-Wl,-)' \
+	      $(and $(filter %/libstore_part.a,$^), $(PARTED_LIBS))
 endif
 
 # Just like above, but tell how to make .prof versions of programs.
@@ -386,7 +388,7 @@ $(..)$(dir).d: $(srcdir)/Makefile
 	echo $(dir): $(hurd-bug-addr-dir-dep) $(addprefix lib,$(HURDLIBS)) > $@
 
 # Making a snapshot
-distfiles = Makefile ChangeLog $(SRCS) $(LCLHDRS) $(DIST_FILES)
+distfiles = Makefile $(SRCS) $(LCLHDRS) $(DIST_FILES)
 lndist: $(distfiles) $(top_srcdir)/hurd-snap/$(dir) FORCE
 	ln $(addprefix $(srcdir)/,$(distfiles)) $(top_srcdir)/hurd-snap/$(dir)
 
@@ -473,6 +475,7 @@ relink:
 # Tell make where to find other -l libraries that we use
 vpath libutil.% $(libdir)/
 
+# The libstore_%.a files fetch symbols from libstore.so
 ifneq ($(dir),libstore)
 $(boot-store-types:%=../libstore/libstore_%.a): ../libstore/libstore.so
 endif
@@ -616,6 +619,6 @@ endef
 	echo '$*.o: $<' > $@
 
 # Rule to make executable shell scripts from .sh files.
-%: %.sh $(top_srcdir)/sh-version.sed
-	sed -e 's/STANDARD_HURD_VERSION_\\(.[^_]*\\)_/\\1 (GNU Hurd) $(hurd-version)/' < $< > $@
+%: %.sh
+	sed -e 's/STANDARD_HURD_VERSION_\(.[^_]*\)_/\1 (GNU Hurd) $(hurd-version)/' < $< > $@
 	chmod +x $@

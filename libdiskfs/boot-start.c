@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 1993,94,95,96,97,98,99,2000,01,02
+   Copyright (C) 1993,94,95,96,97,98,99,2000,01,02,10,11
    	Free Software Foundation, Inc.
 
 This file is part of the GNU Hurd.
@@ -104,6 +104,7 @@ diskfs_start_bootstrap ()
   struct protid *rootpi;
   struct peropen *rootpo;
   mach_port_t diskfs_exec;
+  unsigned int init_lookups = 0;
 
   /* Create the port for current and root directory.  */
   err = diskfs_make_peropen (diskfs_root_node, O_READ | O_EXEC, 0,
@@ -204,6 +205,10 @@ diskfs_start_bootstrap ()
 
   printf ("libdiskfs: check point 7.5\n");
   fflush (stdout);
+
+  /* Cache the exec server port for file_exec to use.  */
+  _hurd_port_set (&_diskfs_exec_portcell, diskfs_exec);
+
   if (_diskfs_boot_command)
     {
       /* We have a boot command line to run instead of init.  */
@@ -229,8 +234,10 @@ diskfs_start_bootstrap ()
       initname = exec_argv + 1;
     }
 
+ lookup_init:
   err = dir_lookup (root_pt, initname, O_READ, 0,
 		    &retry, pathbuf, &startup_pt);
+  init_lookups++;
   if (err)
     {
       printf ("\nCannot find startup program `%s': %s\n",
@@ -239,6 +246,15 @@ diskfs_start_bootstrap ()
       free (exec_argv);
       assert_perror (err);	/* XXX this won't reboot properly */
     }
+  else if (retry == FS_RETRY_MAGICAL && pathbuf[0] == '/')
+    {
+      assert (init_lookups < SYMLOOP_MAX);
+
+      /* INITNAME is a symlink with an absolute target, so try again.  */
+      initname = strdupa (pathbuf);
+      goto lookup_init;
+    }
+
   assert (retry == FS_RETRY_NORMAL);
   assert (pathbuf[0] == '\0');
 
@@ -286,9 +302,6 @@ diskfs_start_bootstrap ()
   mach_port_deallocate (mach_task_self (), startup_pt);
   mach_port_deallocate (mach_task_self (), bootpt);
   assert_perror (err);
-
-  /* Cache the exec server port for file_exec to use.  */
-  _hurd_port_set (&_diskfs_exec_portcell, diskfs_exec);
 }
 
 /* We look like an execserver to the execserver itself; it makes this

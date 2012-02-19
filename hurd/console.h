@@ -1,5 +1,5 @@
 /* console.h -- Public interface to the console server.
-   Copyright (C) 2002 Free Software Foundation, Inc.
+   Copyright (C) 2002,10 Free Software Foundation, Inc.
    Written by Marcus Brinkmann.
 
    This program is free software; you can redistribute it and/or
@@ -50,7 +50,13 @@ typedef struct
   uint32_t italic : 1;
   uint32_t bold : 1;
 } conchar_attr_t; 
-  
+
+/* We support double-width characters by using an extra bit to identify the
+   continuation in the character matrix.  The constants below document our
+   usage of wchar_t.  */
+#define CONS_WCHAR_MASK       ((wchar_t) 0x401fffff)
+#define CONS_WCHAR_CONTINUED  ((wchar_t) 0x40000000)
+
 typedef struct
 {
   wchar_t chr;
@@ -116,7 +122,7 @@ struct cons_display
 			   ever increased by the server, so clients
 			   can optimize scrolling.  */
     uint32_t scr_lines;	/* Number of lines in scrollback buffer
-			   preceeding CUR_LINE.  */
+			   preceding CUR_LINE.  */
     uint32_t height;	/* Number of lines in visible area following
 			   (and including) CUR_LINE.  */
     uint32_t matrix;	/* Index (in uint32_t) of the beginning of

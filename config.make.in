@@ -1,5 +1,8 @@
 # @configure_input@
 
+# What version of the Hurd is this?
+hurd-version := @PACKAGE_VERSION@
+
 # Machine architecture.
 machine = @host_cpu@
 asm_syntax = @asm_syntax@
@@ -67,6 +70,9 @@ PARTED_LIBS = @PARTED_LIBS@
 # How to compile and link against ncursesw.
 LIBNCURSESW = @LIBNCURSESW@
 NCURSESW_INCLUDE = @NCURSESW_INCLUDE@
+
+# Whether Sun RPC support is available.
+HAVE_SUN_RPC = @HAVE_SUN_RPC@
 
 # Installation tools.
 INSTALL = @INSTALL@

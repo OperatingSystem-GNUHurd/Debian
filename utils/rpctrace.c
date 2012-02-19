@@ -1,6 +1,6 @@
 /* Trace RPCs sent to selected ports
 
-   Copyright (C) 1998, 1999, 2001, 2002, 2003, 2005, 2006
+   Copyright (C) 1998, 1999, 2001, 2002, 2003, 2005, 2006, 2009, 2011
    Free Software Foundation, Inc.
 
    This file is part of the GNU Hurd.
@@ -44,6 +44,8 @@ const char *argp_program_version = STANDARD_HURD_VERSION (rpctrace);
 
 #define STD_MSGIDS_DIR DATADIR "/msgids/"
 
+static unsigned strsize = 80;
+
 #define OPT_NOSTDINC -1
 static const struct argp_option options[] =
 {
@@ -56,6 +58,7 @@ static const struct argp_option options[] =
   {0, 'I', "DIR", 0,
    "Add the directory DIR to the list of directories to be searched for files "
    "containing message ID numbers."},
+  {0, 's', "SIZE", 0, "Specify the maximum string size to print (the default is 80)."},
   {0}
 };
 
@@ -631,11 +634,13 @@ print_contents (mach_msg_header_t *inp,
 	      else
 		type->msgt_name = name;
 	    }
-	  else if (newtypes[0] != name)
-	    if (type->msgt_longform)
-	      lt->msgtl_name = newtypes[0];
-	    else
-	      type->msgt_name = newtypes[0];
+	  else if (nelt > 0 && newtypes[0] != name)
+	    {
+	      if (type->msgt_longform)
+		lt->msgtl_name = newtypes[0];
+	      else
+		type->msgt_name = newtypes[0];
+	    }
 	}
       else
 	print_data (name, data, nelt, eltsize);
@@ -955,6 +960,8 @@ print_data (mach_msg_type_name_t type,
 
     case MACH_MSG_TYPE_STRING:
     case MACH_MSG_TYPE_CHAR:
+      if (nelt > strsize)
+	nelt = strsize;
       fprintf (ostream, "\"%.*s\"",
 	       (int) (nelt * eltsize), (const char *) data);
       return;
@@ -1147,6 +1154,10 @@ main (int argc, char **argv, char **envp)
 	case 'I':
 	  scan_msgids_dir (&msgids_files_argz, &msgids_files_argz_len,
 			  arg, TRUE);
+	  break;
+
+	case 's':
+	  strsize = atoi (arg);
 	  break;
 
 	case ARGP_KEY_NO_ARGS:

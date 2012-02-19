@@ -212,6 +212,14 @@ int udpv6_connect(struct sock *sk, struct sockaddr *uaddr, int addr_len)
 		goto ipv4_connected;
 	}
 
+	if (usin->sin6_family == AF_UNSPEC) {
+		udp_connect(sk, uaddr, addr_len);
+		ipv6_addr_set(&np->daddr, 0, 0, 0, 0);
+		ipv6_addr_set(&np->saddr, 0, 0, 0, 0);
+		ipv6_addr_set(&np->rcv_saddr, 0, 0, 0, 0);
+		return 0;
+	}
+
 	if (addr_len < sizeof(*usin)) 
 	  	return(-EINVAL);
 
@@ -327,7 +335,7 @@ ipv4_connected:
 
 	ip6_dst_store(sk, dst, fl.fl6_dst);
 
-	/* get the source adddress used in the apropriate device */
+	/* get the source adddress used in the appropriate device */
 
 	err = ipv6_get_saddr(dst, daddr, &saddr);
 

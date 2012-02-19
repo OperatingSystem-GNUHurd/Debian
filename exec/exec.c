@@ -233,11 +233,12 @@ load_section (void *section, struct execdata *u)
 	      u->error = (page == -1) ? errno : 0;
 	      if (! u->error)
 		{
-		  memcpy ((void *) page, /* XXX/fault */
+		  u->error = hurd_safe_copyin ((void *) page, /* XXX/fault */
 			  (void *) (contents + (size - off)),
 			  off);
-		  u->error = vm_write (u->task, mapstart + (size - off),
-				       page, vm_page_size);
+		  if (! u->error)
+		    u->error = vm_write (u->task, mapstart + (size - off),
+				         page, vm_page_size);
 		  munmap ((caddr_t) page, vm_page_size);
 		}
 	    }
@@ -339,7 +340,10 @@ load_section (void *section, struct execdata *u)
 	      const void *contents = map (u, filepos, readsize);
 	      if (!contents)
 		goto maplose;
-	      memcpy (readaddr, contents, readsize); /* XXX/fault */
+	      u->error = hurd_safe_copyin (readaddr, contents,
+	                                   readsize); /* XXX/fault */
+	      if (u->error)
+	        goto maplose;
 	    }
 	  u->error = vm_write (u->task, overlap_page, ourpage, size);
 	  if (u->error == KERN_PROTECTION_FAILURE)
@@ -443,7 +447,9 @@ map (struct execdata *e, off_t posn, size_t len)
   else if (posn + len > size)
     /* The requested data wouldn't fit in the file.  */
     return NULL;
-  else if (e->filemap == MACH_PORT_NULL)
+  else if (e->file_data != NULL) {
+    return e->file_data + posn;
+  } else if (e->filemap == MACH_PORT_NULL)
     {
       /* No mapping for the file.  Read the data by RPC.  */
       char *buffer = map_buffer (e);
@@ -519,7 +525,10 @@ prepare_stream (struct execdata *e)
   e->map_filepos = 0;
 }
 
-static void prepare_in_memory (struct execdata *e) {}
+static void prepare_in_memory (struct execdata *e)
+{
+  prepare_stream(e);
+}
 
 #else
 
@@ -726,6 +735,9 @@ prepare (file_t file, struct execdata *e)
 
   e->interp.section = NULL;
 
+  /* Initialize E's stdio stream.  */
+  prepare_stream (e);
+
   /* Try to mmap FILE.  */
   e->error = io_map (file, &rd, &wr);
   if (! e->error)
@@ -790,9 +802,6 @@ prepare (file_t file, struct execdata *e)
       e->file_size = st.st_size;
       e->optimal_block = st.st_blksize;
     }
-
-  /* Initialize E's stdio stream.  */
-  prepare_stream (e);
 }
 
 /* Check the magic number, etc. of the file.
@@ -991,7 +1000,9 @@ finish_mapping (struct execdata *e)
     }
 }
 
-/* Clean up after reading the file (need not be completed).  */
+/* Clean up after reading the file (need not be completed).
+   Note: this may be called several times for the E, so it must take care
+   of checking what was already freed.  */
 void
 finish (struct execdata *e, int dealloc_file)
 {
@@ -1008,10 +1019,13 @@ finish (struct execdata *e, int dealloc_file)
 #ifdef EXECDATA_STREAM
       fclose (&e->stream);
 #else
-      if (e->file_data != NULL)
+      if (e->file_data != NULL) {
 	free (e->file_data);
-      else if (map_buffer (e) != NULL)
+	e->file_data = NULL;
+      } else if (map_buffer (e) != NULL) {
 	munmap (map_buffer (e), map_vsize (e));
+	map_buffer (e) = NULL;
+      }
 #endif
     }
   if (dealloc_file && e->file != MACH_PORT_NULL)
@@ -1047,7 +1061,7 @@ load (task_t usertask, struct execdata *e)
 	    if (e->info.elf.phdr[i].p_type == PT_LOAD)
 	      load_section (&e->info.elf.phdr[i], e);
 
-	  /* The entry point address is relative to whereever we loaded the
+	  /* The entry point address is relative to wherever we loaded the
 	     program text.  */
 	  e->entry += e->info.elf.loadbase;
 	}
@@ -1142,7 +1156,11 @@ check_gzip (struct execdata *earg)
 	  return -1;
 	}
       n = MIN (maxread, map_buffer (e) + map_fsize (e) - contents);
-      memcpy (buf, contents, n); /* XXX/fault */
+      errno = hurd_safe_copyin (buf, contents, n); /* XXX/fault */
+      if (errno)
+        longjmp (ziperr, 2);
+        
+      zipread_pos += n;
       return n;
     }
   void zipwrite (const char *buf, size_t nwrite)
@@ -1202,8 +1220,6 @@ check_gzip (struct execdata *earg)
   /* The output is complete.  Clean up the stream and store its resultant
      buffer and size in the execdata as the file contents.  */
   fclose (zipout);
-  e->file_data = zipdata;
-  e->file_size = zipdatasz;
 
   /* Clean up the old exec file stream's state.
      Now that we have the contents all in memory (in E->file_data),
@@ -1211,6 +1227,8 @@ check_gzip (struct execdata *earg)
   finish (e, 0);
 
   /* Prepare the stream state to use the file contents already in memory.  */
+  e->file_data = zipdata;
+  e->file_size = zipdatasz;
   prepare_in_memory (e);
 }
 #endif
@@ -1248,7 +1266,11 @@ check_bzip2 (struct execdata *earg)
 	  return -1;
 	}
       n = MIN (maxread, map_buffer (e) + map_fsize (e) - contents);
-      memcpy (buf, contents, n); /* XXX/fault */
+      errno = hurd_safe_copyin (buf, contents, n); /* XXX/fault */
+      if (errno)
+        longjmp (ziperr, 2);
+
+      zipread_pos += n;
       return n;
     }
   void zipwrite (const char *buf, size_t nwrite)
@@ -1297,8 +1319,6 @@ check_bzip2 (struct execdata *earg)
   /* The output is complete.  Clean up the stream and store its resultant
      buffer and size in the execdata as the file contents.  */
   fclose (zipout);
-  e->file_data = zipdata;
-  e->file_size = zipdatasz;
 
   /* Clean up the old exec file stream's state.
      Now that we have the contents all in memory (in E->file_data),
@@ -1306,6 +1326,8 @@ check_bzip2 (struct execdata *earg)
   finish (e, 0);
 
   /* Prepare the stream state to use the file contents already in memory.  */
+  e->file_data = zipdata;
+  e->file_size = zipdatasz;
   prepare_in_memory (e);
 }
 #endif
@@ -1881,8 +1903,6 @@ do_exec (file_t file,
 	  proc_reassign (proc, newtask);
 	  mach_port_deallocate (mach_task_self (), proc);
 	}
-
-      mach_port_deallocate (mach_task_self (), oldtask);
     }
 
   /* Make sure the proc server has the right idea of our identity. */

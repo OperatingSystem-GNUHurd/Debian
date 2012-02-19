@@ -485,7 +485,7 @@ ftpfs_refresh_node (struct node *node)
 	    }
 	  else if (*(entry->name))
 	    {
-	      /* The root node is treated seperately below.  */
+	      /* The root node is treated separately below.  */
 	      struct ftp_conn *conn;
 
 	      err = ftpfs_get_ftp_conn (dir->fs, &conn);
@@ -532,7 +532,9 @@ ftpfs_refresh_node (struct node *node)
 	    }
 	}
 
-      if ((entry->stat.st_mtime < node->nn_stat.st_mtime
+      if ((entry->stat.st_mtim.tv_sec < node->nn_stat.st_mtim.tv_sec
+           || (entry->stat.st_mtim.tv_sec == node->nn_stat.st_mtim.tv_sec
+               && entry->stat.st_mtim.tv_nsec < node->nn_stat.st_mtim.tv_nsec)
 	   || entry->stat.st_size != node->nn_stat.st_size)
 	  && nn && nn->contents)
 	/* The file has changed.  */
@@ -773,7 +775,7 @@ ftpfs_dir_lookup (struct ftpfs_dir *dir, const char *name,
 }
 
 /* Lookup the null name in DIR, and return a node for it in NODE.  Unlike
-   ftpfs_dir_lookup, this won't attempt to validate the existance of the
+   ftpfs_dir_lookup, this won't attempt to validate the existence of the
    entry (to avoid opening a new connection if possible) -- that will happen
    the first time the entry is refreshed.  Also unlink ftpfs_dir_lookup, this
    function doesn't expect DIR to be locked, and won't return *NODE locked.

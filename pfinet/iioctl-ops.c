@@ -189,9 +189,9 @@ S_iioctl_siocsifflags (io_t port,
     err = ENODEV;
   else
     {
-      err = dev_change_flags(dev, flags);
+      err = dev_change_flags (dev, flags);
       if (!err)
-        err = machdev_change_flags (dev, flags);
+        err = ethernet_change_flags (dev, flags);
     }
 
   __mutex_unlock (&global_lock);

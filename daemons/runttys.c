@@ -193,7 +193,7 @@ init_ttys (void)
   return 0;
 }
 
-/* Free everyting in the terminal array */
+/* Free everything in the terminal array */
 void
 free_ttys (void)
 {

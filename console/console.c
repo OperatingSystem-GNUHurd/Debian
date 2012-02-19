@@ -1,6 +1,6 @@
 /* console.c -- A console server.
 
-   Copyright (C) 1997, 1999, 2002, 2003, 2007, 2008
+   Copyright (C) 1997, 1999, 2002, 2003, 2007, 2008, 2010
      Free Software Foundation, Inc.
 
    Written by Miles Bader and Marcus Brinkmann.
@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <unistd.h>
+#include <locale.h>
 
 #include <argp.h>
 #include <argz.h>
@@ -226,7 +227,7 @@ vcons_lookup (cons_t cons, int id, int create, vcons_t *r_vcons)
   vcons = calloc (1, sizeof (struct vcons));
   if (!vcons)
     {
-      mutex_unlock (&vcons->cons->lock);
+      mutex_unlock (&cons->lock);
       return ENOMEM;
     }
   vcons->cons = cons;
@@ -243,7 +244,7 @@ vcons_lookup (cons_t cons, int id, int create, vcons_t *r_vcons)
     {
       free (vcons->name);
       free (vcons);
-      mutex_unlock (&vcons->cons->lock);
+      mutex_unlock (&cons->lock);
       return err;
     }
 
@@ -253,7 +254,7 @@ vcons_lookup (cons_t cons, int id, int create, vcons_t *r_vcons)
       display_destroy (vcons->display);
       free (vcons->name);
       free (vcons);
-      mutex_unlock (&vcons->cons->lock);
+      mutex_unlock (&cons->lock);
       return err;
     }
   
@@ -861,7 +862,6 @@ netfs_get_dirents (struct iouser *cred, struct node *dir,
 	    if (!add_dir_entry (vcons->name,
 				vcons->id << 2, DT_DIR))
 	      break;
-	  mutex_unlock (&dir->nn->cons->lock);
 	}
       else
 	{
@@ -879,7 +879,10 @@ netfs_get_dirents (struct iouser *cred, struct node *dir,
 	    add_dir_entry ("input", (dir->nn->vcons->id << 3) + 2, DT_FIFO);
 	}	  
     }
-      
+
+  if (dir->nn->cons)
+      mutex_unlock(&dir->nn->cons->lock);
+
   fshelp_touch (&dir->nn_stat, TOUCH_ATIME, console_maptime);
   return err;
 }
@@ -2017,6 +2020,8 @@ main (int argc, char **argv)
 
   /* Parse our command line arguments.  */
   argp_parse (&netfs_std_runtime_argp, argc, argv, 0, 0, cons);
+
+  setlocale (LC_CTYPE, "C.UTF-8");
 
   task_get_bootstrap_port (mach_task_self (), &bootstrap);
 

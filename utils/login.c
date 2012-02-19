@@ -406,7 +406,6 @@ main(int argc, char *argv[])
   struct idvec parent_uids = IDVEC_INIT; /* Parent uids, -SETUID. */
   struct idvec parent_gids = IDVEC_INIT; /* Parent gids, -SETGID. */
   mach_port_t exec;		/* The shell executable.  */
-  mach_port_t cwd;		/* The child's CWD.  */
   mach_port_t root;		/* The child's root directory.  */
   mach_port_t ports[INIT_PORT_MAX]; /* Init ports for the new process.  */
   int ints[INIT_INT_MAX];	/* Init ints for it.  */
@@ -664,7 +663,7 @@ main(int argc, char *argv[])
       if (ugids.eff_uids.num + ugids.avail_uids.num == 0)
 	/* We're transiting from having some uids to having none, which means
 	   this is probably a new login session.  Unless specified otherwise,
-	   set a timer to kill this session if it hasn't aquired any ids by
+	   set a timer to kill this session if it hasn't acquired any ids by
 	   then.  Note that we fork off the timer process before clearing the
 	   process owner: because we're interested in killing unowned
 	   processes, proc's in-same-login-session rule should apply to us
@@ -703,11 +702,10 @@ main(int argc, char *argv[])
   if (err)
     error (40, err, "Port reauth failure");
 
-  /* These are the default values for the child's root/cwd.  We don't want to
+  /* These are the default values for the child's root.  We don't want to
      modify PORTS just yet, because we use it to do child-authenticated
      lookups.  */
   root = ports[INIT_PORT_CRDIR];
-  cwd = ports[INIT_PORT_CWDIR];
 
   /* Find the shell executable (we copy the name, as ARGS may be changed).  */
   if (shell_arg && sh_args && *sh_args)
@@ -762,13 +760,15 @@ main(int argc, char *argv[])
   arg = envz_get (args, args_len, "HOME");
   if (arg && *arg)
     {
-      cwd = child_lookup (arg, 0, O_RDONLY);
+      mach_port_t cwd = child_lookup (arg, 0, O_RDONLY);
       if (cwd == MACH_PORT_NULL)
 	{
 	  error (0, errno, "%s", arg);
 	  error (0, 0, "Using HOME=/");
 	  envz_add (&args, &args_len, "HOME", "/");
 	}
+      else
+        ports[INIT_PORT_CWDIR] = cwd;
     }
 
   arg = envz_get (args, args_len, "ROOT");
@@ -835,7 +835,7 @@ main(int argc, char *argv[])
   if (err)
     error (21, err, "Error building shell args");
 
-  /* Maybe output the message of the day.  Note that we we the child's
+  /* Maybe output the message of the day.  Note that we use the child's
      authentication to do it, so that this program can't be used to read
      arbitrary files!  */
   arg = envz_get (args, args_len, "MOTD");
@@ -855,9 +855,8 @@ main(int argc, char *argv[])
     }
 
   /* Now that we don't need to use PORTS for lookups anymore, put the correct
-     ROOT and CWD in.  */
+     ROOT in.  */
   ports[INIT_PORT_CRDIR] = root;
-  ports[INIT_PORT_CWDIR] = cwd;
 
   /* Get rid of any accumulated null entries in env.  */
   envz_strip (&env, &env_len);
