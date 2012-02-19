@@ -45,3 +45,6 @@ include ../Makeconf
 
 LDFLAGS += -lpciaccess
 CFLAGS += -I$(srcdir)/include
+
+$(libname).so.$(hurd-version):
+	echo "INPUT ( $(libname).a )" > $@
