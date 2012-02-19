@@ -9,7 +9,7 @@ TARGET         = dde_ne2k_pci
 
 SRC_C          = main.c ne2k-pci.c 8390.c
 
-LIBS          += $(libmachdev_path) -ldde_linux26.o -ldde_linux26_net $(libddekit_path) -lfshelp -ltrivfs -lpciaccess -lthreads -lshouldbeinlibc -lports $(libslab_path) $(libbpf_path)
+LIBS          += $(libmachdev_path) -ldde_linux26.o -ldde_linux26_net $(libddekit_path) -lfshelp -ltrivfs -lpciaccess -lz -lthreads -lshouldbeinlibc -lports $(libslab_path) $(libbpf_path)
 CFLAGS        += -g -I$(PKGDIR)/include -I../libmachdev
 
 # DDE configuration
