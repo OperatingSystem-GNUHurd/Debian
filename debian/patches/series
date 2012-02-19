@@ -18,7 +18,7 @@ libports_stability.patch
 libpthread_fix.patch
 extern_inline_fix.patch
 proxy-defpager.diff
-libpthread_procfs.patch
+external.patch
 makedev_keep_options.patch
 makedev_parted_store.patch
 console_ignore_bdf_err.patch

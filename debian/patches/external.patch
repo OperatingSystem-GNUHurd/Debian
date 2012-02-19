@@ -10,7 +10,7 @@ Index: hurd-debian/Makefile
  	      libpager libfshelp libdiskfs libtrivfs libps \
 -	      libnetfs libpipe libstore libhurdbugaddr libftpconn libcons
 +	      libnetfs libpipe libstore libhurdbugaddr libftpconn libcons \
-+	      libpthread
++	      libpthread libmachdev libddekit libhurd-slab
  
  # Hurd programs
  prog-subdirs = auth proc exec init term \
@@ -19,10 +19,38 @@ Index: hurd-debian/Makefile
  	       hostmux usermux ftpfs trans \
  	       console-client utils sutils ufs-fsck ufs-utils \
 -	       benchmarks fstests
-+	       benchmarks fstests procfs random
++	       benchmarks fstests procfs random devnode
  
  ifeq ($(HAVE_SUN_RPC),yes)
  prog-subdirs += nfs nfsd
+--- hurd-debian.orig/Makeconf
++++ hurd-debian/Makeconf
+@@ -548,7 +548,7 @@ vpath %.defs $(top_srcdir)/hurd
+ # These we want to find in the libc include directory...
+ mach_defs_names = bootstrap exc mach mach4 \
+ 	mach_host mach_port mach_timer_reply memory_object \
+-	memory_object_default notify
++	memory_object_default notify experimental
+ device_defs_names = dev_forward device device_reply device_request
+
+ mach_defs = $(addsuffix .defs,$(mach_defs_names))
+diff --git a/configure.in b/configure.in
+index 05b959b..68ec159 100644
+--- a/configure.in
++++ b/configure.in
+@@ -227,6 +227,12 @@ AC_SUBST(boot_store_types)dnl
+ AC_MSG_CHECKING(boot store types)
+ AC_MSG_RESULT($boot_store_types)
+ 
++AC_CHECK_LIB(pciaccess, pci_system_init, LIBPCIACCESS=-lpciaccess, LIBPCIACCESS=no)
++AC_SUBST(LIBPCIACCESS)
++if test "$LIBPCIACCESS" = "no"; then
++  AC_MSG_ERROR([libpciaccess must be install in order to use libddekit])
++fi
++
+ # Check for ncursesw, which is needed for the console-curses client.
+ hurd_LIB_NCURSESW
+ 
 Index: hurd-debian/procfs/Makefile
 ===================================================================
 --- hurd-debian.orig/procfs/Makefile	2010-09-27 19:50:41.000000000 +0000

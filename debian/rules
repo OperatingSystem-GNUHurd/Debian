@@ -31,6 +31,12 @@ DEB_DH_MAKESHLIBS_ARGS_hurd := --add-udeb="hurd-udeb"
 
 build/hurd::
 	cd $(DEB_BUILDDIR)/doc && texi2html -split chapter ../../doc/hurd.texi
+	$(MAKE) -C libdde_linux26
+	$(MAKE) -C dde_e100
+	$(MAKE) -C dde_e1000
+	$(MAKE) -C dde_pcnet32
+	$(MAKE) -C dde_rtl8139
+	$(MAKE) -C dde_ne2k_pci
 
 install/hurd::
 	# runsystem is managed by update-alternatives

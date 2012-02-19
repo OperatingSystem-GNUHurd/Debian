@@ -54,6 +54,7 @@ debian/tmp/bin/rpctrace
 debian/tmp/bin/mount
 debian/tmp/bin/gcore
 debian/tmp/bin/fakeauth
+debian/tmp/bin/devnode
 debian/tmp/usr/bin/fakeroot-hurd
 debian/tmp/bin/forks
 debian/tmp/bin/timertest
@@ -67,3 +68,8 @@ debian/tmp/etc/login/README
 debian/tmp/etc/ttys
 debian/tmp/dev/MAKEDEV
 debian/tmp/share/msgids/hurd.msgids usr/share/msgids
+dde_e100/dde_e100 /hurd/dde
+dde_e1000/dde_e1000 /hurd/dde
+dde_rtl8139/dde_rtl8139 /hurd/dde
+dde_pcnet32/dde_pcnet32 /hurd/dde
+dde_ne2k_pci/dde_ne2k_pci /hurd/dde

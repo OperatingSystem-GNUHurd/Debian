@@ -1,14 +1,18 @@
-hurd (20111206-2) UNRELEASED; urgency=low
+hurd (20120219-1) UNRELEASED; urgency=low
 
+  [ Samuel Thibault ]
+  * New upstream snapshot.
+    - And merge DDE work from Zheng Da.
   * patches/ext2fs_large_stores.patch: Fix memory leak, thanks Sergio Lopez!
   * debian/hurd-console.default: Enable the console by default.
+  * debian/patches/libpthread_procfs.patch: Rename to external.patch.
 
   [ Pino Toscano ]
   * hurd.install, hurd.postinst, rules: Rename halt/reboot to
     halt-hurd/reboot-hurd, and register them as slaves of the runsystem
     alternative.
 
- -- Samuel Thibault <sthibault@debian.org>  Sat, 21 Jan 2012 23:59:41 +0100
+ -- Samuel Thibault <sthibault@debian.org>  Sun, 19 Feb 2012 06:17:49 +0000
 
 hurd (20111206-1) unstable; urgency=low
 
