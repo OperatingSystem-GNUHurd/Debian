@@ -38,7 +38,7 @@ build/hurd::
 	$(MAKE) -C dde_rtl8139 BUILDDIR=$(PWD)/build
 	$(MAKE) -C dde_ne2k_pci BUILDDIR=$(PWD)/build
 
-clean/hurd::
+clean::
 	$(MAKE) -C libdde_linux26 clean
 	$(MAKE) -C dde_e100 clean
 	$(MAKE) -C dde_e1000 clean
