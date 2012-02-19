@@ -29,21 +29,7 @@
  *	Added mach_put_reply_port. mig_dealloc_reply_port now takes the
  *	port as an argument.
  *
- * $Log: mig_support.c,v $
- * Revision 1.4  2002/05/27 02:50:10  roland
- * 2002-05-26  Roland McGrath  <roland@frob.com>
- *
- * 	Changes merged from CMU MK83a version:
- * 	* cthreads.h, options.h: Various cleanups.
- * 	* call.c, cthread_data.c, sync.c, mig_support.c: Likewise.
- * 	* i386/cthreads.h, i386/thread.c, i386/lock.s: Likewise.
- * 	* cthread_internals.h: Add decls for internal functions.
- * 	(struct cproc): Use vm_offset_t for stack_base and stack_size members.
- * 	Use natural_t for context member.
- * 	* cprocs.c: Use prototypes for all defns.
- * 	* cthreads.c: Likewise.
- * 	(cthread_exit): Cast any_t to integer_t before int.
- *
+ * $Log:	mig_support.c,v $
  * Revision 2.8  93/01/24  13:27:14  danner
  * 	Corrrected include of mach/mach.h to mach.h
  * 	[93/01/16            mrt]

@@ -25,13 +25,7 @@
  */
 /*
  * HISTORY
- * $Log: lock.S,v $
- * Revision 1.1  2002/05/27 02:13:47  roland
- * 2002-05-26  Roland McGrath  <roland@frob.com>
- *
- * 	* alpha/cthreads.h, alpha/thread.c, alpha/csw.S, alpha/lock.S:
- * 	New files, verbatim from CMU release MK83a user/threads/alpha.
- *
+ * $Log:	lock.s,v $
  * Revision 2.3  93/03/09  10:59:04  danner
  * 	Lost in previous merge:
  * 	   Added memory barriers where needed.

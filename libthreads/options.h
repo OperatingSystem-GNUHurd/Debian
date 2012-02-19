@@ -26,12 +26,6 @@
 /*
  * HISTORY
  * $Log: options.h,v $
- * Revision 1.3  2002/06/01 19:37:55  roland
- * 2002-05-28  Roland McGrath  <roland@frob.com>
- *
- * 	* cthreads.h: Do not define WAIT_DEBUG to affect inlines.
- * 	* options.h: Not here either.
- *
  * Revision 1.2  2002/05/27 02:50:10  roland
  * 2002-05-26  Roland McGrath  <roland@frob.com>
  *

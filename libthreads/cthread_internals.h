@@ -29,11 +29,6 @@
  *	Defined WAIT_DEBUG and initialized wait_enum
  *
  * $Log: cthread_internals.h,v $
- * Revision 1.7  2007/06/14 17:24:13  tschwinge
- * 2007-06-14  Thomas Schwinge  <tschwinge@gnu.org>
- *
- * 	* cthread_internals.h (cproc_block): Add prototype.
- *
  * Revision 1.6  2002/05/27 02:50:10  roland
  * 2002-05-26  Roland McGrath  <roland@frob.com>
  *

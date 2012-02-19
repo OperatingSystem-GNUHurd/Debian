@@ -466,8 +466,6 @@ auth_demuxer (mach_msg_header_t *inp, mach_msg_header_t *outp)
 	  ports_notify_server (inp, outp));
 }
 
-static mach_port_t forward_sigexc;
-
 
 int
 main (int argc, char **argv)

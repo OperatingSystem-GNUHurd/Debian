@@ -25,10 +25,7 @@
 #
 #
 # HISTORY
-# $Log: Makefile.CMU,v $
-# Revision 1.1  1992/10/06 18:31:03  mib
-# entered into RCS
-#
+# $Log:	Makefile,v $
 # Revision 2.21  92/05/22  18:38:31  jfriedl
 # 	From Mike Kupfer <kupfer@sprite.Berkeley.EDU>:
 # 	Enable CTHREAD_DATA for the kernel bootstrap program.

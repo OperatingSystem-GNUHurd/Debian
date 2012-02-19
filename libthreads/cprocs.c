@@ -29,11 +29,6 @@
  *	Set the wait_type field.
  *
  * $Log: cprocs.c,v $
- * Revision 1.17  2002/05/29 00:01:24  roland
- * 2002-05-28  Roland McGrath  <roland@frob.com>
- *
- * 	* cprocs.c (cproc_block): Can't be static, called from cancel-cond.c.
- *
  * Revision 1.16  2002/05/27 02:50:10  roland
  * 2002-05-26  Roland McGrath  <roland@frob.com>
  *

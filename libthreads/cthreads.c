@@ -30,12 +30,6 @@
  *	catch is reserved word in c++.
  *
  * $Log: cthreads.c,v $
- * Revision 1.16  2002/08/30 00:28:00  roland
- * 2002-08-26  Roland McGrath  <roland@frob.com>
- *
- * 	* cthreads.c (cthread_body) [HAVE_USELOCALE]: Call uselocale to
- * 	initialize the thread to the global locale.
- *
  * Revision 1.15  2002/07/31 02:35:14  marcus
  * Add comment to last change, for the benefit of the next merge :)
  *

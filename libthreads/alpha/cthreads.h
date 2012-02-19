@@ -25,13 +25,7 @@
  */
 /*
  * HISTORY
- * $Log: cthreads.h,v $
- * Revision 1.1  2002/05/27 02:13:47  roland
- * 2002-05-26  Roland McGrath  <roland@frob.com>
- *
- * 	* alpha/cthreads.h, alpha/thread.c, alpha/csw.S, alpha/lock.S:
- * 	New files, verbatim from CMU release MK83a user/threads/alpha.
- *
+ * $Log:	cthreads.h,v $
  * Revision 2.4  93/11/17  19:00:42  dbg
  * 	When compiling with GCC, inline cthread_sp().
  * 	[93/09/21            af]
