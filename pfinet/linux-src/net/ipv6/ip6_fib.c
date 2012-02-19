@@ -234,7 +234,7 @@ static __inline__ void rt6_release(struct rt6_info *rt)
 /*
  *	Routing Table
  *
- *	return the apropriate node for a routing tree "add" operation
+ *	return the appropriate node for a routing tree "add" operation
  *	by either creating and inserting or by returning an existing
  *	node.
  */
@@ -744,7 +744,7 @@ struct fib6_node * fib6_locate(struct fib6_node *root,
 #ifdef CONFIG_IPV6_SUBTREES
 	if (src_len) {
 		BUG_TRAP(saddr!=NULL);
-		if (fn == NULL)
+		if (fn != NULL)
 			fn = fn->subtree;
 		if (fn)
 			fn = fib6_locate_1(fn, saddr, src_len,

@@ -51,12 +51,14 @@ S_socket_create (struct trivfs_protid *master,
 
   /* Don't allow bogus SOCK_PACKET here. */
 
-  if ((sock_type != SOCK_STREAM
-       && sock_type != SOCK_DGRAM
-       && sock_type != SOCK_SEQPACKET
-       && sock_type != SOCK_RAW)
-      || protocol < 0)
-    return EINVAL;
+  if (sock_type != SOCK_STREAM
+      && sock_type != SOCK_DGRAM
+      && sock_type != SOCK_SEQPACKET
+      && sock_type != SOCK_RAW)
+    return EPROTOTYPE;
+
+  if (protocol < 0)
+    return EPROTONOSUPPORT;
 
   __mutex_lock (&global_lock);
 
@@ -299,7 +301,8 @@ S_socket_create_address (mach_port_t server,
   struct sock_addr *addrstruct;
   const struct sockaddr *const sa = (void *) data;
 
-  if (sockaddr_type != AF_INET && sockaddr_type != AF_INET6)
+  if (sockaddr_type != AF_INET && sockaddr_type != AF_INET6
+      && sockaddr_type != AF_UNSPEC)
     return EAFNOSUPPORT;
   if (sa->sa_family != sockaddr_type
       || data_len < offsetof (struct sockaddr, sa_data))
@@ -499,6 +502,11 @@ S_socket_recv (struct sock_user *user,
   if (amount > *datalen)
     {
       *data = mmap (0, amount, PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);
+      if (*data == MAP_FAILED)
+        /* Should check whether errno is indeed ENOMEM --
+           but this can't be done in a straightforward way,
+           because the glue headers #undef errno. */
+        return ENOMEM;
       alloced = 1;
     }
 

@@ -134,7 +134,7 @@ next_device(char *dev)
 
 /* ---------------------------------------------------------------- */
 
-/* Try and start the translator for CTL_PORT on NODE.  If succesful, this
+/* Try and start the translator for CTL_PORT on NODE.  If successful, this
    call will not return until the translator is stopped; otherwise it returns
    an error code describing the reason why it couldn't start.  */
 static error_t
@@ -163,7 +163,7 @@ start_translator(file_t node, fsys_t ctl_port)
 }
 
 /* Find an unoccupied (one with no active translator) filename starting with
-   NAME_PFX, and start the translator for CTL_PORT on it.  If succesful, this
+   NAME_PFX, and start the translator for CTL_PORT on it.  If successful, this
    call will not return until the translator is stopped; otherwise it returns
    an error code describing the reason why it couldn't start.  When
    successful, this function sets UTMP_NODE_NAME to the name of the file we
@@ -272,7 +272,7 @@ return_data(char *data, int data_len, char **buf, int *buf_len)
   if (data_len > *buf_len)
     {
       *buf = mmap (0, data_len, PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);
-      if (*buf == (char *) -1))
+      if (*buf == (char *) -1)
 	return errno;
     }
 
@@ -326,12 +326,12 @@ S_login_get_idle_time(file_t utmp, time_value_t *tv)
 	{
 	  struct stat stat;
 	  if (stat(dev, &state) == 0
-	      && (stat.st_atime < tv->seconds
-		  || (stat.st_atime == tv->seconds
-		      && stat.st_atime_usec < tv->microseconds)))
+	      && (stat.st_atim.tv_sec < tv->seconds
+		  || (stat.st_atim.tv_sec == tv->seconds
+		      && stat.st_atim.tv_nsec / 1000 < tv->microseconds)))
 	    {
-	      tv->seconds = stat.st_atime;
-	      tv->microseconds = stat.st_atime_usec;
+	      tv->seconds = stat.st_atim.tv_sc;
+	      tv->microseconds = stat.st_atim.tv_nsec / 1000;
 	    }
 	}
     }

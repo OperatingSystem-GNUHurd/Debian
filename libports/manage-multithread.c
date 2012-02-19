@@ -61,6 +61,7 @@ ports_manage_port_operations_multithread (struct port_bucket *bucket,
       assert (nreqthreads);
       nreqthreads--;
       if (nreqthreads == 0)
+	/* No thread would be listening for requests, spawn one. */
 	spawn = 1;
       spin_unlock (&lock);
 
@@ -153,6 +154,12 @@ ports_manage_port_operations_multithread (struct port_bucket *bucket,
       else
 	{
 	  spin_lock (&lock);
+	  if (nreqthreads == 1)
+	    {
+	      /* No other thread is listening for requests, continue. */
+	      spin_unlock (&lock);
+	      goto startover;
+	    }
 	  nreqthreads--;
 	  totalthreads--;
 	  spin_unlock (&lock);

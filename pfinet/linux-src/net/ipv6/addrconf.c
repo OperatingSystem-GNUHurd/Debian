@@ -5,7 +5,7 @@
  *	Authors:
  *	Pedro Roque		<roque@di.fc.ul.pt>	
  *
- *	$Id: addrconf.c,v 1.3 2007/10/14 02:26:10 stesie Exp $
+ *	$Id: addrconf.c,v 1.4 2009/02/24 01:21:14 sthibaul Exp $
  *
  *	This program is free software; you can redistribute it and/or
  *      modify it under the terms of the GNU General Public License
@@ -192,7 +192,7 @@ int ipv6_addr_type(struct in6_addr *addr)
 
 	if ((addr->s6_addr32[0] | addr->s6_addr32[1]) == 0) {
 		if (addr->s6_addr32[2] == 0) {
-			if (addr->s6_addr32[3] == 0)
+			if (addr->__in6_u.__u6_addr32[3] == 0)
 				return IPV6_ADDR_ANY;
 
 			if (addr->s6_addr32[3] == __constant_htonl(0x00000001))
@@ -373,9 +373,9 @@ static void ipv6_del_addr(struct inet6_ifaddr *ifp)
 }
 
 /*
- *	Choose an apropriate source address
+ *	Choose an appropriate source address
  *	should do:
- *	i)	get an address with an apropriate scope
+ *	i)	get an address with an appropriate scope
  *	ii)	see if there is a specific route for the destination and use
  *		an address of the attached interface 
  *	iii)	don't use deprecated addresses

@@ -476,7 +476,7 @@ choose_partition(size, cur_part)
 	mutex_lock(&all_partitions.lock);
 	for (i = 0; i < all_partitions.n_partitions; i++) {
 
-		/* the undesireable one ? */
+		/* the undesirable one ? */
 		if (i == cur_part)
 			continue;
 
@@ -1154,6 +1154,7 @@ pager_read_offset(pager, offset)
 	  {
 	    ddprintf ("%spager_read_offset pager %x: bad page %d >= size %d",
 		    my_name, pager, f_page, pager->size);
+	    mutex_unlock(&pager->lock);
 	    return (union dp_map) (union dp_map *) NO_BLOCK;
 #if 0
 	    panic("%spager_read_offset",my_name);
@@ -1667,7 +1668,7 @@ ok:
  * if it is different from <addr>, it must be deallocated after use.
  */
 int
-default_read(ds, addr, size, offset, out_addr, deallocate)
+default_read(ds, addr, size, offset, out_addr, deallocate, external)
 	register dpager_t	ds;
 	vm_offset_t		addr;	/* pointer to block to fill */
 	register vm_size_t	size;
@@ -1675,6 +1676,7 @@ default_read(ds, addr, size, offset, out_addr, deallocate)
 	vm_offset_t		*out_addr;
 				/* returns pointer to data */
 	boolean_t		deallocate;
+	boolean_t		external;
 {
 	register union dp_map	block;
 	vm_offset_t	raddr;
@@ -1691,8 +1693,18 @@ default_read(ds, addr, size, offset, out_addr, deallocate)
 	 * Find the block in the paging partition
 	 */
 	block = pager_read_offset(ds, offset);
-	if ( no_block(block) )
+	if ( no_block(block) ) {
+	    if (external) {
+		/* 
+		 * An external object is requesting unswapped data,
+		 * zero fill the page and return.
+		 */ 
+		bzero((char *) addr, vm_page_size);
+		*out_addr = addr;
+		return (PAGER_SUCCESS);
+	    }
 	    return (PAGER_ABSENT);
+	}
 
 	/*
 	 * Read it, trying for the entire page.
@@ -1843,6 +1855,7 @@ struct dstruct {
 	mach_port_urefs_t request_refs;	/* Request port user-refs */
 	mach_port_t	pager_name;	/* Name port */
 	mach_port_urefs_t name_refs;	/* Name port user-refs */
+	boolean_t	external;	/* Is an external object? */
 
 	unsigned int	readers;	/* Reads in progress */
 	unsigned int	writers;	/* Writes in progress */
@@ -2300,10 +2313,12 @@ void default_pager_add(ds, internal)
 		/* possibly generate an immediate no-senders notification */
 		sync = 0;
 		pset = default_pager_internal_set;
+		ds->external = FALSE;
 	} else {
 		/* delay notification till send right is created */
 		sync = 1;
 		pset = default_pager_external_set;
+		ds->external = TRUE;
 	}
 
 	kr = mach_port_request_notification(default_pager_self, pager,
@@ -2485,6 +2500,8 @@ ddprintf ("seqnos_memory_object_terminate <%p>: pager_port_lock: <%p>[s:%d,r:%d,
 
 	pager_port_wait_for_refs(ds);
 
+	if (ds->external)
+		pager_request = ds->pager_request;
 	ds->pager_request = MACH_PORT_NULL;
 	request_refs = ds->request_refs;
 	ds->request_refs = 0;
@@ -2497,28 +2514,11 @@ ddprintf ("seqnos_memory_object_terminate <%p>: pager_port_unlock: <%p>[s:%d,r:%
 	pager_port_unlock(ds);
 
 	/*
-	 *	Now we deallocate our various port rights.
+	 *	Now we destroy our port rights.
 	 */
 
-	kr = mach_port_mod_refs(default_pager_self, pager_request,
-				MACH_PORT_RIGHT_SEND, -request_refs);
-	if (kr != KERN_SUCCESS)
-	    panic(here,my_name);
-
-	kr = mach_port_mod_refs(default_pager_self, pager_request,
-				MACH_PORT_RIGHT_RECEIVE, -1);
-	if (kr != KERN_SUCCESS)
-	    panic(here,my_name);
-
-	kr = mach_port_mod_refs(default_pager_self, pager_name,
-				MACH_PORT_RIGHT_SEND, -name_refs);
-	if (kr != KERN_SUCCESS)
-	    panic(here,my_name);
-
-	kr = mach_port_mod_refs(default_pager_self, pager_name,
-				MACH_PORT_RIGHT_RECEIVE, -1);
-	if (kr != KERN_SUCCESS)
-	    panic(here,my_name);
+	mach_port_destroy(mach_task_self(), pager_request);
+	mach_port_destroy(mach_task_self(), pager_name);
 
 	return (KERN_SUCCESS);
 }
@@ -2654,7 +2654,8 @@ ddprintf ("seqnos_memory_object_data_request <%p>: pager_port_unlock: <%p>[s:%d,
 	else
 	  rc = default_read(&ds->dpager, dpt->dpt_buffer,
 			    vm_page_size, offset,
-			    &addr, protection_required & VM_PROT_WRITE);
+			    &addr, protection_required & VM_PROT_WRITE,
+			    ds->external);
 
 	switch (rc) {
 	    case PAGER_SUCCESS:
@@ -3709,7 +3710,6 @@ S_default_pager_object_pages (mach_port_t pager,
 kern_return_t
 S_default_pager_object_set_size (mach_port_t pager,
 				 mach_port_seqno_t seqno,
-				 mach_port_t reply_to,
 				 vm_size_t limit)
 {
   kern_return_t kr;
@@ -3720,7 +3720,7 @@ S_default_pager_object_set_size (mach_port_t pager,
     return KERN_INVALID_ARGUMENT;
 
   pager_port_lock(ds, seqno);
-  pager_port_check_request(ds, reply_to);
+  pager_port_check_request(ds, ds->pager_request);
   pager_port_wait_for_readers(ds);
   pager_port_wait_for_writers(ds);
 
@@ -3744,7 +3744,7 @@ S_default_pager_object_set_size (mach_port_t pager,
 				       VM_PROT_ALL, ds->pager);
       if (kr != KERN_SUCCESS)
 	panic ("memory_object_lock_request: %d", kr);
-      ds->lock_request = reply_to;
+      ds->lock_request = ds->pager_request;
       kr = MIG_NO_REPLY;
     }
   else

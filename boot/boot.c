@@ -474,8 +474,8 @@ static struct argp_option options[] =
     "Pause for user confirmation at various times during booting" },
   { "isig",      'I', 0, 0,
     "Do not disable terminal signals, so you can suspend and interrupt boot."},
-  { "device-map",   'm', "DEBICENAME=DEVICEFILE", 0,
-    "Map the device in subhurd to the device in the main Hurd."},
+  { "device",	   'f', "device_name=device_file", 0,
+    "Specify a device file used by subhurd and its virtual name."},
   { "defpager",	    'p', "PAGER TRANSLATOR", 0,
     "Specify the default pager for subhurd."},
   { "user", 'u', 0, 0, "For normal user."},
@@ -495,7 +495,7 @@ static struct dev_map *dev_map_head;
 
 static struct dev_map *add_dev_map (char *dev_name, char *dev_file)
 {
-  struct dev_map *map = (struct dev_map *) malloc (sizeof (*map));
+  struct dev_map *map = malloc (sizeof (*map));
 
   assert (map);
   map->name = dev_name;
@@ -544,7 +544,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
       bootstrap_args[len] = '\0';
       break;
 
-    case 'm':
+    case 'f':
       dev_file = strchr (arg, '=');
       if (dev_file == NULL)
 	return ARGP_ERR_UNKNOWN;
@@ -891,6 +891,7 @@ main (int argc, char **argv, char **envp)
 	int i = strlen (str);
 
 	write (2, str, i);
+	write (2, "\n",  1);
 	host_exit (1);
       }
     free (buf);
@@ -990,7 +991,7 @@ read_reply ()
   if (! spin_try_lock (&readlock))
     return;
 
-  /* Since we're commited to servicing the read, no one else need do so.  */
+  /* Since we're committed to servicing the read, no one else need do so.  */
   should_read = 0;
 
   ioctl (0, FIONREAD, &avail);
@@ -1190,10 +1191,8 @@ ds_device_open (mach_port_t master_port,
   map = lookup_dev (name);
   if (map)
     {
-      error_t err;
       *devicetype = MACH_MSG_TYPE_MOVE_SEND;
-      err = device_open (map->port, mode, "", device);
-      return err;
+      return device_open (map->port, mode, "", device);
     }
 
   if (is_user)

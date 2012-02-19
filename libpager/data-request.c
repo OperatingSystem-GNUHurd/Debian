@@ -1,5 +1,5 @@
 /* Implementation of memory_object_data_request for pager library
-   Copyright (C) 1994,95,96,97,2000,02 Free Software Foundation
+   Copyright (C) 1994,95,96,97,2000,02,10 Free Software Foundation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License as
@@ -67,14 +67,12 @@ _pager_seqnos_memory_object_data_request (mach_port_t object,
   if (p->pager_state != NORMAL)
     {
       printf ("pager in wrong state for read\n");
-      _pager_release_seqno (p, seqno);
-      mutex_unlock (&p->interlock);
-      goto allow_term_out;
+      goto allow_release_out;
     }
 
   err = _pager_pagemap_resize (p, offset + length);
   if (err)
-    goto release_out;		/* Can't do much about the actual error.  */
+    goto allow_release_out;	/* Can't do much about the actual error.  */
 
   /* If someone is paging this out right now, the disk contents are
      unreliable, so we have to wait.  It is too expensive (right now) to
@@ -140,6 +138,8 @@ _pager_seqnos_memory_object_data_request (mach_port_t object,
   ports_port_deref (p);
   return 0;
 
+ allow_release_out:
+  _pager_allow_termination (p);
  release_out:
   _pager_release_seqno (p, seqno);
   mutex_unlock (&p->interlock);

@@ -261,6 +261,8 @@ struct proc_stat
 
   /* Virtual memory statistics for the process, as returned by task_info;
      see <mach/task_info.h> for a description of task_events_info_t.  */
+  /* FIXME: we are actually currently storing it into proc_info, see
+     fetch_procinfo.  */
   task_events_info_t task_events_info;
   task_events_info_data_t task_events_info_buf;
   size_t task_events_info_size;
@@ -301,6 +303,8 @@ struct proc_stat
   char *env;
   /* The length of ENV.  */
   size_t env_len;
+
+  unsigned num_ports;
 };
 
 /* Proc_stat flag bits; each bit is set in the FLAGS field if that
@@ -338,6 +342,7 @@ struct proc_stat
 #define PSTAT_OWNER_UID	      0x200000 /* The uid of the the proc's owner */
 #define PSTAT_UMASK	      0x400000 /* The proc's current umask */
 #define PSTAT_HOOK	      0x800000 /* Has a non-zero hook */
+#define PSTAT_NUM_PORTS      0x4000000 /* Number of Mach ports in the task */
 
 /* Flag bits that don't correspond precisely to any field.  */
 #define PSTAT_NO_MSGPORT     0x1000000 /* Don't use the msgport at all */
@@ -441,6 +446,7 @@ extern char *proc_stat_state_tags;
 #define proc_stat_umask(ps) ((ps)->umask)
 #define proc_stat_tty(ps) ((ps)->tty)
 #define proc_stat_task_events_info(ps) ((ps)->task_events_info)
+#define proc_stat_num_ports(ps) ((ps)->num_ports)
 #define proc_stat_has(ps, needs) (((ps)->flags & needs) == needs)
 
 /* True if PS refers to a thread and not a process.  */
@@ -454,7 +460,9 @@ error_t _proc_stat_create (pid_t pid, struct ps_context *context,
 
 /* Frees PS and any memory/ports it references.  Users shouldn't use this
    routine; proc_stats are normally freed only when their ps_context goes
-   away.  */
+   away.  Insubordinate users will make sure they free the thread proc_stats
+   before they free the corresponding process proc_stat since the thread_wait
+   fields of the former may reference the latter.  */
 void _proc_stat_free (struct proc_stat *ps);
 
 /* Adds FLAGS to PS's flags, fetching information as necessary to validate
@@ -467,7 +475,7 @@ error_t proc_stat_set_flags (struct proc_stat *ps, ps_flags_t flags);
    PS (N should be between 0 and the number of threads in the process).  The
    resulting proc_stat isn't fully functional -- most flags can't be set in
    it.  If N was out of range, EINVAL is returned.  If a memory allocation
-   error occured, ENOMEM is returned.  Otherwise, 0 is returned.  */
+   error occurred, ENOMEM is returned.  Otherwise, 0 is returned.  */
 error_t proc_stat_thread_create (struct proc_stat *ps, unsigned n,
 				 struct proc_stat **thread_ps);
 
@@ -761,7 +769,7 @@ struct ps_fmt
      this procstat. */
   char *inapp;
 
-  /* The string displayed by default for fields which are appropiate, but
+  /* The string displayed by default for fields which are appropriate, but
      couldn't be fetched due to some error.  */
   char *error;
 };
@@ -814,7 +822,7 @@ void ps_fmt_free (struct ps_fmt *fmt);
    instance, you would like squash a format without destroying the original.  */
 error_t ps_fmt_clone (struct ps_fmt *fmt, struct ps_fmt **copy);
 
-/* Write an appropiate header line for FMT, containing the titles of all its
+/* Write an appropriate header line for FMT, containing the titles of all its
    fields appropiately aligned with where the values would be printed, to
    STREAM (without a trailing newline).  If count is non-NULL, the total
    number number of characters output is added to the integer it points to.
@@ -829,14 +837,14 @@ error_t ps_fmt_write_proc_stat (struct ps_fmt *fmt, struct proc_stat *ps,
 				struct ps_stream *stream);
 
 /* Remove those fields from FMT for which the function FN, when called on the
-   field, returns true.  Appropiate inter-field characters are also removed:
+   field, returns true.  Appropriate inter-field characters are also removed:
    those *following* deleted fields at the beginning of the fmt, and those
-   *preceeding* deleted fields *not* at the beginning. */
+   *preceding* deleted fields *not* at the beginning. */
 void ps_fmt_squash (struct ps_fmt *fmt, int (*fn)(struct ps_fmt_field *field));
 
 /* Remove those fields from FMT which would need the proc_stat flags FLAGS.
-   Appropiate inter-field characters are also removed: those *following*
-   deleted fields at the beginning of the fmt, and those *preceeding* deleted
+   Appropriate inter-field characters are also removed: those *following*
+   deleted fields at the beginning of the fmt, and those *preceding* deleted
    fields *not* at the beginning.  */
 void ps_fmt_squash_flags (struct ps_fmt *fmt, ps_flags_t flags);
 

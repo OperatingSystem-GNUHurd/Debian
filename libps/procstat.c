@@ -109,20 +109,22 @@ fetch_procinfo (process_t server, pid_t pid,
 		struct procinfo **pi, size_t *pi_size,
 		char **waits, size_t *waits_len)
 {
+  static const struct { ps_flags_t ps_flag; int pi_flags; } map[] =
+  {
+    { PSTAT_TASK_BASIC,     PI_FETCH_TASKINFO				},
+    { PSTAT_TASK_EVENTS,    PI_FETCH_TASKEVENTS				},
+    { PSTAT_NUM_THREADS,    PI_FETCH_THREADS				},
+    { PSTAT_THREAD_BASIC,   PI_FETCH_THREAD_BASIC | PI_FETCH_THREADS	},
+    { PSTAT_THREAD_SCHED,   PI_FETCH_THREAD_SCHED | PI_FETCH_THREADS	},
+    { PSTAT_THREAD_WAITS,   PI_FETCH_THREAD_WAITS | PI_FETCH_THREADS	},
+    { 0, }
+  };
   int pi_flags = 0;
+  int i;
 
-  if ((need & PSTAT_TASK_BASIC) && !(*have & PSTAT_TASK_BASIC))
-    pi_flags |= PI_FETCH_TASKINFO;
-  if ((need & PSTAT_TASK_EVENTS) && !(*have & PSTAT_TASK_EVENTS))
-    pi_flags |= PI_FETCH_TASKEVENTS;
-  if ((need & PSTAT_NUM_THREADS) && !(*have & PSTAT_NUM_THREADS))
-    pi_flags |= PI_FETCH_THREADS;
-  if ((need & PSTAT_THREAD_BASIC) && !(*have & PSTAT_THREAD_BASIC))
-    pi_flags |= PI_FETCH_THREAD_BASIC | PI_FETCH_THREADS;
-  if ((need & PSTAT_THREAD_SCHED) && !(*have & PSTAT_THREAD_SCHED))
-    pi_flags |= PI_FETCH_THREAD_SCHED | PI_FETCH_THREADS;
-  if ((need & PSTAT_THREAD_WAITS) && !(*have & PSTAT_THREAD_WAITS))
-    pi_flags |= PI_FETCH_THREAD_WAITS | PI_FETCH_THREADS;
+  for (i = 0; map[i].ps_flag; i++)
+    if ((need & map[i].ps_flag) && !(*have & map[i].ps_flag))
+      pi_flags |= map[i].pi_flags;
 
   if (pi_flags || ((need & PSTAT_PROC_INFO) && !(*have & PSTAT_PROC_INFO)))
     {
@@ -137,16 +139,9 @@ fetch_procinfo (process_t server, pid_t pid,
 	/* Update *HAVE to reflect what we've successfully fetched.  */
 	{
 	  *have |= PSTAT_PROC_INFO;
-	  if (pi_flags & PI_FETCH_TASKINFO)
-	    *have |= PSTAT_TASK_BASIC;
-	  if (pi_flags & PI_FETCH_THREADS)
-	    *have |= PSTAT_NUM_THREADS;
-	  if (pi_flags & PI_FETCH_THREAD_BASIC)
-	    *have |= PSTAT_THREAD_BASIC;
-	  if (pi_flags & PI_FETCH_THREAD_SCHED)
-	    *have |= PSTAT_THREAD_SCHED;
-	  if (pi_flags & PI_FETCH_THREAD_WAITS)
-	    *have |= PSTAT_THREAD_WAITS;
+	  for (i = 0; map[i].ps_flag; i++)
+	    if ((pi_flags & map[i].pi_flags) == map[i].pi_flags)
+	      *have |= map[i].ps_flag;
 	}
       return err;
     }
@@ -293,7 +288,7 @@ add_preconditions (ps_flags_t flags, struct ps_context *context)
     flags |= PSTAT_PROC_INFO;
   if (flags & PSTAT_SUSPEND_COUNT)
     /* We just request the resources require for both the thread and task
-       versions, as the extraneous info won't be possible to aquire anyway. */
+       versions, as the extraneous info won't be possible to acquire anyway. */
     flags |= PSTAT_TASK_BASIC | PSTAT_THREAD_BASIC;
   if (flags & (PSTAT_CTTYID | PSTAT_CWDIR | PSTAT_AUTH | PSTAT_UMASK)
       && !(flags & PSTAT_NO_MSGPORT))
@@ -779,7 +774,7 @@ proc_stat_set_flags (struct proc_stat *ps, ps_flags_t flags)
 
   /* Returns true if (1) FLAGS is in NEED, and (2) the appropriate
      preconditions PRECOND are available; if only (1) is true, FLAG is added
-     to the INAPP set if appropiate (to distinguish it from an error), and
+     to the INAPP set if appropriate (to distinguish it from an error), and
      returns false.  */
 #define NEED(flag, precond)						      \
   ({									      \
@@ -966,7 +961,7 @@ proc_stat_set_flags (struct proc_stat *ps, ps_flags_t flags)
      when creating a file.  */
   MP_MGET (PSTAT_UMASK, PSTAT_TASK,
 	   ps_msg_get_init_int (ps->msgport, ps->task, INIT_UMASK,
-				&ps->umask));
+				(int *) &ps->umask));
 
   if (NEED (PSTAT_OWNER_UID, PSTAT_PROC_INFO))
     {
@@ -994,6 +989,10 @@ proc_stat_set_flags (struct proc_stat *ps, ps_flags_t flags)
   if (NEED (PSTAT_TTY, PSTAT_CTTYID))
     if (ps_context_find_tty_by_cttyid (ps->context, ps->cttyid, &ps->tty) == 0)
       have |= PSTAT_TTY;
+
+  /* The number of Mach ports in the task. */
+  MGET (PSTAT_NUM_PORTS, PSTAT_PID,
+        proc_getnports (server, ps->pid, &ps->num_ports));
 
   /* Update PS's flag state.  We haven't tried user flags yet, so don't mark
      them as having failed.  We do this before checking user bits so that the
@@ -1050,7 +1049,7 @@ _proc_stat_free (ps)
   MFREEPORT (PSTAT_AUTH, auth);
 
   /* free any allocated memory pointed to by PS */
-  MFREEMEM (PSTAT_PROCINFO, proc_info, ps->proc_info_size,
+  MFREEMEM (PSTAT_PROC_INFO, proc_info, ps->proc_info_size,
 	    ps->proc_info_vm_alloced, 0, char);
   MFREEMEM (PSTAT_THREAD_BASIC, thread_basic_info, 0, 0, 0, 0);
   MFREEMEM (PSTAT_THREAD_SCHED, thread_sched_info, 0, 0, 0, 0);
@@ -1058,6 +1057,8 @@ _proc_stat_free (ps)
   MFREEMEM (PSTAT_ENV, env, ps->env_len, ps->env_vm_alloced, 0, char);
   MFREEMEM (PSTAT_TASK_EVENTS, task_events_info, ps->task_events_info_size,
 	    0, &ps->task_events_info_buf, char);
+  MFREEMEM (PSTAT_THREAD_WAITS, thread_waits, ps->thread_waits_len,
+	    ps->thread_waits_vm_alloced, 0, char);
 
   FREE (ps);
 }
@@ -1089,7 +1090,7 @@ _proc_stat_create (pid_t pid, struct ps_context *context, struct proc_stat **ps)
    resulting proc_stat isn't fully functional -- most flags can't be set in
    it.  It also contains a pointer to PS, so PS shouldn't be freed without
    also freeing THREAD_PS.  If N was out of range, EINVAL is returned.  If a
-   memory allocation error occured, ENOMEM is returned.  Otherwise, 0 is
+   memory allocation error occurred, ENOMEM is returned.  Otherwise, 0 is
    returned.  */
 error_t
 proc_stat_thread_create (struct proc_stat *ps, unsigned index, struct proc_stat **thread_ps)
