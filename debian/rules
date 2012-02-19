@@ -41,6 +41,8 @@ build/hurd::
 clean::
 	$(MAKE) -C libdde_linux26 cleanall
 	rm -f $$(find libdde_linux26 -name \*.d)
+	rm -fr libdde_linux26/build
+	rm -fr libdde_linux26/lib/src/gen_crc32table libdde_linux26/lib/src/crc32table.h libdde_linux26/lib/src/timeconst.h
 	$(MAKE) -C dde_e100 cleanall
 	$(MAKE) -C dde_e1000 cleanall
 	$(MAKE) -C dde_pcnet32 cleanall
