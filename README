@@ -5,7 +5,7 @@ for, i.e. the merge process is:
 $ git checkout dde
 $ git pull upstream-dde
 $ git tag -a upstream/dde/<date>
-$ git checkou dde-clean
+$ git checkout dde-clean
 $ git pull . dde
 $ git checkout libpthread
 $ git pull upstream-libpthread
@@ -29,7 +29,7 @@ $ git pull upstream
 $ git tag -a upstream/hurd/<date>
 $ git checkout upstream-merged
 $ git pull . upstream
-$ git pull . dde
+$ git pull . dde-clean
 $ git pull . libpthread-moved
 $ git pull . random
 $ git pull . procfs-jkoenig-moved
