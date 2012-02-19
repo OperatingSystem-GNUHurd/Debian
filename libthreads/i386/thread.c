@@ -25,21 +25,7 @@
  */
 /*
  * HISTORY
- * $Log: thread.c,v $
- * Revision 1.7  2002/05/27 02:50:10  roland
- * 2002-05-26  Roland McGrath  <roland@frob.com>
- *
- * 	Changes merged from CMU MK83a version:
- * 	* cthreads.h, options.h: Various cleanups.
- * 	* call.c, cthread_data.c, sync.c, mig_support.c: Likewise.
- * 	* i386/cthreads.h, i386/thread.c, i386/lock.s: Likewise.
- * 	* cthread_internals.h: Add decls for internal functions.
- * 	(struct cproc): Use vm_offset_t for stack_base and stack_size members.
- * 	Use natural_t for context member.
- * 	* cprocs.c: Use prototypes for all defns.
- * 	* cthreads.c: Likewise.
- * 	(cthread_exit): Cast any_t to integer_t before int.
- *
+ * $Log:	thread.c,v $
  * Revision 2.8  93/02/02  21:54:58  mrt
  * 	Changed include of mach/mach.h to mach.h.
  * 	[93/02/02            mrt]
@@ -68,7 +54,7 @@
  */
 
 #ifndef	lint
-char rcs_id[] = "$Header: /sources/hurd/hurd/libthreads/i386/thread.c,v 1.7 2002/05/27 02:50:10 roland Exp $";
+char rcs_id[] = "$Header: cvs-sans-libpthread/hurd/libthreads/i386/thread.c,v 1.7 2002/05/27 02:50:10 roland Exp $";
 #endif	/* not lint */
 
 

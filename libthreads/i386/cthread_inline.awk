@@ -25,10 +25,7 @@
 #
 #
 # HISTORY
-# $Log: cthread_inline.awk,v $
-# Revision 1.1  1992/10/06 18:31:15  mib
-# entered into RCS
-#
+# $Log:	cthread_inline.awk,v $
 # Revision 2.5  91/05/14  17:57:03  mrt
 # 	Correcting copyright
 # 

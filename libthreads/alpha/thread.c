@@ -26,11 +26,6 @@
 /*
  * HISTORY
  * $Log: thread.c,v $
- * Revision 1.2  2002/05/27 02:50:13  roland
- * 2002-05-26  Roland McGrath  <roland@frob.com>
- *
- * 	* alpha/thread.c: #if 0 out the silly bzero decl.
- *
  * Revision 1.1  2002/05/27 02:13:47  roland
  * 2002-05-26  Roland McGrath  <roland@frob.com>
  *

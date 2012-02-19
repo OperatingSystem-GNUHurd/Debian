@@ -34,12 +34,6 @@
  * 	macros. They take one argument: a name string.
  *
  * $Log: cthreads.h,v $
- * Revision 1.20  2002/06/01 19:37:55  roland
- * 2002-05-28  Roland McGrath  <roland@frob.com>
- *
- * 	* cthreads.h: Do not define WAIT_DEBUG to affect inlines.
- * 	* options.h: Not here either.
- *
  * Revision 1.19  2002/05/28 23:55:58  roland
  * 2002-05-28  Roland McGrath  <roland@frob.com>
  *

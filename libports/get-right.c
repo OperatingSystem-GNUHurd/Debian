@@ -22,8 +22,6 @@
 #include <cthreads.h>
 #include <mach/notify.h>
 #include <assert.h>
-#include <string.h>
-#include <stdio.h>
 
 mach_port_t
 ports_get_right (void *port)

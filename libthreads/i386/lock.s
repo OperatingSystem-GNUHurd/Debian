@@ -25,21 +25,7 @@
  */
 /*
  * HISTORY
- * $Log: lock.s,v $
- * Revision 1.2  2002/05/27 02:50:10  roland
- * 2002-05-26  Roland McGrath  <roland@frob.com>
- *
- * 	Changes merged from CMU MK83a version:
- * 	* cthreads.h, options.h: Various cleanups.
- * 	* call.c, cthread_data.c, sync.c, mig_support.c: Likewise.
- * 	* i386/cthreads.h, i386/thread.c, i386/lock.s: Likewise.
- * 	* cthread_internals.h: Add decls for internal functions.
- * 	(struct cproc): Use vm_offset_t for stack_base and stack_size members.
- * 	Use natural_t for context member.
- * 	* cprocs.c: Use prototypes for all defns.
- * 	* cthreads.c: Likewise.
- * 	(cthread_exit): Cast any_t to integer_t before int.
- *
+ * $Log:	lock.s,v $
  * Revision 2.6  93/05/10  17:51:38  rvb
  * 	Use C Comment
  * 	[93/05/04  18:14:05  rvb]

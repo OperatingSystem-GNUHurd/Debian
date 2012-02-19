@@ -32,7 +32,6 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include <sys/resource.h>
 #include <hurd/auth.h>
 #include <assert.h>
-#include <stdio.h>
 
 #include "proc.h"
 #include "process_S.h"
@@ -827,7 +826,6 @@ add_tasks (task_t task)
 		  if (!p)
 		    {
 		      p = new_proc (tasks[j]);
-
 		      set = 1;
 		    }
 		  if (!foundp && tasks[j] == task)

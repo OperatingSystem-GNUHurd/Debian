@@ -26,13 +26,6 @@
 /*
  * HISTORY
  * $Log: stack.c,v $
- * Revision 1.9  2002/07/29 17:52:17  marcus
- * 2002-07-29  Marcus Brinkmann  <marcus@gnu.org>
- *
- * 	* stack.c (stack_init): Put back in setting of the
- * 	__hurd_threadvar_stack_mask and __hurd_threadvar_stack_offset
- * 	variables (which got lost in the merge).
- *
  * Revision 1.8  2002/05/27 02:50:41  roland
  * 2002-05-26  Roland McGrath  <roland@frob.com>
  *

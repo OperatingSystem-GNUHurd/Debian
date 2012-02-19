@@ -26,12 +26,6 @@
 /*
  * HISTORY
  * $Log: csw.S,v $
- * Revision 1.10  2000/03/03 21:58:21  roland
- * 2000-02-28  Roland McGrath  <roland@baalperazim.frob.com>
- *
- * 	* i386/csw.S: #undef __ELF__ before defining it, since
- * 	it is usually predefined.
- *
  * Revision 1.9  1998/07/20 06:58:28  roland
  * 1998-07-20  Roland McGrath  <roland@baalperazim.frob.com>
  *
