@@ -2,31 +2,12 @@ SYSTEMS = x86-l4v2
 ARCH = x86
 SYSTEM = x86-l4v2
 
-BUILDDIR       ?=
+BUILDDIR       ?= ..
 
-libmachdev_path := ../libmachdev/libmachdev.a
-has_libmachdev := $(wildcard $(libmachdev_path))
-ifeq ($(strip $(has_libmachdev)),)
-  libmachdev_path := $(BUILDDIR)/libmachdev/libmachdev.a
-endif
-
-libddekit_path := ../libddekit/libddekit.a
-has_libddekit := $(wildcard $(libddekit_path))
-ifeq ($(strip $(has_libddekit)),)
-  libddekit_path := $(BUILDDIR)/libddekit/libddekit.a
-endif
-
-libslab_path := ../libhurd-slab/libhurd-slab.a
-has_libslab := $(wildcard $(libslab_path))
-ifeq ($(strip $(has_libslab)),)
-  libslab_path := $(BUILDDIR)/libhurd-slab/libhurd-slab.a
-endif
-
-libbpf_path := ../libbpf/libbpf.a
-has_libbpf := $(wildcard $(libbpf_path))
-ifeq ($(strip $(has_libbpf)),)
-  libbpf_path := $(BUILDDIR)/libbpf/libbpf.a
-endif
+libmachdev_path := $(BUILDDIR)/libmachdev/libmachdev.a
+libddekit_path := $(BUILDDIR)/libddekit/libddekit.a
+libslab_path := -L$(BUILDDIR)/libhurd-slab -lhurd-slab
+libbpf_path := -L$(BUILDDIR)/libbpf -lbpf
 
 DDEKITLIBDIR = $(PKGDIR)/../libddekit/
 DDEKITINCDIR = $(PKGDIR)/../libddekit/include
