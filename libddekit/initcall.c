@@ -9,7 +9,7 @@
 #define SECTION(x) __attribute__((section( x )))
 #endif
 
-typedef void (*const crt0_hook)(void);
+typedef void (*crt0_hook)(void);
 
 static crt0_hook __L4DDE_CTOR_BEG__[1] SECTION(".mark_beg_l4dde_ctors")	= BEG;
 static crt0_hook __l4DDE_CTOR_END__[1] SECTION(".mark_end_l4dde_ctors")	= END;
