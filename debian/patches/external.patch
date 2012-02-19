@@ -10,7 +10,7 @@ Index: hurd-debian/Makefile
  	      libpager libfshelp libdiskfs libtrivfs libps \
 -	      libnetfs libpipe libstore libhurdbugaddr libftpconn libcons
 +	      libnetfs libpipe libstore libhurdbugaddr libftpconn libcons \
-+	      libpthread libmachdev libddekit libhurd-slab
++	      libpthread libmachdev libbpf libddekit libhurd-slab
  
  # Hurd programs
  prog-subdirs = auth proc exec init term \
