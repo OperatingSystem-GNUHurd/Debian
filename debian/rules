@@ -31,12 +31,12 @@ DEB_DH_MAKESHLIBS_ARGS_hurd := --add-udeb="hurd-udeb"
 
 build/hurd::
 	cd $(DEB_BUILDDIR)/doc && texi2html -split chapter ../../doc/hurd.texi
-	$(MAKE) -C libdde_linux26 BUILDDIR=$(PWD)/build
-	$(MAKE) -C dde_e100 BUILDDIR=$(PWD)/build
-	$(MAKE) -C dde_e1000 BUILDDIR=$(PWD)/build
-	$(MAKE) -C dde_pcnet32 BUILDDIR=$(PWD)/build
-	$(MAKE) -C dde_rtl8139 BUILDDIR=$(PWD)/build
-	$(MAKE) -C dde_ne2k_pci BUILDDIR=$(PWD)/build
+	$(MAKE) -C libdde_linux26 BUILDDIR=$(CURDIR)/build
+	$(MAKE) -C dde_e100 BUILDDIR=$(CURDIR)/build
+	$(MAKE) -C dde_e1000 BUILDDIR=$(CURDIR)/build
+	$(MAKE) -C dde_pcnet32 BUILDDIR=$(CURDIR)/build
+	$(MAKE) -C dde_rtl8139 BUILDDIR=$(CURDIR)/build
+	$(MAKE) -C dde_ne2k_pci BUILDDIR=$(CURDIR)/build
 
 clean::
 	$(MAKE) -C libdde_linux26 cleanall
