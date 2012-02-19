@@ -1,0 +1,34 @@
+2008-09-26  Zheng Da  <zhengda1936@gmail.com>
+
+	* README: Update.
+
+	* devnode.c (args_doc): New variable.
+	(options): Remove '-d' and change the description of '-n'.
+	(parse_opt): Get the device in ARGP_KEY_ARG instead of from '-d'.
+	(main): Set args_doc to the field of argp.
+
+2008-08-28 Zheng Da <zhengda1936@gmail.com>
+
+	* devnode.c (ds_device_open): Return the error instead of stopping the
+	translator.
+
+2008-08-20 Zheng Da <zhengda1936@gmail.com>
+
+	* devnode.c (ds_device_open): Test device_name before using it.
+
+	* util.h (DEBUG): Remove the macro.
+
+2008-08-18 Zheng Da <zhengda1936@gmail.com>
+
+	* README: New file.
+
+	* devnode.c (options): Replace the option '-i' with '-d'.
+	(parse_opt): Handle the option '-d'. 
+
+2008-08-17 Zheng Da <zhengda1936@gmail.com>
+
+	* Makefile: New file.
+
+	* util.h: New file.
+
+	* devnode.c: New file.
