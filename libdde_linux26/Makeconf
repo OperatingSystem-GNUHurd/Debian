@@ -39,7 +39,7 @@ ifeq ($(ARCH), x86)
 MY_DDE_INCDIR += $(OBJ_BASE)/include/linux-headers/asm/mach-default
 endif
 
-PRIVATE_INCDIR += $(MY_DDE_INCDIR) $(MY_LINUX26_INCDIR) $(PKGDIR)/../libddekit/include
+PRIVATE_INCDIR += $(MY_DDE_INCDIR) $(MY_LINUX26_INCDIR) $(PKGDIR)/../libddekit
 
 DEFINES += -D__KERNEL__ -DDDE_LINUX $(KBUILD_DEFINES)
 CPPFLAGS += $(KBUILD_CPPFLAGS)
