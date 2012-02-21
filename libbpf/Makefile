@@ -21,7 +21,7 @@ makemode := library
 libname = libbpf
 SRCS= bpf_impl.c queue.c
 LCLHDRS = bpf_impl.h queue.h
-installhdrs = 
+installhdrs = bpf_impl.h
 
 MIGSTUBS = 
 OBJS = $(sort $(SRCS:.c=.o) $(MIGSTUBS))
