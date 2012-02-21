@@ -62,7 +62,7 @@
 
 #include <queue.h>
 #include <cthreads.h>
-#include <bpf_impl.h>
+#include <hurd/bpf_impl.h>
 
 #if 0
 /*

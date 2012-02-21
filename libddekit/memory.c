@@ -18,7 +18,7 @@
 #include <sys/mman.h>
 
 #include "mach_U.h"
-#include "libhurd-slab/slab.h"
+#include <hurd/slab.h>
 
 #include "util.h"
 #include "ddekit/memory.h"
