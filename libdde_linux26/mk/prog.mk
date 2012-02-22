@@ -56,7 +56,6 @@ TARGET_STANDARD := $(TARGET) $(TARGET_$(OSYSTEM))
 TARGET_PROFILE := $(addsuffix .pr,$(filter $(BUILD_PROFILE),$(TARGET)))
 TARGET	+= $(TARGET_$(OSYSTEM)) $(TARGET_PROFILE)
 
-CFLAGS += $(DDEKITINCDIR)
 # define some variables different for lib.mk and prog.mk
 ifeq ($(MODE),loader)
 LDFLAGS += --dynamic-linker libld-l4.s.so
