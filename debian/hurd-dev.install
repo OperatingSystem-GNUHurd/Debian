@@ -1,4 +1,7 @@
 debian/tmp/lib/*.a lib
 debian/tmp/include/* usr/include
 debian/tmp/lib/*.so lib
-lib/src/libdde_*.a usr/lib
+libdde_linux26/lib/src/libdde_*.a usr/lib
+libdde_linux26/mk usr/share/libdde_linux26
+libdde_linux26/Makeconf* usr/share/libdde_linux26
+debian/tmp/usr/share/libdde_linux26/build usr/share/libdde_linux26
