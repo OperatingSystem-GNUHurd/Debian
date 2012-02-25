@@ -8,7 +8,7 @@ TARGET         = dde_e1000
 SRC_C          = main.c e1000_ethtool.c e1000_hw.c e1000_main.c e1000_param.c
 
 LIBS          += $(libmachdev_path) -ldde_linux26.o -ldde_linux26_net $(libddekit_path) -lfshelp -ltrivfs -lpciaccess -lz -lthreads -lshouldbeinlibc -lports $(libslab_path) $(libbpf_path)
-CFLAGS        += -g -I$(PKGDIR)/include -I../libmachdev
+CFLAGS        += -g -I$(PKGDIR)/include -I$(BUILDDIR)/include
 
 # DDE configuration
 include $(L4DIR)/Makeconf

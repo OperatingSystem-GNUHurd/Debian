@@ -29,23 +29,25 @@ DEB_MAKE_INSTALL_TARGET = install prefix=$(DEB_DESTDIR) sysconfdir=$(DEB_DESTDIR
 DEB_DH_STRIP_ARGS := --dbg-package=hurd
 DEB_DH_MAKESHLIBS_ARGS_hurd := --add-udeb="hurd-udeb"
 
+DDE_DRIVERS = e100 e1000 pcnet32 rtl8139 ne2k_pci
+
 build/hurd::
 	cd $(DEB_BUILDDIR)/doc && texi2html -split chapter ../../doc/hurd.texi
-	$(MAKE) -C libdde_linux26 BUILDDIR=$(PWD)/build
-	$(MAKE) -C dde_e100 BUILDDIR=$(PWD)/build
-	$(MAKE) -C dde_e1000 BUILDDIR=$(PWD)/build
-	$(MAKE) -C dde_pcnet32 BUILDDIR=$(PWD)/build
-	$(MAKE) -C dde_rtl8139 BUILDDIR=$(PWD)/build
-	$(MAKE) -C dde_ne2k_pci BUILDDIR=$(PWD)/build
+	$(MAKE) -C libdde_linux26 BUILDDIR=$(CURDIR)/build
+	for i in $(DDE_DRIVERS) ; \
+	do \
+		$(MAKE) -C dde_$$i BUILDDIR=$(CURDIR)/build || exit 1 ; \
+	done
 
 clean::
 	$(MAKE) -C libdde_linux26 cleanall
 	rm -f $$(find libdde_linux26 -name \*.d)
-	$(MAKE) -C dde_e100 cleanall
-	$(MAKE) -C dde_e1000 cleanall
-	$(MAKE) -C dde_pcnet32 cleanall
-	$(MAKE) -C dde_rtl8139 cleanall
-	$(MAKE) -C dde_ne2k_pci cleanall
+	rm -fr libdde_linux26/build
+	rm -fr libdde_linux26/lib/src/gen_crc32table libdde_linux26/lib/src/crc32table.h libdde_linux26/lib/src/timeconst.h
+	for i in $(DDE_DRIVERS) ; \
+	do \
+		$(MAKE) -C dde_$$i cleanall ; \
+	done
 
 install/hurd::
 	# runsystem is managed by update-alternatives
@@ -69,6 +71,8 @@ install/hurd::
 
 	install -m664 $(DEB_SRCDIR)/console/motd.UTF8 debian/hurd/etc/
 	install -m664 $(DEB_SRCDIR)/release/servers.boot debian/hurd/boot/
+
+	$(MAKE) -C libdde_linux26 INSTALLDIR=$(CURDIR)/debian/tmp/usr/share/libdde_linux26/build/include install
 
 install/hurd-dev::
 	install -m644 debian/local/soundcard.h debian/tmp/include/sys
