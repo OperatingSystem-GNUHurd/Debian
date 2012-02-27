@@ -61,6 +61,7 @@ Package-Type: udeb
 Priority: optional
 Section: debian-installer
 Architecture: hurd-any
+XC-Package-Type: udeb
 Depends: ${misc:Depends}
 Provides: hurd, ext2-modules, fat-modules, ipv6-modules, isofs-modules, loop-modules, mouse-modules, nfs-modules, socket-modules, ufs-modules
 Description: GNU Hurd - udeb

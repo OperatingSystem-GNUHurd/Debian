@@ -1,8 +1,10 @@
 hurd (20120222-2) UNRELEASED; urgency=low
 
-  * control: Bump Standards-Version to 3.9.3 (no changes).
+  * control:
+    - Bump Standards-Version to 3.9.3 (no changes).
+    - Set hurd-udeb XC-Package-Type to udeb.
 
- -- Samuel Thibault <sthibault@debian.org>  Sat, 25 Feb 2012 17:40:16 +0100
+ -- Samuel Thibault <sthibault@debian.org>  Mon, 27 Feb 2012 22:37:25 +0100
 
 hurd (20120222-1) unstable; urgency=low
 
