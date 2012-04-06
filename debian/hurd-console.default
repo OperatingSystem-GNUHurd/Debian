@@ -3,7 +3,8 @@
 # Set this to 'false' to avoid running the Hurd console on bootup.
 ENABLE='true'
 
-# The display driver, mandatory.  Either `vga' or `ncursesw'.
+# The display driver, mandatory.  Either `vga' or `ncursesw'.  In the case of
+# VGA, -f /some/where/file.bdf can be appended to load a specific font.
 DISPLAY='-d vga'
 
 # The keyboard driver, mandatory.  Either `pc_kbd' or `xkb' from the
