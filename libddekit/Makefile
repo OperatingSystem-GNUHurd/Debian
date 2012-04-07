@@ -22,17 +22,20 @@ libname = libddekit
 SRCS= condvar.c init.c interrupt.c lock.c malloc.c memory.c 	\
       pci.c pgtab.c printf.c resources.c list.c panic.c \
       thread.c timer.c initcall.c
-LCLHDRS = include/ddekit/condvar.h include/ddekit/lock.h	\
-	  include/ddekit/semaphore.h include/ddekit/debug.h	\
-	  include/ddekit/inline.h include/ddekit/panic.h	\
-	  include/ddekit/thread.h include/ddekit/types.h	\
-	  include/ddekit/pgtab.h include/ddekit/printf.h	\
-	  include/ddekit/pci.h include/ddekit/assert.h		\
-	  include/ddekit/interrupt.h include/ddekit/resources.h	\
-	  include/ddekit/memory.h include/ddekit/timer.h	\
-	  include/dde.h		\
+installhdrs = ddekit/condvar.h ddekit/lock.h	\
+	  ddekit/semaphore.h ddekit/debug.h	\
+	  ddekit/inline.h ddekit/panic.h	\
+	  ddekit/thread.h ddekit/types.h	\
+	  ddekit/pgtab.h ddekit/printf.h	\
+	  ddekit/pci.h ddekit/assert.h		\
+	  ddekit/interrupt.h ddekit/resources.h	\
+	  ddekit/memory.h ddekit/timer.h	\
+	  ddekit/initcall.h
+
+installhdrsubdir = .
+LCLHDRS = $(installhdrs)	\
+	  dde.h		\
 	  config.h list.h util.h
-installhdrs = 
 
 MIGSTUBS = deviceUser.o machUser.o
 OBJS = $(sort $(SRCS:.c=.o) $(MIGSTUBS))
@@ -43,5 +46,7 @@ MIGCOMSFLAGS = -prefix dde_
 
 include ../Makeconf
 
-LDFLAGS += -lpciaccess
-CFLAGS += -I$(srcdir)/include
+LIBS += -lpciaccess
+
+$(libname).so.$(hurd-version):
+	echo "INPUT ( $(libname).a )" > $@

@@ -20,6 +20,8 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA. */
 
+/* Do not include glue-include/linux/errno.h */
+#define _HACK_ERRNO_H
 #include "pfinet.h"
 
 #include <fcntl.h>
@@ -30,6 +32,7 @@
 #define _HACK_ERRNO_H
 #include <errno.h>
 #include <error.h>
+#include <fcntl.h>
 
 #include <linux/netdevice.h>
 #include <linux/etherdevice.h>
@@ -82,6 +85,18 @@ static struct bpf_insn ether_filter[] =
     {6, 0, 0, 0}
 };
 static int ether_filter_len = sizeof (ether_filter) / sizeof (short);
+
+/* The BPF instruction allows IP and ARP packets */
+static struct bpf_insn bpf_ether_filter[] =
+{
+    {NETF_IN|NETF_BPF, /* Header. */ 0, 0, 0},
+    {40, 0, 0, 12},
+    {21, 1, 0, 2054},
+    {21, 0, 1, 2048},
+    {6, 0, 0, 1500},
+    {6, 0, 0, 0},
+};
+static int bpf_ether_filter_len = sizeof (bpf_ether_filter) / sizeof (short);
 
 static struct port_bucket *etherport_bucket;
 
@@ -176,7 +191,13 @@ ethernet_open (struct device *dev)
       err = device_open (master_device, D_WRITE | D_READ, "eth", &edev->ether_port);
       mach_port_deallocate (mach_task_self (), master_device);
       if (err)
-	error (2, err, "%s", dev->name);
+	error (2, err, "device_open on %s", dev->name);
+
+      err = device_set_filter (edev->ether_port, ports_get_right (edev->readpt),
+			       MACH_MSG_TYPE_MAKE_SEND, 0,
+			       bpf_ether_filter, bpf_ether_filter_len);
+      if (err)
+	error (2, err, "device_set_filter on %s", dev->name);
     }
   else
     {
@@ -185,23 +206,24 @@ ethernet_open (struct device *dev)
       err = get_privileged_ports (0, &master_device);
       if (err)
 	{
-	  error (0, errno, "file_name_lookup %s", dev->name);
+	  error (0, file_errno, "file_name_lookup %s", dev->name);
 	  error (2, err, "and cannot get device master port");
 	}
       err = device_open (master_device, D_WRITE | D_READ, dev->name, &edev->ether_port);
       mach_port_deallocate (mach_task_self (), master_device);
       if (err)
 	{
-	  error (0, errno, "file_name_lookup %s", dev->name);
-	  error (2, err, "%s", dev->name);
+	  error (0, file_errno, "file_name_lookup %s", dev->name);
+	  error (2, err, "device_open(%s)", dev->name);
 	}
+
+      err = device_set_filter (edev->ether_port, ports_get_right (edev->readpt),
+			       MACH_MSG_TYPE_MAKE_SEND, 0,
+			       ether_filter, ether_filter_len);
+      if (err)
+	error (2, err, "device_set_filter on %s", dev->name);
     }
 
-  err = device_set_filter (edev->ether_port, ports_get_right (edev->readpt),
-			   MACH_MSG_TYPE_MAKE_SEND, 0,
-			   ether_filter, ether_filter_len);
-  if (err)
-    error (2, err, "%s", dev->name);
   return 0;
 }
 

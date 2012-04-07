@@ -24,13 +24,14 @@ SRCS = deviceUser.c machUser.c net.c ds_routines.c queue.c trivfs_server.c \
 LCLHDRS = dev_hdr.h device_emul.h ds_routines.h vm_param.h \
 	  util.h queue.h io_req.h if_ether.h machdev.h linux-errno.h \
 	  errno-base.h
-installhdrs = 
-HURDLIBS = ports threads trivfs
+installhdrs = machdev.h
+HURDLIBS = ports threads trivfs ddekit bpf
 OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
 
 include ../Makeconf
 
-CFLAGS += -I$(top_srcdir)/libddekit/include -I$(top_srcdir)/libbpf
-
 ourdevice.defs: device.defs
 	$(CPP) $(CPPFLAGS) -x c $< | sed -e '/out[ 	]*device[ 	]*:[ 	]*device_t/s/device_t/mach_port_send_t/' > $@
+
+$(libname).so.$(hurd-version):
+	echo "INPUT ( $(libname).a )" > $@
