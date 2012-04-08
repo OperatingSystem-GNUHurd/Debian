@@ -4,6 +4,7 @@ hurd (20120408-1) UNRELEASED; urgency=low
     - Fixes tmpfs, thanks Maksym!
     - Remove patches/console_utf-8.patch and patches/extern_inline_fix.patch,
     merged upstream.
+    - patches/ext2fs_large_stores.patch: Refresh.
   * control:
     - Bump Standards-Version to 3.9.3 (no changes).
     - Set hurd-udeb XC-Package-Type to udeb.

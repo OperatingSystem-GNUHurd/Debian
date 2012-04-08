@@ -26,9 +26,11 @@ Support for >2GB volumes
  ufs/pager.c              |   11 -
  24 files changed, 940 insertions(+), 185 deletions(-)
 
---- a/console/pager.c
-+++ b/console/pager.c
-@@ -94,6 +94,14 @@ pager_unlock_page (struct user_pager_inf
+Index: hurd-debian/console/pager.c
+===================================================================
+--- hurd-debian.orig/console/pager.c	2012-04-08 23:19:14.000000000 +0000
++++ hurd-debian/console/pager.c	2012-04-08 23:23:02.000000000 +0000
+@@ -94,6 +94,14 @@
  }
  
  
@@ -43,7 +45,7 @@ Support for >2GB volumes
  /* Tell how big the file is. */
  error_t
  pager_report_extent (struct user_pager_info *upi,
-@@ -159,7 +167,7 @@ user_pager_create (struct user_pager *us
+@@ -159,7 +167,7 @@
  
    /* XXX Are the values 1 and MEMORY_OBJECT_COPY_DELAY correct? */
    user_pager->pager = pager_create (upi, pager_bucket,
@@ -52,9 +54,11 @@ Support for >2GB volumes
    if (!user_pager->pager)
      {
        free (upi);
---- a/ext2fs/balloc.c
-+++ b/ext2fs/balloc.c
-@@ -92,7 +92,7 @@ ext2_free_blocks (block_t block, unsigne
+Index: hurd-debian/ext2fs/balloc.c
+===================================================================
+--- hurd-debian.orig/ext2fs/balloc.c	2012-04-08 23:19:14.000000000 +0000
++++ hurd-debian/ext2fs/balloc.c	2012-04-08 23:23:02.000000000 +0000
+@@ -92,7 +92,7 @@
  		      block, count);
  	}
        gdp = group_desc (block_group);
@@ -63,7 +67,7 @@ Support for >2GB volumes
  
        if (in_range (gdp->bg_block_bitmap, block, gcount) ||
  	  in_range (gdp->bg_inode_bitmap, block, gcount) ||
-@@ -114,6 +114,7 @@ ext2_free_blocks (block_t block, unsigne
+@@ -114,6 +114,7 @@
  	}
  
        record_global_poke (bh);
@@ -71,7 +75,7 @@ Support for >2GB volumes
        record_global_poke (gdp);
  
        block += gcount;
-@@ -139,7 +140,7 @@ ext2_new_block (block_t goal,
+@@ -139,7 +140,7 @@
  		block_t prealloc_goal,
  		block_t *prealloc_count, block_t *prealloc_block)
  {
@@ -80,7 +84,7 @@ Support for >2GB volumes
    char *p, *r;
    int i, j, k, tmp;
    unsigned long lmap;
-@@ -164,9 +165,10 @@ ext2_new_block (block_t goal,
+@@ -164,9 +165,10 @@
  
    ext2_debug ("goal=%u", goal);
  
@@ -93,7 +97,7 @@ Support for >2GB volumes
     */
    if (goal < sblock->s_first_data_block || goal >= sblock->s_blocks_count)
      goal = sblock->s_first_data_block;
-@@ -179,7 +181,7 @@ repeat:
+@@ -179,7 +181,7 @@
        if (j)
  	goal_attempts++;
  #endif
@@ -102,7 +106,7 @@ Support for >2GB volumes
  
        ext2_debug ("goal is at %d:%d", i, j);
  
-@@ -194,8 +196,8 @@ repeat:
+@@ -194,8 +196,8 @@
        if (j)
  	{
  	  /*
@@ -113,7 +117,7 @@ Support for >2GB volumes
  	   */
  	  lmap = ((((unsigned long *) bh)[j >> 5]) >>
  		  ((j & 31) + 1));
-@@ -242,13 +244,16 @@ repeat:
+@@ -242,13 +244,16 @@
  	  j = k;
  	  goto got_block;
  	}
@@ -132,7 +136,7 @@ Support for >2GB volumes
     */
    for (k = 0; k < groups_count; k++)
      {
-@@ -264,7 +269,8 @@ repeat:
+@@ -264,7 +269,8 @@
        spin_unlock (&global_lock);
        return 0;
      }
@@ -142,7 +146,7 @@ Support for >2GB volumes
    r = memscan (bh, 0, sblock->s_blocks_per_group >> 3);
    j = (r - bh) << 3;
    if (j < sblock->s_blocks_per_group)
-@@ -274,21 +280,25 @@ repeat:
+@@ -274,21 +280,25 @@
  			     sblock->s_blocks_per_group);
    if (j >= sblock->s_blocks_per_group)
      {
@@ -174,7 +178,7 @@ Support for >2GB volumes
    ext2_debug ("using block group %d (%d)", i, gdp->bg_free_blocks_count);
  
    tmp = j + i * sblock->s_blocks_per_group + sblock->s_first_data_block;
-@@ -301,6 +311,8 @@ got_block:
+@@ -301,6 +311,8 @@
    if (set_bit (j, bh))
      {
        ext2_warning ("bit already set for block %d", j);
@@ -183,7 +187,7 @@ Support for >2GB volumes
        goto repeat;
      }
  
-@@ -317,7 +329,7 @@ got_block:
+@@ -317,7 +329,7 @@
    ext2_debug ("found bit %d", j);
  
    /*
@@ -192,7 +196,7 @@ Support for >2GB volumes
     */
  #ifdef EXT2_PREALLOCATE
    if (prealloc_goal)
-@@ -348,6 +360,7 @@ got_block:
+@@ -348,6 +360,7 @@
    j = tmp;
  
    record_global_poke (bh);
@@ -200,7 +204,7 @@ Support for >2GB volumes
  
    if (j >= sblock->s_blocks_count)
      {
-@@ -360,12 +373,14 @@ got_block:
+@@ -360,12 +373,14 @@
  	      j, goal_hits, goal_attempts);
  
    gdp->bg_free_blocks_count--;
@@ -215,7 +219,7 @@ Support for >2GB volumes
    spin_unlock (&global_lock);
    alloc_sync (0);
  
-@@ -387,9 +402,12 @@ ext2_count_free_blocks ()
+@@ -387,9 +402,12 @@
    gdp = NULL;
    for (i = 0; i < groups_count; i++)
      {
@@ -229,7 +233,7 @@ Support for >2GB volumes
        printf ("group %d: stored = %d, counted = %lu",
  	      i, gdp->bg_free_blocks_count, x);
        bitmap_count += x;
-@@ -450,7 +468,7 @@ ext2_check_blocks_bitmap ()
+@@ -450,7 +468,7 @@
  
        gdp = group_desc (i);
        desc_count += gdp->bg_free_blocks_count;
@@ -238,7 +242,7 @@ Support for >2GB volumes
  
        if (!EXT2_HAS_RO_COMPAT_FEATURE (sblock,
  				       EXT2_FEATURE_RO_COMPAT_SPARSE_SUPER)
-@@ -476,6 +494,7 @@ ext2_check_blocks_bitmap ()
+@@ -476,6 +494,7 @@
  	  ext2_error ("block #%d of the inode table in group %d is marked free", j, i);
  
        x = count_free (bh, block_size);
@@ -246,8 +250,10 @@ Support for >2GB volumes
        if (gdp->bg_free_blocks_count != x)
  	ext2_error ("wrong free blocks count for group %d,"
  		    " stored = %d, counted = %lu",
---- a/ext2fs/ext2_fs.h
-+++ b/ext2fs/ext2_fs.h
+Index: hurd-debian/ext2fs/ext2_fs.h
+===================================================================
+--- hurd-debian.orig/ext2fs/ext2_fs.h	2012-04-08 23:19:14.000000000 +0000
++++ hurd-debian/ext2fs/ext2_fs.h	2012-04-08 23:23:02.000000000 +0000
 @@ -25,7 +25,8 @@
  /*
   * Define EXT2FS_DEBUG to produce debug messages
@@ -258,9 +264,11 @@ Support for >2GB volumes
  
  /*
   * Define EXT2_PREALLOCATE to preallocate data blocks for expanding files
---- a/ext2fs/ext2fs.c
-+++ b/ext2fs/ext2fs.c
-@@ -106,7 +106,7 @@ parse_opt (int key, char *arg, struct ar
+Index: hurd-debian/ext2fs/ext2fs.c
+===================================================================
+--- hurd-debian.orig/ext2fs/ext2fs.c	2012-04-08 23:19:14.000000000 +0000
++++ hurd-debian/ext2fs/ext2fs.c	2012-04-08 23:23:02.000000000 +0000
+@@ -106,7 +106,7 @@
        if (values == 0)
  	return ENOMEM;
        state->hook = values;
@@ -269,7 +277,7 @@ Support for >2GB volumes
        values->sb_block = SBLOCK_BLOCK;
        break;
  
-@@ -181,9 +181,9 @@ main (int argc, char **argv)
+@@ -181,9 +181,9 @@
    /* Map the entire disk. */
    create_disk_pager ();
  
@@ -281,7 +289,7 @@ Support for >2GB volumes
  
    inode_init ();
  
-@@ -211,6 +211,8 @@ diskfs_reload_global_state ()
+@@ -211,6 +211,8 @@
  {
    pokel_flush (&global_pokel);
    pager_flush (diskfs_disk_pager, 1);
@@ -290,8 +298,10 @@ Support for >2GB volumes
 +  map_hypermetadata ();
    return 0;
  }
---- a/ext2fs/ext2fs.h
-+++ b/ext2fs/ext2fs.h
+Index: hurd-debian/ext2fs/ext2fs.h
+===================================================================
+--- hurd-debian.orig/ext2fs/ext2fs.h	2012-04-08 23:19:14.000000000 +0000
++++ hurd-debian/ext2fs/ext2fs.h	2012-04-08 23:23:02.000000000 +0000
 @@ -23,7 +23,9 @@
  #include <hurd/pager.h>
  #include <hurd/fshelp.h>
@@ -302,7 +312,7 @@ Support for >2GB volumes
  #include <assert.h>
  #include <rwlock.h>
  #include <sys/mman.h>
-@@ -186,6 +188,8 @@ struct user_pager_info
+@@ -195,6 +197,8 @@
  /* ---------------------------------------------------------------- */
  /* pager.c */
  
@@ -311,7 +321,7 @@ Support for >2GB volumes
  #include <hurd/diskfs-pager.h>
  
  /* Set up the disk pager.  */
-@@ -209,10 +213,54 @@ extern struct store *store;
+@@ -218,10 +222,54 @@
  /* What the user specified.  */
  extern struct store_parsed *store_parsed;
  
@@ -369,7 +379,7 @@ Support for >2GB volumes
  struct ext2_super_block *sblock;
  /* True if sblock has been modified.  */
  int sblock_dirty;
-@@ -242,6 +290,9 @@ vm_address_t zeroblock;
+@@ -251,6 +299,9 @@
  
  /* Get the superblock from the disk, & setup various global info from it.  */
  void get_hypermetadata ();
@@ -379,7 +389,7 @@ Support for >2GB volumes
  
  /* ---------------------------------------------------------------- */
  /* Random stuff calculated from the super block.  */
-@@ -265,21 +316,51 @@ spin_lock_t generation_lock;
+@@ -274,21 +325,51 @@
  unsigned long next_generation;
  
  /* ---------------------------------------------------------------- */
@@ -437,8 +447,8 @@ Support for >2GB volumes
  
  /* block num --> pointer to in-memory block */
  #define bptr(block) boffs_ptr(boffs(block))
-@@ -296,14 +377,24 @@ struct ext2_group_desc *group_desc_image
- 
+@@ -308,14 +389,24 @@
+ #if defined(__USE_EXTERN_INLINES) || defined(EXT2FS_DEFINE_EI)
  /* Convert an inode number to the dinode on disk. */
  EXT2FS_EI struct ext2_inode *
 -dino (ino_t inum)
@@ -463,9 +473,9 @@ Support for >2GB volumes
 +  ext2_debug ("(%p)", inode);
 +  disk_cache_block_deref (inode);
  }
+ #endif /* Use extern inlines.  */
  
- /* ---------------------------------------------------------------- */
-@@ -356,27 +447,38 @@ global_block_modified (block_t block)
+@@ -377,27 +468,38 @@
  EXT2FS_EI void
  record_global_poke (void *ptr)
  {
@@ -513,7 +523,7 @@ Support for >2GB volumes
  }
  
  /* ---------------------------------------------------------------- */
-@@ -384,6 +486,7 @@ record_indir_poke (struct node *node, vo
+@@ -405,6 +507,7 @@
  EXT2FS_EI void
  sync_global (int wait)
  {
@@ -521,9 +531,11 @@ Support for >2GB volumes
    pokel_sync (&global_pokel, wait);
  }
  
---- a/ext2fs/getblk.c
-+++ b/ext2fs/getblk.c
-@@ -52,7 +52,7 @@ ext2_discard_prealloc (struct node *node
+Index: hurd-debian/ext2fs/getblk.c
+===================================================================
+--- hurd-debian.orig/ext2fs/getblk.c	2012-04-08 23:19:15.000000000 +0000
++++ hurd-debian/ext2fs/getblk.c	2012-04-08 23:23:02.000000000 +0000
+@@ -52,7 +52,7 @@
    if (node->dn->info.i_prealloc_count)
      {
        int i = node->dn->info.i_prealloc_count;
@@ -532,7 +544,7 @@ Support for >2GB volumes
  		  i, node->cache_id);
        node->dn->info.i_prealloc_count = 0;
        ext2_free_blocks (node->dn->info.i_prealloc_block, i);
-@@ -104,8 +104,8 @@ ext2_alloc_block (struct node *node, blo
+@@ -104,8 +104,8 @@
  
    if (result && zero)
      {
@@ -543,7 +555,7 @@ Support for >2GB volumes
        record_indir_poke (node, bh);
      }
  
-@@ -122,6 +122,8 @@ inode_getblk (struct node *node, int nr,
+@@ -122,6 +122,8 @@
    block_t hint;
  #endif
  
@@ -552,7 +564,7 @@ Support for >2GB volumes
    *result = node->dn->info.i_data[nr];
    if (*result)
      return 0;
-@@ -180,14 +182,20 @@ block_getblk (struct node *node, block_t
+@@ -180,14 +182,20 @@
  {
    int i;
    block_t goal = 0;
@@ -576,7 +588,7 @@ Support for >2GB volumes
  
    if (node->dn->info.i_next_alloc_block == new_block)
      goal = node->dn->info.i_next_alloc_goal;
-@@ -207,7 +215,10 @@ block_getblk (struct node *node, block_t
+@@ -207,7 +215,10 @@
  
    *result = ext2_alloc_block (node, goal, zero);
    if (!*result)
@@ -588,7 +600,7 @@ Support for >2GB volumes
  
    bh[nr] = *result;
  
-@@ -243,9 +254,9 @@ ext2_getblk (struct node *node, block_t 
+@@ -243,9 +254,9 @@
        return EIO;
      }
    /*
@@ -601,9 +613,11 @@ Support for >2GB volumes
     */
  
    ext2_debug ("block = %u, next = %u, goal = %u", block,
---- a/ext2fs/hyper.c
-+++ b/ext2fs/hyper.c
-@@ -58,12 +58,15 @@ static int ext2fs_clean;	/* fs clean bef
+Index: hurd-debian/ext2fs/hyper.c
+===================================================================
+--- hurd-debian.orig/ext2fs/hyper.c	2012-04-08 23:19:15.000000000 +0000
++++ hurd-debian/ext2fs/hyper.c	2012-04-08 23:23:02.000000000 +0000
+@@ -58,12 +58,15 @@
  void
  get_hypermetadata (void)
  {
@@ -624,7 +638,7 @@ Support for >2GB volumes
    if (sblock->s_magic != EXT2_SUPER_MAGIC
  #ifdef EXT2FS_PRE_02B_COMPAT
        && sblock->s_magic != EXT2_PRE_02B_MAGIC
-@@ -152,15 +155,22 @@ get_hypermetadata (void)
+@@ -152,15 +155,22 @@
  
    allocate_mod_map ();
  
@@ -652,7 +666,7 @@ Support for >2GB volumes
  }
  
  error_t
-@@ -183,6 +193,7 @@ diskfs_set_hypermetadata (int wait, int 
+@@ -183,6 +193,7 @@
   if (sblock_dirty)
     {
       sblock_dirty = 0;
@@ -660,7 +674,7 @@ Support for >2GB volumes
       record_global_poke (sblock);
     }
  
-@@ -199,7 +210,8 @@ diskfs_readonly_changed (int readonly)
+@@ -199,7 +210,8 @@
  
    (*(readonly ? store_set_flags : store_clear_flags)) (store, STORE_READONLY);
  
@@ -670,9 +684,11 @@ Support for >2GB volumes
  
    if (!readonly && !(sblock->s_state & EXT2_VALID_FS))
      ext2_warning ("UNCLEANED FILESYSTEM NOW WRITABLE");
---- a/ext2fs/ialloc.c
-+++ b/ext2fs/ialloc.c
-@@ -60,7 +60,7 @@ diskfs_free_node (struct node *np, mode_
+Index: hurd-debian/ext2fs/ialloc.c
+===================================================================
+--- hurd-debian.orig/ext2fs/ialloc.c	2012-04-08 23:19:15.000000000 +0000
++++ hurd-debian/ext2fs/ialloc.c	2012-04-08 23:23:02.000000000 +0000
+@@ -60,7 +60,7 @@
  
    assert (!diskfs_readonly);
  
@@ -681,7 +697,7 @@ Support for >2GB volumes
  
    spin_lock (&global_lock);
  
-@@ -75,22 +75,25 @@ diskfs_free_node (struct node *np, mode_
+@@ -75,22 +75,25 @@
    bit = (inum - 1) % sblock->s_inodes_per_group;
  
    gdp = group_desc (block_group);
@@ -708,7 +724,7 @@ Support for >2GB volumes
    sblock_dirty = 1;
    spin_unlock (&global_lock);
    alloc_sync(0);
-@@ -111,14 +114,15 @@ diskfs_free_node (struct node *np, mode_
+@@ -111,14 +114,15 @@
  ino_t
  ext2_alloc_inode (ino_t dir_inum, mode_t mode)
  {
@@ -726,7 +742,7 @@ Support for >2GB volumes
    gdp = NULL;
    i = 0;
  
-@@ -213,7 +217,7 @@ repeat:
+@@ -213,7 +217,7 @@
        return 0;
      }
  
@@ -735,7 +751,7 @@ Support for >2GB volumes
    if ((inum =
         find_first_zero_bit ((unsigned long *) bh, sblock->s_inodes_per_group))
        < sblock->s_inodes_per_group)
-@@ -221,12 +225,17 @@ repeat:
+@@ -221,12 +225,17 @@
        if (set_bit (inum, bh))
  	{
  	  ext2_warning ("bit already set for inode %d", inum);
@@ -753,7 +769,7 @@ Support for >2GB volumes
        if (gdp->bg_free_inodes_count != 0)
  	{
  	  ext2_error ("free inodes count corrupted in group %d", i);
-@@ -248,15 +257,25 @@ repeat:
+@@ -248,15 +257,25 @@
    gdp->bg_free_inodes_count--;
    if (S_ISDIR (mode))
      gdp->bg_used_dirs_count++;
@@ -779,7 +795,7 @@ Support for >2GB volumes
    return inum;
  }
  
-@@ -354,10 +373,12 @@ ext2_count_free_inodes ()
+@@ -353,10 +372,12 @@
    gdp = NULL;
    for (i = 0; i < groups_count; i++)
      {
@@ -794,7 +810,7 @@ Support for >2GB volumes
        ext2_debug ("group %d: stored = %d, counted = %lu",
  		  i, gdp->bg_free_inodes_count, x);
        bitmap_count += x;
-@@ -387,10 +408,12 @@ ext2_check_inodes_bitmap ()
+@@ -386,10 +407,12 @@
    gdp = NULL;
    for (i = 0; i < groups_count; i++)
      {
@@ -809,9 +825,11 @@ Support for >2GB volumes
        if (gdp->bg_free_inodes_count != x)
  	ext2_error ("wrong free inodes count in group %d, "
  		    "stored = %d, counted = %lu",
---- a/ext2fs/inode.c
-+++ b/ext2fs/inode.c
-@@ -92,7 +92,7 @@ diskfs_cached_lookup (ino_t inum, struct
+Index: hurd-debian/ext2fs/inode.c
+===================================================================
+--- hurd-debian.orig/ext2fs/inode.c	2012-04-08 23:19:15.000000000 +0000
++++ hurd-debian/ext2fs/inode.c	2012-04-08 23:23:02.000000000 +0000
+@@ -92,7 +92,7 @@
    dn->dir_idx = 0;
    dn->pager = 0;
    rwlock_init (&dn->alloc_lock);
@@ -820,7 +838,7 @@ Support for >2GB volumes
  
    /* Create the new node.  */
    np = diskfs_make_node (dn);
-@@ -201,13 +201,17 @@ read_node (struct node *np)
+@@ -201,13 +201,17 @@
    error_t err;
    struct stat *st = &np->dn_stat;
    struct disknode *dn = np->dn;
@@ -839,7 +857,7 @@ Support for >2GB volumes
    st->st_fstype = FSTYPE_EXT2FS;
    st->st_fsid = getpid ();	/* This call is very cheap.  */
    st->st_ino = np->cache_id;
-@@ -285,7 +289,9 @@ read_node (struct node *np)
+@@ -285,7 +289,9 @@
        info->i_high_size = di->i_size_high;
        if (info->i_high_size)	/* XXX */
  	{
@@ -849,7 +867,7 @@ Support for >2GB volumes
  	  return EFBIG;
  	}
      }
-@@ -307,20 +313,12 @@ read_node (struct node *np)
+@@ -307,20 +313,12 @@
      }
    dn->info_i_translator = di->i_translator;
  
@@ -872,7 +890,7 @@ Support for >2GB volumes
    else
      /* Allocsize should be zero for anything except directories, files, and
         long symlinks.  These are the only things allowed to have any blocks
-@@ -408,7 +406,9 @@ write_node (struct node *np)
+@@ -408,7 +406,9 @@
  {
    error_t err;
    struct stat *st = &np->dn_stat;
@@ -883,7 +901,7 @@ Support for >2GB volumes
  
    if (np->dn->info.i_prealloc_count)
      ext2_discard_prealloc (np);
-@@ -419,12 +419,14 @@ write_node (struct node *np)
+@@ -419,12 +419,14 @@
  
        assert (!diskfs_readonly);
  
@@ -899,7 +917,7 @@ Support for >2GB volumes
        di->i_generation = st->st_gen;
  
        /* We happen to know that the stat mode bits are the same
-@@ -505,6 +507,7 @@ write_node (struct node *np)
+@@ -505,6 +507,7 @@
        diskfs_end_catch_exception ();
        np->dn_stat_dirty = 0;
  
@@ -907,7 +925,7 @@ Support for >2GB volumes
        return di;
      }
    else
-@@ -664,7 +667,7 @@ diskfs_set_translator (struct node *np, 
+@@ -664,7 +667,7 @@
    if (err)
      return err;
  
@@ -916,7 +934,7 @@ Support for >2GB volumes
    blkno = di->i_translator;
  
    if (namelen && !blkno)
-@@ -677,6 +680,7 @@ diskfs_set_translator (struct node *np, 
+@@ -677,6 +680,7 @@
  			0, 0, 0);
        if (blkno == 0)
  	{
@@ -924,7 +942,7 @@ Support for >2GB volumes
  	  diskfs_end_catch_exception ();
  	  return ENOSPC;
  	}
-@@ -700,15 +704,20 @@ diskfs_set_translator (struct node *np, 
+@@ -700,15 +704,20 @@
        np->dn_stat.st_mode &= ~S_IPTRANS;
        np->dn_set_ctime = 1;
      }
@@ -948,7 +966,7 @@ Support for >2GB volumes
  
        np->dn_stat.st_mode |= S_IPTRANS;
        np->dn_set_ctime = 1;
-@@ -726,7 +735,7 @@ diskfs_get_translator (struct node *np, 
+@@ -726,7 +735,7 @@
    error_t err = 0;
    daddr_t blkno;
    unsigned datalen;
@@ -957,7 +975,7 @@ Support for >2GB volumes
  
    assert (sblock->s_creator_os == EXT2_OS_HURD);
  
-@@ -734,9 +743,11 @@ diskfs_get_translator (struct node *np, 
+@@ -734,9 +743,11 @@
    if (err)
      return err;
  
@@ -971,7 +989,7 @@ Support for >2GB volumes
  
    datalen =
      ((unsigned char *)transloc)[0] + (((unsigned char *)transloc)[1] << 8);
-@@ -751,6 +762,7 @@ diskfs_get_translator (struct node *np, 
+@@ -751,6 +762,7 @@
  	memcpy (*namep, transloc + 2, datalen);
      }
  
@@ -979,7 +997,7 @@ Support for >2GB volumes
    diskfs_end_catch_exception ();
  
    *namelen = datalen;
-@@ -772,7 +784,7 @@ write_symlink (struct node *node, const 
+@@ -772,7 +784,7 @@
  
    assert (node->dn_stat.st_blocks == 0);
  
@@ -988,7 +1006,7 @@ Support for >2GB volumes
    node->dn_stat.st_size = len - 1;
    node->dn_set_ctime = 1;
    node->dn_set_mtime = 1;
-@@ -789,7 +801,7 @@ read_symlink (struct node *node, char *t
+@@ -789,7 +801,7 @@
  
    assert (node->dn_stat.st_size < MAX_INODE_SYMLINK);
  
@@ -997,8 +1015,10 @@ Support for >2GB volumes
    return 0;
  }
  
---- a/ext2fs/pager.c
-+++ b/ext2fs/pager.c
+Index: hurd-debian/ext2fs/pager.c
+===================================================================
+--- hurd-debian.orig/ext2fs/pager.c	2012-04-08 23:19:15.000000000 +0000
++++ hurd-debian/ext2fs/pager.c	2012-04-08 23:23:02.000000000 +0000
 @@ -18,17 +18,18 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
@@ -1021,7 +1041,7 @@ Support for >2GB volumes
  spin_lock_t node_to_page_lock = SPIN_LOCK_INITIALIZER;
  
  #ifdef DONT_CACHE_MEMORY_OBJECTS
-@@ -163,6 +164,9 @@ file_pager_read_page (struct node *node,
+@@ -163,6 +164,9 @@
    block_t pending_blocks = 0;
    int num_pending_blocks = 0;
  
@@ -1031,7 +1051,7 @@ Support for >2GB volumes
    /* Read the NUM_PENDING_BLOCKS blocks in PENDING_BLOCKS, into the buffer
       pointed to by BUF (allocating it if necessary) at offset OFFS.  OFFS in
       adjusted by the amount read, and NUM_PENDING_BLOCKS is zeroed.  Any read
-@@ -171,7 +175,8 @@ file_pager_read_page (struct node *node,
+@@ -171,7 +175,8 @@
      {
        if (num_pending_blocks > 0)
  	{
@@ -1041,7 +1061,7 @@ Support for >2GB volumes
  	  size_t amount = num_pending_blocks << log2_block_size;
  	  /* The buffer we try to read into; on the first read, we pass in a
  	     size of zero, so that the read is guaranteed to allocate a new
-@@ -198,7 +203,7 @@ file_pager_read_page (struct node *node,
+@@ -198,7 +203,7 @@
  	      else
  		/* We've already got some buffer, so copy into it.  */
  		{
@@ -1050,7 +1070,7 @@ Support for >2GB volumes
  		  free_page_buf (new_buf); /* Return NEW_BUF to our pool.  */
  		  STAT_INC (file_pagein_freed_bufs);
  		}
-@@ -254,7 +259,7 @@ file_pager_read_page (struct node *node,
+@@ -254,7 +259,7 @@
  		break;
  	      STAT_INC (file_pagein_alloced_bufs);
  	    }
@@ -1059,7 +1079,7 @@ Support for >2GB volumes
  	  offs += block_size;
  	}
        else
-@@ -295,16 +300,17 @@ pending_blocks_write (struct pending_blo
+@@ -295,16 +300,17 @@
    if (pb->num > 0)
      {
        error_t err;
@@ -1080,7 +1100,7 @@ Support for >2GB volumes
  	  err = store_write (store, dev_block, page_buf, length, &amount);
  	  free_page_buf (page_buf);
  	}
-@@ -357,7 +363,7 @@ pending_blocks_add (struct pending_block
+@@ -357,7 +363,7 @@
    return 0;
  }
  
@@ -1089,7 +1109,7 @@ Support for >2GB volumes
     may need to write several filesystem blocks to satisfy one page, and tries
     to consolidate the i/o if possible.  */
  static error_t
-@@ -381,7 +387,7 @@ file_pager_write_page (struct node *node
+@@ -381,7 +387,7 @@
    else if (offset + left > node->allocsize)
      left = node->allocsize - offset;
  
@@ -1098,7 +1118,7 @@ Support for >2GB volumes
  
    STAT_INC (file_pageouts);
  
-@@ -409,16 +415,31 @@ disk_pager_read_page (vm_offset_t page, 
+@@ -409,16 +415,31 @@
  {
    error_t err;
    size_t length = vm_page_size, read = 0;
@@ -1135,7 +1155,7 @@ Support for >2GB volumes
  
    *writelock = 0;
  
-@@ -430,26 +451,38 @@ disk_pager_write_page (vm_offset_t page,
+@@ -430,26 +451,38 @@
  {
    error_t err = 0;
    size_t length = vm_page_size, amount;
@@ -1180,7 +1200,7 @@ Support for >2GB volumes
  
  	  /* We don't clear the block modified bit here because this paging
  	     write request may not be the same one that actually set the bit,
-@@ -467,7 +500,7 @@ disk_pager_write_page (vm_offset_t page,
+@@ -467,7 +500,7 @@
  	    /* Otherwise just skip it.  */
  	    err = pending_blocks_skip (&pb);
  
@@ -1189,7 +1209,7 @@ Support for >2GB volumes
  	  length -= block_size;
  	}
  
-@@ -476,7 +509,7 @@ disk_pager_write_page (vm_offset_t page,
+@@ -476,7 +509,7 @@
      }
    else
      {
@@ -1198,7 +1218,7 @@ Support for >2GB volumes
  			 buf, length, &amount);
        if (!err && length != amount)
  	err = EIO;
-@@ -484,6 +517,18 @@ disk_pager_write_page (vm_offset_t page,
+@@ -484,6 +517,18 @@
  
    return err;
  }
@@ -1217,7 +1237,7 @@ Support for >2GB volumes
  
  /* Satisfy a pager read request for either the disk pager or file pager
     PAGER, to the page at offset PAGE into BUF.  WRITELOCK should be set if
-@@ -493,9 +538,11 @@ pager_read_page (struct user_pager_info 
+@@ -493,9 +538,11 @@
  		 vm_address_t *buf, int *writelock)
  {
    if (pager->type == DISK)
@@ -1231,7 +1251,7 @@ Support for >2GB volumes
  }
  
  /* Satisfy a pager write request for either the disk pager or file pager
-@@ -509,6 +556,14 @@ pager_write_page (struct user_pager_info
+@@ -509,6 +556,14 @@
    else
      return file_pager_write_page (pager->node, page, (void *)buf);
  }
@@ -1246,7 +1266,7 @@ Support for >2GB volumes
  
  /* Make page PAGE writable, at least up to ALLOCSIZE.  This function and
     diskfs_grow are the only places that blocks are actually added to the
-@@ -558,10 +613,10 @@ pager_unlock_page (struct user_pager_inf
+@@ -558,10 +613,10 @@
  
  #ifdef EXT2FS_DEBUG
        if (dn->last_page_partially_writable)
@@ -1259,7 +1279,7 @@ Support for >2GB volumes
  		    page, vm_page_size, node->cache_id);
  #endif
  
-@@ -619,8 +674,8 @@ diskfs_grow (struct node *node, off_t si
+@@ -619,8 +674,8 @@
  	  block_t old_page_end_block =
  	    round_page (old_size) >> log2_block_size;
  
@@ -1270,7 +1290,7 @@ Support for >2GB volumes
  
  	  if (dn->last_page_partially_writable
  	      && old_page_end_block > end_block)
-@@ -656,11 +711,11 @@ diskfs_grow (struct node *node, off_t si
+@@ -656,11 +711,11 @@
  
        STAT_INC (file_grows);
  
@@ -1284,7 +1304,7 @@ Support for >2GB volumes
  		      node->cache_id, new_size, strerror (err));
  
        node->allocsize = new_size;
-@@ -765,6 +820,374 @@ pager_dropweak (struct user_pager_info *
+@@ -765,6 +820,374 @@
  {
  }
  
@@ -1659,7 +1679,7 @@ Support for >2GB volumes
  /* Create the DISK pager.  */
  void
  create_disk_pager (void)
-@@ -774,8 +1197,12 @@ create_disk_pager (void)
+@@ -774,8 +1197,12 @@
      ext2_panic ("can't create disk pager: %s", strerror (errno));
    upi->type = DISK;
    pager_bucket = ports_create_bucket ();
@@ -1674,7 +1694,7 @@ Support for >2GB volumes
  }
  
  /* Call this to create a FILE_DATA pager and return a send right.
-@@ -815,7 +1242,7 @@ diskfs_get_filemap (struct node *node, v
+@@ -815,7 +1242,7 @@
  	  diskfs_nref_light (node);
  	  node->dn->pager =
  	    pager_create (upi, pager_bucket, MAY_CACHE,
@@ -1683,9 +1703,11 @@ Support for >2GB volumes
  	  if (node->dn->pager == 0)
  	    {
  	      diskfs_nrele_light (node);
---- a/ext2fs/pokel.c
-+++ b/ext2fs/pokel.c
-@@ -67,12 +67,27 @@ pokel_add (struct pokel *pokel, void *lo
+Index: hurd-debian/ext2fs/pokel.c
+===================================================================
+--- hurd-debian.orig/ext2fs/pokel.c	2012-04-08 23:19:15.000000000 +0000
++++ hurd-debian/ext2fs/pokel.c	2012-04-08 23:23:02.000000000 +0000
+@@ -67,12 +67,27 @@
        vm_offset_t p_offs = pl->offset;
        vm_size_t p_end = p_offs + pl->length;
  
@@ -1715,7 +1737,7 @@ Support for >2GB volumes
  	  ext2_debug ("extended 0x%x[%ul] to 0x%x[%ul]",
  		      p_offs, p_end - p_offs, pl->offset, pl->length);
  	  break;
-@@ -106,18 +121,28 @@ void
+@@ -106,18 +121,28 @@
  _pokel_exec (struct pokel *pokel, int sync, int wait)
  {
    struct poke *pl, *pokes, *last = NULL;
@@ -1750,9 +1772,11 @@ Support for >2GB volumes
  
    if (last)
      {
---- a/ext2fs/truncate.c
-+++ b/ext2fs/truncate.c
-@@ -124,7 +124,7 @@ trunc_indirect (struct node *node, block
+Index: hurd-debian/ext2fs/truncate.c
+===================================================================
+--- hurd-debian.orig/ext2fs/truncate.c	2012-04-08 23:19:15.000000000 +0000
++++ hurd-debian/ext2fs/truncate.c	2012-04-08 23:23:02.000000000 +0000
+@@ -124,7 +124,7 @@
      {
        unsigned index;
        int modified = 0, all_freed = 1;
@@ -1761,7 +1785,7 @@ Support for >2GB volumes
        unsigned first = end < offset ? 0 : end - offset;
  
        for (index = first; index < addr_per_block; index++)
-@@ -139,11 +139,16 @@ trunc_indirect (struct node *node, block
+@@ -139,11 +139,16 @@
  
        if (first == 0 && all_freed)
  	{
@@ -1779,7 +1803,7 @@ Support for >2GB volumes
      }
  }
  
-@@ -218,7 +223,7 @@ poke_pages (memory_object_t obj, vm_offs
+@@ -218,7 +223,7 @@
  /* Flush all the data past the new size from the kernel.  Also force any
     delayed copies of this data to take place immediately.  (We are implicitly
     changing the data to zeros and doing it without the kernel's immediate
@@ -1788,9 +1812,11 @@ Support for >2GB volumes
  static void
  force_delayed_copies (struct node *node, off_t length)
  {
---- a/fatfs/pager.c
-+++ b/fatfs/pager.c
-@@ -596,6 +596,13 @@ pager_unlock_page (struct user_pager_inf
+Index: hurd-debian/fatfs/pager.c
+===================================================================
+--- hurd-debian.orig/fatfs/pager.c	2012-04-08 23:19:15.000000000 +0000
++++ hurd-debian/fatfs/pager.c	2012-04-08 23:23:02.000000000 +0000
+@@ -596,6 +596,13 @@
    return 0;
  }
  
@@ -1804,7 +1830,7 @@ Support for >2GB volumes
  /* Grow the disk allocated to locked node NODE to be at least SIZE
     bytes, and set NODE->allocsize to the actual allocated size.  (If
     the allocated size is already SIZE bytes, do nothing.)  CRED
-@@ -752,7 +759,7 @@ create_fat_pager (void)
+@@ -752,7 +759,7 @@
    struct user_pager_info *upi = malloc (sizeof (struct user_pager_info));
    upi->type = FAT;
    pager_bucket = ports_create_bucket ();
@@ -1813,7 +1839,7 @@ Support for >2GB volumes
  			   bytes_per_sector * sectors_per_fat,
  			   &fat_image);
  }
-@@ -794,7 +801,7 @@ diskfs_get_filemap (struct node *node, v
+@@ -794,7 +801,7 @@
            diskfs_nref_light (node);
            node->dn->pager =
              pager_create (upi, pager_bucket, MAY_CACHE,
@@ -1822,9 +1848,11 @@ Support for >2GB volumes
            if (node->dn->pager == 0)
              {
                diskfs_nrele_light (node);
---- a/isofs/pager.c
-+++ b/isofs/pager.c
-@@ -94,6 +94,13 @@ pager_unlock_page (struct user_pager_inf
+Index: hurd-debian/isofs/pager.c
+===================================================================
+--- hurd-debian.orig/isofs/pager.c	2012-04-08 23:19:15.000000000 +0000
++++ hurd-debian/isofs/pager.c	2012-04-08 23:23:02.000000000 +0000
+@@ -94,6 +94,13 @@
    return EROFS;
  }
  
@@ -1838,7 +1866,7 @@ Support for >2GB volumes
  /* Tell how big the file is. */
  error_t
  pager_report_extent (struct user_pager_info *pager,
-@@ -137,7 +144,7 @@ create_disk_pager (void)
+@@ -137,7 +144,7 @@
    upi->type = DISK;
    upi->np = 0;
    pager_bucket = ports_create_bucket ();
@@ -1847,7 +1875,7 @@ Support for >2GB volumes
    upi->p = diskfs_disk_pager;
  }
  
-@@ -168,7 +175,8 @@ diskfs_get_filemap (struct node *np, vm_
+@@ -168,7 +175,8 @@
  	upi->type = FILE_DATA;
  	upi->np = np;
  	diskfs_nref_light (np);
@@ -1857,9 +1885,11 @@ Support for >2GB volumes
  	if (upi->p == 0)
  	  {
  	    diskfs_nrele_light (np);
---- a/libdiskfs/disk-pager.c
-+++ b/libdiskfs/disk-pager.c
-@@ -46,7 +46,8 @@ service_paging_requests (any_t arg)
+Index: hurd-debian/libdiskfs/disk-pager.c
+===================================================================
+--- hurd-debian.orig/libdiskfs/disk-pager.c	2012-04-08 23:19:15.000000000 +0000
++++ hurd-debian/libdiskfs/disk-pager.c	2012-04-08 23:23:02.000000000 +0000
+@@ -46,7 +46,8 @@
  
  void
  diskfs_start_disk_pager (struct user_pager_info *upi,
@@ -1869,7 +1899,7 @@ Support for >2GB volumes
  			 size_t size, void **image)
  {
    error_t err;
-@@ -58,7 +59,8 @@ diskfs_start_disk_pager (struct user_pag
+@@ -58,7 +59,8 @@
  
    /* Create the pager.  */
    diskfs_disk_pager = pager_create (upi, pager_bucket,
@@ -1879,8 +1909,10 @@ Support for >2GB volumes
    assert (diskfs_disk_pager);
  
    /* Get a port to the disk pager.  */
---- a/libdiskfs/diskfs-pager.h
-+++ b/libdiskfs/diskfs-pager.h
+Index: hurd-debian/libdiskfs/diskfs-pager.h
+===================================================================
+--- hurd-debian.orig/libdiskfs/diskfs-pager.h	2012-04-08 23:19:15.000000000 +0000
++++ hurd-debian/libdiskfs/diskfs-pager.h	2012-04-08 23:23:02.000000000 +0000
 @@ -33,7 +33,8 @@
     mapped is returned in IMAGE.  INFO, PAGER_BUCKET, & MAY_CACHE are passed
     to `pager_create'.  */
@@ -1891,9 +1923,11 @@ Support for >2GB volumes
  				     size_t size, void **image);
  
  extern struct pager *diskfs_disk_pager;
---- a/libpager/data-request.c
-+++ b/libpager/data-request.c
-@@ -40,11 +40,11 @@ _pager_seqnos_memory_object_data_request
+Index: hurd-debian/libpager/data-request.c
+===================================================================
+--- hurd-debian.orig/libpager/data-request.c	2012-04-08 23:19:15.000000000 +0000
++++ hurd-debian/libpager/data-request.c	2012-04-08 23:23:02.000000000 +0000
+@@ -40,11 +40,11 @@
    if (!p)
      return EOPNOTSUPP;
  
@@ -1907,7 +1941,7 @@ Support for >2GB volumes
    if (control != p->memobjcntl)
      {
        printf ("incg data request: wrong control port\n");
-@@ -121,7 +123,8 @@ _pager_seqnos_memory_object_data_request
+@@ -119,7 +119,8 @@
      goto error_read;
  
    memory_object_data_supply (p->memobjcntl, offset, page, length, 1,
@@ -1917,9 +1951,11 @@ Support for >2GB volumes
  			     MACH_PORT_NULL);
    mutex_lock (&p->interlock);
    _pager_mark_object_error (p, offset, length, 0);
---- a/libpager/data-return.c
-+++ b/libpager/data-return.c
-@@ -39,6 +39,7 @@ _pager_do_write_request (mach_port_t obj
+Index: hurd-debian/libpager/data-return.c
+===================================================================
+--- hurd-debian.orig/libpager/data-return.c	2012-04-08 23:19:15.000000000 +0000
++++ hurd-debian/libpager/data-return.c	2012-04-08 23:23:02.000000000 +0000
+@@ -39,6 +39,7 @@
    struct pager *p;
    short *pm_entries;
    int npages, i;
@@ -1927,7 +1963,7 @@ Support for >2GB volumes
    error_t *pagerrs;
    struct lock_request *lr;
    struct lock_list {struct lock_request *lr;
-@@ -71,9 +72,6 @@ _pager_do_write_request (mach_port_t obj
+@@ -71,9 +72,6 @@
        goto release_out;
      }
  
@@ -1937,7 +1973,7 @@ Support for >2GB volumes
    if (p->pager_state != NORMAL)
      {
        printf ("pager in wrong state for write\n");
-@@ -83,6 +81,11 @@ _pager_do_write_request (mach_port_t obj
+@@ -83,6 +81,11 @@
    npages = length / __vm_page_size;
    pagerrs = alloca (npages * sizeof (error_t));
  
@@ -1949,7 +1985,7 @@ Support for >2GB volumes
    _pager_block_termination (p);	/* until we are done with the pagemap
  				   when the write completes. */
  
-@@ -90,6 +93,24 @@ _pager_do_write_request (mach_port_t obj
+@@ -90,6 +93,24 @@
  
    pm_entries = &p->pagemap[offset / __vm_page_size];
  
@@ -1974,7 +2010,7 @@ Support for >2GB volumes
    /* Make sure there are no other in-progress writes for any of these
       pages before we begin.  This imposes a little more serialization
       than we really have to require (because *all* future writes on
-@@ -120,10 +141,6 @@ _pager_do_write_request (mach_port_t obj
+@@ -120,10 +141,6 @@
      for (i = 0; i < npages; i++)
        pm_entries[i] |= PM_PAGINGOUT | PM_INIT;
  
@@ -1985,7 +2021,7 @@ Support for >2GB volumes
    /* If this write occurs while a lock is pending, record
       it.  We have to keep this list because a lock request
       might come in while we do the I/O; in that case there
-@@ -163,7 +180,10 @@ _pager_do_write_request (mach_port_t obj
+@@ -163,7 +180,10 @@
    for (i = 0; i < npages; i++)
      {
        if (omitdata & (1 << i))
@@ -1997,7 +2033,7 @@ Support for >2GB volumes
  
        if (pm_entries[i] & PM_WRITEWAIT)
  	wakeup = 1;
-@@ -179,14 +199,22 @@ _pager_do_write_request (mach_port_t obj
+@@ -179,14 +199,22 @@
  	pm_entries[i] |= PM_INVALID;
  
        if (pm_entries[i] & PM_PAGEINWAIT)
@@ -2027,7 +2063,7 @@ Support for >2GB volumes
  
        pm_entries[i] &= ~(PM_PAGINGOUT | PM_PAGEINWAIT | PM_WRITEWAIT);
      }
-@@ -198,10 +226,29 @@ _pager_do_write_request (mach_port_t obj
+@@ -198,10 +226,29 @@
    if (wakeup)
      condition_broadcast (&p->wakeup);
  
@@ -2058,9 +2094,11 @@ Support for >2GB volumes
    ports_port_deref (p);
    return 0;
  
---- a/libpager/pager-create.c
-+++ b/libpager/pager-create.c
-@@ -22,7 +22,8 @@ struct pager *
+Index: hurd-debian/libpager/pager-create.c
+===================================================================
+--- hurd-debian.orig/libpager/pager-create.c	2012-04-08 23:19:15.000000000 +0000
++++ hurd-debian/libpager/pager-create.c	2012-04-08 23:23:02.000000000 +0000
+@@ -22,7 +22,8 @@
  pager_create (struct user_pager_info *upi,
  	      struct port_bucket *bucket,
  	      boolean_t may_cache,
@@ -2070,7 +2108,7 @@ Support for >2GB volumes
  {
    struct pager *p;
  
-@@ -38,6 +39,7 @@ pager_create (struct user_pager_info *up
+@@ -38,6 +39,7 @@
    p->attribute_requests = 0;
    p->may_cache = may_cache;
    p->copy_strategy = copy_strategy;
@@ -2078,9 +2116,11 @@ Support for >2GB volumes
    p->memobjcntl = MACH_PORT_NULL;
    p->memobjname = MACH_PORT_NULL;
    p->seqno = -1;
---- a/libpager/pager.h
-+++ b/libpager/pager.h
-@@ -32,18 +32,21 @@ int pager_demuxer (mach_msg_header_t *in
+Index: hurd-debian/libpager/pager.h
+===================================================================
+--- hurd-debian.orig/libpager/pager.h	2012-04-08 23:19:15.000000000 +0000
++++ hurd-debian/libpager/pager.h	2012-04-08 23:23:02.000000000 +0000
+@@ -32,18 +32,21 @@
  		   mach_msg_header_t *outp);
  
  /* Create a new pager.  The pager will have a port created for it
@@ -2108,7 +2148,7 @@ Support for >2GB volumes
  
  /* Return the user_pager_info struct associated with a pager. */
  struct user_pager_info *
-@@ -110,7 +113,7 @@ pager_offer_page (struct pager *pager,
+@@ -110,7 +113,7 @@
  /* Change the attributes of the memory object underlying pager PAGER.
     Args MAY_CACHE and COPY_STRATEGY are as for
     memory_object_change_atributes.  Wait for the kernel to report completion
@@ -2117,7 +2157,7 @@ Support for >2GB volumes
  void
  pager_change_attributes (struct pager *pager,
  			 boolean_t may_cache,
-@@ -172,6 +175,18 @@ error_t
+@@ -172,6 +175,18 @@
  pager_unlock_page (struct user_pager_info *pager,
  		   vm_offset_t address);
  
@@ -2136,9 +2176,11 @@ Support for >2GB volumes
  /* The user must define this function.  It should report back (in
     *OFFSET and *SIZE the minimum valid address the pager will accept
     and the size of the object.   */
---- a/libpager/priv.h
-+++ b/libpager/priv.h
-@@ -45,6 +45,7 @@ struct pager
+Index: hurd-debian/libpager/priv.h
+===================================================================
+--- hurd-debian.orig/libpager/priv.h	2012-04-08 23:19:15.000000000 +0000
++++ hurd-debian/libpager/priv.h	2012-04-08 23:23:02.000000000 +0000
+@@ -45,6 +45,7 @@
  
    boolean_t may_cache;
    memory_object_copy_strategy_t copy_strategy;
@@ -2146,9 +2188,11 @@ Support for >2GB volumes
  
    /* Interface ports */
    memory_object_control_t memobjcntl;
---- a/storeio/pager.c
-+++ b/storeio/pager.c
-@@ -109,6 +109,13 @@ pager_unlock_page (struct user_pager_inf
+Index: hurd-debian/storeio/pager.c
+===================================================================
+--- hurd-debian.orig/storeio/pager.c	2012-04-08 23:19:15.000000000 +0000
++++ hurd-debian/storeio/pager.c	2012-04-08 23:23:02.000000000 +0000
+@@ -109,6 +109,13 @@
      return 0;
  }
  
@@ -2162,7 +2206,7 @@ Support for >2GB volumes
  /* The user must define this function.  It should report back (in
     *OFFSET and *SIZE the minimum valid address the pager will accept
     and the size of the object.   */
-@@ -232,7 +239,7 @@ dev_get_memory_object (struct dev *dev, 
+@@ -232,7 +239,7 @@
  	{
  	  dev->pager =
  	    pager_create ((struct user_pager_info *)dev, pager_port_bucket,
@@ -2171,9 +2215,11 @@ Support for >2GB volumes
  	  if (dev->pager == NULL)
  	    {
  	      mutex_unlock (&dev->pager_lock);
---- a/tmpfs/pager-stubs.c
-+++ b/tmpfs/pager-stubs.c
-@@ -57,6 +57,14 @@ pager_unlock_page (struct user_pager_inf
+Index: hurd-debian/tmpfs/pager-stubs.c
+===================================================================
+--- hurd-debian.orig/tmpfs/pager-stubs.c	2012-04-08 23:19:15.000000000 +0000
++++ hurd-debian/tmpfs/pager-stubs.c	2012-04-08 23:23:02.000000000 +0000
+@@ -57,6 +57,14 @@
    return EIEIO;
  }
  
@@ -2188,9 +2234,11 @@ Support for >2GB volumes
  /* The user must define this function.  It should report back (in
     *OFFSET and *SIZE the minimum valid address the pager will accept
     and the size of the object.   */
---- a/ufs/pager.c
-+++ b/ufs/pager.c
-@@ -425,6 +425,13 @@ pager_unlock_page (struct user_pager_inf
+Index: hurd-debian/ufs/pager.c
+===================================================================
+--- hurd-debian.orig/ufs/pager.c	2012-04-08 23:19:15.000000000 +0000
++++ hurd-debian/ufs/pager.c	2012-04-08 23:23:02.000000000 +0000
+@@ -425,6 +425,13 @@
    return err;
  }
  
@@ -2204,7 +2252,7 @@ Support for >2GB volumes
  /* Implement the pager_report_extent callback from the pager library.  See
     <hurd/pager.h> for the interface description. */
  inline error_t
-@@ -477,7 +484,7 @@ create_disk_pager (void)
+@@ -477,7 +484,7 @@
    upi->type = DISK;
    upi->np = 0;
    pager_bucket = ports_create_bucket ();
@@ -2213,7 +2261,7 @@ Support for >2GB volumes
  			   &disk_image);
    upi->p = diskfs_disk_pager;
  }
-@@ -570,7 +577,7 @@ diskfs_get_filemap (struct node *np, vm_
+@@ -570,7 +577,7 @@
  	upi->unlocked_pagein_length = 0;
  	diskfs_nref_light (np);
  	upi->p = pager_create (upi, pager_bucket,
