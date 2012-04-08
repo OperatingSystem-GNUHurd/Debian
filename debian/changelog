@@ -1,5 +1,7 @@
-hurd (20120222-2) UNRELEASED; urgency=low
+hurd (20120408-1) UNRELEASED; urgency=low
 
+  * New upstream snapshot.
+    - Fixes tmpfs, thanks Maksym!
   * control:
     - Bump Standards-Version to 3.9.3 (no changes).
     - Set hurd-udeb XC-Package-Type to udeb.
