@@ -1,3 +1,0 @@
-
-# Get the make rules from the source directory.
-include $(top_srcdir)/Makeconf

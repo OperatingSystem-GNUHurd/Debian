@@ -1,4 +1,0 @@
-mkdir hurd
-mkdir lib
-objcopy lib/ld.so.1
-objcopy hurd/ext2fs.static
