@@ -11,6 +11,7 @@ hurd (20120408-1) UNRELEASED; urgency=low
   * patches/libexec.patch: Switch to gnu-mach-color TERM.
   * hurd-console.default: Document the -f option of the vga module.
   * patches/run.patch: Fix utmp database creation, and thus w command.
+  * rules: Remove dde drivers, will be shipped by netdde.
 
  -- Samuel Thibault <sthibault@debian.org>  Fri, 06 Apr 2012 19:07:15 +0200
 

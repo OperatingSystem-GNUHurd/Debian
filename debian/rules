@@ -29,25 +29,15 @@ DEB_MAKE_INSTALL_TARGET = install prefix=$(DEB_DESTDIR) sysconfdir=$(DEB_DESTDIR
 DEB_DH_STRIP_ARGS := --dbg-package=hurd
 DEB_DH_MAKESHLIBS_ARGS_hurd := --add-udeb="hurd-udeb"
 
-DDE_DRIVERS = e100 e1000 pcnet32 rtl8139 ne2k_pci
-
 build/hurd::
 	cd $(DEB_BUILDDIR)/doc && texi2html -split chapter ../../doc/hurd.texi
 	$(MAKE) -C libdde_linux26 BUILDDIR=$(CURDIR)/build
-	for i in $(DDE_DRIVERS) ; \
-	do \
-		$(MAKE) -C dde_$$i BUILDDIR=$(CURDIR)/build || exit 1 ; \
-	done
 
 clean::
 	$(MAKE) -C libdde_linux26 cleanall
 	rm -f $$(find libdde_linux26 -name \*.d)
 	rm -fr libdde_linux26/build
 	rm -fr libdde_linux26/lib/src/gen_crc32table libdde_linux26/lib/src/crc32table.h libdde_linux26/lib/src/timeconst.h
-	for i in $(DDE_DRIVERS) ; \
-	do \
-		$(MAKE) -C dde_$$i cleanall ; \
-	done
 
 install/hurd::
 	# runsystem is managed by update-alternatives
