@@ -1,4 +1,3 @@
-console_utf-8.patch
 diskfs_no_inherit_dir_group.patch
 ext2fs_large_stores.patch
 hurd_console_startup.patch
