@@ -255,7 +255,7 @@ trivfs_append_args (struct trivfs_control *fsys, char **argz, size_t *argz_len)
   if (master_file)
     ADD_OPT ("--master-device=%s", master_file);
 
-  ADD_OPT (device_name);
+  ADD_OPT ("%s", device_name);
 
 #undef ADD_OPT
   return err;
