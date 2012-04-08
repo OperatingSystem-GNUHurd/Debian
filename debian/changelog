@@ -2,7 +2,8 @@ hurd (20120408-1) UNRELEASED; urgency=low
 
   * New upstream snapshot.
     - Fixes tmpfs, thanks Maksym!
-    - Remove patches/console_utf-8.patch, merged upstream.
+    - Remove patches/console_utf-8.patch and patches/extern_inline_fix.patch,
+    merged upstream.
   * control:
     - Bump Standards-Version to 3.9.3 (no changes).
     - Set hurd-udeb XC-Package-Type to udeb.

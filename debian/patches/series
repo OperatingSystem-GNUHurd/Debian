@@ -15,7 +15,6 @@ uptime_w_path_fix.patch
 stat_round.patch
 libports_stability.patch
 libpthread_fix.patch
-extern_inline_fix.patch
 proxy-defpager.diff
 external.patch
 makedev_keep_options.patch
