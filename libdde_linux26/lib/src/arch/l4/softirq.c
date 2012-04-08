@@ -172,6 +172,7 @@ static void tasklet_hi_action(struct softirq_action *a)
 	}
 }
 
+
 #define MAX_SOFTIRQ_RETRIES	10
 
 /** Run softirq handlers 
@@ -185,7 +186,6 @@ void __do_softirq(void)
 
 		/* reset softirq count */
 		set_softirq_pending(0);
-		local_irq_enable();
 
 		/* While we have a softirq pending... */
 		while (pending) {
@@ -197,7 +197,6 @@ void __do_softirq(void)
 			/* remove pending flag for last softirq */
 			pending >>= 1;
 		}
-		local_irq_disable();
 
 	/* Somebody might have scheduled another softirq in between
 	 * (e.g., an IRQ thread or another tasklet). */

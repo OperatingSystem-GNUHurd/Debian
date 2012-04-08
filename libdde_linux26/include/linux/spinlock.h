@@ -372,10 +372,6 @@ extern int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock);
 
 #else /* DDE_LINUX */
 
-unsigned long fake_local_irq_disable_flags(void);
-void fake_local_irq_enable(void);
-void fake_local_irq_restore(unsigned long flags);
-
 #define spin_lock_init(l) \
 	do { \
 		ddekit_lock_init(&(l)->ddekit_lock); \
@@ -398,7 +394,7 @@ void fake_local_irq_restore(unsigned long flags);
 
 #define read_lock(lock) spin_lock(lock)
 #define write_lock(lock) spin_lock(lock)
-#define spin_lock_irq(lock) fake_local_irq_disable_flags(); spin_lock(lock)
+#define spin_lock_irq(lock) local_irq_disable(); spin_lock(lock)
 #define spin_lock_bh(lock) spin_lock(lock)
 #define read_lock_irq(lock) spin_lock_irq(lock)
 #define read_lock_bh(lock) spin_lock_bh(lock)
@@ -415,7 +411,7 @@ void fake_local_irq_restore(unsigned long flags);
 #define read_unlock(lock) spin_unlock(lock)
 #define write_unlock(lock) spin_unlock(lock)
 
-#define spin_unlock_irq(lock) spin_unlock(lock); fake_local_irq_enable()
+#define spin_unlock_irq(lock) spin_unlock(lock); local_irq_enable()
 #define spin_unlock_bh(lock) spin_unlock(lock)
 #define read_unlock_irq(lock) spin_unlock_irq(lock)
 #define read_unlock_bh(lock) spin_unlock_bh(lock)
@@ -424,7 +420,7 @@ void fake_local_irq_restore(unsigned long flags);
 
 #define spin_lock_irqsave(lock, flags) \
 	do { \
-		flags = fake_local_irq_disable_flags();    \
+		local_irq_save(flags); \
 		spin_lock(lock);\
 	} while (0);
 
@@ -434,7 +430,7 @@ void fake_local_irq_restore(unsigned long flags);
 #define spin_unlock_irqrestore(lock, flags) \
 	do { \
 		spin_unlock(lock); \
-		fake_local_irq_restore (flags);	\
+		local_irq_restore(flags); \
 	} while (0);
 
 #define read_unlock_irqrestore(lock, flags) spin_unlock_irqrestore(lock, flags)
@@ -450,7 +446,12 @@ static int __lockfunc spin_trylock(spinlock_t *lock)
 #define _raw_spin_unlock(l) spin_unlock(l)
 #define _raw_spin_trylock(l) spin_trylock(l)
 
-#define spin_trylock_irqsave(lock, flags) spin_trylock(lock)
+#define spin_trylock_irqsave(lock, flags) \
+({ \
+	local_irq_save(flags); \
+	spin_trylock(lock) ? \
+	1 : ({ local_irq_restore(flags); 0; }); \
+})
 
 #define read_trylock(l) spin_trylock(l)
 #define write_trylock(l) read_trylock(l)
