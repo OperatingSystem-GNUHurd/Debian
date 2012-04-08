@@ -6,7 +6,7 @@
 #include <linux/init.h>  // initcall()
 #include <linux/delay.h> // msleep()
 
-#include <machdev.h>
+#include <hurd/machdev.h>
 
 int using_std = 1;
 
