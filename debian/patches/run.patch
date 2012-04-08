@@ -2,7 +2,7 @@ Index: hurd/daemons/rc.sh
 ===================================================================
 --- hurd.orig/daemons/rc.sh	2011-12-06 02:51:32.000000000 +0100
 +++ hurd/daemons/rc.sh	2011-12-06 02:52:16.000000000 +0100
-@@ -98,6 +98,12 @@
+@@ -98,6 +98,13 @@
  	chgrp utmp utmp
      fi; })
  fi
@@ -11,6 +11,7 @@ Index: hurd/daemons/rc.sh
 +rm -fr /run/*
 +mkdir -p /run/lock /run/shm
 +chmod 1777 /run/lock /run/shm
++: > /run/utmp
 +
  echo done
  

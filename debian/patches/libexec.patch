@@ -14,7 +14,7 @@ index 6a548d5..d10bfcc 100644
 -tty5	"/libexec/getty 38400"		hurd		on	secure trusted console
 -tty6	"/libexec/getty 38400"		hurd		on	secure trusted console
 -#com0	"/libexec/getty 9600"		dialup		on	secure
-+console	"/sbin/getty 9600"		mach-color	on	secure trusted console
++console	"/sbin/getty 9600"		mach-gnu-color	on	secure trusted console
 +tty1	"/sbin/getty 38400"		hurd		on	secure trusted console
 +tty2	"/sbin/getty 38400"		hurd		on	secure trusted console
 +tty3	"/sbin/getty 38400"		hurd		on	secure trusted console
