@@ -67,8 +67,3 @@ debian/tmp/etc/login/README
 debian/tmp/etc/ttys
 debian/tmp/dev/MAKEDEV
 debian/tmp/share/msgids/hurd.msgids usr/share/msgids
-dde_e100/dde_e100 /hurd
-dde_e1000/dde_e1000 /hurd
-dde_rtl8139/dde_rtl8139 /hurd
-dde_pcnet32/dde_pcnet32 /hurd
-dde_ne2k_pci/dde_ne2k_pci /hurd
