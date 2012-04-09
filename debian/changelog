@@ -1,4 +1,4 @@
-hurd (20120408-1) UNRELEASED; urgency=low
+hurd (20120408-1) unstable; urgency=low
 
   * New upstream snapshot.
     - Fixes tmpfs, thanks Maksym!
