@@ -4,7 +4,34 @@ on Tue,  4 Aug 1998 21:52:45 +0200
 It is currently maintained by the Debian GNU Hurd maintainers, who can be
 reached via <debian-hurd@lists.debian.org>.
 
-Sources are available from http://savannah.gnu.org/projects/hurd
+libdde_linux26/ is from http://svn.tudos.org/repos/tudos/trunk/l4/pkg/dde/linux26
+and is a modified copy of the Linux kernel.
+
+Copyright:
+
+   Copyright (C) 1991-2009 Linus Torvalds
+   and many others
+
+License:
+
+   This package is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License version 2 as
+   published by the Free Software Foundation.
+
+   This package is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this package; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+
+On Debian systems, the complete text of the GNU General Public License version
+2 can be found in `/usr/share/common-licenses/GPL-2'.
+
+
+The rest of the sources are from http://savannah.gnu.org/projects/hurd
 
 Copyright 1992-2011 the Free Software Foundation, Inc.
 
