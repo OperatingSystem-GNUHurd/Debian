@@ -1,0 +1,37 @@
+commit 0c27922e4933ceb86644f4a9b1af212ffe5aad75
+Author: Eric Dumazet <eric.dumazet@gmail.com>
+Date:   Mon Jun 8 03:49:24 2009 +0000
+
+    net: dev_addr_init() fix
+    
+    commit f001fde5eadd915f4858d22ed70d7040f48767cf
+    (net: introduce a list of device addresses dev_addr_list (v6))
+    added one regression Vegard Nossum found in its testings.
+    
+    With kmemcheck help, Vegard found some uninitialized memory
+    was read and reported to user, potentialy leaking kernel data.
+    ( thread can be found on http://lkml.org/lkml/2009/5/30/177 )
+    
+    dev_addr_init() incorrectly uses sizeof() operator. We were
+    initializing one byte instead of MAX_ADDR_LEN bytes.
+    
+    Reported-by: Vegard Nossum <vegard.nossum@gmail.com>
+    Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
+    Acked-by: Jiri Pirko <jpirko@redhat.com>
+    Signed-off-by: David S. Miller <davem@davemloft.net>
+
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 4913089..81b392e 100644
+--- a/libdde_linux26/lib/src/net/core/dev.c
++++ b/libdde_linux26/lib/src/net/core/dev.c
+@@ -3577,8 +3577,8 @@ static int dev_addr_init(struct net_device *dev)
+ 	/* rtnl_mutex must be held here */
+ 
+ 	INIT_LIST_HEAD(&dev->dev_addr_list);
+-	memset(addr, 0, sizeof(*addr));
+-	err = __hw_addr_add(&dev->dev_addr_list, NULL, addr, sizeof(*addr),
++	memset(addr, 0, sizeof(addr));
++	err = __hw_addr_add(&dev->dev_addr_list, NULL, addr, sizeof(addr),
+ 			    NETDEV_HW_ADDR_T_LAN);
+ 	if (!err) {
+ 		/*

@@ -1,0 +1,39 @@
+commit 260d703adc5f275e3ba7ddff6e2e0217bc613b35
+Author: Mike Mason <mmlnx@us.ibm.com>
+Date:   Thu Jul 30 15:33:21 2009 -0700
+
+    PCI: support for PCI Express fundamental reset
+    
+    This is the first of three patches that implement a bit field that PCI
+    Express device drivers can use to indicate they need a fundamental reset
+    during error recovery.
+    
+    By default, the EEH framework on powerpc does what's known as a "hot
+    reset" during recovery of a PCI Express device.  We've found a case
+    where the device needs a "fundamental reset" to recover properly.  The
+    current PCI error recovery and EEH frameworks do not support this
+    distinction.
+    
+    The attached patch (courtesy of Richard Lary) adds a bit field to
+    pci_dev that indicates whether the device requires a fundamental reset
+    during recovery.
+    
+    These patches supersede the previously submitted patch that implemented
+    a fundamental reset bit field.
+    
+    Signed-off-by: Mike Mason <mmlnx@us.ibm.com>
+    Signed-off-by: Richard Lary <rlary@us.ibm.com>
+    Signed-off-by: Jesse Barnes <jbarnes@virtuousgeek.org>
+
+Index: hurd-debian/libdde_linux26/contrib/include/linux/pci.h
+===================================================================
+--- hurd-debian.orig/libdde_linux26/contrib/include/linux/pci.h	2012-04-16 00:26:44.000000000 +0000
++++ hurd-debian/libdde_linux26/contrib/include/linux/pci.h	2012-04-16 00:34:37.000000000 +0000
+@@ -256,6 +256,7 @@
+ 	unsigned int	ari_enabled:1;	/* ARI forwarding */
+ 	unsigned int	is_managed:1;
+ 	unsigned int	is_pcie:1;
++	unsigned int    needs_freset:1; /* Dev requires fundamental reset */
+ 	unsigned int	state_saved:1;
+ 	pci_dev_flags_t dev_flags;
+ 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
