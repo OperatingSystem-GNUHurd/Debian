@@ -1,3 +1,10 @@
+hurd (20120408-3) unstable; urgency=low
+
+  * patches/libpthread*, control, patches/external.patch: Remove libpthread, now
+  shipped by glibc, and depend on it.
+
+ -- Samuel Thibault <sthibault@debian.org>  Wed, 25 Apr 2012 02:14:04 +0000
+
 hurd (20120408-2) unstable; urgency=low
 
   * debian/patches/libdde_{addr_fix,addr_list,config,devres,dma_head,ethoc,

@@ -3,7 +3,6 @@ ext2fs_large_stores.patch
 hurd_console_startup.patch
 init_try_runsystem.gnu.patch
 install-msgids.diff
-libpthread_stubs.patch
 makedev.diff
 pfinet_dhcp.patch
 pflocal.patch
@@ -14,18 +13,15 @@ tmp_exec_startup.patch
 uptime_w_path_fix.patch
 stat_round.patch
 libports_stability.patch
-libpthread_fix.patch
 proxy-defpager.diff
 external.patch
 makedev_keep_options.patch
 makedev_parted_store.patch
 console_ignore_bdf_err.patch
-libpthread_sigmask.patch
 ext2fs_nowait.patch
 libpager_deadlock.patch
 libdiskfs_self-reauth.patch
 libdiskfs_sync.patch
-libpthread_globsigdisp.patch
 posix-sigcodes.patch
 random-default-fast.patch
 libexec.patch
