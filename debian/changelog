@@ -1,3 +1,9 @@
+hurd (20120408-4) unstable; urgency=low
+
+  * rules: Bump to gcc-4.7.
+
+ -- Samuel Thibault <sthibault@debian.org>  Thu, 26 Apr 2012 19:03:16 +0000
+
 hurd (20120408-3) unstable; urgency=low
 
   * patches/libpthread*, control, patches/external.patch: Remove libpthread, now
