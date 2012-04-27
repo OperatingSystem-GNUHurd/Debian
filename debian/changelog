@@ -1,4 +1,4 @@
-hurd (20120408-4) unstable; urgency=low
+hurd (20120408-4) UNRELEASED; urgency=low
 
   * rules: Bump to gcc-4.7.
 
