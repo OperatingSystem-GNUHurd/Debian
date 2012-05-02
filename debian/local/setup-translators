@@ -126,12 +126,12 @@ md fd
 md fdX 01
 md std
 md vcs
-md hdX 0123
-md hdXsY 0123 123456789
-md hdXs1Y 0123 0123456
-md sdX 0123
-md sdXsY 0123 123456789
-md sdXs1Y 0123 0123456
+md hdX 012345
+md hdXsY 012345 123456789
+md hdXs1Y 012345 0123456
+md sdX 012345
+md sdXsY 012345 123456789
+md sdXs1Y 012345 0123456
 md cdX 01
 
 if [ "$MINIMAL" ]; then

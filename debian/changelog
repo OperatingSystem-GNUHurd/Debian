@@ -1,8 +1,10 @@
 hurd (20120408-4) UNRELEASED; urgency=low
 
   * rules: Bump to gcc-4.7.
+  * local/setup-translators: Add hd4 and hd5 /dev entries, for some SATA
+    controlers.
 
- -- Samuel Thibault <sthibault@debian.org>  Thu, 26 Apr 2012 19:03:16 +0000
+ -- Samuel Thibault <sthibault@debian.org>  Thu, 03 May 2012 01:53:00 +0200
 
 hurd (20120408-3) unstable; urgency=low
 
