@@ -177,6 +177,7 @@ static void tasklet_hi_action(struct softirq_action *a)
 
 /** Run softirq handlers 
  */
+asmlinkage
 void __do_softirq(void)
 {
 	int retries = MAX_SOFTIRQ_RETRIES;
@@ -205,6 +206,7 @@ void __do_softirq(void)
 }
 
 
+asmlinkage
 void do_softirq(void)
 {
 	unsigned long flags;
