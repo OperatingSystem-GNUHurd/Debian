@@ -42,6 +42,7 @@ debian/tmp/bin/mount
 debian/tmp/dev/MAKEDEV
 debian/tmp/hurd/auth
 debian/tmp/hurd/console
+debian/tmp/hurd/devnode
 debian/tmp/hurd/exec
 debian/tmp/hurd/ext2fs
 debian/tmp/hurd/ext2fs.static /boot

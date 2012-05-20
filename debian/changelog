@@ -9,6 +9,7 @@ hurd (20120520-1) UNRELEASED; urgency=low
     - Add hd4 and hd5 /dev entries, for some SATA controlers.
   * hurd.postinst: Migrate pfinet into using /dev/eth0.
   * patches/libmachdev.patch: Fix packet delivery on pfinet restart.
+  * hurd-udev.install: Add devnode.
 
  -- Samuel Thibault <sthibault@debian.org>  Thu, 03 May 2012 01:53:00 +0200
 
