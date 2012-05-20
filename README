@@ -29,6 +29,8 @@ $ git pull . upstream
 $ git pull . dde-clean
 $ git pull . random
 $ git pull . procfs-jkoenig-moved
+$ autoreconf -fi
+$ git commit ...
 $ git tag -a upstream/<date>
 $ git checkout master
 $ git pull . upstream-merged
