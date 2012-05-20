@@ -70,4 +70,4 @@ Index: hurd/sutils/MAKEDEV.sh
 +	fi
  	;;
  
-       # /dev/shm is used by the POSIX.1 shm_open call in libc.
+       netdde)
