@@ -47,3 +47,4 @@ libdde_pr_cont.patch
 libdde_fixes.patch
 libdde_rx_queue.patch
 libdde_rcu.patch
+libmachdev.patch

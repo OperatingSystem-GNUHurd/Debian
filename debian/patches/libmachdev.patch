@@ -1,0 +1,39 @@
+diff --git a/libmachdev/net.c b/libmachdev/net.c
+index 606765f..a892d1f 100644
+--- a/libmachdev/net.c
++++ b/libmachdev/net.c
+@@ -212,7 +212,7 @@ deliver_msg(struct net_rcv_msg *msg, if_filter_list_t *ifp)
+ 			  MACH_SEND_MSG|MACH_SEND_TIMEOUT,
+ 			  msg->msg_hdr.msgh_size, 0, MACH_PORT_NULL,
+ 			  0, MACH_PORT_NULL);
+-	  if (err != MACH_MSG_SUCCESS)
++	  if (0 && err != MACH_MSG_SUCCESS)
+ 	    {
+ 	      mach_port_deallocate(mach_task_self (),
+ 				   ((mach_msg_header_t *)msg)->msgh_remote_port);
+diff --git a/libbpf/bpf_impl.c b/libbpf/bpf_impl.c
+index b2dafd1..c8a250b 100644
+--- a/libbpf/bpf_impl.c
++++ b/libbpf/bpf_impl.c
+@@ -45,6 +45,8 @@
+ #include "queue.h"
+ #include "util.h"
+ 
++static struct net_hash_header filter_hash_header[N_NET_HASH];
++
+ /*
+  * Execute the filter program starting at pc on the packet p
+  * wirelen is the length of the original packet
+diff --git a/libbpf/bpf_impl.h b/libbpf/bpf_impl.h
+index e611491..9073fda 100644
+--- a/libbpf/bpf_impl.h
++++ b/libbpf/bpf_impl.h
+@@ -134,7 +134,7 @@ struct net_hash_header {
+ 	int n_keys;			/* zero if not used */
+ 	int ref_count;			/* reference count */
+ 	net_hash_entry_t table[NET_HASH_SIZE];
+-} filter_hash_header[N_NET_HASH];
++};
+ 
+ typedef struct net_hash_header *net_hash_header_t;
+ 
