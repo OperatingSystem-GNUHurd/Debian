@@ -32,10 +32,6 @@ endif
 SRCS = $(CONSOLE_SRCS) \
   $(VGA_SO_SRCS) $(PC_KBD_SO_SRCS) $(PC_MOUSE_SO_SRCS) \
   $(GENERIC_SPEAKER_SO_SRCS) $(CURRENT_VCS_SO_SRCS) $(NCURSESW_SO_SRCS)
-LCLHDRS = timer.h driver.h display.h input.h bell.h \
-	  unicode.h bdf.h mach-inputdev.h \
-	  vga-dynafont.h vga-dynacolor.h vga-hw.h vga-support.h \
-	  trans.h
 
 OBJS = $(SRCS:.c=.o) kdioctlServer.o
 HURDLIBS = cons threads ports netfs fshelp iohelp ihash shouldbeinlibc
@@ -50,6 +46,7 @@ include ../Makeconf
 
 driver-CPPFLAGS = -D'CONSOLE_DEFPATH="$(module-dir)\0"' \
 	-D'CONSOLE_SONAME_SUFFIX=".so.$(hurd-version)"'
+driver-DEPS = $(..)config.make
 
 console: $(CONSOLE_SRCS:.c=.o) \
 	../libnetfs/libnetfs.a ../libfshelp/libfshelp.a \
