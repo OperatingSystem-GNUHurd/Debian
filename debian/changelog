@@ -2,6 +2,10 @@ hurd (20120520-1) UNRELEASED; urgency=low
 
   * New upstream snapshot, remove libpthread.
   * rules: Bump to gcc-4.7.
+  * control: Depend on netdde, recent enough (>= 0.0.20120518~) to avoid
+    conflicts with gnumach drivers.
+  * local/setup-translators: Setup netdde translator and /dev/eth*.
+  * debian/hurd.postinst: Migrate pfinet into using /dev/eth0.
 
  -- Samuel Thibault <sthibault@debian.org>  Thu, 26 Apr 2012 19:03:16 +0000
 

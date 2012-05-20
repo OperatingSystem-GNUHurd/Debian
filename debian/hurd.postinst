@@ -75,6 +75,20 @@ if [ "$1" = configure ] && [ "$2" ]; then
 		( cd /dev ; rm -f random urandom )
 	fi
 	/usr/lib/hurd/setup-translators -K
+
+	# upgrade pfinet into using DDE node
+	if PFINET="`showtrans /servers/socket/2`"
+	then
+		PFINET=$(echo "$PFINET" | sed 's_ eth_ /dev/eth_')
+		PFINET=$(echo "$PFINET" | sed 's_=eth_=/dev/eth_')
+		settrans -pk /servers/socket/2 $PFINET
+	fi
+	if PFINET6=`showtrans /servers/socket/26`
+	then
+		PFINET6=$(echo "$PFINET6" | sed 's_ eth_ /dev/eth_')
+		PFINET6=$(echo "$PFINET6" | sed 's_=eth_=/dev/eth_')
+		settrans -pk /servers/socket/26 $PFINET6
+	fi
 fi
 
 update-alternatives --install /hurd/random.sh random.sh /hurd/random-hurd.sh 10 \
