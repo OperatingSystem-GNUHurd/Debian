@@ -1,5 +1,5 @@
 diff --git a/libmachdev/net.c b/libmachdev/net.c
-index 606765f..a892d1f 100644
+index 606765f..766d9b4 100644
 --- a/libmachdev/net.c
 +++ b/libmachdev/net.c
 @@ -212,7 +212,7 @@ deliver_msg(struct net_rcv_msg *msg, if_filter_list_t *ifp)
@@ -11,6 +11,28 @@ index 606765f..a892d1f 100644
  	    {
  	      mach_port_deallocate(mach_task_self (),
  				   ((mach_msg_header_t *)msg)->msgh_remote_port);
+@@ -377,7 +377,7 @@ device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
+     }
+ 
+   *devp = ports_get_right (nd);
+-  *devicePoly = MACH_MSG_TYPE_COPY_SEND;
++  *devicePoly = MACH_MSG_TYPE_MAKE_SEND;
+   return D_SUCCESS;
+ }
+ 
+diff --git a/libmachdev/ds_routines.c b/libmachdev/ds_routines.c
+index 6b8d1d4..f0c034f 100644
+--- a/libmachdev/ds_routines.c
++++ b/libmachdev/ds_routines.c
+@@ -206,7 +206,7 @@ ds_device_close (device_t dev)
+   ret = (device->emul_ops->close
+ 	 ? (*device->emul_ops->close) (device->emul_data)
+ 	 : D_SUCCESS);
+-  mach_device_deallocate (device_to_pi (device));
++  //mach_device_deallocate (device_to_pi (device));
+ 
+   ports_port_deref (device_to_pi (device));
+   return ret;
 diff --git a/libbpf/bpf_impl.c b/libbpf/bpf_impl.c
 index b2dafd1..c8a250b 100644
 --- a/libbpf/bpf_impl.c
