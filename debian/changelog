@@ -1,4 +1,4 @@
-hurd (20120520-1) UNRELEASED; urgency=low
+hurd (20120520-1) unstable; urgency=low
 
   * New upstream snapshot, remove libpthread.
   * rules: Bump to gcc-4.7.
