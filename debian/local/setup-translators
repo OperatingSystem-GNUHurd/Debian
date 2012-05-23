@@ -156,6 +156,7 @@ fi
 
 st kbd '/hurd/symlink cons/kbd' kbd
 st mouse '/hurd/symlink cons/mouse' mouse
+[ -d shm ] && ! [ -L shm ] && rmdir shm
 st shm '/hurd/symlink /run/shm' shm
 
 echo .

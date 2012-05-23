@@ -3,6 +3,8 @@ hurd (20120520-2) UNRELEASED; urgency=low
   * control: Do not make hurd-udeb depend on netdde-udeb, it leads to configure
     recursion, and is not actually needed.
   * hurd.postinst: Drop error messages while fetching pfinet options.
+  * local/setup-translators: Remove /dev/shm directory if any, to be replaced
+    with symlink to /run/shm.
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 22 May 2012 00:07:09 +0000
 
