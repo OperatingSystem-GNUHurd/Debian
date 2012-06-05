@@ -1,0 +1,113 @@
+From bbce8439190738efc9260490fa52f9dfe9600306 Mon Sep 17 00:00:00 2001
+From: Emilio Pozuelo Monfort <pochu27@gmail.com>
+Date: Wed, 26 May 2010 23:32:16 +0200
+Subject: [PATCH 3/3] Use the new _hurd_exec_file_name function
+
+* configure.in: Check for _hurd_exec_file_name.
+* utils/fakeauth.c: Call _hurd_exec_file_name instead of
+_hurd_exec if it's available.
+* utils/rpctrace.c: Likewise.
+* utils/shd.c: Likewise.
+---
+ configure.in     |    4 ++--
+ utils/fakeauth.c |    9 +++++++--
+ utils/rpctrace.c |    6 +++++-
+ utils/shd.c      |    9 ++++++---
+ 4 files changed, 20 insertions(+), 8 deletions(-)
+
+Index: hurd-debian/configure.in
+===================================================================
+--- hurd-debian.orig/configure.in	2012-06-05 00:38:18.000000000 +0000
++++ hurd-debian/configure.in	2012-06-05 00:38:18.000000000 +0000
+@@ -160,8 +160,8 @@
+ fi
+ AC_SUBST(VERSIONING)
+ 
+-# Check if libc contains getgrouplist and/or uselocale.
+-AC_CHECK_FUNCS(getgrouplist uselocale file_exec_file_name exec_exec_file_name)
++# Check if libc contains these functions.
++AC_CHECK_FUNCS(getgrouplist uselocale file_exec_file_name exec_exec_file_name _hurd_exec_file_name)
+ 
+ 
+ # From glibc HEAD, 2007-11-07.
+Index: hurd-debian/utils/fakeauth.c
+===================================================================
+--- hurd-debian.orig/utils/fakeauth.c	2012-06-05 00:35:35.000000000 +0000
++++ hurd-debian/utils/fakeauth.c	2012-06-05 01:48:00.000000000 +0000
+@@ -1,5 +1,5 @@
+ /* fakeauth -- proxy auth server to lie to users about what their IDs are
+-   Copyright (C) 2002 Free Software Foundation, Inc.
++   Copyright (C) 2002, 2010 Free Software Foundation, Inc.
+ 
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License as
+@@ -388,7 +388,7 @@
+   /* We cannot use fork because it doesn't do the right thing with our send
+      rights that point to our own receive rights, i.e. the new auth port.
+      Since posix_spawn might be implemented with fork (prior to glibc 2.3),
+-     we cannot use that simple interface either.  We use _hurd_exec
++     we cannot use that simple interface either.  We use _hurd_exec_file_name
+      directly to effect what posix_spawn does in the simple case.  */
+   {
+     task_t newtask;
+@@ -413,7 +413,12 @@
+     if (err)
+       error (3, err, "proc_child");
+ 
++#ifdef HAVE__HURD_EXEC_FILE_NAME
++    err = _hurd_exec_file_name (newtask, execfile, argv[argi],
++				&argv[argi], environ);
++#else
+     err = _hurd_exec (newtask, execfile, &argv[argi], environ);
++#endif
+     mach_port_deallocate (mach_task_self (), newtask);
+     mach_port_deallocate (mach_task_self (), execfile);
+     if (err)
+Index: hurd-debian/utils/rpctrace.c
+===================================================================
+--- hurd-debian.orig/utils/rpctrace.c	2012-06-05 00:35:35.000000000 +0000
++++ hurd-debian/utils/rpctrace.c	2012-06-05 01:48:00.000000000 +0000
+@@ -1069,7 +1069,11 @@
+   /* Now actually run the command they told us to trace.  We do the exec on
+      the actual task, so the RPCs to map in the program itself do not get
+      traced.  Could have an option to use TASK_WRAPPER here instead.  */
++#ifdef HAVE__HURD_EXEC_FILE_NAME
++  err = _hurd_exec_file_name (traced_task, file, *argv, argv, envp);
++#else
+   err = _hurd_exec (traced_task, file, argv, envp);
++#endif
+   if (err)
+     error (2, err, "cannot exec `%s'", argv[0]);
+ 
+Index: hurd-debian/utils/shd.c
+===================================================================
+--- hurd-debian.orig/utils/shd.c	2012-06-05 00:35:35.000000000 +0000
++++ hurd-debian/utils/shd.c	2012-06-05 01:48:00.000000000 +0000
+@@ -1,5 +1,5 @@
+ /*
+-   Copyright (C) 1994,95,99,2002 Free Software Foundation
++   Copyright (C) 1994, 1995, 1999, 2002, 2010 Free Software Foundation
+ 
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License as
+@@ -159,15 +159,18 @@
+ 	      movefd (fd1, 1, &save1))
+ 	    return -1;
+ 
++#ifdef HAVE__HURD_EXEC_FILE_NAME
++	  err = _hurd_exec_file_name (task, file, program, argv, environ);
++#else
+ 	  err = _hurd_exec (task, file, argv, environ);
+-
++#endif
+ 	  if (restorefd (fd0, 0, &save0) ||
+ 	      restorefd (fd1, 1, &save1))
+ 	    return -1;
+ 
+ 	  if (err)
+ 	    {
+-	      error (0, err, "_hurd_exec");
++	      error (0, err, "_hurd_exec_file_name");
+ 	      err = task_terminate (task);
+ 	      if (err)
+ 		error (0, err, "task_terminate");

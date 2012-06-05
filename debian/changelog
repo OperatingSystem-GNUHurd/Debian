@@ -10,6 +10,8 @@ hurd (20120605-1) UNRELEASED; urgency=low
   * local/setup-translators: Remove /dev/shm directory if any, to be replaced
     with symlink to /run/shm.
   * patches/balloc.patch: Fix parentheses.
+  * patches/exec_filename_{exec,fs,use}.patch: Add support for passing
+    filename through exec() call.
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 22 May 2012 00:07:09 +0000
 

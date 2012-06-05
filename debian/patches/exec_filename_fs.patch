@@ -1,0 +1,1035 @@
+From ba528e4a9db131112aa09edfdbb3449b55618578 Mon Sep 17 00:00:00 2001
+From: Emilio Pozuelo Monfort <pochu27@gmail.com>
+Date: Wed, 26 May 2010 01:27:40 +0200
+Subject: [PATCH 2/3] Add a file_exec_file_name RPC
+
+* hurd/fs.defs (file_exec): Deprecate in favor of...
+(file_exec_file_name): ...this new RPC.
+Change all implementations and forward old implementations to
+the new version.  Change all callers but fallback to old version.
+Change comments and documentation.
+---
+ TODO                              |    2 +-
+ doc/hurd.texi                     |   16 ++++----
+ exec/hashexec.c                   |   32 ++++++++++----
+ hurd/fs.defs                      |   28 +++++++++++--
+ hurd/hurd_types.h                 |    9 ++--
+ init/init.c                       |   81 ++++++++++++++++++++++++++----------
+ libdiskfs/boot-start.c            |    2 +-
+ libdiskfs/file-exec.c             |   75 ++++++++++++++++++++++++++++------
+ libfshelp/start-translator-long.c |   21 +++++++---
+ libnetfs/file-exec.c              |   67 ++++++++++++++++++++++++++----
+ libtrivfs/file-exec.c             |   27 ++++++++++++-
+ trans/fakeroot.c                  |   59 ++++++++++++++++++++++++---
+ utils/login.c                     |   23 +++++++---
+ 13 files changed, 350 insertions(+), 92 deletions(-)
+
+Index: hurd-debian/TODO
+===================================================================
+--- hurd-debian.orig/TODO	2012-06-05 05:01:41.000000000 +0000
++++ hurd-debian/TODO	2012-06-05 05:02:02.000000000 +0000
+@@ -136,7 +136,7 @@
+ 
+ ** libtrivfs
+ *** Allow for read/write/exec to be passed down.
+-*** Implement file_exec when appropriate. !!
++*** Implement file_exec_file_name when appropriate. !!
+ *** Provide for the visible owner, etc., to be held in command-line args
+     instead of the underlying node, when it's important. !!
+ 
+Index: hurd-debian/doc/hurd.texi
+===================================================================
+--- hurd-debian.orig/doc/hurd.texi	2012-06-05 05:02:02.000000000 +0000
++++ hurd-debian/doc/hurd.texi	2012-06-05 05:02:02.000000000 +0000
+@@ -2741,10 +2741,10 @@
+ @node Program Execution
+ @subsection Program Execution
+ 
+-@findex file_exec
++@findex file_exec_file_name
+ Execution of programs on the Hurd is done through fileservers with the
+-@code{file_exec} RPC.  The fileserver is expected to verify that the
+-user is allowed to execute the file, make whatever modifications to the
++@code{file_exec_file_name} RPC.  The fileserver is expected to verify that
++the user is allowed to execute the file, make whatever modifications to the
+ ports are necessary for setuid execution, and then invoke the standard
+ execserver found on @file{/servers/exec}.
+ 
+@@ -2756,13 +2756,13 @@
+ be returned.  In addition, at least one of the execute bits must be on.  A
+ failure of this check should result in @code{EACCES}---not
+ @code{ENOEXEC}.  It is not proper for the fileserver ever to respond to
+-the @code{file_exec} RPC with @code{ENOEXEC}.
++the @code{file_exec_file_name} RPC with @code{ENOEXEC}.
+ 
+ If either the setuid or setgid bits are set, the server needs to
+ construct a new authentication handle with the additional new ID's.
+-Then all the ports passed to @code{file_exec} need to be reauthenticated
+-with the new handle.  If the fileserver is unable to make the new
+-authentication handle (for example, because it is not running as root)
++Then all the ports passed to @code{file_exec_file_name} need to be
++reauthenticated with the new handle.  If the fileserver is unable to make the
++new authentication handle (for example, because it is not running as root)
+ it is not acceptable to return an error; in such a case the server
+ should simply silently fail to implement the setuid/setgid semantics.
+ 
+@@ -2777,7 +2777,7 @@
+ opened with @code{O_READ}.  Finally, all the information (mutated
+ appropriately for setuid/setgid) should be sent to the execserver with
+ @code{exec_exec_file_name}.  Whatever error code @code{exec_exec_file_name}
+-returns should be returned to the caller of @code{file_exec}.
++returns should be returned to the caller of @code{file_exec_file_name}.
+ 
+ @node File Locking
+ @subsection File Locking
+Index: hurd-debian/exec/hashexec.c
+===================================================================
+--- hurd-debian.orig/exec/hashexec.c	2012-06-05 05:02:02.000000000 +0000
++++ hurd-debian/exec/hashexec.c	2012-06-05 05:06:23.000000000 +0000
+@@ -24,6 +24,9 @@
+ #include <unistd.h>
+ #include <envz.h>
+ #include <sys/param.h>
++#ifdef HAVE_FILE_EXEC_FILE_NAME
++#include <hurd/fs_experimental.h>
++#endif
+ 
+ /* This is called to check E for a #! interpreter specification.  E has
+    already been prepared (successfully) and checked (unsuccessfully).  If
+@@ -421,16 +424,32 @@
+     /* We cannot open the interpreter file to execute it.  Lose!  */
+     return;
+ 
++#ifdef HAVE_FILE_EXEC_FILE_NAME
+   /* Execute the interpreter program.  */
+-  e->error = file_exec (interp_file,
+-			oldtask, flags,
+-			new_argv, new_argvlen, envp, envplen,
+-			new_dtable ?: dtable, MACH_MSG_TYPE_COPY_SEND,
+-			new_dtable ? new_dtablesize : dtablesize,
+-			portarray, MACH_MSG_TYPE_COPY_SEND, nports,
+-			intarray, nints,
+-			deallocnames, ndeallocnames,
+-			destroynames, ndestroynames);
++  e->error = file_exec_file_name (interp_file,
++				  oldtask, flags, interp,
++				  new_argv, new_argvlen, envp, envplen,
++				  new_dtable ?: dtable,
++				  MACH_MSG_TYPE_COPY_SEND,
++				  new_dtable ? new_dtablesize : dtablesize,
++				  portarray, MACH_MSG_TYPE_COPY_SEND, nports,
++				  intarray, nints,
++				  deallocnames, ndeallocnames,
++				  destroynames, ndestroynames);
++  /* For backwards compatibility.  Just drop it when we kill file_exec.  */
++  if (e->error == MIG_BAD_ID)
++#endif
++    e->error = file_exec (interp_file,
++			  oldtask, flags,
++			  new_argv, new_argvlen, envp, envplen,
++			  new_dtable ?: dtable, MACH_MSG_TYPE_COPY_SEND,
++			  new_dtable ? new_dtablesize : dtablesize,
++			  portarray, MACH_MSG_TYPE_COPY_SEND, nports,
++			  intarray, nints,
++			  deallocnames, ndeallocnames,
++			  destroynames, ndestroynames);
++
++
+   mach_port_deallocate (mach_task_self (), interp_file);
+ 
+   if (! e->error)
+Index: hurd-debian/hurd/fs.defs
+===================================================================
+--- hurd-debian.orig/hurd/fs.defs	2012-06-05 05:01:41.000000000 +0000
++++ hurd-debian/hurd/fs.defs	2012-06-05 05:02:02.000000000 +0000
+@@ -1,5 +1,6 @@
+ /* Definitions for the filesystem interface.
+-   Copyright (C) 1994,95,96,97,98,99,2002 Free Software Foundation, Inc.
++   Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2002, 2010
++   Free Software Foundation, Inc.
+ 
+ This file is part of the GNU Hurd.
+ 
+@@ -35,7 +36,8 @@
+ /* Overlay a task with a file.  Necessary initialization, including
+    authentication changes associated with set[ug]id execution must be
+    handled by the filesystem.  Filesystems normally implement this by
+-   using exec_newtask or exec_loadtask as appropriate.  */
++   using exec_newtask or exec_loadtask as appropriate.
++   Deprecated: use file_exec_file_name instead.  */
+ routine file_exec (
+ 	exec_file: file_t;
+ 	RPT
+@@ -129,8 +131,8 @@
+    (regardless of the current open modes for this port).  ALLOWED is a
+    bitwise OR of O_READ, O_WRITE, and O_EXEC.  This is not necessarily the
+    same as what an open or exec would allow; O_EXEC is set for root even if
+-   no executable bits are on (in which case file_exec should fail) and
+-   O_WRITE is set a directory can be modified, even though it can't be
++   no executable bits are on (in which case file_exec_file_name should fail)
++   and O_WRITE is set a directory can be modified, even though it can't be
+    written directly.  */
+ routine file_check_access (
+ 	file: file_t;
+Index: hurd-debian/hurd/hurd_types.h
+===================================================================
+--- hurd-debian.orig/hurd/hurd_types.h	2012-06-05 05:01:41.000000000 +0000
++++ hurd-debian/hurd/hurd_types.h	2012-06-05 05:02:02.000000000 +0000
+@@ -1,5 +1,6 @@
+ /* C declarations for Hurd server interfaces
+-   Copyright (C) 1993,94,95,96,98,99,2001,02 Free Software Foundation, Inc.
++   Copyright (C) 1993, 1994, 1995, 1996, 1998, 1999, 2001, 2002,
++   2010 Free Software Foundation, Inc.
+ 
+ This file is part of the GNU Hurd.
+ 
+@@ -76,7 +77,7 @@
+ /* Many such parameters and flags are also defined in various libc
+    headers. */
+ 
+-/* Bits for flags in fs.defs:file_exec and exec.defs:exec_* calls: */
++/* Bits for flags in fs.defs:file_exec_file_name and exec.defs:exec_* calls: */
+ #define EXEC_NEWTASK	0x00000001 /* Create new task; kill old one.  */
+ #define EXEC_SECURE	0x00000002 /* Use secure values of portarray, etc. */
+ #define EXEC_DEFAULTS	0x00000004 /* Use defaults for unspecified ports.  */
+@@ -342,7 +343,7 @@
+ #define FSTYPE_MEMFS   0x00000019 /* In-core filesystem */
+ #define FSTYPE_ISO9660 0x0000001a /* ISO9660 */
+ 
+-/* Standard port assignments for file_exec and exec_* */
++/* Standard port assignments for file_exec_file_name and exec_* */
+ enum
+   {
+     INIT_PORT_CWDIR,
+@@ -356,7 +357,7 @@
+     INIT_PORT_MAX
+   };
+ 
+-/* Standard ints for file_exec and exec_* */
++/* Standard ints for file_exec_file_name and exec_* */
+ enum
+   {
+     INIT_UMASK,
+Index: hurd-debian/init/init.c
+===================================================================
+--- hurd-debian.orig/init/init.c	2012-06-05 05:02:02.000000000 +0000
++++ hurd-debian/init/init.c	2012-06-05 05:06:35.000000000 +0000
+@@ -1,7 +1,7 @@
+ /* Start and maintain hurd core servers and system run state
+ 
+    Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
+-     2005, 2008 Free Software Foundation, Inc.
++     2005, 2008, 2010 Free Software Foundation, Inc.
+    This file is part of the GNU Hurd.
+ 
+    The GNU Hurd is free software; you can redistribute it and/or modify
+@@ -24,6 +24,9 @@
+    one file. */
+ #include <hurd.h>
+ #include <hurd/fs.h>
++#ifdef HAVE_FILE_EXEC_FILE_NAME
++#include <hurd/fs_experimental.h>
++#endif
+ #include <hurd/fsys.h>
+ #include <device/device.h>
+ #include <stdio.h>
+@@ -375,13 +378,28 @@
+ 	      printf ("Pausing for %s\n", prog);
+ 	      getchar ();
+ 	    }
+-	  err = file_exec (file, *task, 0,
+-			   (char *)prog, strlen (prog) + 1, /* Args.  */
+-			   startup_envz, startup_envz_len,
+-			   default_dtable, MACH_MSG_TYPE_COPY_SEND, 3,
+-			   ports, MACH_MSG_TYPE_COPY_SEND, INIT_PORT_MAX,
+-			   default_ints, INIT_INT_MAX,
+-			   NULL, 0, NULL, 0);
++#ifdef HAVE_FILE_EXEC_FILE_NAME
++	  err = file_exec_file_name (file, *task, 0, (char *)prog,
++				     (char *)prog,
++				     strlen (prog) + 1, /* Args.  */
++				     startup_envz, startup_envz_len,
++				     default_dtable,
++				     MACH_MSG_TYPE_COPY_SEND, 3,
++				     ports, MACH_MSG_TYPE_COPY_SEND,
++				     INIT_PORT_MAX,
++				     default_ints, INIT_INT_MAX,
++				     NULL, 0, NULL, 0);
++	  /* For backwards compatibility.  Just drop it when we kill
++	     file_exec.  */
++	  if (err == MIG_BAD_ID)
++#endif
++	    err = file_exec (file, *task, 0,
++			     (char *)prog, strlen (prog) + 1, /* Args.  */
++			     startup_envz, startup_envz_len,
++			     default_dtable, MACH_MSG_TYPE_COPY_SEND, 3,
++			     ports, MACH_MSG_TYPE_COPY_SEND, INIT_PORT_MAX,
++			     default_ints, INIT_INT_MAX,
++			     NULL, 0, NULL, 0);
+ 	  if (!err)
+ 	    break;
+ 
+@@ -468,14 +486,27 @@
+     ++progname;
+   else
+     progname = filename;
+-  err = file_exec (file, task, 0,
+-		   args, arglen,
+-		   startup_envz, startup_envz_len,
+-		   default_dtable, MACH_MSG_TYPE_COPY_SEND, 3,
+-		   default_ports, MACH_MSG_TYPE_COPY_SEND,
+-		   INIT_PORT_MAX,
+-		   default_ints, INIT_INT_MAX,
+-		   NULL, 0, NULL, 0);
++#ifdef HAVE_FILE_EXEC_FILE_NAME
++  err = file_exec_file_name (file, task, 0, filename,
++			     args, arglen,
++			     startup_envz, startup_envz_len,
++			     default_dtable, MACH_MSG_TYPE_COPY_SEND, 3,
++			     default_ports, MACH_MSG_TYPE_COPY_SEND,
++			     INIT_PORT_MAX,
++			     default_ints, INIT_INT_MAX,
++			     NULL, 0, NULL, 0);
++  /* For backwards compatibility.  Just drop it when we kill file_exec.  */
++  if (err == MIG_BAD_ID)
++#endif
++    err = file_exec (file, task, 0,
++		     args, arglen,
++		     startup_envz, startup_envz_len,
++		     default_dtable, MACH_MSG_TYPE_COPY_SEND, 3,
++		     default_ports, MACH_MSG_TYPE_COPY_SEND,
++		     INIT_PORT_MAX,
++		     default_ints, INIT_INT_MAX,
++		     NULL, 0, NULL, 0);
++
+   mach_port_deallocate (mach_task_self (), default_ports[INIT_PORT_PROC]);
+   mach_port_deallocate (mach_task_self (), task);
+   if (ctty != MACH_PORT_NULL)
+@@ -1059,13 +1090,26 @@
+       getchar ();
+     }
+ 
+-  err = file_exec (file, child_task, 0,
+-		   args, arglen,
+-		   startup_envz, startup_envz_len,
+-		   NULL, MACH_MSG_TYPE_COPY_SEND, 0, /* No fds.  */
+-		   default_ports, MACH_MSG_TYPE_COPY_SEND, INIT_PORT_MAX,
+-		   default_ints, INIT_INT_MAX,
+-		   NULL, 0, NULL, 0);
++#ifdef HAVE_FILE_EXEC_FILE_NAME
++  err = file_exec_file_name (file, child_task, 0, args,
++			     args, arglen,
++			     startup_envz, startup_envz_len,
++			     NULL, MACH_MSG_TYPE_COPY_SEND, 0, /* No fds.  */
++			     default_ports, MACH_MSG_TYPE_COPY_SEND,
++			     INIT_PORT_MAX,
++			     default_ints, INIT_INT_MAX,
++			     NULL, 0, NULL, 0);
++  /* For backwards compatibility.  Just drop it when we kill file_exec.  */
++  if (err == MIG_BAD_ID)
++#endif
++    err = file_exec (file, child_task, 0,
++		     args, arglen,
++		     startup_envz, startup_envz_len,
++		     NULL, MACH_MSG_TYPE_COPY_SEND, 0, /* No fds.  */
++		     default_ports, MACH_MSG_TYPE_COPY_SEND, INIT_PORT_MAX,
++		     default_ints, INIT_INT_MAX,
++		     NULL, 0, NULL, 0);
++
+   mach_port_deallocate (mach_task_self (), default_ports[INIT_PORT_PROC]);
+   mach_port_deallocate (mach_task_self (), file);
+   free (args);
+Index: hurd-debian/libdiskfs/boot-start.c
+===================================================================
+--- hurd-debian.orig/libdiskfs/boot-start.c	2012-06-05 05:02:02.000000000 +0000
++++ hurd-debian/libdiskfs/boot-start.c	2012-06-05 05:02:02.000000000 +0000
+@@ -207,7 +207,7 @@
+       diskfs_exec_ctl = MACH_PORT_NULL;	/* Not used after this.  */
+     }
+ 
+-  /* Cache the exec server port for file_exec to use.  */
++  /* Cache the exec server port for file_exec_file_name to use.  */
+   _hurd_port_set (&_diskfs_exec_portcell, diskfs_exec);
+ 
+   if (_diskfs_boot_command)
+Index: hurd-debian/libdiskfs/file-exec.c
+===================================================================
+--- hurd-debian.orig/libdiskfs/file-exec.c	2012-06-05 05:01:41.000000000 +0000
++++ hurd-debian/libdiskfs/file-exec.c	2012-06-05 05:07:14.000000000 +0000
+@@ -1,5 +1,6 @@
+-/* File execution (file_exec RPC) for diskfs servers, using exec server.
+-   Copyright (C) 1993,94,95,96,97,98,2000,02 Free Software Foundation, Inc.
++/* File execution (file_exec_file_name RPC) for diskfs servers, using exec server.
++   Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 2000, 2002,
++   2010 Free Software Foundation, Inc.
+ 
+ This file is part of the GNU Hurd.
+ 
+@@ -21,10 +22,14 @@
+ 
+ #include "priv.h"
+ #include "fs_S.h"
++#include "fs_experimental_S.h"
+ #include <sys/stat.h>
+ #include <fcntl.h>
+ #include <hurd/exec.h>
+ #include <hurd/paths.h>
++#ifdef HAVE_EXEC_EXEC_FILE_NAME
++#include <hurd/exec_experimental.h>
++#endif
+ #include <string.h>
+ #include <idvec.h>
+ 
+@@ -47,6 +52,39 @@
+ 		    mach_port_t *destroynames,
+ 		    size_t destroynameslen)
+ {
++  return diskfs_S_file_exec_file_name (cred,
++				       task,
++				       flags,
++				       "",
++				       argv, argvlen,
++				       envp, envplen,
++				       fds, fdslen,
++				       portarray, portarraylen,
++				       intarray, intarraylen,
++				       deallocnames, deallocnameslen,
++				       destroynames, destroynameslen);
++}
++
++kern_return_t
++diskfs_S_file_exec_file_name (struct protid *cred,
++			      task_t task,
++			      int flags,
++			      char *filename,
++			      char *argv,
++			      size_t argvlen,
++			      char *envp,
++			      size_t envplen,
++			      mach_port_t *fds,
++			      size_t fdslen,
++			      mach_port_t *portarray,
++			      size_t portarraylen,
++			      int *intarray,
++			      size_t intarraylen,
++			      mach_port_t *deallocnames,
++			      size_t deallocnameslen,
++			      mach_port_t *destroynames,
++			      size_t destroynameslen)
++{
+   struct node *np;
+   uid_t uid;
+   gid_t gid;
+@@ -136,9 +174,9 @@
+ 
+   if (! err)
+     /* Make a new peropen for the exec server to access the file, since any
+-       seeking the exec server might want to do should not affect the
+-       original peropen on which file_exec was called.  (The new protid for
+-       this peropen clones the caller's iouser to preserve the caller's
++       seeking the exec server might want to do should not affect the original
++       peropen on which file_exec_file_name was called.  (The new protid
++       for this peropen clones the caller's iouser to preserve the caller's
+        authentication credentials.)  The new peropen's openmodes must have
+        O_READ even if the caller had only O_EXEC privilege, so the exec
+        server can read the executable file.  We also include O_EXEC so that
+@@ -159,14 +197,31 @@
+       do
+ 	{
+ 	  right = ports_get_send_right (newpi);
+-	  err = exec_exec (execserver,
+-			   right, MACH_MSG_TYPE_COPY_SEND,
+-			   task, flags, argv, argvlen, envp, envplen,
+-			   fds, MACH_MSG_TYPE_COPY_SEND, fdslen,
+-			   portarray, MACH_MSG_TYPE_COPY_SEND, portarraylen,
+-			   intarray, intarraylen,
+-			   deallocnames, deallocnameslen,
+-			   destroynames, destroynameslen);
++#ifdef HAVE_EXEC_EXEC_FILE_NAME
++	  err = exec_exec_file_name (execserver,
++				     right, MACH_MSG_TYPE_COPY_SEND,
++				     task, flags, filename,
++				     argv, argvlen, envp, envplen,
++				     fds, MACH_MSG_TYPE_COPY_SEND, fdslen,
++				     portarray, MACH_MSG_TYPE_COPY_SEND,
++				     portarraylen,
++				     intarray, intarraylen,
++				     deallocnames, deallocnameslen,
++				     destroynames, destroynameslen);
++	  /* For backwards compatibility.  Just drop it when we kill
++	     exec_exec.  */
++	  if (err == MIG_BAD_ID)
++#endif
++	    err = exec_exec (execserver,
++			     right, MACH_MSG_TYPE_COPY_SEND,
++			     task, flags, argv, argvlen, envp, envplen,
++			     fds, MACH_MSG_TYPE_COPY_SEND, fdslen,
++			     portarray, MACH_MSG_TYPE_COPY_SEND, portarraylen,
++			     intarray, intarraylen,
++			     deallocnames, deallocnameslen,
++			     destroynames, destroynameslen);
++
++
+ 	  mach_port_deallocate (mach_task_self (), right);
+ 	  if (err == MACH_SEND_INVALID_DEST)
+ 	    {
+Index: hurd-debian/libfshelp/start-translator-long.c
+===================================================================
+--- hurd-debian.orig/libfshelp/start-translator-long.c	2012-06-05 05:01:41.000000000 +0000
++++ hurd-debian/libfshelp/start-translator-long.c	2012-06-05 05:07:36.000000000 +0000
+@@ -1,5 +1,6 @@
+ /*
+-   Copyright (C) 1995,96,99,2000,02, 04 Free Software Foundation, Inc.
++   Copyright (C) 1995, 1996, 1999, 2000, 2002, 2004, 2010
++   Free Software Foundation, Inc.
+    Written by Miles Bader and Michael I. Bushnell.
+ 
+    This file is part of the GNU Hurd.
+@@ -27,6 +28,9 @@
+ #include <string.h>
+ #include <assert.h>
+ #include "fshelp.h"
++#ifdef HAVE_FILE_EXEC_FILE_NAME
++#include <hurd/fs_experimental.h>
++#endif
+ 
+ 
+ /* The data passed in the various messages we're interested in.  */
+@@ -264,12 +268,22 @@
+   saveport = ports[INIT_PORT_BOOTSTRAP];
+   ports[INIT_PORT_BOOTSTRAP] = bootstrap;
+ 
++#ifdef HAVE_FILE_EXEC_FILE_NAME
+   /* Try and exec the translator in TASK...  */
+-  err = file_exec (executable, task, EXEC_DEFAULTS,
+-		   argz, argz_len, 0, 0,
+-		   fds, fds_type, fds_len,
+-		   ports, ports_type, ports_len,
+-		   ints, ints_len, 0, 0, 0, 0);
++  err = file_exec_file_name (executable, task, EXEC_DEFAULTS, name,
++			     argz, argz_len, 0, 0,
++			     fds, fds_type, fds_len,
++			     ports, ports_type, ports_len,
++			     ints, ints_len, 0, 0, 0, 0);
++  /* For backwards compatibility.  Just drop it when we kill file_exec.  */
++  if (err == MIG_BAD_ID)
++#endif
++    err = file_exec (executable, task, EXEC_DEFAULTS,
++		     argz, argz_len, 0, 0,
++		     fds, fds_type, fds_len,
++		     ports, ports_type, ports_len,
++		     ints, ints_len, 0, 0, 0, 0);
++
+   ports_moved = 1;
+ 
+   if (ports_type == MACH_MSG_TYPE_COPY_SEND)
+Index: hurd-debian/libnetfs/file-exec.c
+===================================================================
+--- hurd-debian.orig/libnetfs/file-exec.c	2012-06-05 05:01:41.000000000 +0000
++++ hurd-debian/libnetfs/file-exec.c	2012-06-05 05:07:49.000000000 +0000
+@@ -1,5 +1,6 @@
+ /*
+-   Copyright (C) 1996,97,2000,01,02 Free Software Foundation, Inc.
++   Copyright (C) 1996, 1997, 2000, 2001, 2002, 2010
++   Free Software Foundation, Inc.
+    Written by Michael I. Bushnell, p/BSG.
+ 
+    This file is part of the GNU Hurd.
+@@ -23,10 +24,14 @@
+ #include "netfs.h"
+ #include "execserver.h"
+ #include "fs_S.h"
++#include "fs_experimental_S.h"
+ #include <sys/stat.h>
+ #include <fcntl.h>
+ #include <hurd/exec.h>
+ #include <hurd/paths.h>
++#ifdef HAVE_EXEC_EXEC_FILE_NAME
++#include <hurd/exec_experimental.h>
++#endif
+ #include <string.h>
+ #include <idvec.h>
+ 
+@@ -49,6 +54,39 @@
+ 		   mach_port_t *destroynames,
+ 		   size_t destroynameslen)
+ {
++  return netfs_S_file_exec_file_name (cred,
++				      task,
++				      flags,
++				      "",
++				      argv, argvlen,
++				      envp, envplen,
++				      fds, fdslen,
++				      portarray, portarraylen,
++				      intarray, intarraylen,
++				      deallocnames, deallocnameslen,
++				      destroynames, destroynameslen);
++}
++
++kern_return_t
++netfs_S_file_exec_file_name (struct protid *cred,
++			     task_t task,
++			     int flags,
++			     char *filename,
++			     char *argv,
++			     size_t argvlen,
++			     char *envp,
++			     size_t envplen,
++			     mach_port_t *fds,
++			     size_t fdslen,
++			     mach_port_t *portarray,
++			     size_t portarraylen,
++			     int *intarray,
++			     size_t intarraylen,
++			     mach_port_t *deallocnames,
++			     size_t deallocnameslen,
++			     mach_port_t *destroynames,
++			     size_t destroynameslen)
++{
+   struct node *np;
+   error_t err;
+   uid_t uid;
+@@ -133,14 +171,31 @@
+ 	  if (newpi)
+ 	    {
+ 	      right = ports_get_send_right (newpi);
+-	      err = exec_exec (_netfs_exec,
+-			       right, MACH_MSG_TYPE_COPY_SEND,
+-			       task, flags, argv, argvlen, envp, envplen,
+-			       fds, MACH_MSG_TYPE_COPY_SEND, fdslen,
+-			       portarray, MACH_MSG_TYPE_COPY_SEND, portarraylen,
+-			       intarray, intarraylen,
+-			       deallocnames, deallocnameslen,
+-			       destroynames, destroynameslen);
++#ifdef HAVE_EXEC_EXEC_FILE_NAME
++	      err = exec_exec_file_name (_netfs_exec,
++					 right, MACH_MSG_TYPE_COPY_SEND,
++					 task, flags, filename,
++					 argv, argvlen, envp, envplen,
++					 fds, MACH_MSG_TYPE_COPY_SEND, fdslen,
++					 portarray, MACH_MSG_TYPE_COPY_SEND,
++					 portarraylen,
++					 intarray, intarraylen,
++					 deallocnames, deallocnameslen,
++					 destroynames, destroynameslen);
++	      /* For backwards compatibility.  Just drop it when we kill
++		 exec_exec.  */
++	      if (err == MIG_BAD_ID)
++#endif
++		err = exec_exec (_netfs_exec,
++				 right, MACH_MSG_TYPE_COPY_SEND,
++				 task, flags, argv, argvlen, envp, envplen,
++				 fds, MACH_MSG_TYPE_COPY_SEND, fdslen,
++				 portarray, MACH_MSG_TYPE_COPY_SEND,
++				 portarraylen,
++				 intarray, intarraylen,
++				 deallocnames, deallocnameslen,
++				 destroynames, destroynameslen);
++
+ 	      mach_port_deallocate (mach_task_self (), right);
+ 	      ports_port_deref (newpi);
+ 	    }
+Index: hurd-debian/libtrivfs/file-exec.c
+===================================================================
+--- hurd-debian.orig/libtrivfs/file-exec.c	2012-06-05 05:01:41.000000000 +0000
++++ hurd-debian/libtrivfs/file-exec.c	2012-06-05 05:02:02.000000000 +0000
+@@ -1,5 +1,5 @@
+ /*
+-   Copyright (C) 1994,2002 Free Software Foundation, Inc.
++   Copyright (C) 1994, 2002, 2010 Free Software Foundation, Inc.
+ 
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License as
+@@ -40,3 +40,28 @@
+ {
+   return EOPNOTSUPP;
+ }
++
++kern_return_t
++trivfs_S_file_exec_file_name (trivfs_protid_t exec_file,
++			      mach_port_t reply,
++			      mach_msg_type_name_t replyPoly,
++			      mach_port_t exec_task,
++			      int flags,
++			      string_t filename,
++			      data_t argv,
++			      mach_msg_type_number_t argvCnt,
++			      data_t envp,
++			      mach_msg_type_number_t envpCnt,
++			      portarray_t fdarray,
++			      mach_msg_type_number_t fdarrayCnt,
++			      portarray_t portarray,
++			      mach_msg_type_number_t portarrayCnt,
++			      intarray_t intarray,
++			      mach_msg_type_number_t intarrayCnt,
++			      mach_port_array_t deallocnames,
++			      mach_msg_type_number_t deallocnamesCnt,
++			      mach_port_array_t destroynames,
++			      mach_msg_type_number_t destroynamesCnt)
++{
++  return EOPNOTSUPP;
++}
+Index: hurd-debian/trans/fakeroot.c
+===================================================================
+--- hurd-debian.orig/trans/fakeroot.c	2012-06-05 05:01:41.000000000 +0000
++++ hurd-debian/trans/fakeroot.c	2012-06-05 05:08:00.000000000 +0000
+@@ -1,5 +1,5 @@
+ /* fakeroot -- a translator for faking actions that aren't really permitted
+-   Copyright (C) 2002, 2003, 2008 Free Software Foundation, Inc.
++   Copyright (C) 2002, 2003, 2008, 2010 Free Software Foundation, Inc.
+ 
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License as
+@@ -28,6 +28,9 @@
+ #include <cthreads.h>
+ #include <hurd/ihash.h>
+ #include <hurd/paths.h>
++#ifdef HAVE_FILE_EXEC_FILE_NAME
++#include <hurd/fs_experimental.h>
++#endif
+ 
+ #include <version.h>
+ 
+@@ -705,6 +708,39 @@
+                    mach_port_t *destroynames,
+                    size_t destroynameslen)
+ {
++  return netfs_S_file_exec_file_name (user,
++				      task,
++				      flags,
++				      "",
++				      argv, argvlen,
++				      envp, envplen,
++				      fds, fdslen,
++				      portarray, portarraylen,
++				      intarray, intarraylen,
++				      deallocnames, deallocnameslen,
++				      destroynames, destroynameslen);
++}
++
++kern_return_t
++netfs_S_file_exec_file_name (struct protid *user,
++			     task_t task,
++			     int flags,
++			     char *filename,
++			     char *argv,
++			     size_t argvlen,
++			     char *envp,
++			     size_t envplen,
++			     mach_port_t *fds,
++			     size_t fdslen,
++			     mach_port_t *portarray,
++			     size_t portarraylen,
++			     int *intarray,
++			     size_t intarraylen,
++			     mach_port_t *deallocnames,
++			     size_t deallocnameslen,
++			     mach_port_t *destroynames,
++			     size_t destroynameslen)
++{
+   error_t err;
+   file_t file;
+ 
+@@ -721,13 +757,29 @@
+ 
+   if (!err)
+     {
++#ifdef HAVE_FILE_EXEC_FILE_NAME
+       /* We cannot use MACH_MSG_TYPE_MOVE_SEND because we might need to
+ 	 retry an interrupted call that would have consumed the rights.  */
+-      err = file_exec (user->po->np->nn->file, task, flags, argv, argvlen,
+-		       envp, envplen, fds, MACH_MSG_TYPE_COPY_SEND, fdslen,
+-		       portarray, MACH_MSG_TYPE_COPY_SEND, portarraylen,
+-		       intarray, intarraylen, deallocnames, deallocnameslen,
+-		       destroynames, destroynameslen);
++      err = file_exec_file_name (user->po->np->nn->file, task, flags,
++				 filename,
++				 argv, argvlen,
++				 envp, envplen,
++				 fds, MACH_MSG_TYPE_COPY_SEND, fdslen,
++				 portarray, MACH_MSG_TYPE_COPY_SEND,
++				 portarraylen,
++				 intarray, intarraylen,
++				 deallocnames, deallocnameslen,
++				 destroynames, destroynameslen);
++      /* For backwards compatibility.  Just drop it when we kill
++	 file_exec.  */
++      if (err == MIG_BAD_ID)
++#endif
++	err = file_exec (user->po->np->nn->file, task, flags, argv, argvlen,
++			 envp, envplen, fds, MACH_MSG_TYPE_COPY_SEND, fdslen,
++			 portarray, MACH_MSG_TYPE_COPY_SEND, portarraylen,
++			 intarray, intarraylen, deallocnames, deallocnameslen,
++			 destroynames, destroynameslen);
++
+       mach_port_deallocate (mach_task_self (), file);
+     }
+ 
+@@ -835,12 +887,14 @@
+ 	       mach_msg_header_t *outp)
+ {
+   int netfs_fs_server (mach_msg_header_t *, mach_msg_header_t *);
++  int netfs_fs_experimental_server (mach_msg_header_t *, mach_msg_header_t *);
+   int netfs_io_server (mach_msg_header_t *, mach_msg_header_t *);
+   int netfs_fsys_server (mach_msg_header_t *, mach_msg_header_t *);
+   int netfs_ifsock_server (mach_msg_header_t *, mach_msg_header_t *);
+ 
+   if (netfs_io_server (inp, outp)
+       || netfs_fs_server (inp, outp)
++      || netfs_fs_experimental_server (inp, outp)
+       || ports_notify_server (inp, outp)
+       || netfs_fsys_server (inp, outp)
+       /* XXX we should intercept interrupt_operation and do
+Index: hurd-debian/utils/login.c
+===================================================================
+--- hurd-debian.orig/utils/login.c	2012-06-05 05:01:41.000000000 +0000
++++ hurd-debian/utils/login.c	2012-06-05 05:08:09.000000000 +0000
+@@ -1,6 +1,7 @@
+ /* Hurdish login
+ 
+-   Copyright (C) 1995,96,97,98,99,2002 Free Software Foundation, Inc.
++   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2002, 2010
++   Free Software Foundation, Inc.
+ 
+    Written by Miles Bader <miles@gnu.org>
+ 
+@@ -46,6 +47,9 @@
+ #include <error.h>
+ #include <timefmt.h>
+ #include <hurd/lookup.h>
++#ifdef HAVE_FILE_EXEC_FILE_NAME
++#include <hurd/fs_experimental.h>
++#endif
+ #include <ugids.h>
+ 
+ const char *argp_program_version = STANDARD_HURD_VERSION (login);
+@@ -882,12 +886,22 @@
+ 	}
+     }
+ 
+-  err = file_exec (exec, mach_task_self (), EXEC_DEFAULTS,
+-		   sh_args, sh_args_len, env, env_len,
+-		   fds, MACH_MSG_TYPE_COPY_SEND, 3,
+-		   ports, MACH_MSG_TYPE_COPY_SEND, INIT_PORT_MAX,
+-		   ints, INIT_INT_MAX,
+-		   0, 0, 0, 0);
++#ifdef HAVE_FILE_EXEC_FILE_NAME
++  err = file_exec_file_name (exec, mach_task_self (), EXEC_DEFAULTS, shell,
++			     sh_args, sh_args_len, env, env_len,
++			     fds, MACH_MSG_TYPE_COPY_SEND, 3,
++			     ports, MACH_MSG_TYPE_COPY_SEND, INIT_PORT_MAX,
++			     ints, INIT_INT_MAX,
++			     0, 0, 0, 0);
++  /* Fallback in case the file server hasn't been restarted.  */
++  if (err == MIG_BAD_ID)
++#endif
++    err = file_exec (exec, mach_task_self (), EXEC_DEFAULTS,
++		     sh_args, sh_args_len, env, env_len,
++		     fds, MACH_MSG_TYPE_COPY_SEND, 3,
++		     ports, MACH_MSG_TYPE_COPY_SEND, INIT_PORT_MAX,
++		     ints, INIT_INT_MAX,
++		     0, 0, 0, 0);
+   if (err)
+     error(5, err, "%s", shell);
+ 
+Index: hurd-debian/hurd/fs_experimental.defs
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ hurd-debian/hurd/fs_experimental.defs	2012-06-05 05:02:02.000000000 +0000
+@@ -0,0 +1,51 @@
++/* Definitions for the filesystem interface.
++   Copyright (C) 1994,95,96,97,98,99,2002 Free Software Foundation, Inc.
++
++This file is part of the GNU Hurd.
++
++The GNU Hurd is free software; you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation; either version 2, or (at your option)
++any later version.
++
++The GNU Hurd is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with the GNU Hurd; see the file COPYING.  If not, write to
++the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
++
++
++/* All these objects also implement the generic IO facilities. */
++
++subsystem fs_experimental 444242;
++
++#include <hurd/hurd_types.defs>
++
++#ifdef FILE_IMPORTS
++FILE_IMPORTS
++#endif
++
++/* Operations supported on all files */
++
++INTR_INTERFACE
++
++/* Overlay a task with a file.  Necessary initialization, including
++   authentication changes associated with set[ug]id execution must be
++   handled by the filesystem.  Filesystems normally implement this by
++   using exec_newtask or exec_loadtask as appropriate.  */
++routine file_exec_file_name (
++	exec_file: file_t;
++	RPT
++	exec_task: task_t;
++	flags: int;
++	filename: string_t;
++	argv: data_t SCP;
++	envp: data_t SCP;
++	fdarray: portarray_t SCP;
++	portarray: portarray_t SCP;
++	intarray: intarray_t SCP;
++	deallocnames: mach_port_name_array_t SCP;
++	destroynames: mach_port_name_array_t SCP);
+Index: hurd-debian/libdiskfs/Makefile
+===================================================================
+--- hurd-debian.orig/libdiskfs/Makefile	2012-06-05 05:01:41.000000000 +0000
++++ hurd-debian/libdiskfs/Makefile	2012-06-05 05:02:02.000000000 +0000
+@@ -55,7 +55,7 @@
+ SRCS = $(OTHERSRCS) $(FSSRCS) $(IOSRCS) $(FSYSSRCS) $(IFSOCKSRCS)
+ installhdrs = diskfs.h diskfs-pager.h
+ 
+-MIGSTUBS = fsServer.o ioServer.o fsysServer.o exec_startupServer.o \
++MIGSTUBS = fsServer.o fs_experimentalServer.o ioServer.o fsysServer.o exec_startupServer.o \
+ 	fsys_replyUser.o fs_notifyUser.o ifsockServer.o \
+ 	startup_notifyServer.o
+ OBJS = $(sort $(SRCS:.c=.o) $(MIGSTUBS))
+@@ -64,6 +64,7 @@
+ 
+ fsys-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h -DREPLY_PORTS
+ fs-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h
++fs_experimental-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h
+ io-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h
+ ifsock-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h
+ MIGCOMSFLAGS = -prefix diskfs_
+Index: hurd-debian/libdiskfs/demuxer.c
+===================================================================
+--- hurd-debian.orig/libdiskfs/demuxer.c	2012-06-05 05:01:41.000000000 +0000
++++ hurd-debian/libdiskfs/demuxer.c	2012-06-05 05:02:02.000000000 +0000
+@@ -22,6 +22,7 @@
+ 		mach_msg_header_t *outp)
+ {
+   int diskfs_fs_server (mach_msg_header_t *, mach_msg_header_t *);
++  int diskfs_fs_experimental_server (mach_msg_header_t *, mach_msg_header_t *);
+   int diskfs_io_server (mach_msg_header_t *, mach_msg_header_t *);
+   int diskfs_fsys_server (mach_msg_header_t *, mach_msg_header_t *);
+   int diskfs_exec_startup_server (mach_msg_header_t *, mach_msg_header_t *);
+@@ -31,6 +32,7 @@
+   
+   return (diskfs_io_server (inp, outp)
+ 	  || diskfs_fs_server (inp, outp)
++	  || diskfs_fs_experimental_server (inp, outp)
+ 	  || ports_notify_server (inp, outp)
+ 	  || diskfs_fsys_server (inp, outp)
+ 	  || diskfs_exec_startup_server (inp, outp)
+Index: hurd-debian/libnetfs/Makefile
+===================================================================
+--- hurd-debian.orig/libnetfs/Makefile	2012-06-05 05:01:41.000000000 +0000
++++ hurd-debian/libnetfs/Makefile	2012-06-05 05:02:02.000000000 +0000
+@@ -57,12 +57,13 @@
+ 
+ installhdrs=netfs.h
+ 
+-MIGSTUBS= ioServer.o fsServer.o fsysServer.o fsys_replyUser.o ifsockServer.o
++MIGSTUBS= ioServer.o fsServer.o fs_experimentalServer.o fsysServer.o fsys_replyUser.o ifsockServer.o
+ 
+ OBJS=$(sort $(SRCS:.c=.o) $(MIGSTUBS))
+ 
+ fsys-MIGSFLAGS = -imacros $(srcdir)/mutations.h -DREPLY_PORTS
+ fs-MIGSFLAGS = -imacros $(srcdir)/mutations.h
++fs_experimental-MIGSFLAGS = -imacros $(srcdir)/mutations.h
+ io-MIGSFLAGS = -imacros $(srcdir)/mutations.h
+ ifsock-MIGSFLAGS = -imacros $(srcdir)/mutations.h
+ MIGCOMSFLAGS = -prefix netfs_
+Index: hurd-debian/libnetfs/demuxer.c
+===================================================================
+--- hurd-debian.orig/libnetfs/demuxer.c	2012-06-05 05:01:41.000000000 +0000
++++ hurd-debian/libnetfs/demuxer.c	2012-06-05 05:02:02.000000000 +0000
+@@ -25,12 +25,14 @@
+ 	       mach_msg_header_t *outp)
+ {
+   int netfs_fs_server (mach_msg_header_t *, mach_msg_header_t *);
++  int netfs_fs_experimental_server (mach_msg_header_t *, mach_msg_header_t *);
+   int netfs_io_server (mach_msg_header_t *, mach_msg_header_t *);
+   int netfs_fsys_server (mach_msg_header_t *, mach_msg_header_t *);
+   int netfs_ifsock_server (mach_msg_header_t *, mach_msg_header_t *);
+ 
+   return (netfs_io_server (inp, outp)
+           || netfs_fs_server (inp, outp)
++          || netfs_fs_experimental_server (inp, outp)
+           || ports_notify_server (inp, outp)
+           || netfs_fsys_server (inp, outp)
+           || ports_interrupt_server (inp, outp)
+Index: hurd-debian/libtrivfs/Makefile
+===================================================================
+--- hurd-debian.orig/libtrivfs/Makefile	2012-06-05 05:01:41.000000000 +0000
++++ hurd-debian/libtrivfs/Makefile	2012-06-05 05:02:02.000000000 +0000
+@@ -43,7 +43,7 @@
+ 
+ SRCS=$(FSSRCS) $(IOSRCS) $(FSYSSRCS) $(OTHERSRCS)
+ 
+-MIGSTUBS=fsServer.o ioServer.o fsysServer.o fsys_replyUser.o
++MIGSTUBS=fsServer.o fs_experimentalServer.o ioServer.o fsysServer.o fsys_replyUser.o
+ 
+ libname = libtrivfs
+ HURDLIBS = fshelp iohelp ports shouldbeinlibc
+@@ -53,7 +53,7 @@
+ installhdrs := trivfs.h
+ mig-sheader-prefix = trivfs_
+ ifndef no_deps
+-installhdrs += $(patsubst %,trivfs_%_S.h,fs io fsys)
++installhdrs += $(patsubst %,trivfs_%_S.h,fs fs_experimental io fsys)
+ endif
+ 
+ include ../Makeconf
+Index: hurd-debian/libtrivfs/demuxer.c
+===================================================================
+--- hurd-debian.orig/libtrivfs/demuxer.c	2012-06-05 05:01:41.000000000 +0000
++++ hurd-debian/libtrivfs/demuxer.c	2012-06-05 05:02:02.000000000 +0000
+@@ -26,11 +26,13 @@
+ 		mach_msg_header_t *outp)
+ {
+   int trivfs_fs_server (mach_msg_header_t *, mach_msg_header_t *);
++  int trivfs_fs_experimental_server (mach_msg_header_t *, mach_msg_header_t *);
+   int trivfs_io_server (mach_msg_header_t *, mach_msg_header_t *);
+   int trivfs_fsys_server (mach_msg_header_t *, mach_msg_header_t *);
+   
+   return (trivfs_io_server (inp, outp)
+ 	  || trivfs_fs_server (inp, outp)
++	  || trivfs_fs_experimental_server (inp, outp)
+ 	  || ports_notify_server (inp, outp)
+ 	  || trivfs_fsys_server (inp, outp)
+ 	  || ports_interrupt_server (inp, outp));
+Index: hurd-debian/configure.in
+===================================================================
+--- hurd-debian.orig/configure.in	2012-06-05 05:02:02.000000000 +0000
++++ hurd-debian/configure.in	2012-06-05 05:06:02.000000000 +0000
+@@ -161,7 +161,7 @@
+ AC_SUBST(VERSIONING)
+ 
+ # Check if libc contains getgrouplist and/or uselocale.
+-AC_CHECK_FUNCS(getgrouplist uselocale)
++AC_CHECK_FUNCS(getgrouplist uselocale file_exec_file_name exec_exec_file_name)
+ 
+ 
+ # From glibc HEAD, 2007-11-07.
+Index: hurd-debian/libtrivfs/trivfs.h
+===================================================================
+--- hurd-debian.orig/libtrivfs/trivfs.h	2012-06-05 05:01:41.000000000 +0000
++++ hurd-debian/libtrivfs/trivfs.h	2012-06-05 05:02:02.000000000 +0000
+@@ -293,6 +293,7 @@
+ /* These are the MiG-generated headers that declare prototypes
+    for the server functions.  */
+ #include <hurd/trivfs_fs_S.h>
++#include <hurd/trivfs_fs_experimental_S.h>
+ #include <hurd/trivfs_io_S.h>
+ #include <hurd/trivfs_fsys_S.h>
+ 
