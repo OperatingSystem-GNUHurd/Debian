@@ -1,5 +1,6 @@
-hurd (20120520-2) UNRELEASED; urgency=low
+hurd (20120605-1) UNRELEASED; urgency=low
 
+  * New upstream snapshot.
   * control:
     - Do not make hurd-udeb depend on netdde-udeb, it leads to configure
     recursion, and is not actually needed.
