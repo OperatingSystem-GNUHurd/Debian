@@ -134,7 +134,7 @@ struct net_hash_header {
 	int n_keys;			/* zero if not used */
 	int ref_count;			/* reference count */
 	net_hash_entry_t table[NET_HASH_SIZE];
-} filter_hash_header[N_NET_HASH];
+};
 
 typedef struct net_hash_header *net_hash_header_t;
 
