@@ -1,4 +1,4 @@
-hurd (20120605-1) UNRELEASED; urgency=low
+hurd (20120605-1) unstable; urgency=low
 
   * New upstream snapshot.
     - patches/ext2fs_large_stores.patch,libmachdev.patch: Refresh.
