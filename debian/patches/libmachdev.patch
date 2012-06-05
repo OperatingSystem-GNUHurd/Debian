@@ -9,8 +9,8 @@ index 606765f..766d9b4 100644
 -	  if (err != MACH_MSG_SUCCESS)
 +	  if (0 && err != MACH_MSG_SUCCESS)
  	    {
- 	      mach_port_deallocate(mach_task_self (),
- 				   ((mach_msg_header_t *)msg)->msgh_remote_port);
+ 	      /* TODO: remove from filter */
+ 	    }
 @@ -377,7 +377,7 @@ device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
      }
  
@@ -33,29 +33,3 @@ index 6b8d1d4..f0c034f 100644
  
    ports_port_deref (device_to_pi (device));
    return ret;
-diff --git a/libbpf/bpf_impl.c b/libbpf/bpf_impl.c
-index b2dafd1..c8a250b 100644
---- a/libbpf/bpf_impl.c
-+++ b/libbpf/bpf_impl.c
-@@ -45,6 +45,8 @@
- #include "queue.h"
- #include "util.h"
- 
-+static struct net_hash_header filter_hash_header[N_NET_HASH];
-+
- /*
-  * Execute the filter program starting at pc on the packet p
-  * wirelen is the length of the original packet
-diff --git a/libbpf/bpf_impl.h b/libbpf/bpf_impl.h
-index e611491..9073fda 100644
---- a/libbpf/bpf_impl.h
-+++ b/libbpf/bpf_impl.h
-@@ -134,7 +134,7 @@ struct net_hash_header {
- 	int n_keys;			/* zero if not used */
- 	int ref_count;			/* reference count */
- 	net_hash_entry_t table[NET_HASH_SIZE];
--} filter_hash_header[N_NET_HASH];
-+};
- 
- typedef struct net_hash_header *net_hash_header_t;
- 

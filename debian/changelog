@@ -1,6 +1,7 @@
 hurd (20120605-1) UNRELEASED; urgency=low
 
   * New upstream snapshot.
+    - patches/ext2fs_large_stores.patch,libmachdev.patch: Refresh.
   * control:
     - Do not make hurd-udeb depend on netdde-udeb, it leads to configure
     recursion, and is not actually needed.
@@ -8,6 +9,7 @@ hurd (20120605-1) UNRELEASED; urgency=low
   * hurd.postinst: Drop error messages while fetching pfinet options.
   * local/setup-translators: Remove /dev/shm directory if any, to be replaced
     with symlink to /run/shm.
+  * patches/balloc.patch: Fix parentheses.
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 22 May 2012 00:07:09 +0000
 

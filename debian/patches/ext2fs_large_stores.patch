@@ -115,8 +115,8 @@ Index: hurd-debian/ext2fs/balloc.c
 +	   * The goal was occupied; search forward for a free
 +	   * block within the next 32 blocks
  	   */
- 	  lmap = ((((unsigned long *) bh)[j >> 5]) >>
- 		  ((j & 31) + 1));
+ 	  if (j & 31 == 31)
+ 	    lmap = 0;
 @@ -242,13 +244,16 @@
  	  j = k;
  	  goto got_block;
