@@ -1,10 +1,10 @@
-diff --git a/ext2fs/balloc.c b/ext2fs/balloc.c
-index 8ad29ce..7fe82ba 100644
---- a/ext2fs/balloc.c
-+++ b/ext2fs/balloc.c
-@@ -197,7 +197,7 @@ repeat:
- 	     * The goal was occupied; search forward for a free
- 	     * block within the next 32 blocks
+Index: hurd-debian/ext2fs/balloc.c
+===================================================================
+--- hurd-debian.orig/ext2fs/balloc.c	2012-06-05 11:29:37.000000000 +0000
++++ hurd-debian/ext2fs/balloc.c	2012-06-05 11:29:40.000000000 +0000
+@@ -199,7 +199,7 @@
+ 	   * The goal was occupied; search forward for a free
+ 	   * block within the next 32 blocks
  	   */
 -	  if (j & 31 == 31)
 +	  if ((j & 31) == 31)
