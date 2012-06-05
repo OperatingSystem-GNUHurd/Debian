@@ -214,9 +214,7 @@ deliver_msg(struct net_rcv_msg *msg, if_filter_list_t *ifp)
 			  0, MACH_PORT_NULL);
 	  if (err != MACH_MSG_SUCCESS)
 	    {
-	      mach_port_deallocate(mach_task_self (),
-				   ((mach_msg_header_t *)msg)->msgh_remote_port);
-	      return -1;
+	      /* TODO: remove from filter */
 	    }
 	}
     }
