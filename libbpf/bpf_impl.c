@@ -45,6 +45,8 @@
 #include "queue.h"
 #include "util.h"
 
+static struct net_hash_header filter_hash_header[N_NET_HASH];
+
 /*
  * Execute the filter program starting at pc on the packet p
  * wirelen is the length of the original packet
