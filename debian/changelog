@@ -1,3 +1,9 @@
+hurd (20120605-2) unstable; urgency=low
+
+  * control: Add missing autoconf build-dependency.
+
+ -- Samuel Thibault <sthibault@debian.org>  Wed, 06 Jun 2012 21:20:43 +0200
+
 hurd (20120605-1) unstable; urgency=low
 
   * New upstream snapshot.
