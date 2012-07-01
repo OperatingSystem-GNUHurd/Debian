@@ -62,6 +62,7 @@ SRC_S_libdde_linux26.o.a += $(ARCH_DIR)/lib/delay.o
 SRC_C_libdde_linux26.o.a += lib/rwsem.c
 SRC_C_libdde_linux26.o.a += $(ARCH_DIR)/kernel/pci-dma.c
 SRC_C_libdde_linux26.o.a += $(ARCH_DIR)/kernel/pci-nommu.c
+SRC_C_libdde_linux26.o.a += $(ARCH_DIR)/kernel/setup.c
 SRC_S_libdde_linux26_net.a += $(ARCH_DIR)/lib/checksum_32.S
 endif
 
