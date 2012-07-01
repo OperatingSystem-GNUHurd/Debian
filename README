@@ -11,6 +11,7 @@ $ git tag -a upstream/dde/<date>
 $ git checkout dde-clean
 $ git pull . dde
 $ git checkout random
+$ git pull upstream-random
 $ git tag -a upstream/random/<date>
 $ git checkout random-moved
 $ git pull . random
