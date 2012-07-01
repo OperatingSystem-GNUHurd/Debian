@@ -85,6 +85,7 @@ endif
 
 # + contrib stuff / slightly modified stuff
 SRC_C_libdde_linux26.o.a += \
+				kernel/dma.c \
 				kernel/exit.c \
 				kernel/kthread.c \
 				kernel/mutex.c \
