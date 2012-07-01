@@ -98,6 +98,7 @@ SRC_C_libdde_linux26.o.a += \
 				kernel/timer.c \
 				kernel/wait.c \
 				kernel/workqueue.c \
+				kernel/irq/handle.c \
 				lib/bitmap.c \
 				lib/bitrev.c \
 				lib/crc32.c \
