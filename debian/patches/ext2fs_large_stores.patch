@@ -28,8 +28,8 @@ Support for >2GB volumes
 
 Index: hurd-debian/console/pager.c
 ===================================================================
---- hurd-debian.orig/console/pager.c	2012-04-08 23:19:14.000000000 +0000
-+++ hurd-debian/console/pager.c	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/console/pager.c	2012-07-10 01:33:10.000000000 +0000
++++ hurd-debian/console/pager.c	2012-07-10 01:39:22.000000000 +0000
 @@ -94,6 +94,14 @@
  }
  
@@ -56,8 +56,8 @@ Index: hurd-debian/console/pager.c
        free (upi);
 Index: hurd-debian/ext2fs/balloc.c
 ===================================================================
---- hurd-debian.orig/ext2fs/balloc.c	2012-04-08 23:19:14.000000000 +0000
-+++ hurd-debian/ext2fs/balloc.c	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/ext2fs/balloc.c	2012-07-10 01:36:36.000000000 +0000
++++ hurd-debian/ext2fs/balloc.c	2012-07-10 01:39:22.000000000 +0000
 @@ -92,7 +92,7 @@
  		      block, count);
  	}
@@ -115,9 +115,9 @@ Index: hurd-debian/ext2fs/balloc.c
 +	   * The goal was occupied; search forward for a free
 +	   * block within the next 32 blocks
  	   */
- 	  if (j & 31 == 31)
+ 	  if ((j & 31) == 31)
  	    lmap = 0;
-@@ -242,13 +244,16 @@
+@@ -245,13 +247,16 @@
  	  j = k;
  	  goto got_block;
  	}
@@ -136,7 +136,7 @@ Index: hurd-debian/ext2fs/balloc.c
     */
    for (k = 0; k < groups_count; k++)
      {
-@@ -264,7 +269,8 @@
+@@ -267,7 +272,8 @@
        spin_unlock (&global_lock);
        return 0;
      }
@@ -146,7 +146,7 @@ Index: hurd-debian/ext2fs/balloc.c
    r = memscan (bh, 0, sblock->s_blocks_per_group >> 3);
    j = (r - bh) << 3;
    if (j < sblock->s_blocks_per_group)
-@@ -274,21 +280,25 @@
+@@ -277,21 +283,25 @@
  			     sblock->s_blocks_per_group);
    if (j >= sblock->s_blocks_per_group)
      {
@@ -178,7 +178,7 @@ Index: hurd-debian/ext2fs/balloc.c
    ext2_debug ("using block group %d (%d)", i, gdp->bg_free_blocks_count);
  
    tmp = j + i * sblock->s_blocks_per_group + sblock->s_first_data_block;
-@@ -301,6 +311,8 @@
+@@ -304,6 +314,8 @@
    if (set_bit (j, bh))
      {
        ext2_warning ("bit already set for block %d", j);
@@ -187,7 +187,7 @@ Index: hurd-debian/ext2fs/balloc.c
        goto repeat;
      }
  
-@@ -317,7 +329,7 @@
+@@ -320,7 +332,7 @@
    ext2_debug ("found bit %d", j);
  
    /*
@@ -196,7 +196,7 @@ Index: hurd-debian/ext2fs/balloc.c
     */
  #ifdef EXT2_PREALLOCATE
    if (prealloc_goal)
-@@ -348,6 +360,7 @@
+@@ -351,6 +363,7 @@
    j = tmp;
  
    record_global_poke (bh);
@@ -204,7 +204,7 @@ Index: hurd-debian/ext2fs/balloc.c
  
    if (j >= sblock->s_blocks_count)
      {
-@@ -360,12 +373,14 @@
+@@ -363,12 +376,14 @@
  	      j, goal_hits, goal_attempts);
  
    gdp->bg_free_blocks_count--;
@@ -219,7 +219,7 @@ Index: hurd-debian/ext2fs/balloc.c
    spin_unlock (&global_lock);
    alloc_sync (0);
  
-@@ -387,9 +402,12 @@
+@@ -390,9 +405,12 @@
    gdp = NULL;
    for (i = 0; i < groups_count; i++)
      {
@@ -233,7 +233,7 @@ Index: hurd-debian/ext2fs/balloc.c
        printf ("group %d: stored = %d, counted = %lu",
  	      i, gdp->bg_free_blocks_count, x);
        bitmap_count += x;
-@@ -450,7 +468,7 @@
+@@ -453,7 +471,7 @@
  
        gdp = group_desc (i);
        desc_count += gdp->bg_free_blocks_count;
@@ -242,7 +242,7 @@ Index: hurd-debian/ext2fs/balloc.c
  
        if (!EXT2_HAS_RO_COMPAT_FEATURE (sblock,
  				       EXT2_FEATURE_RO_COMPAT_SPARSE_SUPER)
-@@ -476,6 +494,7 @@
+@@ -479,6 +497,7 @@
  	  ext2_error ("block #%d of the inode table in group %d is marked free", j, i);
  
        x = count_free (bh, block_size);
@@ -252,8 +252,8 @@ Index: hurd-debian/ext2fs/balloc.c
  		    " stored = %d, counted = %lu",
 Index: hurd-debian/ext2fs/ext2_fs.h
 ===================================================================
---- hurd-debian.orig/ext2fs/ext2_fs.h	2012-04-08 23:19:14.000000000 +0000
-+++ hurd-debian/ext2fs/ext2_fs.h	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/ext2fs/ext2_fs.h	2012-07-10 01:33:10.000000000 +0000
++++ hurd-debian/ext2fs/ext2_fs.h	2012-07-10 01:39:22.000000000 +0000
 @@ -25,7 +25,8 @@
  /*
   * Define EXT2FS_DEBUG to produce debug messages
@@ -266,8 +266,8 @@ Index: hurd-debian/ext2fs/ext2_fs.h
   * Define EXT2_PREALLOCATE to preallocate data blocks for expanding files
 Index: hurd-debian/ext2fs/ext2fs.c
 ===================================================================
---- hurd-debian.orig/ext2fs/ext2fs.c	2012-04-08 23:19:14.000000000 +0000
-+++ hurd-debian/ext2fs/ext2fs.c	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/ext2fs/ext2fs.c	2012-07-10 01:33:10.000000000 +0000
++++ hurd-debian/ext2fs/ext2fs.c	2012-07-10 01:39:22.000000000 +0000
 @@ -106,7 +106,7 @@
        if (values == 0)
  	return ENOMEM;
@@ -300,8 +300,8 @@ Index: hurd-debian/ext2fs/ext2fs.c
  }
 Index: hurd-debian/ext2fs/ext2fs.h
 ===================================================================
---- hurd-debian.orig/ext2fs/ext2fs.h	2012-04-08 23:19:14.000000000 +0000
-+++ hurd-debian/ext2fs/ext2fs.h	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/ext2fs/ext2fs.h	2012-07-10 01:33:10.000000000 +0000
++++ hurd-debian/ext2fs/ext2fs.h	2012-07-10 01:39:22.000000000 +0000
 @@ -23,7 +23,9 @@
  #include <hurd/pager.h>
  #include <hurd/fshelp.h>
@@ -533,8 +533,8 @@ Index: hurd-debian/ext2fs/ext2fs.h
  
 Index: hurd-debian/ext2fs/getblk.c
 ===================================================================
---- hurd-debian.orig/ext2fs/getblk.c	2012-04-08 23:19:15.000000000 +0000
-+++ hurd-debian/ext2fs/getblk.c	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/ext2fs/getblk.c	2012-07-10 01:33:10.000000000 +0000
++++ hurd-debian/ext2fs/getblk.c	2012-07-10 01:39:22.000000000 +0000
 @@ -52,7 +52,7 @@
    if (node->dn->info.i_prealloc_count)
      {
@@ -615,8 +615,8 @@ Index: hurd-debian/ext2fs/getblk.c
    ext2_debug ("block = %u, next = %u, goal = %u", block,
 Index: hurd-debian/ext2fs/hyper.c
 ===================================================================
---- hurd-debian.orig/ext2fs/hyper.c	2012-04-08 23:19:15.000000000 +0000
-+++ hurd-debian/ext2fs/hyper.c	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/ext2fs/hyper.c	2012-07-10 01:33:10.000000000 +0000
++++ hurd-debian/ext2fs/hyper.c	2012-07-10 01:39:22.000000000 +0000
 @@ -58,12 +58,15 @@
  void
  get_hypermetadata (void)
@@ -686,8 +686,8 @@ Index: hurd-debian/ext2fs/hyper.c
      ext2_warning ("UNCLEANED FILESYSTEM NOW WRITABLE");
 Index: hurd-debian/ext2fs/ialloc.c
 ===================================================================
---- hurd-debian.orig/ext2fs/ialloc.c	2012-04-08 23:19:15.000000000 +0000
-+++ hurd-debian/ext2fs/ialloc.c	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/ext2fs/ialloc.c	2012-07-10 01:33:10.000000000 +0000
++++ hurd-debian/ext2fs/ialloc.c	2012-07-10 01:39:22.000000000 +0000
 @@ -60,7 +60,7 @@
  
    assert (!diskfs_readonly);
@@ -827,8 +827,8 @@ Index: hurd-debian/ext2fs/ialloc.c
  		    "stored = %d, counted = %lu",
 Index: hurd-debian/ext2fs/inode.c
 ===================================================================
---- hurd-debian.orig/ext2fs/inode.c	2012-04-08 23:19:15.000000000 +0000
-+++ hurd-debian/ext2fs/inode.c	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/ext2fs/inode.c	2012-07-10 01:36:36.000000000 +0000
++++ hurd-debian/ext2fs/inode.c	2012-07-10 01:39:22.000000000 +0000
 @@ -92,7 +92,7 @@
    dn->dir_idx = 0;
    dn->pager = 0;
@@ -925,7 +925,7 @@ Index: hurd-debian/ext2fs/inode.c
        return di;
      }
    else
-@@ -664,7 +667,7 @@
+@@ -674,7 +677,7 @@
    if (err)
      return err;
  
@@ -934,7 +934,7 @@ Index: hurd-debian/ext2fs/inode.c
    blkno = di->i_translator;
  
    if (namelen && !blkno)
-@@ -677,6 +680,7 @@
+@@ -687,6 +690,7 @@
  			0, 0, 0);
        if (blkno == 0)
  	{
@@ -942,7 +942,7 @@ Index: hurd-debian/ext2fs/inode.c
  	  diskfs_end_catch_exception ();
  	  return ENOSPC;
  	}
-@@ -700,15 +704,20 @@
+@@ -710,15 +714,20 @@
        np->dn_stat.st_mode &= ~S_IPTRANS;
        np->dn_set_ctime = 1;
      }
@@ -966,7 +966,7 @@ Index: hurd-debian/ext2fs/inode.c
  
        np->dn_stat.st_mode |= S_IPTRANS;
        np->dn_set_ctime = 1;
-@@ -726,7 +735,7 @@
+@@ -736,7 +745,7 @@
    error_t err = 0;
    daddr_t blkno;
    unsigned datalen;
@@ -975,7 +975,7 @@ Index: hurd-debian/ext2fs/inode.c
  
    assert (sblock->s_creator_os == EXT2_OS_HURD);
  
-@@ -734,9 +743,11 @@
+@@ -744,9 +753,11 @@
    if (err)
      return err;
  
@@ -989,7 +989,7 @@ Index: hurd-debian/ext2fs/inode.c
  
    datalen =
      ((unsigned char *)transloc)[0] + (((unsigned char *)transloc)[1] << 8);
-@@ -751,6 +762,7 @@
+@@ -761,6 +772,7 @@
  	memcpy (*namep, transloc + 2, datalen);
      }
  
@@ -997,7 +997,7 @@ Index: hurd-debian/ext2fs/inode.c
    diskfs_end_catch_exception ();
  
    *namelen = datalen;
-@@ -772,7 +784,7 @@
+@@ -782,7 +794,7 @@
  
    assert (node->dn_stat.st_blocks == 0);
  
@@ -1006,7 +1006,7 @@ Index: hurd-debian/ext2fs/inode.c
    node->dn_stat.st_size = len - 1;
    node->dn_set_ctime = 1;
    node->dn_set_mtime = 1;
-@@ -789,7 +801,7 @@
+@@ -799,7 +811,7 @@
  
    assert (node->dn_stat.st_size < MAX_INODE_SYMLINK);
  
@@ -1017,8 +1017,8 @@ Index: hurd-debian/ext2fs/inode.c
  
 Index: hurd-debian/ext2fs/pager.c
 ===================================================================
---- hurd-debian.orig/ext2fs/pager.c	2012-04-08 23:19:15.000000000 +0000
-+++ hurd-debian/ext2fs/pager.c	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/ext2fs/pager.c	2012-07-10 01:33:10.000000000 +0000
++++ hurd-debian/ext2fs/pager.c	2012-07-10 01:39:22.000000000 +0000
 @@ -18,17 +18,18 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
@@ -1705,8 +1705,8 @@ Index: hurd-debian/ext2fs/pager.c
  	      diskfs_nrele_light (node);
 Index: hurd-debian/ext2fs/pokel.c
 ===================================================================
---- hurd-debian.orig/ext2fs/pokel.c	2012-04-08 23:19:15.000000000 +0000
-+++ hurd-debian/ext2fs/pokel.c	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/ext2fs/pokel.c	2012-07-10 01:33:10.000000000 +0000
++++ hurd-debian/ext2fs/pokel.c	2012-07-10 01:39:22.000000000 +0000
 @@ -67,12 +67,27 @@
        vm_offset_t p_offs = pl->offset;
        vm_size_t p_end = p_offs + pl->length;
@@ -1774,8 +1774,8 @@ Index: hurd-debian/ext2fs/pokel.c
      {
 Index: hurd-debian/ext2fs/truncate.c
 ===================================================================
---- hurd-debian.orig/ext2fs/truncate.c	2012-04-08 23:19:15.000000000 +0000
-+++ hurd-debian/ext2fs/truncate.c	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/ext2fs/truncate.c	2012-07-10 01:33:10.000000000 +0000
++++ hurd-debian/ext2fs/truncate.c	2012-07-10 01:39:22.000000000 +0000
 @@ -124,7 +124,7 @@
      {
        unsigned index;
@@ -1814,8 +1814,8 @@ Index: hurd-debian/ext2fs/truncate.c
  {
 Index: hurd-debian/fatfs/pager.c
 ===================================================================
---- hurd-debian.orig/fatfs/pager.c	2012-04-08 23:19:15.000000000 +0000
-+++ hurd-debian/fatfs/pager.c	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/fatfs/pager.c	2012-07-10 01:33:10.000000000 +0000
++++ hurd-debian/fatfs/pager.c	2012-07-10 01:39:22.000000000 +0000
 @@ -596,6 +596,13 @@
    return 0;
  }
@@ -1850,8 +1850,8 @@ Index: hurd-debian/fatfs/pager.c
                diskfs_nrele_light (node);
 Index: hurd-debian/isofs/pager.c
 ===================================================================
---- hurd-debian.orig/isofs/pager.c	2012-04-08 23:19:15.000000000 +0000
-+++ hurd-debian/isofs/pager.c	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/isofs/pager.c	2012-07-10 01:33:10.000000000 +0000
++++ hurd-debian/isofs/pager.c	2012-07-10 01:39:22.000000000 +0000
 @@ -94,6 +94,13 @@
    return EROFS;
  }
@@ -1887,8 +1887,8 @@ Index: hurd-debian/isofs/pager.c
  	    diskfs_nrele_light (np);
 Index: hurd-debian/libdiskfs/disk-pager.c
 ===================================================================
---- hurd-debian.orig/libdiskfs/disk-pager.c	2012-04-08 23:19:15.000000000 +0000
-+++ hurd-debian/libdiskfs/disk-pager.c	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/libdiskfs/disk-pager.c	2012-07-10 01:33:11.000000000 +0000
++++ hurd-debian/libdiskfs/disk-pager.c	2012-07-10 01:39:22.000000000 +0000
 @@ -46,7 +46,8 @@
  
  void
@@ -1911,8 +1911,8 @@ Index: hurd-debian/libdiskfs/disk-pager.c
    /* Get a port to the disk pager.  */
 Index: hurd-debian/libdiskfs/diskfs-pager.h
 ===================================================================
---- hurd-debian.orig/libdiskfs/diskfs-pager.h	2012-04-08 23:19:15.000000000 +0000
-+++ hurd-debian/libdiskfs/diskfs-pager.h	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/libdiskfs/diskfs-pager.h	2012-07-10 01:33:11.000000000 +0000
++++ hurd-debian/libdiskfs/diskfs-pager.h	2012-07-10 01:39:22.000000000 +0000
 @@ -33,7 +33,8 @@
     mapped is returned in IMAGE.  INFO, PAGER_BUCKET, & MAY_CACHE are passed
     to `pager_create'.  */
@@ -1925,8 +1925,8 @@ Index: hurd-debian/libdiskfs/diskfs-pager.h
  extern struct pager *diskfs_disk_pager;
 Index: hurd-debian/libpager/data-request.c
 ===================================================================
---- hurd-debian.orig/libpager/data-request.c	2012-04-08 23:19:15.000000000 +0000
-+++ hurd-debian/libpager/data-request.c	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/libpager/data-request.c	2012-07-10 01:33:11.000000000 +0000
++++ hurd-debian/libpager/data-request.c	2012-07-10 01:39:22.000000000 +0000
 @@ -40,11 +40,11 @@
    if (!p)
      return EOPNOTSUPP;
@@ -1953,8 +1953,8 @@ Index: hurd-debian/libpager/data-request.c
    _pager_mark_object_error (p, offset, length, 0);
 Index: hurd-debian/libpager/data-return.c
 ===================================================================
---- hurd-debian.orig/libpager/data-return.c	2012-04-08 23:19:15.000000000 +0000
-+++ hurd-debian/libpager/data-return.c	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/libpager/data-return.c	2012-07-10 01:33:11.000000000 +0000
++++ hurd-debian/libpager/data-return.c	2012-07-10 01:39:22.000000000 +0000
 @@ -39,6 +39,7 @@
    struct pager *p;
    short *pm_entries;
@@ -2096,8 +2096,8 @@ Index: hurd-debian/libpager/data-return.c
  
 Index: hurd-debian/libpager/pager-create.c
 ===================================================================
---- hurd-debian.orig/libpager/pager-create.c	2012-04-08 23:19:15.000000000 +0000
-+++ hurd-debian/libpager/pager-create.c	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/libpager/pager-create.c	2012-07-10 01:33:11.000000000 +0000
++++ hurd-debian/libpager/pager-create.c	2012-07-10 01:39:22.000000000 +0000
 @@ -22,7 +22,8 @@
  pager_create (struct user_pager_info *upi,
  	      struct port_bucket *bucket,
@@ -2118,8 +2118,8 @@ Index: hurd-debian/libpager/pager-create.c
    p->seqno = -1;
 Index: hurd-debian/libpager/pager.h
 ===================================================================
---- hurd-debian.orig/libpager/pager.h	2012-04-08 23:19:15.000000000 +0000
-+++ hurd-debian/libpager/pager.h	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/libpager/pager.h	2012-07-10 01:33:11.000000000 +0000
++++ hurd-debian/libpager/pager.h	2012-07-10 01:39:22.000000000 +0000
 @@ -32,18 +32,21 @@
  		   mach_msg_header_t *outp);
  
@@ -2178,9 +2178,9 @@ Index: hurd-debian/libpager/pager.h
     and the size of the object.   */
 Index: hurd-debian/libpager/priv.h
 ===================================================================
---- hurd-debian.orig/libpager/priv.h	2012-04-08 23:19:15.000000000 +0000
-+++ hurd-debian/libpager/priv.h	2012-04-08 23:23:02.000000000 +0000
-@@ -45,6 +45,7 @@
+--- hurd-debian.orig/libpager/priv.h	2012-07-10 01:33:11.000000000 +0000
++++ hurd-debian/libpager/priv.h	2012-07-10 01:39:22.000000000 +0000
+@@ -48,6 +48,7 @@
  
    boolean_t may_cache;
    memory_object_copy_strategy_t copy_strategy;
@@ -2190,8 +2190,8 @@ Index: hurd-debian/libpager/priv.h
    memory_object_control_t memobjcntl;
 Index: hurd-debian/storeio/pager.c
 ===================================================================
---- hurd-debian.orig/storeio/pager.c	2012-04-08 23:19:15.000000000 +0000
-+++ hurd-debian/storeio/pager.c	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/storeio/pager.c	2012-07-10 01:33:12.000000000 +0000
++++ hurd-debian/storeio/pager.c	2012-07-10 01:39:22.000000000 +0000
 @@ -109,6 +109,13 @@
      return 0;
  }
@@ -2217,8 +2217,8 @@ Index: hurd-debian/storeio/pager.c
  	      mutex_unlock (&dev->pager_lock);
 Index: hurd-debian/tmpfs/pager-stubs.c
 ===================================================================
---- hurd-debian.orig/tmpfs/pager-stubs.c	2012-04-08 23:19:15.000000000 +0000
-+++ hurd-debian/tmpfs/pager-stubs.c	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/tmpfs/pager-stubs.c	2012-07-10 01:33:12.000000000 +0000
++++ hurd-debian/tmpfs/pager-stubs.c	2012-07-10 01:39:22.000000000 +0000
 @@ -57,6 +57,14 @@
    return EIEIO;
  }
@@ -2236,8 +2236,8 @@ Index: hurd-debian/tmpfs/pager-stubs.c
     and the size of the object.   */
 Index: hurd-debian/ufs/pager.c
 ===================================================================
---- hurd-debian.orig/ufs/pager.c	2012-04-08 23:19:15.000000000 +0000
-+++ hurd-debian/ufs/pager.c	2012-04-08 23:23:02.000000000 +0000
+--- hurd-debian.orig/ufs/pager.c	2012-07-10 01:33:12.000000000 +0000
++++ hurd-debian/ufs/pager.c	2012-07-10 01:39:22.000000000 +0000
 @@ -425,6 +425,13 @@
    return err;
  }
