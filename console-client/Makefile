@@ -31,16 +31,27 @@ NCURSESW_SO_SRCS = ncursesw.c
 endif
 SRCS = $(CONSOLE_SRCS) \
   $(VGA_SO_SRCS) $(PC_KBD_SO_SRCS) $(PC_MOUSE_SO_SRCS) \
-  $(GENERIC_SPEAKER_SO_SRCS) $(CURRENT_VCS_SO_SRCS) $(NCURSESW_SO_SRCS)
+  $(GENERIC_SPEAKER_SO_SRCS) $(CURRENT_VCS_SO_SRCS) $(NCURSESW_SO_SRCS) \
+  $(XKB_SRCS)
 
-OBJS = $(SRCS:.c=.o) kdioctlServer.o
+VPATH += $(srcdir)/xkb
+OBJS = $(addsuffix .o,$(basename $(notdir $(SRCS)))) kdioctlServer.o
 HURDLIBS = cons threads ports netfs fshelp iohelp ihash shouldbeinlibc
 LDLIBS = -ldl
 module-dir = $(libdir)/hurd/console
 console-LDFLAGS = -Wl,-E
 
+CPPFLAGS += -I$(srcdir)/xkb
+LFLAGS = -i
+YFLAGS = -by
+XKB_DATA_FILES = keymap/hurd types/hurd symbols/hurd
+
 # In seeking, thou shalt find it!
 CPPFLAGS += -DQUAERENDO_INVENIETIS
+
+DIST_FILES = xkb/HACKING xkb/MISSING-FEATURES xkb/README xkb/TODO \
+             xkb/kstoucs_map.sh \
+             $(addprefix xkb/xkb-data/, $(XKB_DATA_FILES))
 
 include ../Makeconf
 
@@ -57,7 +68,7 @@ modules = vga pc_kbd generic_speaker pc_mouse current_vcs
 
 vga-CPPFLAGS = -DDEFAULT_VGA_FONT_DIR=\"${datadir}/hurd/\"
 vga.so.$(hurd-version): $(patsubst %.c,%_pic.o,$(VGA_SO_SRCS))
-pc_kbd.so.$(hurd-version): $(patsubst %.c,%_pic.o,$(PC_KBD_SO_SRCS))	\
+pc_kbd.so.$(hurd-version): $(patsubst %.c,%_pic.o,$(PC_KBD_SO_SRCS)) \
 	kdioctlServer_pic.o
 pc_mouse.so.$(hurd-version): $(patsubst %.c,%_pic.o,$(PC_MOUSE_SO_SRCS))
 generic_speaker.so.$(hurd-version): $(patsubst %.c,%_pic.o,$(GENERIC_SPEAKER_SO_SRCS))
@@ -88,3 +99,38 @@ $(module-dir)/%: %
 	$(CC) -shared -Wl,-soname=$@ -o $@ $(rpath) \
 		$(CFLAGS) $($*-CFLAGS) $(LDFLAGS) \
 		'-Wl,-(' $($*-LDLIBS) '-Wl,-)' $^
+
+lex.c: lex.l parser.tab.h
+parser.tab.h: parser.y
+	if $(YACC) $(YFLAGS) -d $<; then \
+	    mv y.tab.h $@; \
+	    rm y.tab.c; \
+	fi
+
+XKB_SRCS = xkb/compose.c xkb/kstoucs.c xkb/parser.y xkb/lex.l \
+           xkb/xkb.c xkb/xkbdata.c xkb/xkbtimer.c
+ifeq ($(HAVE_X11),yes)
+XKB_UNITS = $(basename $(notdir $(XKB_SRCS)))
+pc_kbd.so.$(hurd-version): $(addsuffix _pic.o,$(XKB_UNITS))
+pc-kbd-CFLAGS = -DXKB_SUPPORT -DXKB_DATA_DIR=\"$(XKB_BASE)\" $(X11_CFLAGS)
+$(foreach XKB_UNIT, $(XKB_UNITS), $(eval $(XKB_UNIT)-CFLAGS = $(X11_CFLAGS)))
+compose-CFLAGS += -DDATADIR=\"$(datadir)\"
+pc_kbd-LDLIBS = $(X11_LIBS)
+install: $(XKB_BASE) $(addprefix $(XKB_BASE)/, $(XKB_DATA_FILES))
+
+$(XKB_BASE):
+	@$(MKINSTALLDIRS) $@
+
+$(XKB_BASE)/%: xkb/xkb-data/%
+	$(INSTALL_DATA) $< $@
+
+kstoucs.o: xkb/kstoucs_map.c
+kstoucs_pic.o: xkb/kstoucs_map.c
+xkb/kstoucs_map.c: $(X11_KEYSYMDEF_H) $(srcdir)/xkb/kstoucs_map.sh
+	SED=$(SED) \
+	AWK=$(AWK) \
+	sh $(srcdir)/xkb/kstoucs_map.sh \
+	     < $< \
+	     > map.tmp && \
+	mv map.tmp $@
+endif

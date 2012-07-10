@@ -305,7 +305,7 @@ S_auth_user_authenticate (struct authhandle *userauth,
   if (! userauth)
     return EOPNOTSUPP;
 
-  if (rendezvous == MACH_PORT_DEAD) /* Port died in transit.  */
+  if (rendezvous == MACH_PORT_NULL || rendezvous == MACH_PORT_DEAD)
     return EINVAL;
 
   u.user = userauth;
@@ -342,7 +342,11 @@ S_auth_user_authenticate (struct authhandle *userauth,
     /* We were interrupted; remove our record.  */
     {
       hurd_ihash_locp_remove (&pending_users, u.locp);
-      err = EINTR;
+
+      /* Was it a normal interruption or did RENDEZVOUS die?  */
+      mach_port_type_t type;
+      mach_port_type (mach_task_self (), rendezvous, &type);
+      err = type & MACH_PORT_TYPE_DEAD_NAME ? EINVAL : EINTR;
     }
 
   mutex_unlock (&pending_lock);
@@ -382,7 +386,7 @@ S_auth_server_authenticate (struct authhandle *serverauth,
   if (! serverauth)
     return EOPNOTSUPP;
 
-  if (rendezvous == MACH_PORT_DEAD) /* Port died in transit.  */
+  if (rendezvous == MACH_PORT_NULL || rendezvous == MACH_PORT_DEAD)
     return EINVAL;
 
   mutex_lock (&pending_lock);
@@ -403,7 +407,11 @@ S_auth_server_authenticate (struct authhandle *serverauth,
 	    /* We were interrupted; remove our record.  */
 	    {
 	      hurd_ihash_locp_remove (&pending_servers, s.locp);
-	      err = EINTR;
+
+	      /* Was it a normal interruption or did RENDEZVOUS die?  */
+	      mach_port_type_t type;
+	      mach_port_type (mach_task_self (), rendezvous, &type);
+	      err = type & MACH_PORT_TYPE_DEAD_NAME ? EINVAL : EINTR;
 	    }
 	  else
 	    {
