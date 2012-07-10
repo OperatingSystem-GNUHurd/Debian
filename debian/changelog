@@ -1,3 +1,9 @@
+hurd (20120710-1) UNRELEASED; urgency=low
+
+  * New upstream snapshot.
+
+ -- Samuel Thibault <sthibault@debian.org>  Tue, 10 Jul 2012 01:36:55 +0000
+
 hurd (20120605-2) unstable; urgency=low
 
   * control: Add missing autoconf build-dependency.
