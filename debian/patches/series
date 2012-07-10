@@ -43,7 +43,6 @@ libdde_workqueue.patch
 libdde_trans_start.patch
 libdde_devres.patch
 libdde_pr_cont.patch
-libdde_fixes.patch
 libdde_rx_queue.patch
 libdde_rcu.patch
 libmachdev.patch
