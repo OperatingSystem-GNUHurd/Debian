@@ -2,6 +2,7 @@ hurd (20120710-1) UNRELEASED; urgency=low
 
   * New upstream snapshot.
     - patches/ext2fs_large_stores.patch: Refresh.
+    - patches/libdde_config.patch: Remove, merged upstream.
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 10 Jul 2012 01:36:55 +0000
 

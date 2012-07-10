@@ -41,7 +41,6 @@ libdde_pci_ids.h.patch
 libdde_ethtool.patch
 libdde_workqueue.patch
 libdde_trans_start.patch
-libdde_config.patch
 libdde_devres.patch
 libdde_pr_cont.patch
 libdde_fixes.patch
