@@ -6,6 +6,7 @@ hurd (20120710-1) UNRELEASED; urgency=low
     - patches/libdde_fixes.patch: Remove, merged upstream.
     - patches/ext2fs_large_stores.patch: Refresh.
   * hurd-console.default: Get keyboard layout from console-setup.
+  * rules: Set XKB_DATA root for installing in debian/tmp.
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 10 Jul 2012 01:36:55 +0000
 
