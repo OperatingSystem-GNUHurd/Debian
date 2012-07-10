@@ -68,3 +68,4 @@ debian/tmp/hurd/streamio
 debian/tmp/hurd/symlink
 debian/tmp/hurd/term
 debian/tmp/hurd/tmpfs
+debian/tmp/usr/share/X11
