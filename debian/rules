@@ -65,8 +65,8 @@ install/hurd::
 	$(MAKE) -C libdde_linux26 INSTALLDIR=$(CURDIR)/debian/tmp/usr/share/libdde_linux26/build/include install
 
 	mkdir -p debian/tmp/usr/share/X11/locale
-	echo Compose C > debian/tmp/usr/share/X11/compose.dir
-	touch debian/tmp/usr/share/X11/Compose
+	echo Compose C > debian/tmp/usr/share/X11/locale/compose.dir
+	touch debian/tmp/usr/share/X11/locale/Compose
 
 install/hurd-dev::
 	install -m644 debian/local/soundcard.h debian/tmp/include/sys
