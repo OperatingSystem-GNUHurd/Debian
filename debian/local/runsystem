@@ -55,13 +55,25 @@ then
         touch /dev/tty1
 
         echo -n "Starting the Hurd console..."
-        console -d vga -g -d pc_mouse --repeat=mouse -d pc_kbd --repeat=kbd -c /dev/vcs &
-        sleep 1
+	while true
+	do
+		LAYOUT=""
+		if [ -f /etc/default/keyboard ]
+		then
+			. /etc/default/keyboard
+			[ -z "$XKBLAYOUT" ] || LAYOUT="--keymap $XKBLAYOUT"
+		fi
+        	console -d vga -g -d pc_mouse --repeat=mouse -d pc_kbd --repeat=kbd $LAYOUT -c /dev/vcs &
+		echo $! > /var/run/hurd-console.pid
+		wait
+		echo
+		echo -n "Restarting the Hurd console..."
+	done &
 
         # Switch over
         envvars="$envvars TERM=hurd"
         exec < /dev/tty1 > /dev/tty1 2>&1
-        echo "Console started, initializing installer environment, please wait..."
+        echo "Console started"
 
         # Set the console device used by /sbin/reopen-console
         echo /dev/tty1 >/var/run/console-device
