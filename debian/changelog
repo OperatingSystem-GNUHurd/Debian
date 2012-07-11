@@ -1,7 +1,7 @@
-hurd (20120710-2) UNRELEASED; urgency=low
+hurd (20120710-2) unstable; urgency=low
 
   * control: Make hurd-udeb depend on xkb-data-udeb. Make hurd
-    conflict/replace console-driver-xkb.
+    conflict/replace console-driver-xkb (Closes: Bug#681183).
   * rules: Add empty compose file for hurd-udeb.
   * hurd.install: Do not install empty compose file.
   * local/runsystem: Read keyboard layout from console-setup, restart the
