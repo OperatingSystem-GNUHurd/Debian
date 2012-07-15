@@ -1,7 +1,7 @@
 hurd (20120710-4) UNRELEASED; urgency=low
 
-  * control: Add missing libx11-dev, x11proto-core-dev, and pkg-config
-  build-dependencies.
+  * control: Add missing libx11-dev, x11proto-core-dev, pkg-config, xkb-data,
+  flex, and bison build-dependencies.
 
  -- Samuel Thibault <sthibault@debian.org>  Sun, 15 Jul 2012 12:53:39 +0200
 

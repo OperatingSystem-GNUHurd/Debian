@@ -6,7 +6,8 @@ Standards-Version: 3.9.3
 Build-Depends: mig (>= 1.3-2), gnumach-dev (>= 2:1.3.99.dfsg.cvs20070526),
  libc0.3-dev (>= 2.9), texinfo, texi2html, libncursesw5-dev, cdbs,
  debhelper (>= 4.2.0), gcc-4.7, dpkg (>= 1.15.4) | install-info, autoconf,
- libparted-dev, libpciaccess-dev, libx11-dev, x11proto-core-dev, pkg-config
+ libparted-dev, libpciaccess-dev, libx11-dev, x11proto-core-dev, pkg-config,
+ xkb-data, flex, bison
 Uploaders: Jeff Bailey <jbailey@raspberryginger.com>,
  Neal H. Walfield <neal@debian.org>, Michael Banck <mbanck@debian.org>, 
  Samuel Thibault <sthibault@debian.org>
