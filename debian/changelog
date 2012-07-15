@@ -1,4 +1,4 @@
-hurd (20120710-1) UNRELEASED; urgency=low
+hurd (20120710-3) unstable; urgency=low
 
   * control: Make hurd depend on xkb-data.
 
