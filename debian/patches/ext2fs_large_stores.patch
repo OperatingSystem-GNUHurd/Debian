@@ -1,4 +1,6 @@
 Support for >2GB volumes
+
+XXX: this adds a parameter to pager_create and diskfs_start_disk_pager
 ---
  console/pager.c          |   10 
  ext2fs/balloc.c          |   57 +++--
