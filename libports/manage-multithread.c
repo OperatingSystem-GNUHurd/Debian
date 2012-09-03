@@ -23,6 +23,61 @@
 #include <assert.h>
 #include <cthreads.h>
 #include <mach/message.h>
+#include <mach/thread_info.h>
+#include <mach/thread_switch.h>
+
+#define THREAD_PRI 2
+
+/* XXX To reduce starvation, the priority of new threads is initially
+   depressed. This helps already existing threads complete their job and be
+   recycled to handle new messages. The duration of this depression is made
+   a function of the total number of threads because more threads imply
+   more contention, and the priority of threads blocking on a contended spin
+   lock is also implicitely depressed.
+
+   Then, if permitted, a greater priority is requested to further decrease
+   the need for additional threads. */
+static void
+adjust_priority (unsigned int totalthreads)
+{
+  mach_port_t host_priv, self, pset, pset_priv;
+  unsigned int t;
+  error_t err;
+
+  t = 10 + (((totalthreads - 1) / 100) + 1) * 10;
+  thread_switch (MACH_PORT_NULL, SWITCH_OPTION_DEPRESS, t);
+
+  self = MACH_PORT_NULL;
+
+  err = get_privileged_ports (&host_priv, NULL);
+  if (err)
+    goto out;
+
+  self = mach_thread_self ();
+  err = thread_get_assignment (self, &pset);
+  if (err)
+    goto out;
+
+  err = host_processor_set_priv (host_priv, pset, &pset_priv);
+  if (err)
+    goto out;
+
+  err = thread_max_priority (self, pset_priv, 0);
+  if (err)
+    goto out;
+
+  err = thread_priority (self, THREAD_PRI, 0);
+
+out:
+  if (self != MACH_PORT_NULL)
+    mach_port_deallocate (mach_task_self (), self);
+
+  if (err)
+    {
+      errno = err;
+      perror ("unable to adjust libports thread priority");
+    }
+}
 
 void
 ports_manage_port_operations_multithread (struct port_bucket *bucket,
@@ -118,6 +173,9 @@ ports_manage_port_operations_multithread (struct port_bucket *bucket,
     {
       int timeout;
       error_t err;
+
+      /* No need to lock as an approximation is sufficient. */
+      adjust_priority (totalthreads);
 
       if (hook)
 	(*hook) ();
