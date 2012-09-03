@@ -31,8 +31,8 @@ ports_manage_port_operations_multithread (struct port_bucket *bucket,
 					  int global_timeout,
 					  void (*hook)())
 {
-  volatile int nreqthreads;
-  volatile int totalthreads;
+  volatile unsigned int nreqthreads;
+  volatile unsigned int totalthreads;
   spin_lock_t lock = SPIN_LOCK_INITIALIZER;
 
   auto int thread_function (int);
@@ -41,7 +41,6 @@ ports_manage_port_operations_multithread (struct port_bucket *bucket,
   internal_demuxer (mach_msg_header_t *inp,
 		    mach_msg_header_t *outheadp)
     {
-      int spawn = 0;
       int status;
       struct port_info *pi;
       struct rpc_info link;
@@ -59,14 +58,11 @@ ports_manage_port_operations_multithread (struct port_bucket *bucket,
       spin_lock (&lock);
       assert (nreqthreads);
       nreqthreads--;
-      if (nreqthreads == 0)
+      if (nreqthreads != 0)
+	spin_unlock (&lock);
+      else
 	/* No thread would be listening for requests, spawn one. */
-	spawn = 1;
-      spin_unlock (&lock);
-
-      if (spawn)
 	{
-	  spin_lock (&lock);
 	  totalthreads++;
 	  nreqthreads++;
 	  spin_unlock (&lock);
