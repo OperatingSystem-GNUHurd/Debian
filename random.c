@@ -28,6 +28,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <pthread.h>
+#include <assert.h>
 
 #include <version.h>
 
