@@ -35,7 +35,7 @@
 #ifndef	_KERN_QUEUE_H_
 #define	_KERN_QUEUE_H_
 
-#include <cthreads.h>
+#include <pthread.h>
 
 /*
  *	Queue of abstract objects.  Queue is maintained
@@ -337,7 +337,7 @@ void		insque(queue_entry_t, queue_entry_t);
  */
 struct mpqueue_head {
 	struct queue_entry	head;		/* header for queue */
-	struct mutex		lock;		/* lock for queue */
+	pthread_mutex_t		lock;		/* lock for queue */
 };
 
 typedef struct mpqueue_head	mpqueue_head_t;
@@ -347,21 +347,21 @@ typedef struct mpqueue_head	mpqueue_head_t;
 #define mpqueue_init(q) \
 	{ \
 		queue_init(&(q)->head); \
-		mutex_init(&(q)->lock); \
+		pthread_mutex_init(&(q)->lock, NULL); \
 	}
 
 #define mpenqueue_tail(q, elt) \
-		mutex_lock(&(q)->lock); \
+		pthread_mutex_lock(&(q)->lock); \
 		enqueue_tail(&(q)->head, elt); \
-		mutex_unlock(&(q)->lock);
+		pthread_mutex_unlock(&(q)->lock);
 
 #define mpdequeue_head(q, elt) \
-		mutex_lock(&(q)->lock); \
+		pthread_mutex_lock(&(q)->lock); \
 		if (queue_empty(&(q)->head)) \
 			*(elt) = 0; \
 		else \
 			*(elt) = dequeue_head(&(q)->head); \
-		mutex_unlock(&(q)->lock);
+		pthread_mutex_unlock(&(q)->lock);
 
 /*
  *	Old queue stuff, will go away soon.

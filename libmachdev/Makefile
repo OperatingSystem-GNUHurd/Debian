@@ -25,7 +25,8 @@ LCLHDRS = dev_hdr.h device_emul.h ds_routines.h vm_param.h \
 	  util.h queue.h io_req.h if_ether.h machdev.h linux-errno.h \
 	  errno-base.h
 installhdrs = machdev.h
-HURDLIBS = ports threads trivfs ddekit bpf
+HURDLIBS = ports trivfs ddekit bpf
+OTHERLIBS = -lpthread
 OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
 
 include ../Makeconf

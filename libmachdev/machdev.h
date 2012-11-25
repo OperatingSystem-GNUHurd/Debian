@@ -23,7 +23,7 @@
 #ifndef __MACHDEV_H__
 #define __MACHDEV_H__
 
-void ds_server(void);
+void * ds_server(void *);
 void mach_device_init(void);
 void register_net(void);
 void register_block(void);

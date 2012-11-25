@@ -1,6 +1,5 @@
 #include <error.h>
 #include <maptime.h>
-#include <cthreads.h>
 #include <stdio.h>
 
 #include "ddekit/lock.h"
@@ -322,12 +321,12 @@ void ddekit_init_timers(void)
 {
   error_t err;
   struct timeval tp;
-  static boolean_t initialized = FALSE;
+  static int initialized = 0;
 
   if (initialized)
     return;
 
-  initialized = TRUE;
+  initialized = 1;
   err = maptime_map (0, 0, &mapped_time);
   if (err)
     error (2, err, "cannot map time device");

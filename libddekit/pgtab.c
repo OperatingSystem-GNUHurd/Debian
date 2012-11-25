@@ -15,7 +15,7 @@
 #include <error.h>
 #include <errno.h>
 #include <mach.h>
-#include <cthreads.h>
+#include <pthread.h>
 
 #include "ddekit/pgtab.h"
 #include "util.h"
@@ -35,7 +35,7 @@ static struct entry *regions;
 static int num_regions;
 /* The size of the array REGIONS */
 static int capability;
-static struct mutex lock;
+static pthread_mutex_t lock;
 #define INIT_SIZE 128
 
 /*****************************
@@ -78,15 +78,15 @@ static struct entry *get_entry_from_virt (const ddekit_addr_t virt)
 ddekit_addr_t ddekit_pgtab_get_physaddr(const void *virtual)
 {
 	struct entry *e;
-	mutex_lock (&lock);
+	pthread_mutex_lock (&lock);
 	e = get_entry_from_virt ((ddekit_addr_t) virtual);
 	if (e)
 	{
 		ddekit_addr_t phys = e->physical + (virtual - e->virtual);
-		mutex_unlock (&lock);
+		pthread_mutex_unlock (&lock);
 		return phys;
 	}
-	mutex_unlock (&lock);
+	pthread_mutex_unlock (&lock);
 
 	ddekit_printf ("a virtual address %p doesn't exist.\n", virtual);
 	return -1;
@@ -102,16 +102,16 @@ ddekit_addr_t ddekit_pgtab_get_virtaddr(const ddekit_addr_t physical)
 {
 	struct entry *e;
 
-	mutex_lock (&lock);
+	pthread_mutex_lock (&lock);
 	e = get_entry_from_phys (physical);
 	if (e)
 	{
 		ddekit_addr_t virt = (ddekit_addr_t) e->virtual 
 			+ (physical - e->physical);
-		mutex_unlock (&lock);
+		pthread_mutex_unlock (&lock);
 		return virt;
 	}
-	mutex_unlock (&lock);
+	pthread_mutex_unlock (&lock);
 
 
 	ddekit_printf ("a physical address %p doesn't exist.\n", physical);
@@ -139,15 +139,15 @@ int ddekit_pgtab_get_type(const void *virtual)
 int ddekit_pgtab_get_size(const void *virtual)
 {
 	struct entry *e;
-	mutex_lock (&lock);
+	pthread_mutex_lock (&lock);
 	e = get_entry_from_virt ((ddekit_addr_t) virtual);
 	if (e)
 	{
 		int size = e->size;
-		mutex_unlock (&lock);
+		pthread_mutex_unlock (&lock);
 		return size;
 	}
-	mutex_unlock (&lock);
+	pthread_mutex_unlock (&lock);
 	return 0;
 }
 
@@ -162,14 +162,14 @@ void ddekit_pgtab_clear_region(void *virtual, int type)
 {
 	struct entry *e;
 
-	mutex_lock (&lock);
+	pthread_mutex_lock (&lock);
 	e = get_entry_from_virt ((ddekit_addr_t) virtual);
 	if (e)
 	{
 		*e = regions[num_regions - 1];
 		num_regions--;
 	}
-	mutex_unlock (&lock);
+	pthread_mutex_unlock (&lock);
 }
 
 
@@ -188,7 +188,7 @@ void ddekit_pgtab_set_region(void *virtual, ddekit_addr_t physical, int pages, i
 
 void ddekit_pgtab_set_region_with_size(void *virt, ddekit_addr_t phys, int size, int type)
 {
-	mutex_lock (&lock);
+	pthread_mutex_lock (&lock);
 	if (num_regions == capability)
 	{
 		capability *= 2;
@@ -201,13 +201,13 @@ void ddekit_pgtab_set_region_with_size(void *virt, ddekit_addr_t phys, int size,
 	regions[num_regions].size = size;
 	regions[num_regions].type = type;
 	num_regions++;
-	mutex_unlock (&lock);
+	pthread_mutex_unlock (&lock);
 }
 
 int pgtab_init ()
 {
 	capability = INIT_SIZE;
 	regions = malloc (sizeof (struct entry) * capability);
-	mutex_init (&lock);
+	pthread_mutex_init (&lock, NULL);
 	return 0;
 }
