@@ -344,3 +344,56 @@ index 93c89f0..c022d0c 100644
    
    if (sync)
      {
+diff --git a/ext2fs/ext2fs.h b/ext2fs/ext2fs.h
+index 8cd8c5a..bb5b3cd 100644
+--- a/ext2fs/ext2fs.h
++++ b/ext2fs/ext2fs.h
+@@ -262,7 +262,7 @@ extern struct disk_cache_info *disk_cache_info;
+ /* Lock for these mappings */
+ extern pthread_mutex_t disk_cache_lock;
+ /* Fired when a re-association is done.  */
+-extern struct condition disk_cache_reassociation;
++extern pthread_cond_t disk_cache_reassociation;
+ 
+ void *disk_cache_block_ref (block_t block);
+ void disk_cache_block_ref_ptr (void *ptr);
+diff --git a/ext2fs/pager.c b/ext2fs/pager.c
+index 67c9922..4b3a5c4 100644
+--- a/ext2fs/pager.c
++++ b/ext2fs/pager.c
+@@ -837,7 +837,7 @@ int disk_cache_hint;
+ /* Lock for these structures.  */
+ pthread_mutex_t disk_cache_lock;
+ /* Fired when a re-association is done.  */
+-struct condition disk_cache_reassociation;
++pthread_cond_t disk_cache_reassociation;
+ 
+ /* Finish mapping initialization. */
+ static void
+@@ -848,7 +848,7 @@ disk_cache_init (void)
+ 		block_size, vm_page_size);
+ 
+   pthread_mutex_init (&disk_cache_lock, NULL);
+-  condition_init (&disk_cache_reassociation);
++  pthread_cond_init (&disk_cache_reassociation, NULL);
+ 
+   /* Allocate space for block num -> in-memory pointer mapping.  */
+   if (hurd_ihash_create (&disk_cache_bptr, HURD_IHASH_NO_LOCP))
+@@ -970,7 +970,7 @@ disk_cache_block_ref (block_t block)
+       if (disk_cache_info[index].flags & DC_UNTOUCHED)
+ 	{
+ 	  /* Wait re-association to finish.  */
+-	  condition_wait (&disk_cache_reassociation, &disk_cache_lock);
++	  pthread_cond_wait (&disk_cache_reassociation, &disk_cache_lock);
+ 	  pthread_mutex_unlock (&disk_cache_lock);
+ 
+ #if 0
+@@ -1127,7 +1127,7 @@ disk_cache_block_ref (block_t block)
+   pthread_mutex_unlock (&disk_cache_lock);
+ 
+   /* Re-association was successful.  */
+-  condition_broadcast (&disk_cache_reassociation);
++  pthread_cond_broadcast (&disk_cache_reassociation);
+ 
+   ext2_debug ("(%u) = %p", block, bptr);
+   return bptr;
