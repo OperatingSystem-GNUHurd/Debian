@@ -4,31 +4,35 @@
  *
  * \author Thomas Friebel <tf13@os.inf.tu-dresden.de>
  */
-#include <cthreads.h>
+#include <pthread.h>
 
+#include "ddekit/memory.h"
 #include "ddekit/condvar.h"
 
 struct ddekit_condvar {
-	struct condition cond;
+	pthread_cond_t cond;
 };
 
 ddekit_condvar_t *ddekit_condvar_init() {
-	struct condition *cvp;
+	ddekit_condvar_t *cvp;
 
-	cvp = condition_alloc ();
-	condition_init (cvp);
+	cvp = ddekit_simple_malloc (sizeof (*cvp));
 
-	return (ddekit_condvar_t *) cvp;
+	if (cvp == NULL)
+		return NULL;
+
+	pthread_cond_init (&cvp->cond, NULL);
+	return cvp;
 }
 
 void ddekit_condvar_deinit(ddekit_condvar_t *cvp) {
-	condition_free (&cvp->cond);
+	ddekit_simple_free (cvp);
 }
 
 void ddekit_condvar_wait(ddekit_condvar_t *cvp, ddekit_lock_t *mp) {
 	/* This isn't nice. The encapsulation is broken.
 	 * TODO I can merge the two files condvar.c and lock.c. */
-	condition_wait (&cvp->cond, (struct mutex *) *mp);
+	pthread_cond_wait (&cvp->cond, (pthread_mutex_t *) *mp);
 }
 
 int ddekit_condvar_wait_timed(ddekit_condvar_t *cvp,
@@ -40,9 +44,9 @@ int ddekit_condvar_wait_timed(ddekit_condvar_t *cvp,
 
 void ddekit_condvar_signal(ddekit_condvar_t *cvp)
 {
-	condition_signal (&cvp->cond);
+	pthread_cond_signal (&cvp->cond);
 }
 
 void ddekit_condvar_broadcast(ddekit_condvar_t *cvp) {
-	condition_broadcast (&cvp->cond);
+	pthread_cond_broadcast (&cvp->cond);
 }

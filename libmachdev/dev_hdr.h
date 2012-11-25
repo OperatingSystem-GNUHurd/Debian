@@ -59,7 +59,7 @@
 #include <mach.h>
 #include <hurd.h>
 #include <hurd/ports.h>
-#include <cthreads.h>
+#include <pthread.h>
 
 #include "device_emul.h"
 
@@ -127,7 +127,7 @@ boolean_t	dev_map(boolean_t (*)(), mach_port_t);
 /*
  * To lock and unlock state and open-count
  */
-#define	device_lock(device)	mutex_lock(&(device)->lock)
-#define	device_unlock(device)	mutex_unlock(&(device)->lock)
+#define	device_lock(device)	pthread_mutex_lock(&(device)->lock)
+#define	device_unlock(device)	pthread_mutex_unlock(&(device)->lock)
 
 #endif	/* _DEVICE_DEV_HDR_H_ */
