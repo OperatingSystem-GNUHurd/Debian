@@ -1,4 +1,6 @@
 Also try runsystem.gnu
+
+Almost merged upstream, ony runsystem.gnu remaining
 ---
  daemons/console-run.c |    7 +++++++
  init/init.c           |   24 ++++++++++++++++++++----

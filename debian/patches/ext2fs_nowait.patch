@@ -1,6 +1,8 @@
 Avoid waiting for disk I/O completion. This improves performance quite a bit,
 and should not be less safe.
 
+Merged upstream.
+
 diff --git a/ext2fs/dir.c b/ext2fs/dir.c
 index 66d8c8a..f0f52f7 100644
 --- a/ext2fs/dir.c

@@ -3,6 +3,8 @@ Add option -p to MAKEDEV to use user-space parted stores for partition devices.
 TODO: use in installed system, test, and submit to bug-hurd. IIRC the issue with
 it was that the swapper does not like parted-based stores.
 
+merged upstream
+
 Index: hurd/sutils/MAKEDEV.sh
 ===================================================================
 --- hurd.orig/sutils/MAKEDEV.sh	2010-07-08 00:48:13.000000000 +0000

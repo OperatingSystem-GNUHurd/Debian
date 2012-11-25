@@ -34,6 +34,7 @@
 	* socket.c (S_socket_connect): Create the server socket here...
 	(S_socket_accept): ... not here.
 
+merged upstream
 ---
  pflocal/connq.c  |  341 +++++++++++++++++++++++++++++--------------------------
  pflocal/connq.h  |   39 +++---

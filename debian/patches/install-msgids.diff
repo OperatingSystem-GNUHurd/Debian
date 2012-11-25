@@ -5,6 +5,8 @@
 	(install): Specify install-header and install-msgids as
 	prerequisites.
 
+merged upstream
+
 ---
  hurd/Makefile |    9 +++++++--
  1 file changed, 7 insertions(+), 2 deletions(-)

@@ -4,6 +4,7 @@ pipelines.
  daemons/runsystem.sh |    6 ++++++
  1 file changed, 6 insertions(+)
 
+merged upstream
 --- a/daemons/runsystem.sh
 +++ b/daemons/runsystem.sh
 @@ -53,6 +53,12 @@ function singleuser ()

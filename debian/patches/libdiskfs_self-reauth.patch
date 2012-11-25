@@ -2,6 +2,8 @@
 
 http://lists.gnu.org/archive/html/bug-hurd/2011-03/msg00045.html
 
+Merged upstream
+
 diff --git a/libfshelp/fetch-root.c b/libfshelp/fetch-root.c
 index 54d3c0c..6585052 100644
 --- a/libfshelp/fetch-root.c
