@@ -28,7 +28,7 @@
 #include <assert.h>
 #include <string.h>
 #include <unistd.h>
-#include <cthreads.h>
+#include <pthread.h>
 #include <stdint.h>
 
 #include "slab.h"
@@ -337,7 +337,7 @@ hurd_slab_init (hurd_slab_space_t space, size_t size, size_t alignment,
 	      - sizeof (union hurd_bufctl)))
     return EINVAL;
 
-  err = mutex_init (&space->lock);
+  err = pthread_mutex_init (&space->lock, NULL);
   if (err)
     return err;
 
@@ -393,11 +393,11 @@ hurd_slab_destroy (hurd_slab_space_t space)
 
   /* The caller wants to destroy the slab.  It can not be destroyed if
      there are any outstanding memory allocations.  */
-  mutex_lock (&space->lock);
+  pthread_mutex_lock (&space->lock);
   err = reap (space);
   if (err)
     {
-      mutex_unlock (&space->lock);
+      pthread_mutex_unlock (&space->lock);
       return err;
     }
 
@@ -405,7 +405,7 @@ hurd_slab_destroy (hurd_slab_space_t space)
     {
       /* There are still slabs, i.e. there is outstanding allocations.
 	 Return EBUSY.  */
-      mutex_unlock (&space->lock);
+      pthread_mutex_unlock (&space->lock);
       return EBUSY;
     }
 
@@ -436,7 +436,7 @@ hurd_slab_alloc (hurd_slab_space_t space, void **buffer)
   error_t err;
   union hurd_bufctl *bufctl;
 
-  mutex_lock (&space->lock);
+  pthread_mutex_lock (&space->lock);
 
   /* If there is no slabs with free buffer, the cache has to be
      expanded with another slab.  If the slab space has not yet been
@@ -446,7 +446,7 @@ hurd_slab_alloc (hurd_slab_space_t space, void **buffer)
       err = grow (space);
       if (err)
 	{
-	  mutex_unlock (&space->lock);
+	  pthread_mutex_unlock (&space->lock);
 	  return err;
 	}
     }
@@ -477,7 +477,7 @@ hurd_slab_alloc (hurd_slab_space_t space, void **buffer)
       space->first_free = new_first;
     }
   *buffer = ((void *) bufctl) - (space->size - sizeof *bufctl);
-  mutex_unlock (&space->lock);
+  pthread_mutex_unlock (&space->lock);
   return 0;
 }
 
@@ -501,7 +501,7 @@ hurd_slab_dealloc (hurd_slab_space_t space, void *buffer)
 
   assert (space->initialized);
 
-  mutex_lock (&space->lock);
+  pthread_mutex_lock (&space->lock);
 
   bufctl = (buffer + (space->size - sizeof *bufctl));
   put_on_slab_list (slab = bufctl->slab, bufctl);
@@ -514,5 +514,5 @@ hurd_slab_dealloc (hurd_slab_space_t space, void *buffer)
       || slab->refcount < space->first_free->refcount)
     space->first_free = slab;
 
-  mutex_unlock (&space->lock);
+  pthread_mutex_unlock (&space->lock);
 }

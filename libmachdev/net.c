@@ -288,8 +288,8 @@ void if_init_queues(ifp)
 //  IFQ_INIT(&ifp->if_snd);
   queue_init(&ifp->port_list.if_rcv_port_list);
   queue_init(&ifp->port_list.if_snd_port_list);
-  mutex_init(&ifp->if_rcv_port_list_lock);
-  mutex_init(&ifp->if_snd_port_list_lock);
+  pthread_mutex_init(&ifp->if_rcv_port_list_lock, NULL);
+  pthread_mutex_init(&ifp->if_snd_port_list_lock, NULL);
 }
 
 static io_return_t
