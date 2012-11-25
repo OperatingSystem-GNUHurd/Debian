@@ -26,7 +26,7 @@ installhdrs = bpf_impl.h
 MIGSTUBS = 
 OBJS = $(sort $(SRCS:.c=.o) $(MIGSTUBS))
 
-HURDLIBS = threads
+OTHERLIBS = -lpthread
 
 MIGCOMSFLAGS =
 

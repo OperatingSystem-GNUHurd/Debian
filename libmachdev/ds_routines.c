@@ -59,7 +59,6 @@
 
 #include <hurd.h>
 #include <mach.h>
-#include <cthreads.h>
 
 #include <ddekit/thread.h>
 
@@ -467,7 +466,7 @@ void reg_dev_emul (struct device_emulation_ops *ops)
   emulation_list[num_emul++] = ops;
 }
 
-void ds_server()
+void * ds_server(void *arg)
 {
   /* This thread calls Linux functions,
    * so I need to make it known to the Linux environment. */
@@ -478,4 +477,6 @@ void ds_server()
     {
       ports_manage_port_operations_one_thread (port_bucket, demuxer, 0);
     } while (1);
+
+  return NULL;
 }
