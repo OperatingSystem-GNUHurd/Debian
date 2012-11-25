@@ -33,10 +33,10 @@ _pager_lock_object (struct pager *p,
   int i;
   struct lock_request *lr = 0;
 
-  mutex_lock (&p->interlock);
+  pthread_mutex_lock (&p->interlock);
   if (p->pager_state != NORMAL)
     {
-      mutex_unlock (&p->interlock);
+      pthread_mutex_unlock (&p->interlock);
       return;
     }
 
@@ -65,14 +65,16 @@ _pager_lock_object (struct pager *p,
 	}
     }
 
+  mutex_unlock (&p->interlock);
   memory_object_lock_request (p->memobjcntl, offset, size, should_return,
 			      should_flush, lock_value, 
 			      sync ? p->port.port_right : MACH_PORT_NULL);
+  mutex_lock (&p->interlock);
   
   if (sync)
     {
       while (lr->locks_pending || lr->pending_writes)
-	condition_wait (&p->wakeup, &p->interlock);
+	pthread_cond_wait (&p->wakeup, &p->interlock);
   
       if (! --lr->threads_waiting)
 	{
@@ -101,5 +103,5 @@ _pager_lock_object (struct pager *p,
 	}
     }
 
-  mutex_unlock (&p->interlock);
+  pthread_mutex_unlock (&p->interlock);
 }
