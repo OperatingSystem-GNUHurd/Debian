@@ -1,5 +1,6 @@
 diskfs_no_inherit_dir_group.patch
 ext2fs_large_stores.patch
+ext2fs_large_stores_pthread.patch
 hurd_console_startup.patch
 init_try_runsystem.gnu.patch
 install-msgids.diff
