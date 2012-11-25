@@ -11,7 +11,7 @@ TARGET         = dde26_test
 
 SRC_C          = main.c
 
-LIBS          += -ldde_linux26.o -ldde_linux26_block -ldde_linux26_char -ldde_linux26_net /root/hurd/libddekit/libddekit.a -lpciaccess -lthreads -lshouldbeinlibc
+LIBS          += -ldde_linux26.o -ldde_linux26_block -ldde_linux26_char -ldde_linux26_net /root/hurd/libddekit/libddekit.a -lpciaccess -lpthread -lshouldbeinlibc
 CFLAGS        += -g
 
 # DDE configuration

@@ -61,7 +61,7 @@
 #define	_IF_HDR_
 
 #include <queue.h>
-#include <cthreads.h>
+#include <pthread.h>
 #include <hurd/bpf_impl.h>
 
 #if 0
@@ -94,8 +94,8 @@ struct ifnet {
 	char	*if_address;		/* pointer to hardware address */
 //	struct ifqueue if_snd;		/* output queue */
 	if_filter_list_t port_list;
-	struct mutex if_rcv_port_list_lock;/* lock for input filter list */
-	struct mutex if_snd_port_list_lock;/* lock for output filter list */
+	pthread_mutex_t if_rcv_port_list_lock;/* lock for input filter list */
+	pthread_mutex_t if_snd_port_list_lock;/* lock for output filter list */
 /* statistics */
 	int	if_ipackets;		/* packets received */
 	int	if_ierrors;		/* input errors */

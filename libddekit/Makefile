@@ -40,7 +40,8 @@ LCLHDRS = $(installhdrs)	\
 MIGSTUBS = deviceUser.o machUser.o
 OBJS = $(sort $(SRCS:.c=.o) $(MIGSTUBS))
 
-HURDLIBS = threads ports shouldbeinlibc hurd-slab
+HURDLIBS = ports shouldbeinlibc hurd-slab
+OTHERLIBS = -lpthread
 
 MIGCOMSFLAGS = -prefix dde_
 

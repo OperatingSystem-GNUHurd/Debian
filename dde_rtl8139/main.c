@@ -12,6 +12,8 @@ int using_std = 1;
 
 int main(int argc, char **argv)
 {
+	pthread_t thread;
+
 	l4dde26_init();
 	l4dde26_process_init();
 	l4dde26_softirq_init();
@@ -25,7 +27,8 @@ int main(int argc, char **argv)
 	mach_device_init();
 	trivfs_init();
 
-	cthread_detach (cthread_fork (ds_server, NULL));
+	pthread_create (&thread, NULL, ds_server, NULL;
+	pthread_detach (thread);
 	trivfs_server();
 
 	return 0;
