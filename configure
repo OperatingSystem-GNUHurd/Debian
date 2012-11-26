@@ -5174,7 +5174,7 @@ fi
        { $as_echo "$as_me:${as_lineno-$LINENO}: result: $XKB_BASE" >&5
 $as_echo "$XKB_BASE" >&6; }
 else
-  XKB_BASE="$datadir/X11/xkb"
+  XKB_BASE="$datadir/share/X11/xkb"
        { $as_echo "$as_me:${as_lineno-$LINENO}: result: (default) $XKB_BASE" >&5
 $as_echo "(default) $XKB_BASE" >&6; }
 fi
