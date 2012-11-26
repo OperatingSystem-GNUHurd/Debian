@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <string.h>
-#include <cthreads.h>
+#include <pthread.h>
 #include <time.h>
 #include <error.h>
+#include <mach.h>
 #include <hurd.h>
 #include <sys/time.h>
 #include <assert.h>
@@ -26,39 +27,30 @@ struct _ddekit_private_data {
 };
 
 struct ddekit_thread {
-	struct cthread thread;
+	pthread_t thread;
+	char *name;
+	struct _ddekit_private_data *private;
+	void *user;
 };
 
 struct ddekit_sem
 {
-	spin_lock_t lock;
+	pthread_spinlock_t lock;
 	/* A list of thread waiting for the semaphore. */
 	struct list head;
 	int value;
 };
 
-static struct mutex global_lock = MUTEX_INITIALIZER;
+static __thread struct ddekit_thread *thread_self;
 
 static void _thread_cleanup ()
 {
-	const char *name;
-	struct _ddekit_private_data *data;
-	cthread_t t = cthread_self ();
-
-	/* I have to free the sleep condition variable
-	 * before the thread exits. */
-	mutex_lock (&global_lock);
-	data = cthread_ldata (t);
-	cthread_set_ldata (t, NULL);
-	mutex_unlock (&global_lock);
 	mach_port_destroy (mach_task_self (),
-			   data->wakeupmsg.msgh_remote_port);
-	ddekit_condvar_deinit (data->sleep_cond);
-	ddekit_simple_free (data);
-
-	name = cthread_name (t);
-	cthread_set_name (t, NULL);
-	ddekit_simple_free ((char *) name);
+			   thread_self->private->wakeupmsg.msgh_remote_port);
+	ddekit_condvar_deinit (thread_self->private->sleep_cond);
+	ddekit_simple_free (thread_self->private);
+	ddekit_simple_free (thread_self->name);
+	ddekit_simple_free (thread_self);
 }
 
 /* Prepare a wakeup message.  */
@@ -105,14 +97,8 @@ static void setup_thread (struct ddekit_thread *t, const char *name) {
 		else 
 			strcpy (cpy, name);
 
-		cthread_set_name (&t->thread, cpy);
+		t->name = cpy;
 	}
-
-	/*
-	 * ldata isn't used by cthread. Since cthread isn't exposed to 
-	 * the user of this library. It's very safe to store
-	 * the condition variable in ldata.
-	 */
 
 	private_data = (struct _ddekit_private_data *)
 	  ddekit_simple_malloc (sizeof (*private_data));
@@ -126,15 +112,13 @@ static void setup_thread (struct ddekit_thread *t, const char *name) {
 	if (err)
 	  error (1, err, "_create_wakeupmsg");
 
-	mutex_lock (&global_lock);
-	cthread_set_ldata (&t->thread, private_data);
-	mutex_unlock (&global_lock);
+	t->private = private_data;
 }
 
 ddekit_thread_t *ddekit_thread_setup_myself(const char *name) {
-	ddekit_thread_t *td = ddekit_thread_myself();
-
+	ddekit_thread_t *td = (ddekit_thread_t *) malloc (sizeof (*td));
 	setup_thread (td, name);
+	thread_self = td;
 	return td;
 }
 
@@ -142,54 +126,58 @@ typedef struct
 {
   void (*fun)(void *);
   void *arg;
-  struct condition cond;
-  struct mutex lock;
+  struct ddekit_thread *td;
+  pthread_cond_t cond;
+  pthread_mutex_t lock;
   int status;
 } priv_arg_t;
 
 static void* _priv_fun (void *arg)
 {
   priv_arg_t *priv_arg = arg;
+  thread_self = priv_arg->td;
   /* We wait until the initialization of the thread is finished. */
-  mutex_lock (&priv_arg->lock);
+  pthread_mutex_lock (&priv_arg->lock);
   while (!priv_arg->status)
-    condition_wait (&priv_arg->cond, &priv_arg->lock);
-  mutex_unlock (&priv_arg->lock);
+    pthread_cond_wait (&priv_arg->cond, &priv_arg->lock);
+  pthread_mutex_unlock (&priv_arg->lock);
 
   priv_arg->fun(priv_arg->arg);
+  free (priv_arg->arg);
   _thread_cleanup ();
   return NULL;
 }
 
 ddekit_thread_t *ddekit_thread_create(void (*fun)(void *), void *arg, const char *name) {
-	ddekit_thread_t *td;
-	priv_arg_t *priv_arg = (priv_arg_t *) malloc (sizeof (*priv_arg));
-
-	priv_arg->fun = fun;
-	priv_arg->arg = arg;
-	condition_init (&priv_arg->cond);
-	mutex_init (&priv_arg->lock);
-	priv_arg->status = 0;
-
-	td = (ddekit_thread_t *) cthread_fork (_priv_fun, priv_arg);
-	cthread_detach (&td->thread);
+	ddekit_thread_t *td = (ddekit_thread_t *) malloc (sizeof (*td));
 	setup_thread (td, name);
 
+	priv_arg_t *priv_arg = (priv_arg_t *) malloc (sizeof (*priv_arg));
+	priv_arg->fun = fun;
+	priv_arg->arg = arg;
+	priv_arg->td = td;
+	pthread_cond_init (&priv_arg->cond, NULL);
+	pthread_mutex_init (&priv_arg->lock, NULL);
+	priv_arg->status = 0;
+
+	pthread_create (&td->thread, NULL, _priv_fun, priv_arg);
+	pthread_detach (td->thread);
+
 	/* Tell the new thread that initialization has been finished. */
-	mutex_lock (&priv_arg->lock);
+	pthread_mutex_lock (&priv_arg->lock);
 	priv_arg->status = 1;
-	cond_signal (&priv_arg->cond);
-	mutex_unlock (&priv_arg->lock);
+	pthread_cond_signal (&priv_arg->cond);
+	pthread_mutex_unlock (&priv_arg->lock);
 
 	return td;
 }
 
 ddekit_thread_t *ddekit_thread_myself(void) {
-	return (ddekit_thread_t *) cthread_self ();
+	return thread_self;
 }
 
 void ddekit_thread_set_data(ddekit_thread_t *thread, void *data) {
-	cthread_set_data ((cthread_t) thread, data);
+	thread->user = data;
 }
 
 void ddekit_thread_set_my_data(void *data) {
@@ -197,7 +185,7 @@ void ddekit_thread_set_my_data(void *data) {
 }
 
 void *ddekit_thread_get_data(ddekit_thread_t *thread) {
-	return cthread_data ((cthread_t) thread);
+	return thread->user;
 }
 
 void *ddekit_thread_get_my_data() {
@@ -239,47 +227,36 @@ void ddekit_thread_nsleep(unsigned long nsecs) {
 }
 
 void ddekit_thread_sleep(ddekit_lock_t *lock) {
-	struct _ddekit_private_data *data;
-	
-	mutex_lock (&global_lock);
-	data= cthread_ldata (cthread_self ());
-	mutex_unlock (&global_lock);
-
-	// TODO condition_wait cannot guarantee that the thread is 
+	// TODO pthread_cond_wait cannot guarantee that the thread is 
 	// woke up by another thread, maybe by signals.
 	// Does it matter here?
-	ddekit_condvar_wait (data->sleep_cond, lock);
+	// If it does, use pthread_hurd_cond_wait_np.
+	ddekit_condvar_wait (thread_self->private->sleep_cond, lock);
 }
 
 void  ddekit_thread_wakeup(ddekit_thread_t *td) {
-	struct _ddekit_private_data *data;
-	
-	mutex_lock (&global_lock);
-	data = cthread_ldata (&td->thread);
-	mutex_unlock (&global_lock);
-
-	if (data == NULL)
+	if (td->private == NULL)
 		return;
-	ddekit_condvar_signal (data->sleep_cond);
+	ddekit_condvar_signal (td->private->sleep_cond);
 }
 
 void  ddekit_thread_exit() {
 	_thread_cleanup ();
-	cthread_exit (0);
+	pthread_exit (NULL);
 }
 
 const char *ddekit_thread_get_name(ddekit_thread_t *thread) {
-	return cthread_name ((cthread_t) thread);
+	return thread->name;
 }
 
 void ddekit_thread_schedule(void)
 {
-	cthread_yield();
+	swtch_pri (0);
 }
 
 void ddekit_yield(void)
 {
-	cthread_yield();
+	swtch_pri (0);
 }
 
 void ddekit_init_threads() {
@@ -324,34 +301,29 @@ static void _block (struct _ddekit_private_data *data)
 static int _sem_timedwait_internal (ddekit_sem_t *restrict sem,
 				    const int timeout)
 {
-	struct _ddekit_private_data *self_private_data;
-
-	spin_lock (&sem->lock);
+	pthread_spin_lock (&sem->lock);
 	if (sem->value > 0) {
 	        /* Successful down.  */
 		sem->value --;
-		spin_unlock (&sem->lock);
+		pthread_spin_unlock (&sem->lock);
 		return 0;
 	}
 
 	if (timeout < 0) {
+		pthread_spin_unlock (&sem->lock);
 		errno = EINVAL;
 		return -1;
 	}
 
 	/* Add ourselves to the queue.  */
-	mutex_lock (&global_lock);
-	self_private_data = cthread_ldata (cthread_self ());
-	mutex_unlock (&global_lock);
-
-	add_entry_head (&sem->head, (struct list *) self_private_data);
-	spin_unlock (&sem->lock);
+	add_entry_head (&sem->head, &thread_self->private->list);
+	pthread_spin_unlock (&sem->lock);
 
 	/* Block the thread.  */
 	if (timeout) {
 		error_t err;
 
-		err = _timedblock (self_private_data, timeout);
+		err = _timedblock (thread_self->private, timeout);
 		if (err) {
 		  /* We timed out.  We may need to disconnect ourself from the
 		     waiter queue.
@@ -361,16 +333,16 @@ static int _sem_timedwait_internal (ddekit_sem_t *restrict sem,
 		     block.  */
 			assert (err == ETIMEDOUT);
 
-			spin_lock (&sem->lock);
-			remove_entry ((struct list *) self_private_data);
-			spin_unlock (&sem->lock);
+			pthread_spin_lock (&sem->lock);
+			remove_entry (&thread_self->private->list);
+			pthread_spin_unlock (&sem->lock);
 
 			errno = err;
 			return -1;
 		}
 	}
 	else
-		_block (self_private_data);
+		_block (thread_self->private);
 
 	return 0;
 }
@@ -390,7 +362,7 @@ ddekit_sem_t *ddekit_sem_init(int value) {
 	ddekit_sem_t *sem =
 	  (ddekit_sem_t *) ddekit_simple_malloc (sizeof (*sem));
 
-	sem->lock = SPIN_LOCK_INITIALIZER;
+	sem->lock = PTHREAD_SPINLOCK_INITIALIZER;
 	sem->head.prev = &sem->head;
 	sem->head.next = &sem->head;
 	sem->value = value;
@@ -411,14 +383,14 @@ void ddekit_sem_down(ddekit_sem_t *sem) {
 
 /* returns 0 on success, != 0 when it would block */
 int  ddekit_sem_down_try(ddekit_sem_t *sem) {
-	spin_lock (&sem->lock);
+	pthread_spin_lock (&sem->lock);
 	if (sem->value > 0) {
 		/* Successful down.  */
 		sem->value --;
-		spin_unlock (&sem->lock);
+		pthread_spin_unlock (&sem->lock);
 		return 0;
 	}
-	spin_unlock (&sem->lock);
+	pthread_spin_unlock (&sem->lock);
 
 	return -1;
 }
@@ -432,19 +404,19 @@ int  ddekit_sem_down_timed(ddekit_sem_t *sem, int timo) {
 void ddekit_sem_up(ddekit_sem_t *sem) {
 	struct _ddekit_private_data *wakeup;
 
-	spin_lock (&sem->lock);
+	pthread_spin_lock (&sem->lock);
 	if (sem->value > 0) {
 		/* Do a quick up.  */
 		assert (EMPTY_LIST (&sem->head));
 		sem->value ++;
-		spin_unlock (&sem->lock);
+		pthread_spin_unlock (&sem->lock);
 		return;
 	}
 
 	if (EMPTY_LIST (&sem->head)) {
 		/* No one waiting.  */
 		sem->value = 1;
-		spin_unlock (&sem->lock);
+		pthread_spin_unlock (&sem->lock);
 		return;
 	}
 
@@ -455,7 +427,7 @@ void ddekit_sem_up(ddekit_sem_t *sem) {
 			     struct _ddekit_private_data, list);
 
 	/* Then drop the lock and transfer control.  */
-	spin_unlock (&sem->lock);
+	pthread_spin_unlock (&sem->lock);
 	if (wakeup) 
 		_thread_wakeup (wakeup);
 }

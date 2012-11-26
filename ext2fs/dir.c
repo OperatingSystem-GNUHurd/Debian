@@ -278,9 +278,9 @@ diskfs_lookup_hard (struct node *dp, const char *name, enum lookup_type type,
 	      /* Drop what we *thought* was .. (but isn't any more) and
 		 try *again*. */
 	      diskfs_nput (np);
-	      mutex_unlock (&dp->lock);
+	      pthread_mutex_unlock (&dp->lock);
 	      err = diskfs_cached_lookup (inum, &np);
-	      mutex_lock (&dp->lock);
+	      pthread_mutex_lock (&dp->lock);
 	      if (err)
 		goto out;
 	      retry_dotdot = inum;
@@ -293,9 +293,9 @@ diskfs_lookup_hard (struct node *dp, const char *name, enum lookup_type type,
 	  /* Lock them in the proper order, and then
 	     repeat the directory scan to see if this is still
 	     right.  */
-	  mutex_unlock (&dp->lock);
+	  pthread_mutex_unlock (&dp->lock);
 	  err = diskfs_cached_lookup (inum, &np);
-	  mutex_lock (&dp->lock);
+	  pthread_mutex_lock (&dp->lock);
 	  if (err)
 	    goto out;
 	  retry_dotdot = inum;
@@ -690,7 +690,7 @@ diskfs_direnter_hard (struct node *dp, const char *name, struct node *np,
 	}
     }
 
-  diskfs_file_update (dp, 1);
+  diskfs_file_update (dp, diskfs_synchronous);
 
   return 0;
 }
@@ -727,7 +727,7 @@ diskfs_dirremove_hard (struct node *dp, struct dirstat *ds)
   if (dp->dn->dirents && dp->dn->dirents[ds->idx] != -1)
     dp->dn->dirents[ds->idx]--;
 
-  diskfs_file_update (dp, 1);
+  diskfs_file_update (dp, diskfs_synchronous);
 
   return 0;
 }
@@ -753,7 +753,7 @@ diskfs_dirrewrite_hard (struct node *dp, struct node *np, struct dirstat *ds)
 
   munmap ((caddr_t) ds->mapbuf, ds->mapextent);
 
-  diskfs_file_update (dp, 1);
+  diskfs_file_update (dp, diskfs_synchronous);
 
   return 0;
 }

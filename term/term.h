@@ -18,7 +18,7 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA. */
 
-#include <cthreads.h>
+#include <pthread.h>
 #include <assert.h>
 #include <errno.h>
 #include <hurd/trivfs.h>
@@ -95,13 +95,16 @@ long termflags;
 #define QUEUE_HIWAT 8100
 
 /* Global lock */
-struct mutex global_lock;
+pthread_mutex_t global_lock;
 
 /* Wakeup when NO_CARRIER turns off */
-struct condition carrier_alert;
+pthread_cond_t carrier_alert;
 
 /* Wakeup for select */
-struct condition select_alert;
+pthread_cond_t select_alert;
+
+/* Wakeup for pty select, if not null */
+pthread_cond_t *pty_select_alert;
 
 /* Bucket for all our ports. */
 struct port_bucket *term_bucket;
@@ -185,7 +188,7 @@ struct queue
   int hiwat;
   short *cs, *ce;
   int arraylen;
-  struct condition *wait;
+  pthread_cond_t *wait;
   quoted_char array[0];
 };
 
@@ -224,7 +227,10 @@ clear_queue (struct queue *q)
 {
   q->susp = 0;
   q->cs = q->ce = q->array;
-  condition_broadcast (q->wait);
+  pthread_cond_broadcast (q->wait);
+  pthread_cond_broadcast (&select_alert);
+  if (q == inputq && pty_select_alert != NULL)
+    pthread_cond_broadcast (pty_select_alert);
 }
 #endif /* Use extern inlines.  */
 
@@ -248,8 +254,11 @@ dequeue_quote (struct queue *q)
     beep = 1;
   if (beep)
     {
-      condition_broadcast (q->wait);
-      if (q == outputq)
+      pthread_cond_broadcast (q->wait);
+      pthread_cond_broadcast (&select_alert);
+      if (q == inputq && pty_select_alert != NULL)
+	pthread_cond_broadcast (pty_select_alert);
+      else if (q == outputq)
 	call_asyncs (O_WRITE);
     }
   return *q->cs++;
@@ -279,9 +288,14 @@ enqueue_internal (struct queue **qp, quoted_char c)
 
   if (qsize (q) == 1)
     {
-      condition_broadcast (q->wait);
+      pthread_cond_broadcast (q->wait);
+      pthread_cond_broadcast (&select_alert);
       if (q == inputq)
-	call_asyncs (O_READ);
+	{
+	  if (pty_select_alert != NULL)
+	    pthread_cond_broadcast (pty_select_alert);
+	  call_asyncs (O_READ);
+	}
     }
 
   if (!q->susp && (qsize (q) > q->hiwat))
@@ -334,7 +348,12 @@ queue_erase (struct queue *q)
   if (qsize (q) == 0)
     beep = 1;
   if (beep)
-    condition_broadcast (q->wait);
+    {
+      pthread_cond_broadcast (q->wait);
+      pthread_cond_broadcast (&select_alert);
+      if (q == inputq && pty_select_alert != NULL)
+	pthread_cond_broadcast (pty_select_alert);
+    }
   return answer;
 }
 #endif /* Use extern inlines.  */

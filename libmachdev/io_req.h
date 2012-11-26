@@ -32,7 +32,7 @@
 #define	_IO_REQ_
 
 #include <mach.h>
-#include <cthreads.h>
+#include <pthread.h>
 
 #include "dev_hdr.h"
 
@@ -72,7 +72,7 @@ struct io_req {
 	struct io_req *	io_rlink;	/* reverse link (for driver header) */
 //	vm_map_copy_t	io_copy;	/* vm_map_copy obj. for this op. */
 	long		io_total;	/* total op size, for write */
-	struct mutex	io_req_lock;
+	pthread_mutex_t	io_req_lock;
 //	decl_simple_lock_data(,io_req_lock)
 					/* Lock for this structure */
 	long            io_physrec;    /* mapping to the physical block
@@ -90,8 +90,8 @@ struct io_req {
  * happen simultaneously on different processors.
  */
 
-#define ior_lock(ior)	mutex_lock(&(ior)->io_req_lock)
-#define ior_unlock(ior)	mutex_unlock(&(ior)->io_req_lock)
+#define ior_lock(ior)	pthread_mutex_lock(&(ior)->io_req_lock)
+#define ior_unlock(ior)	pthread_mutex_unlock(&(ior)->io_req_lock)
 
 /*
  * Flags and operations
@@ -123,7 +123,7 @@ void	iodone(io_req_t);
 #define	io_req_alloc(ior,size)					\
 	MACRO_BEGIN						\
 	(ior) = (io_req_t)malloc(sizeof(struct io_req));	\
-	mutex_init(&(ior)->io_req_lock);			\
+	pthread_mutex_init(&(ior)->io_req_lock, NULL);		\
 	MACRO_END
 
 #define	io_req_free(ior)					\
