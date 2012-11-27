@@ -1,5 +1,19 @@
-hurd (20120710-4) UNRELEASED; urgency=low
+hurd (20121127-1~0) UNRELEASED; urgency=low
 
+  * New ustream snapshot
+    - Migrates everything to libpthread.
+    - Bump libc0.3-dev build dependency to get pthread_hurd_cond_wait.
+    - Break libthreads-based netdde.
+    - Remove install-msgids.diff, pflocal.patch,
+    runsystem_setup_pflocal.patch, makedev_keep_options.patch,
+    makedev_parted_store.patch, ext2fs_nowait.patch, libpager_deadlock.patch,
+    libdiskfs_self-reauth.patch, libdiskfs_sync.patch, merged upstream
+    - Refresh exec_filename_exec.patch, exec_filename_fs.patch,
+    ext2fs_large_stores.patch, external.patch, init_try_runsystem.gnu.patch,
+    libdde_workqueue.patch, libports_stability.patch, pfinet_dhcp.patch,
+    posix-sigcodes.patch, proxy-defpager.diff.
+  * New patch ext2fs_large_stores_pthread.patch to move ext2fs large store
+    support to pthread.
   * control: Add missing libx11-dev, x11proto-core-dev, pkg-config, xkb-data,
   flex, and bison build-dependencies.
 
