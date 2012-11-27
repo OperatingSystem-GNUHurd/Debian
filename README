@@ -6,7 +6,7 @@ $ git checkout dde-upstream
 $ git pull upstream-dde
 $ git checkout dde
 $ git pull . dde-upstream
-$ git push dde-upstream:upstream-dde-debian
+$ git push dde:upstream-dde-debian
 $ git tag -a upstream/dde/<date>
 $ git checkout dde-clean
 $ git pull . dde
