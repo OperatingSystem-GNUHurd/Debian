@@ -139,7 +139,7 @@ Index: hurd-debian/ext2fs/balloc.c
    for (k = 0; k < groups_count; k++)
      {
 @@ -267,7 +272,8 @@
-       spin_unlock (&global_lock);
+       pthread_spin_unlock (&global_lock);
        return 0;
      }
 -  bh = bptr (gdp->bg_block_bitmap);
@@ -155,7 +155,7 @@ Index: hurd-debian/ext2fs/balloc.c
 +      disk_cache_block_deref (bh);
 +      bh = 0;
        ext2_error ("free blocks count corrupted for block group %d", i);
-       spin_unlock (&global_lock);
+       pthread_spin_unlock (&global_lock);
        return 0;
      }
  
@@ -218,7 +218,7 @@ Index: hurd-debian/ext2fs/balloc.c
  
   sync_out:
 +  assert (! bh);
-   spin_unlock (&global_lock);
+   pthread_spin_unlock (&global_lock);
    alloc_sync (0);
  
 @@ -390,9 +405,12 @@
@@ -312,7 +312,7 @@ Index: hurd-debian/ext2fs/ext2fs.h
  #include <hurd/diskfs.h>
 +#include <hurd/ihash.h>
  #include <assert.h>
- #include <rwlock.h>
+ #include <pthread.h>
  #include <sys/mman.h>
 @@ -195,6 +197,8 @@
  /* ---------------------------------------------------------------- */
@@ -697,7 +697,7 @@ Index: hurd-debian/ext2fs/ialloc.c
 -  ext2_debug ("freeing inode %u", inum);
 +  ext2_debug ("freeing inode %Lu", inum);
  
-   spin_lock (&global_lock);
+   pthread_spin_lock (&global_lock);
  
 @@ -75,22 +75,25 @@
    bit = (inum - 1) % sblock->s_inodes_per_group;
@@ -724,7 +724,7 @@ Index: hurd-debian/ext2fs/ialloc.c
  
 +  disk_cache_block_deref (bh);
    sblock_dirty = 1;
-   spin_unlock (&global_lock);
+   pthread_spin_unlock (&global_lock);
    alloc_sync(0);
 @@ -111,14 +114,15 @@
  ino_t
@@ -736,7 +736,7 @@ Index: hurd-debian/ext2fs/ialloc.c
    struct ext2_group_desc *gdp;
    struct ext2_group_desc *tmp;
  
-   spin_lock (&global_lock);
+   pthread_spin_lock (&global_lock);
  
 -repeat:
 + repeat:
@@ -783,7 +783,7 @@ Index: hurd-debian/ext2fs/ialloc.c
  
   sync_out:
 +  assert (! bh);
-   spin_unlock (&global_lock);
+   pthread_spin_unlock (&global_lock);
    alloc_sync (0);
  
 +  /* Make sure the coming read_node won't complain about bad
@@ -829,12 +829,12 @@ Index: hurd-debian/ext2fs/ialloc.c
  		    "stored = %d, counted = %lu",
 Index: hurd-debian/ext2fs/inode.c
 ===================================================================
---- hurd-debian.orig/ext2fs/inode.c	2012-07-10 01:36:36.000000000 +0000
-+++ hurd-debian/ext2fs/inode.c	2012-07-10 01:39:22.000000000 +0000
+--- hurd-debian.orig/ext2fs/inode.c	2012-11-26 00:23:28.000000000 +0000
++++ hurd-debian/ext2fs/inode.c	2012-11-26 00:24:49.000000000 +0000
 @@ -92,7 +92,7 @@
    dn->dir_idx = 0;
    dn->pager = 0;
-   rwlock_init (&dn->alloc_lock);
+   pthread_rwlock_init (&dn->alloc_lock, NULL);
 -  pokel_init (&dn->indir_pokel, diskfs_disk_pager, disk_image);
 +  pokel_init (&dn->indir_pokel, diskfs_disk_pager, disk_cache);
  
@@ -1040,10 +1040,10 @@ Index: hurd-debian/ext2fs/pager.c
 -/* Mapped image of the disk.  */
 -void *disk_image;
 -
- spin_lock_t node_to_page_lock = SPIN_LOCK_INITIALIZER;
+ pthread_spinlock_t node_to_page_lock = PTHREAD_SPINLOCK_INITIALIZER;
  
- #ifdef DONT_CACHE_MEMORY_OBJECTS
-@@ -163,6 +164,9 @@
+ 
+@@ -165,6 +166,9 @@
    block_t pending_blocks = 0;
    int num_pending_blocks = 0;
  
@@ -1745,10 +1745,10 @@ Index: hurd-debian/ext2fs/pokel.c
    struct poke *pl, *pokes, *last = NULL;
 -  
 +
-   spin_lock (&pokel->lock);
+   pthread_spin_lock (&pokel->lock);
    pokes = pokel->pokes;
    pokel->pokes = NULL;
-   spin_unlock (&pokel->lock);
+   pthread_spin_unlock (&pokel->lock);
  
    for (pl = pokes; pl; last = pl, pl = pl->next)
 -    if (sync)
@@ -1900,8 +1900,8 @@ Index: hurd-debian/libdiskfs/disk-pager.c
 +			 int may_cache, int notify_on_evict,
  			 size_t size, void **image)
  {
-   error_t err;
-@@ -58,7 +59,8 @@
+   pthread_t thread;
+@@ -68,7 +69,8 @@
  
    /* Create the pager.  */
    diskfs_disk_pager = pager_create (upi, pager_bucket,
@@ -1927,15 +1927,15 @@ Index: hurd-debian/libdiskfs/diskfs-pager.h
  extern struct pager *diskfs_disk_pager;
 Index: hurd-debian/libpager/data-request.c
 ===================================================================
---- hurd-debian.orig/libpager/data-request.c	2012-07-10 01:33:11.000000000 +0000
-+++ hurd-debian/libpager/data-request.c	2012-07-10 01:39:22.000000000 +0000
+--- hurd-debian.orig/libpager/data-request.c	2012-11-26 00:23:28.000000000 +0000
++++ hurd-debian/libpager/data-request.c	2012-11-26 00:24:49.000000000 +0000
 @@ -40,11 +40,11 @@
    if (!p)
      return EOPNOTSUPP;
  
 -  /* Acquire the right to meddle with the pagemap */
 +  /* Acquire the right to meddle with the pagemap.  */
-   mutex_lock (&p->interlock);
+   pthread_mutex_lock (&p->interlock);
    _pager_wait_for_seqno (p, seqno);
  
 -  /* sanity checks -- we don't do multi-page requests yet.  */
@@ -1951,12 +1951,12 @@ Index: hurd-debian/libpager/data-request.c
 +			     write_lock ? VM_PROT_WRITE : VM_PROT_NONE,
 +			     p->notify_on_evict ? 1 : 0,
  			     MACH_PORT_NULL);
-   mutex_lock (&p->interlock);
+   pthread_mutex_lock (&p->interlock);
    _pager_mark_object_error (p, offset, length, 0);
 Index: hurd-debian/libpager/data-return.c
 ===================================================================
---- hurd-debian.orig/libpager/data-return.c	2012-07-10 01:33:11.000000000 +0000
-+++ hurd-debian/libpager/data-return.c	2012-07-10 01:39:22.000000000 +0000
+--- hurd-debian.orig/libpager/data-return.c	2012-11-26 00:23:28.000000000 +0000
++++ hurd-debian/libpager/data-return.c	2012-11-26 00:24:49.000000000 +0000
 @@ -39,6 +39,7 @@
    struct pager *p;
    short *pm_entries;
@@ -2067,12 +2067,12 @@ Index: hurd-debian/libpager/data-return.c
      }
 @@ -198,10 +226,29 @@
    if (wakeup)
-     condition_broadcast (&p->wakeup);
+     pthread_cond_broadcast (&p->wakeup);
  
 + notify:
    _pager_allow_termination (p);
 -
-   mutex_unlock (&p->interlock);
+   pthread_mutex_unlock (&p->interlock);
  
 +  for (i = 0; i < npages; i++)
 +    {
@@ -2216,11 +2216,11 @@ Index: hurd-debian/storeio/pager.c
 +			  1, MEMORY_OBJECT_COPY_DELAY, 0);
  	  if (dev->pager == NULL)
  	    {
- 	      mutex_unlock (&dev->pager_lock);
+ 	      pthread_mutex_unlock (&dev->pager_lock);
 Index: hurd-debian/tmpfs/pager-stubs.c
 ===================================================================
---- hurd-debian.orig/tmpfs/pager-stubs.c	2012-07-10 01:33:12.000000000 +0000
-+++ hurd-debian/tmpfs/pager-stubs.c	2012-07-10 01:39:22.000000000 +0000
+--- hurd-debian.orig/tmpfs/pager-stubs.c	2012-11-26 00:23:28.000000000 +0000
++++ hurd-debian/tmpfs/pager-stubs.c	2012-11-26 00:24:49.000000000 +0000
 @@ -57,6 +57,14 @@
    return EIEIO;
  }

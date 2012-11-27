@@ -682,7 +682,7 @@ Index: hurd-debian/trans/fakeroot.c
     This program is free software; you can redistribute it and/or
     modify it under the terms of the GNU General Public License as
 @@ -28,6 +28,9 @@
- #include <cthreads.h>
+ #include <pthread.h>
  #include <hurd/ihash.h>
  #include <hurd/paths.h>
 +#ifdef HAVE_FILE_EXEC_FILE_NAME

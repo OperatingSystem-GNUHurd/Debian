@@ -247,11 +247,11 @@
 +	      fprintf (stderr, "No prefix-length given, "
 +		       "defaulting to %s/64.\n", arg);
 +	    }
- 
--	  *ptr = 0;
++
 +	  if (inet_pton (AF_INET6, arg, &h->curint->address6.addr) <= 0)
 +	    PERR (EINVAL, "Malformed address");
-+
+ 
+-	  *ptr = 0;
 +	  if (IN6_IS_ADDR_MULTICAST (&h->curint->address6.addr))
 +	    FAIL (EINVAL, 1, 0, "%s: Cannot set interface address to "
 +		  "multicast address", arg);
@@ -320,13 +320,20 @@
  
  #ifdef CONFIG_IPV6
  	  if (!IN6_IS_ADDR_UNSPECIFIED (&in->gateway6))
-@@ -361,15 +454,20 @@ parse_opt (int opt, char *arg, struct ar
+@@ -361,15 +454,20 @@
  	    idev = ipv6_find_idev(in->device);
  #endif
  
 -	  if (in->address != INADDR_NONE || in->netmask != INADDR_NONE)
 +	  if (in->address == INADDR_NONE && in->netmask == INADDR_NONE)
-+	    {
+ 	    {
+-	      err = configure_device (in->device, in->address, in->netmask,
+-				      in->peer, INADDR_NONE);
+-	      if (err)
+-		{
+-		  pthread_mutex_unlock (&global_lock);
+-		  FAIL (err, 16, 0, "cannot configure interface");
+-		}
 +	      h->curint->address = ADDR ("0.0.0.0", "address");
 +	      h->curint->netmask = ADDR ("255.0.0.0", "netmask");
 +	    }
@@ -336,20 +343,13 @@
 +				    in->peer, INADDR_NONE);
 +
 +	  if (err)
- 	    {
--	      err = configure_device (in->device, in->address, in->netmask,
--				      in->peer, INADDR_NONE);
--	      if (err)
--		{
--		  __mutex_unlock (&global_lock);
--		  FAIL (err, 16, 0, "cannot configure interface");
--		}
-+	      __mutex_unlock (&global_lock);
++	    {
++	      pthread_mutex_unlock (&global_lock);
 +	      FAIL (err, 16, 0, "cannot configure interface");
  	    }
  
  #ifdef CONFIG_IPV6
-@@ -377,24 +475,25 @@ parse_opt (int opt, char *arg, struct ar
+@@ -377,24 +475,25 @@
  	    continue;
  
  	  /* First let's remove all non-local addresses. */
@@ -393,7 +393,7 @@
  	      /* Now assign the new address */
  	      inet6_addr_add (in->device->ifindex, &in->address6.addr,
  			      in->address6.prefix_len);
-@@ -418,33 +517,40 @@ parse_opt (int opt, char *arg, struct ar
+@@ -418,33 +517,40 @@
  	req.nlh.nlmsg_seq = 0;
  	req.nlh.nlmsg_len = NLMSG_LENGTH (sizeof req.rtm);
  
@@ -418,7 +418,7 @@
 -		err = - (*tb->tb_delete) (tb, &req.rtm, &rta, &req.nlh, 0);
 -		if (err && err != ESRCH)
 -		  {
--		    __mutex_unlock (&global_lock);
+-		    pthread_mutex_unlock (&global_lock);
 -		    FAIL (err, 17, 0, "cannot remove old default gateway");
 -		  }
 -		err = 0;
@@ -436,7 +436,7 @@
 +                    (tb, &req.rtm, &rta, &req.nlh, 0);
 +                  if (err && err != ESRCH)
 +                    {
-+                      __mutex_unlock (&global_lock);
++                      pthread_mutex_unlock (&global_lock);
 +                      FAIL (err, 17, 0, 
 +                            "cannot remove old default gateway");
 +                    }
@@ -452,7 +452,7 @@
  	    req.nlh.nlmsg_type = RTM_NEWROUTE;
  	    req.nlh.nlmsg_flags = NLM_F_REQUEST | NLM_F_CREATE | NLM_F_REPLACE;
  	    tb = fib_new_table (req.rtm.rtm_table);
-@@ -467,13 +573,77 @@ parse_opt (int opt, char *arg, struct ar
+@@ -467,13 +573,77 @@
  	  if (!gw6_in || rt6i->rt6i_dev != gw6_in->device
  	      || !IN6_ARE_ADDR_EQUAL (&rt6i->rt6i_gateway, &gw6_in->gateway6))
  	    {
@@ -489,13 +489,13 @@
 +	  dst = (struct sockaddr_in *) &route.rt_dst;
 +	  if (!in->device->name) 
 +	    {
-+	      __mutex_unlock (&global_lock);
++	      pthread_mutex_unlock (&global_lock);
 +	      FAIL (ENODEV, 17, 0, "unknown device");
 +	    }
 +	  dev = dev_get (in->device->name);
 +	  if (!dev)
 +	    {
-+	      __mutex_unlock (&global_lock);
++	      pthread_mutex_unlock (&global_lock);
 +	      FAIL (ENODEV, 17, 0, "unknown device");
 +	    }
 +
@@ -523,15 +523,15 @@
 +
 +	  if (err)
 +	    {
-+	      __mutex_unlock (&global_lock);
++	      pthread_mutex_unlock (&global_lock);
 +	      FAIL (err, 17, 0, "cannot add route");
 +	    }
 +	}
 +
-       __mutex_unlock (&global_lock);
+       pthread_mutex_unlock (&global_lock);
  
        /* Fall through to free hook.  */
-@@ -526,8 +696,9 @@ trivfs_append_args (struct trivfs_contro
+@@ -526,8 +696,9 @@
          ADD_ADDR_OPT ("netmask", mask);
        if (peer != addr)
  	ADD_ADDR_OPT ("peer", peer);

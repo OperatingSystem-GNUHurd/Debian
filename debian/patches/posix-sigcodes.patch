@@ -214,7 +214,7 @@ index 6fc94e8..332aaf6 100644
  
    if (p->p_parent->p_waiting)
      {
-       condition_broadcast (&p->p_parent->p_wakeup);
+       pthread_cond_broadcast (&p->p_parent->p_wakeup);
        p->p_parent->p_waiting = 0;
      }
  }
@@ -241,7 +241,7 @@ index 6fc94e8..332aaf6 100644
  
    if (p->p_parent->p_waiting)
      {
-       condition_broadcast (&p->p_parent->p_wakeup);
+       pthread_cond_broadcast (&p->p_parent->p_wakeup);
        p->p_parent->p_waiting = 0;
      }
  

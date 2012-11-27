@@ -4,20 +4,23 @@ Date:   Mon Sep 3 22:19:16 2012 +0200
 
     Move large storage patch to pthreads
 
-diff --git a/ext2fs/ext2fs.h b/ext2fs/ext2fs.h
-index 71fba04..8cd8c5a 100644
---- a/ext2fs/ext2fs.h
-+++ b/ext2fs/ext2fs.h
-@@ -260,7 +260,7 @@ extern hurd_ihash_t disk_cache_bptr;
+Index: hurd-debian/ext2fs/ext2fs.h
+===================================================================
+--- hurd-debian.orig/ext2fs/ext2fs.h	2012-11-26 00:24:49.000000000 +0000
++++ hurd-debian/ext2fs/ext2fs.h	2012-11-26 00:24:58.000000000 +0000
+@@ -260,9 +260,9 @@
  /* Metadata about cached block. */
  extern struct disk_cache_info *disk_cache_info;
  /* Lock for these mappings */
 -extern struct mutex disk_cache_lock;
 +extern pthread_mutex_t disk_cache_lock;
  /* Fired when a re-association is done.  */
- extern struct condition disk_cache_reassociation;
+-extern struct condition disk_cache_reassociation;
++extern pthread_cond_t disk_cache_reassociation;
  
-@@ -345,9 +345,9 @@ EXT2FS_EI char *
+ void *disk_cache_block_ref (block_t block);
+ void disk_cache_block_ref_ptr (void *ptr);
+@@ -345,9 +345,9 @@
  boffs_ptr (off_t offset)
  {
    block_t block = boffs_block (offset);
@@ -96,25 +99,30 @@ index 2bec88d..67c9922 100644
  }
  
  /* Satisfy a pager read request for either the disk pager or file pager
-@@ -835,7 +835,7 @@ struct disk_cache_info *disk_cache_info;
+@@ -836,9 +836,9 @@
  /* Hint index for which cache block to reuse next.  */
  int disk_cache_hint;
  /* Lock for these structures.  */
 -struct mutex disk_cache_lock;
 +pthread_mutex_t disk_cache_lock;
  /* Fired when a re-association is done.  */
- struct condition disk_cache_reassociation;
+-struct condition disk_cache_reassociation;
++pthread_cond_t disk_cache_reassociation;
  
-@@ -847,7 +847,7 @@ disk_cache_init (void)
+ /* Finish mapping initialization. */
+ static void
+@@ -848,8 +848,8 @@
      ext2_panic ("Block size %d != vm_page_size %d",
  		block_size, vm_page_size);
  
 -  mutex_init (&disk_cache_lock);
+-  condition_init (&disk_cache_reassociation);
 +  pthread_mutex_init (&disk_cache_lock, NULL);
-   condition_init (&disk_cache_reassociation);
++  pthread_cond_init (&disk_cache_reassociation, NULL);
  
    /* Allocate space for block num -> in-memory pointer mapping.  */
-@@ -904,7 +904,7 @@ disk_cache_return_unused (void)
+   if (hurd_ihash_create (&disk_cache_bptr, HURD_IHASH_NO_LOCP))
+@@ -905,7 +905,7 @@
  
    /* Return unused pages that are in core.  */
    int pending_begin = -1, pending_end = -1;
@@ -157,16 +165,18 @@ index 2bec88d..67c9922 100644
  
    bptr = hurd_ihash_find (disk_cache_bptr, block);
    if (bptr)
-@@ -971,7 +971,7 @@ disk_cache_block_ref (block_t block)
+@@ -971,8 +971,8 @@
+       if (disk_cache_info[index].flags & DC_UNTOUCHED)
  	{
  	  /* Wait re-association to finish.  */
- 	  condition_wait (&disk_cache_reassociation, &disk_cache_lock);
+-	  condition_wait (&disk_cache_reassociation, &disk_cache_lock);
 -	  mutex_unlock (&disk_cache_lock);
++	  pthread_cond_wait (&disk_cache_reassociation, &disk_cache_lock);
 +	  pthread_mutex_unlock (&disk_cache_lock);
  
  #if 0
  	  printf ("Re-association -- wait finished.\n");
-@@ -991,7 +991,7 @@ disk_cache_block_ref (block_t block)
+@@ -992,7 +992,7 @@
  		  disk_cache_info[index].ref_count,
  		  disk_cache_info[index].flags, bptr);
  
@@ -249,7 +259,7 @@ index 2bec88d..67c9922 100644
  
        /* Prepare next time association of this page to succeed.  */
        pager_flush_some (diskfs_disk_pager, bptr - disk_cache,
-@@ -1124,7 +1124,7 @@ disk_cache_block_ref (block_t block)
+@@ -1124,10 +1124,10 @@ disk_cache_block_ref (block_t block)
        /* Try again.  */
        return disk_cache_block_ref (block); /* tail recursion */
      }
@@ -257,8 +267,12 @@ index 2bec88d..67c9922 100644
 +  pthread_mutex_unlock (&disk_cache_lock);
  
    /* Re-association was successful.  */
-   condition_broadcast (&disk_cache_reassociation);
-@@ -1138,7 +1138,7 @@ disk_cache_block_ref_ptr (void *ptr)
+-  condition_broadcast (&disk_cache_reassociation);
++  pthread_cond_broadcast (&disk_cache_reassociation);
+ 
+   ext2_debug ("(%u) = %p", block, bptr);
+   return bptr;
+@@ -1139,7 +1139,7 @@
  {
    int index;
  
@@ -294,7 +308,7 @@ index 2bec88d..67c9922 100644
  }
  
  /* Not used.  */
-@@ -1178,13 +1178,13 @@ disk_cache_block_is_ref (block_t block)
+@@ -1179,13 +1179,13 @@ disk_cache_block_is_ref (block_t block)
    int ref;
    void *ptr;
  
@@ -344,56 +358,3 @@ index 93c89f0..c022d0c 100644
    
    if (sync)
      {
-diff --git a/ext2fs/ext2fs.h b/ext2fs/ext2fs.h
-index 8cd8c5a..bb5b3cd 100644
---- a/ext2fs/ext2fs.h
-+++ b/ext2fs/ext2fs.h
-@@ -262,7 +262,7 @@ extern struct disk_cache_info *disk_cache_info;
- /* Lock for these mappings */
- extern pthread_mutex_t disk_cache_lock;
- /* Fired when a re-association is done.  */
--extern struct condition disk_cache_reassociation;
-+extern pthread_cond_t disk_cache_reassociation;
- 
- void *disk_cache_block_ref (block_t block);
- void disk_cache_block_ref_ptr (void *ptr);
-diff --git a/ext2fs/pager.c b/ext2fs/pager.c
-index 67c9922..4b3a5c4 100644
---- a/ext2fs/pager.c
-+++ b/ext2fs/pager.c
-@@ -837,7 +837,7 @@ int disk_cache_hint;
- /* Lock for these structures.  */
- pthread_mutex_t disk_cache_lock;
- /* Fired when a re-association is done.  */
--struct condition disk_cache_reassociation;
-+pthread_cond_t disk_cache_reassociation;
- 
- /* Finish mapping initialization. */
- static void
-@@ -848,7 +848,7 @@ disk_cache_init (void)
- 		block_size, vm_page_size);
- 
-   pthread_mutex_init (&disk_cache_lock, NULL);
--  condition_init (&disk_cache_reassociation);
-+  pthread_cond_init (&disk_cache_reassociation, NULL);
- 
-   /* Allocate space for block num -> in-memory pointer mapping.  */
-   if (hurd_ihash_create (&disk_cache_bptr, HURD_IHASH_NO_LOCP))
-@@ -970,7 +970,7 @@ disk_cache_block_ref (block_t block)
-       if (disk_cache_info[index].flags & DC_UNTOUCHED)
- 	{
- 	  /* Wait re-association to finish.  */
--	  condition_wait (&disk_cache_reassociation, &disk_cache_lock);
-+	  pthread_cond_wait (&disk_cache_reassociation, &disk_cache_lock);
- 	  pthread_mutex_unlock (&disk_cache_lock);
- 
- #if 0
-@@ -1127,7 +1127,7 @@ disk_cache_block_ref (block_t block)
-   pthread_mutex_unlock (&disk_cache_lock);
- 
-   /* Re-association was successful.  */
--  condition_broadcast (&disk_cache_reassociation);
-+  pthread_cond_broadcast (&disk_cache_reassociation);
- 
-   ext2_debug ("(%u) = %p", block, bptr);
-   return bptr;

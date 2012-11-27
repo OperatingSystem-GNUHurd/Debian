@@ -53,13 +53,13 @@ index 05b959b..68ec159 100644
  
 Index: hurd-debian/procfs/Makefile
 ===================================================================
---- hurd-debian.orig/procfs/Makefile	2010-09-27 19:50:41.000000000 +0000
-+++ hurd-debian/procfs/Makefile	2010-09-27 19:50:46.000000000 +0000
+--- hurd-debian.orig/procfs/Makefile	2012-11-26 00:23:22.000000000 +0000
++++ hurd-debian/procfs/Makefile	2012-11-26 00:25:35.000000000 +0000
 @@ -1,26 +1,31 @@
 -TARGET = procfs
 -OBJS = procfs.o netfs.o procfs_dir.o \
 -       process.o proclist.o rootdir.o dircat.o main.o
--LIBS = -lnetfs -lps
+-LIBS = -lnetfs -lps -lfshelp
 +#   Makefile - for procfs
 +# 
 +#   Copyright (C) 2008 Free Software Foundation, Inc.
@@ -82,24 +82,26 @@ Index: hurd-debian/procfs/Makefile
 +makemode := server
 +
 +target = procfs
++
++SRCS = procfs.c netfs.c procfs_dir.c process.c proclist.c rootdir.c dircat.c main.c
++LCLHDRS = dircat.h main.h process.h procfs.h procfs_dir.h proclist.h rootdir.h
++
++OBJS = $(SRCS:.c=.o)
++HURDLIBS = netfs fshelp iohelp ps ports ihash shouldbeinlibc
++OTHERLIBS = -lpthread
  
 -CC = gcc
 -CFLAGS = -Wall -g
 -CPPFLAGS =
 -LDFLAGS =
-+SRCS = procfs.c netfs.c procfs_dir.c process.c proclist.c rootdir.c dircat.c main.c
-+LCLHDRS = dircat.h main.h process.h procfs.h procfs_dir.h proclist.h rootdir.h
- 
+-
 -ifdef PROFILE
 -CFLAGS= -g -pg
 -CPPFLAGS= -DPROFILE
 -LDFLAGS= -static
 -LIBS= -lnetfs -lfshelp -liohelp -lps -lports -lthreads -lihash -lshouldbeinlibc
 -endif
-+OBJS = $(SRCS:.c=.o)
-+HURDLIBS = netfs fshelp iohelp ps ports ihash shouldbeinlibc
-+OTHERLIBS = -lpthread
- 
+-
 -CPPFLAGS += -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64
 -
 -all: $(TARGET)

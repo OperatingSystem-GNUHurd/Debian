@@ -11,18 +11,20 @@ https://savannah.gnu.org/bugs/?26751
  proxy-defpager.c |    5 +++--
  2 files changed, 8 insertions(+), 4 deletions(-)
 
-diff -u -a -r1.40 -r1.40.10.1
---- a/trans/Makefile	6 Jun 2007 16:08:56 -0000	1.40
-+++ b/trans/Makefile	7 Jun 2009 03:51:49 -0000	1.40.10.1
-@@ -26,13 +26,16 @@
+Index: hurd-debian/trans/Makefile
+===================================================================
+--- hurd-debian.orig/trans/Makefile	2012-11-26 00:23:22.000000000 +0000
++++ hurd-debian/trans/Makefile	2012-11-26 00:25:32.000000000 +0000
+@@ -26,7 +26,7 @@
  	fakeroot.c proxy-defpager.c
  OBJS = $(SRCS:.c=.o) fsysServer.o ifsockServer.o passwordServer.o \
  	crashServer.o crash_replyUser.o msgServer.o \
 -	default_pagerServer.o default_pagerUser.o \
 +	ourdefault_pagerServer.o ourdefault_pagerUser.o \
  	device_replyServer.o elfcore.o
- HURDLIBS = threads ports netfs trivfs iohelp fshelp pipe ihash shouldbeinlibc
- password-LDLIBS = $(LIBCRYPT)
+ HURDLIBS = ports netfs trivfs iohelp fshelp pipe ihash shouldbeinlibc
+ LDLIBS += -lpthread
+@@ -34,6 +34,9 @@
  
  include ../Makeconf
  
@@ -32,18 +34,19 @@ diff -u -a -r1.40 -r1.40.10.1
  vpath elfcore.c $(top_srcdir)/exec
  
  symlink: fsysServer.o
-@@ -40,7 +43,7 @@
+@@ -41,7 +44,7 @@
  crash: crashServer.o crash_replyUser.o msgServer.o elfcore.o
  password: passwordServer.o
  streamio: device_replyServer.o
 -proxy-defpager: default_pagerServer.o default_pagerUser.o
 +proxy-defpager: ourdefault_pagerServer.o ourdefault_pagerUser.o
  
- proxy-defpager crash password streamio: ../libthreads/libthreads.a ../libports/libports.a ../libtrivfs/libtrivfs.a ../libthreads/libthreads.a ../libfshelp/libfshelp.a
+ proxy-defpager crash password streamio: ../libports/libports.a ../libtrivfs/libtrivfs.a ../libfshelp/libfshelp.a
  fifo new-fifo: ../libpipe/libpipe.a
-diff -u -a -r1.5 -r1.5.10.1
---- a/trans/proxy-defpager.c	6 Jun 2007 16:08:56 -0000	1.5
-+++ b/trans/proxy-defpager.c	7 Jun 2009 03:51:49 -0000	1.5.10.1
+Index: hurd-debian/trans/proxy-defpager.c
+===================================================================
+--- hurd-debian.orig/trans/proxy-defpager.c	2012-11-26 00:23:22.000000000 +0000
++++ hurd-debian/trans/proxy-defpager.c	2012-11-26 00:25:32.000000000 +0000
 @@ -23,9 +23,10 @@
  #include <error.h>
  #include <version.h>

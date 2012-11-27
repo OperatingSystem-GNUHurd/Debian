@@ -1,19 +1,15 @@
 Also try runsystem.gnu
 
-Almost merged upstream, ony runsystem.gnu remaining
 ---
  daemons/console-run.c |    7 +++++++
  init/init.c           |   24 ++++++++++++++++++++----
  2 files changed, 27 insertions(+), 4 deletions(-)
 
---- a/init/init.c
-+++ b/init/init.c
-@@ -1082,10 +1082,12 @@ start_child (const char *prog, char **pr
- static void
- launch_something (const char *why)
- {
-+  file_t something;
-   static unsigned int try;
+Index: hurd-debian/init/init.c
+===================================================================
+--- hurd-debian.orig/init/init.c	2012-11-26 00:23:25.000000000 +0000
++++ hurd-debian/init/init.c	2012-11-26 00:25:06.000000000 +0000
+@@ -1087,6 +1087,7 @@
    static const char *const tries[] =
    {
      "/libexec/runsystem",
@@ -21,57 +17,3 @@ Almost merged upstream, ony runsystem.gnu remaining
      _PATH_BSHELL,
      "/bin/shd",			/* XXX */
    };
-@@ -1093,12 +1095,26 @@ launch_something (const char *why)
-   if (why)
-     error (0, 0, "%s %s", tries[try - 1], why);
- 
--  if (try == 0 && start_child (tries[try++], &global_argv[1]) == 0)
--      return;
-+  something = file_name_lookup (tries[try], O_EXEC, 0);
-+  if (something != MACH_PORT_NULL)
-+    {
-+      mach_port_deallocate (mach_task_self (), something);
-+      if (try == 0 && start_child (tries[try++], &global_argv[1]) == 0)
-+        return;
-+    }
-+  else
-+    try++;
- 
-   while (try < sizeof tries / sizeof tries[0])
--    if (start_child (tries[try++], NULL) == 0)
--      return;
-+    {
-+      something = file_name_lookup (tries[try], O_EXEC, 0);
-+      if (something != MACH_PORT_NULL)
-+	{
-+	  mach_port_deallocate (mach_task_self (), something);
-+	  if (start_child (tries[try++], NULL) == 0)
-+	    return;
-+	}
-+    }
- 
-   crash_system ();
- }
---- a/daemons/console-run.c
-+++ b/daemons/console-run.c
-@@ -49,6 +49,7 @@ int
- main (int argc, char **argv)
- {
-   mach_port_t consdev = get_console ();
-+  mach_port_t runsystem;
-   char *consname;
- 
-   if (consdev == MACH_PORT_NULL)
-@@ -62,6 +63,12 @@ main (int argc, char **argv)
-   if (argc < 2)
-     error (1, 0, "Usage: %s PROGRAM [ARG...]", program_invocation_short_name);
- 
-+  /* Check whether runsystem exists before opening a console for it.  */
-+  runsystem = file_name_lookup (argv[1], O_RDONLY, 0);
-+  if (runsystem == MACH_PORT_NULL)
-+    error (127, errno, "cannot open file `%s' for execution", argv[1]);
-+  mach_port_deallocate (mach_task_self (), runsystem);
-+
-   if (open_console (&consname))
-     setenv ("FALLBACK_CONSOLE", consname, 1);
- 

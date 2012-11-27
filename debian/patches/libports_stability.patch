@@ -5,14 +5,16 @@ however it makes all threads often wake at the same time and overload Mach.
  libports/manage-multithread.c |    2 ++
  1 file changed, 2 insertions(+)
 
---- a/libports/manage-multithread.c
-+++ b/libports/manage-multithread.c
-@@ -157,6 +157,8 @@ ports_manage_port_operations_multithread
-       return 0;
+Index: hurd-debian/libports/manage-multithread.c
+===================================================================
+--- hurd-debian.orig/libports/manage-multithread.c	2012-11-26 00:23:22.000000000 +0000
++++ hurd-debian/libports/manage-multithread.c	2012-11-26 00:25:28.000000000 +0000
+@@ -243,6 +243,8 @@
+       return NULL;
      }
  
 +  thread_timeout = global_timeout = 0; /* XXX */
 +
    nreqthreads = 1;
    totalthreads = 1;
-   thread_function (1);
+   thread_function ((void *) 1);
