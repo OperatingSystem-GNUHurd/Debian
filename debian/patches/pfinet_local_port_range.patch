@@ -1,0 +1,27 @@
+commit 23c9bbee12b08bcbc82188dabe3bf8135756c183
+Author: Richard Braun <rbraun@sceen.net>
+Date:   Thu Dec 6 23:16:54 2012 +0000
+
+    pfinet: increase local port range
+    
+    * pfinet/linux-src/net/ipv4/tcp_ipv4.c (sysctl_local_port_range): Set port
+    range to 32768-61000.
+
+merged upstream
+
+diff --git a/pfinet/linux-src/net/ipv4/tcp_ipv4.c b/pfinet/linux-src/net/ipv4/tcp_ipv4.c
+index 9919423..60d2bdb 100644
+--- a/pfinet/linux-src/net/ipv4/tcp_ipv4.c
++++ b/pfinet/linux-src/net/ipv4/tcp_ipv4.c
+@@ -113,7 +113,11 @@ struct sock *tcp_regs[TCP_NUM_REGS];
+  * For high-usage systems, use sysctl to change this to
+  * 32768-61000
+  */
++#if 0
+ int sysctl_local_port_range[2] = { 1024, 4999 };
++#else
++int sysctl_local_port_range[2] = { 32768, 61000 };
++#endif
+ int tcp_port_rover = (1024 - 1);
+ 
+ static __inline__ int tcp_hashfn(__u32 laddr, __u16 lport,
