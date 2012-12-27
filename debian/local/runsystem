@@ -63,7 +63,7 @@ then
 			. /etc/default/keyboard
 			[ -z "$XKBLAYOUT" ] || LAYOUT="--keymap $XKBLAYOUT"
 		fi
-        	console -d vga -g -d pc_mouse --repeat=mouse -d pc_kbd --repeat=kbd $LAYOUT -c /dev/vcs &
+        	console -d vga -g -d pc_kbd --repeat=kbd $LAYOUT -d pc_mouse --repeat=mouse -c /dev/vcs &
 		echo $! > /var/run/hurd-console.pid
 		wait
 		echo

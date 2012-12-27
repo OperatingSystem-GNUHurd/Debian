@@ -18,6 +18,8 @@ hurd (20121127-1~0) UNRELEASED; urgency=low
   flex, and bison build-dependencies.
   * New upstream patch patches/pfinet_local_port_range.patch to increase
     number of available local ports.
+  * Fix g-i by putting console keyboard parameters before mouse parameters,
+    otherwise it seems the -c option gets lost.
 
  -- Samuel Thibault <sthibault@debian.org>  Sun, 15 Jul 2012 12:53:39 +0200
 
