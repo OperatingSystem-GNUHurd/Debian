@@ -20,6 +20,7 @@ hurd (20121127-1~0) UNRELEASED; urgency=low
     number of available local ports.
   * Fix g-i by putting console keyboard parameters before mouse parameters,
     otherwise it seems the -c option gets lost.
+  * Install all msgids files, not only hurd.msgids.
 
  -- Samuel Thibault <sthibault@debian.org>  Sun, 15 Jul 2012 12:53:39 +0200
 
