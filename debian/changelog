@@ -1,4 +1,4 @@
-hurd (20121127-1) unstable; urgency=low
+hurd (20130105-1) unstable; urgency=low
 
   [ Samuel Thibault ]
   * New ustream snapshot
