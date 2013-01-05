@@ -21,7 +21,7 @@ hurd (20121127-1) unstable; urgency=low
     number of available local ports.
   * hurd.install: Install all msgids, not only hurd.msgids.
 
- -- Samuel Thibault <samuel.thibault@ens-lyon.org>  Sat, 05 Jan 2013 22:30:06 +0000
+ -- Samuel Thibault <sthibault@debian.org>  Sat, 05 Jan 2013 22:30:06 +0000
 
 hurd (20120710-3) unstable; urgency=low
 
