@@ -19,7 +19,9 @@ hurd (20121127-1) unstable; urgency=low
     flex, and bison build-dependencies.
   * New upstream patch patches/pfinet_local_port_range.patch to increase
     number of available local ports.
-  * hurd.install: Install all msgids, not only hurd.msgids.
+  * Fix g-i by putting console keyboard parameters before mouse parameters,
+    otherwise it seems the -c option gets lost.
+  * Install all msgids files, not only hurd.msgids.
 
  -- Samuel Thibault <sthibault@debian.org>  Sat, 05 Jan 2013 22:30:06 +0000
 
