@@ -17,8 +17,6 @@ hurd (20130105-1) unstable; urgency=low
     support to pthread.
   * control: Add missing libx11-dev, x11proto-core-dev, pkg-config, xkb-data,
     flex, and bison build-dependencies.
-  * New upstream patch patches/pfinet_local_port_range.patch to increase
-    number of available local ports.
   * Fix g-i by putting console keyboard parameters before mouse parameters,
     otherwise it seems the -c option gets lost.
   * Install all msgids files, not only hurd.msgids.
