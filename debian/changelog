@@ -15,8 +15,11 @@ hurd (20130105-1) unstable; urgency=low
     posix-sigcodes.patch, proxy-defpager.diff.
   * New patch ext2fs_large_stores_pthread.patch to move ext2fs large store
     support to pthread.
-  * control: Add missing libx11-dev, x11proto-core-dev, pkg-config, xkb-data,
-    flex, and bison build-dependencies.
+  * control:
+    - Add missing libx11-dev, x11proto-core-dev, pkg-config, xkb-data, flex,
+    and bison build-dependencies.
+    - Drop hurd dependency on libc0.3, it is now properly automatically
+    computed.
   * Fix g-i by putting console keyboard parameters before mouse parameters,
     otherwise it seems the -c option gets lost.
   * Install all msgids files, not only hurd.msgids.
