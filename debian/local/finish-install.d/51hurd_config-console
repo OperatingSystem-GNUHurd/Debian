@@ -1,0 +1,3 @@
+#!/bin/sh
+
+[ -f /var/run/hurd-console.pid ] || sed -i -e "s/ENABLE='true'/ENABLE='false'/" /target/etc/default/hurd-console
