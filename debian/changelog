@@ -1,5 +1,6 @@
 hurd (20130105-2) UNRELEASED; urgency=low
 
+  [ Samuel Thibault ]
   * local/finish-install.d/51hurd_config-console: Disable the Hurd console on
     the installed system if installation was done without it.
 
