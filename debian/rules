@@ -60,10 +60,6 @@ install/hurd::
 
 	$(MAKE) -C libdde_linux26 INSTALLDIR=$(CURDIR)/debian/tmp/usr/share/libdde_linux26/build/include install
 
-	mkdir -p debian/tmp/usr/share/X11/locale
-	echo Compose C > debian/tmp/usr/share/X11/locale/compose.dir
-	touch debian/tmp/usr/share/X11/locale/Compose
-
 SUID_PROGRAMS = /bin/ids /bin/login /bin/ps-hurd /usr/bin/w-hurd
 
 binary-predeb/hurd::
