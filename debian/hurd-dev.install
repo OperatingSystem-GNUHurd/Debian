@@ -5,3 +5,5 @@ libdde_linux26/lib/src/libdde_*.a usr/lib
 libdde_linux26/mk usr/share/libdde_linux26
 libdde_linux26/Makeconf* usr/share/libdde_linux26
 debian/tmp/usr/share/libdde_linux26/build usr/share/libdde_linux26
+debian/local/cdrom.h usr/include/sys
+debian/local/soundcard.h usr/include/sys

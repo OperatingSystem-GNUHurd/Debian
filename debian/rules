@@ -58,18 +58,11 @@ install/hurd::
 	mv debian/tmp/sbin/halt debian/tmp/sbin/halt-hurd
 	mv debian/tmp/sbin/reboot debian/tmp/sbin/reboot-hurd
 
-	install -m664 $(DEB_SRCDIR)/console/motd.UTF8 debian/hurd/etc/
-	install -m664 $(DEB_SRCDIR)/release/servers.boot debian/hurd/boot/
-
 	$(MAKE) -C libdde_linux26 INSTALLDIR=$(CURDIR)/debian/tmp/usr/share/libdde_linux26/build/include install
 
 	mkdir -p debian/tmp/usr/share/X11/locale
 	echo Compose C > debian/tmp/usr/share/X11/locale/compose.dir
 	touch debian/tmp/usr/share/X11/locale/Compose
-
-install/hurd-dev::
-	install -m644 debian/local/soundcard.h debian/tmp/include/sys
-	install -m644 debian/local/cdrom.h debian/tmp/include/sys
 
 SUID_PROGRAMS = /bin/ids /bin/login /bin/ps-hurd /usr/bin/w-hurd
 

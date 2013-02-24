@@ -11,6 +11,8 @@ hurd (20130105-2) UNRELEASED; urgency=low
     - Fix the dh_strip parameters.
   * Rename hurd-console.default to hurd.hurd-console.default, and let it be
     installed by dh_installinit.
+  * hurd/hurd-dev: install more stuff via dh_install, instead of copying them
+    manually.
 
  -- Samuel Thibault <sthibault@debian.org>  Sun, 27 Jan 2013 20:38:39 +0100
 
