@@ -28,6 +28,7 @@ DEB_CONFIGURE_USER_FLAGS := --disable-profile --enable-static-progs='ext2fs,ufs,
 DEB_MAKE_INSTALL_TARGET = install prefix=$(DEB_DESTDIR) sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var XKB_BASE=$(DEB_DESTDIR)/usr/share/X11/xkb
 DEB_DH_STRIP_ARGS_hurd := --dbg-package=hurd-dbg
 DEB_DH_MAKESHLIBS_ARGS_hurd := --add-udeb="hurd-udeb"
+DEB_DH_INSTALLINIT_ARGS_hurd := --name=hurd-console
 
 build/hurd::
 	cd $(DEB_BUILDDIR)/doc && texi2html -split chapter ../../doc/hurd.texi
@@ -56,8 +57,6 @@ install/hurd::
 	# (they will be handled as alternatives)
 	mv debian/tmp/sbin/halt debian/tmp/sbin/halt-hurd
 	mv debian/tmp/sbin/reboot debian/tmp/sbin/reboot-hurd
-
-	install -m664 debian/hurd-console.default debian/hurd/etc/default/hurd-console
 
 	install -m664 $(DEB_SRCDIR)/console/motd.UTF8 debian/hurd/etc/
 	install -m664 $(DEB_SRCDIR)/release/servers.boot debian/hurd/boot/
