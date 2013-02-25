@@ -12,8 +12,8 @@ Uploaders: Jeff Bailey <jbailey@raspberryginger.com>,
  Neal H. Walfield <neal@debian.org>, Michael Banck <mbanck@debian.org>, 
  Samuel Thibault <sthibault@debian.org>
 Homepage: http://www.gnu.org/software/hurd/hurd.html
-Vcs-Browser: http://git.debian.org/?p=pkg-hurd/hurd.git
-Vcs-Git: git://git.debian.org/pkg-hurd/hurd.git
+Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-hurd/hurd.git
+Vcs-Git: git://anonscm.debian.org/pkg-hurd/hurd.git
 
 Package: hurd
 Essential: yes
