@@ -1,2 +1,3 @@
 non-standard-toplevel-dir hurd/
 non-standard-toplevel-dir servers/
+package-contains-empty-directory servers/
