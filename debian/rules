@@ -17,29 +17,35 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 # 02111-1307 USA.
 
-DEB_BUILDDIR = $(DEB_SRCDIR)/build
+DEB_DESTDIR = $(CURDIR)/debian/tmp
+
+CONFIGURE_ARGS = --disable-profile --enable-static-progs='ext2fs,ufs,iso9660fs'
+SUID_PROGRAMS = /bin/ids /bin/login /bin/ps-hurd /usr/bin/w-hurd
 
 CC=gcc-4.7
 
-include /usr/share/cdbs/1/rules/debhelper.mk
-include /usr/share/cdbs/1/class/autotools.mk
+%:
+	dh $@ -Bbuild --with autotools_dev
 
-DEB_CONFIGURE_USER_FLAGS := --disable-profile --enable-static-progs='ext2fs,ufs,iso9660fs'
-DEB_MAKE_INSTALL_TARGET = install prefix=$(DEB_DESTDIR) sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var XKB_BASE=$(DEB_DESTDIR)/usr/share/X11/xkb
-DEB_DH_STRIP_ARGS := --dbg-package=hurd
-DEB_DH_MAKESHLIBS_ARGS_hurd := --add-udeb="hurd-udeb"
+override_dh_auto_configure:
+	dh_auto_configure -Bbuild -- $(CONFIGURE_ARGS) $(shell dpkg-buildflags --export=configure)
 
-build/hurd::
-	cd $(DEB_BUILDDIR)/doc && texi2html -split chapter ../../doc/hurd.texi
+override_dh_auto_build:
+	dh_auto_build -Bbuild
+	cd build/doc && texi2html -split chapter ../../doc/hurd.texi
 	$(MAKE) -C libdde_linux26 BUILDDIR=$(CURDIR)/build
 
-clean::
+override_dh_auto_clean:
+	dh_auto_clean
 	$(MAKE) -C libdde_linux26 cleanall
 	rm -f $$(find libdde_linux26 -name \*.d)
 	rm -fr libdde_linux26/build
 	rm -fr libdde_linux26/lib/src/gen_crc32table libdde_linux26/lib/src/crc32table.h libdde_linux26/lib/src/timeconst.h
 
-install/hurd::
+override_dh_auto_install:
+	dh_auto_install -Bbuild --destdir= -- prefix=$(DEB_DESTDIR) sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var XKB_BASE=$(DEB_DESTDIR)/usr/share/X11/xkb
+	$(MAKE) -C libdde_linux26 INSTALLDIR=$(CURDIR)/debian/tmp/usr/share/libdde_linux26/build/include install
+
 	# runsystem is managed by update-alternatives
 	mv debian/tmp/lib/hurd/runsystem debian/tmp/lib/hurd/runsystem.gnu
 
@@ -57,25 +63,22 @@ install/hurd::
 	mv debian/tmp/sbin/halt debian/tmp/sbin/halt-hurd
 	mv debian/tmp/sbin/reboot debian/tmp/sbin/reboot-hurd
 
-	install -m664 debian/hurd-console.default debian/hurd/etc/default/hurd-console
+	# remove PIC static libraries
+	rm -f debian/tmp/lib/*_pic.a
 
-	install -m664 $(DEB_SRCDIR)/console/motd.UTF8 debian/hurd/etc/
-	install -m664 $(DEB_SRCDIR)/release/servers.boot debian/hurd/boot/
+override_dh_installinit:
+	dh_installinit -phurd --name=hurd-console
+	dh_installinit --remaining-packages
 
-	$(MAKE) -C libdde_linux26 INSTALLDIR=$(CURDIR)/debian/tmp/usr/share/libdde_linux26/build/include install
+override_dh_strip:
+	dh_strip -phurd --dbg-package=hurd-dbg
+	dh_strip --remaining-packages
 
-	mkdir -p debian/tmp/usr/share/X11/locale
-	echo Compose C > debian/tmp/usr/share/X11/locale/compose.dir
-	touch debian/tmp/usr/share/X11/locale/Compose
+override_dh_fixperms:
+	dh_fixperms
+	chmod u+s $(patsubst %,$(CURDIR)/debian/hurd%,$(SUID_PROGRAMS))
 
-install/hurd-dev::
-	install -m644 debian/local/soundcard.h debian/tmp/include/sys
-	install -m644 debian/local/cdrom.h debian/tmp/include/sys
-
-SUID_PROGRAMS = /bin/ids /bin/login /bin/ps-hurd /usr/bin/w-hurd
-
-binary-predeb/hurd::
-	chmod u+s $(patsubst %, $(CURDIR)/debian/$(cdbs_curpkg)%, $(SUID_PROGRAMS))
-binary-predeb/hurd-dev:: 
-	rm -f $(CURDIR)/debian/hurd-dev/lib/*_pic.a
+override_dh_makeshlibs:
+	dh_makeshlibs -phurd --add-udeb=hurd-udeb
+	dh_makeshlibs --remaining-packages
 

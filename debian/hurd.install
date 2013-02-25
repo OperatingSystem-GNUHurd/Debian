@@ -68,3 +68,5 @@ debian/tmp/etc/ttys
 debian/tmp/dev/MAKEDEV
 debian/tmp/share/msgids/*.msgids usr/share/msgids
 debian/tmp/usr/share/X11/xkb
+console/motd.UTF8 etc
+release/servers.boot boot
