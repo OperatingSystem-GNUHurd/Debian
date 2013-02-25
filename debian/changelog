@@ -15,7 +15,7 @@ hurd (20130105-2) UNRELEASED; urgency=low
     manually.
   * Turn the X11 compose data into static files in the debian directory
     (instead of being generated at build time), and install them in hurd-udeb.
-  * Drop hurd-dbg.dirs, unuseful.
+  * Drop hurd-dbg.dirs, useless.
   * hurd-udeb: remove XC-Package-Type, redundant with Package-Type.
   * Fix Vcs-* keys to point to anonscm.debian.org.
   * Remove asterisks from NEWS file.
