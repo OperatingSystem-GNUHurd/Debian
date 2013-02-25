@@ -1,6 +1,7 @@
-hurd (20130105-2) UNRELEASED; urgency=low
+hurd (20130226-1) UNRELEASED; urgency=low
 
   [ Samuel Thibault ]
+  * New upstream snapshot.
   * local/finish-install.d/51hurd_config-console: Disable the Hurd console on
     the installed system if installation was done without it.
 
