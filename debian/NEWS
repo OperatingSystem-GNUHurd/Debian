@@ -1,6 +1,6 @@
 hurd (20110319-1) unstable; urgency=low
 
-  * To harmonize with Debian security conventions, the Debian
+    To harmonize with Debian security conventions, the Debian
     GNU/Hurd login prompt is now a standard login/password prompt,
     and not a login shell any more. To revert to a standard login, set the
     shell of the login user to /bin/bash.
@@ -9,7 +9,7 @@ hurd (20110319-1) unstable; urgency=low
 
 hurd (20050513-4) unstable; urgency=low
 
-  * The Hurd console may now be started automatically on bootup.  The
+    The Hurd console may now be started automatically on bootup.  The
     file `/etc/default/hurd-console' controls whether the Hurd console
     will be started, and if so, which options are used.  To get the 
     Hurd console on bootup, change ENABLE to `true' and adjust the
@@ -19,7 +19,7 @@ hurd (20050513-4) unstable; urgency=low
 
 hurd (20050119-1) unstable; urgency=low
 
-  * The command line syntax for the console client has slightly
+    The command line syntax for the console client has slightly
     changed.  It is no longer necessary or even allowed to specify the
     consnode path to the short `-c' option (e.g. `-c /dev/cons'),
     /dev/cons is implied as default (but can be changed using the long
