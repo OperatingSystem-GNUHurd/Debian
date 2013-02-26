@@ -1,9 +1,10 @@
-hurd (20130226-1) UNRELEASED; urgency=low
+hurd (20130226-1) unstable; urgency=low
 
   [ Samuel Thibault ]
   * New upstream snapshot.
   * local/finish-install.d/51hurd_config-console: Disable the Hurd console on
     the installed system if installation was done without it.
+  * Add remap script.
 
   [ Pino Toscano ]
   * Bump debhelper compatibility to 7:
@@ -26,7 +27,7 @@ hurd (20130226-1) UNRELEASED; urgency=low
     - Drop the cdbs build dependency.
     - Install BUGS, NEWS, README, and TODO only in hurd.
 
- -- Samuel Thibault <sthibault@debian.org>  Sun, 27 Jan 2013 20:38:39 +0100
+ -- Samuel Thibault <sthibault@debian.org>  Tue, 26 Feb 2013 02:12:55 +0000
 
 hurd (20130105-1) unstable; urgency=low
 
