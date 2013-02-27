@@ -1,3 +1,5 @@
+debian/tmp/bin/timertest
+debian/tmp/bin/fstests
 debian/tmp/lib/*.a lib
 debian/tmp/include/* usr/include
 debian/tmp/lib/*.so lib

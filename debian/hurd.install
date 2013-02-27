@@ -56,8 +56,6 @@ debian/tmp/bin/gcore
 debian/tmp/bin/fakeauth
 debian/tmp/usr/bin/fakeroot-hurd
 debian/tmp/bin/forks
-debian/tmp/bin/timertest
-debian/tmp/bin/fstests
 debian/tmp/bin/remap
 debian/tmp/etc/login
 debian/tmp/etc/login/.bash_login

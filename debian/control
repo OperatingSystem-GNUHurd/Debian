@@ -35,8 +35,9 @@ Section: libdevel
 Architecture: hurd-any
 Depends: ${misc:Depends}, libc0.3-dev (>= 2.13-31~), hurd (= ${binary:Version})
 Provides: libsem-dev
-Replaces: libsem-dev
+Replaces: libsem-dev, hurd (<< 20130226-2~)
 Conflicts: libsem-dev
+Breaks: hurd (<< 20130226-2~)
 Description: GNU Hurd (development files)
  This package includes the header files and the static libraries.
 
