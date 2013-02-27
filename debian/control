@@ -52,7 +52,7 @@ Priority: optional
 Section: doc
 Architecture: all
 Depends: ${misc:Depends}
-Suggests: hurd (>= ${source:Version})
+Suggests: www-browser
 Description: GNU Hurd manual
  This package includes the manual in info and HTML format.
 
