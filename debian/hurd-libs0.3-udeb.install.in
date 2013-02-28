@@ -1,0 +1,1 @@
+debian/tmp/lib/@DEB_HOST_MULTIARCH@/*.so.* lib

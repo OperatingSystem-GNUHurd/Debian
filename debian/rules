@@ -80,7 +80,7 @@ override_dh_installinit:
 	dh_installinit --remaining-packages
 
 override_dh_strip:
-	dh_strip -phurd --dbg-package=hurd-dbg
+	dh_strip -phurd-libs0.3 -phurd --dbg-package=hurd-dbg
 	dh_strip --remaining-packages
 
 override_dh_fixperms:
@@ -88,6 +88,7 @@ override_dh_fixperms:
 	chmod u+s $(patsubst %,$(CURDIR)/debian/hurd%,$(SUID_PROGRAMS))
 
 override_dh_makeshlibs:
+	dh_makeshlibs -phurd-libs0.3 --add-udeb=hurd-libs0.3-udeb
 	dh_makeshlibs -phurd --add-udeb=hurd-udeb
 	dh_makeshlibs --remaining-packages
 
