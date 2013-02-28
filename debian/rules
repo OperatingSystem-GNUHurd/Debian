@@ -71,7 +71,7 @@ override_dh_auto_install:
 	rm -f debian/tmp/lib/*_pic.a
 
 override_dh_install: $(INSTALL_generated)
-	dh_install
+	dh_install --list-missing
 
 override_dh_installinit:
 	dh_installinit -phurd --name=hurd-console
