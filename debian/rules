@@ -24,6 +24,9 @@ SUID_PROGRAMS = /bin/ids /bin/login /bin/ps-hurd /usr/bin/w-hurd
 
 CC=gcc-4.7
 
+INSTALL_in := $(wildcard debian/*.install.in)
+INSTALL_generated := $(patsubst %.in,%,$(INSTALL_in))
+
 %:
 	dh $@ -Bbuild --with autotools_dev
 
@@ -41,6 +44,7 @@ override_dh_auto_clean:
 	rm -f $$(find libdde_linux26 -name \*.d)
 	rm -fr libdde_linux26/build
 	rm -fr libdde_linux26/lib/src/gen_crc32table libdde_linux26/lib/src/crc32table.h libdde_linux26/lib/src/timeconst.h
+	rm -f $(INSTALL_generated)
 
 override_dh_auto_install:
 	dh_auto_install -Bbuild --destdir= -- prefix=$(DEB_DESTDIR) sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var XKB_BASE=$(DEB_DESTDIR)/usr/share/X11/xkb
@@ -66,6 +70,9 @@ override_dh_auto_install:
 	# remove PIC static libraries
 	rm -f debian/tmp/lib/*_pic.a
 
+override_dh_install: $(INSTALL_generated)
+	dh_install
+
 override_dh_installinit:
 	dh_installinit -phurd --name=hurd-console
 	dh_installinit --remaining-packages
@@ -81,4 +88,7 @@ override_dh_fixperms:
 override_dh_makeshlibs:
 	dh_makeshlibs -phurd --add-udeb=hurd-udeb
 	dh_makeshlibs --remaining-packages
+
+debian/%.install: debian/%.install.in
+	cat $^ > $@
 
