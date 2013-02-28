@@ -24,6 +24,8 @@ SUID_PROGRAMS = /bin/ids /bin/login /bin/ps-hurd /usr/bin/w-hurd
 
 CC=gcc-4.7
 
+DEB_HOST_MULTIARCH := $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+
 INSTALL_in := $(wildcard debian/*.install.in)
 INSTALL_generated := $(patsubst %.in,%,$(INSTALL_in))
 
@@ -47,7 +49,7 @@ override_dh_auto_clean:
 	rm -f $(INSTALL_generated)
 
 override_dh_auto_install:
-	dh_auto_install -Bbuild --destdir= -- prefix=$(DEB_DESTDIR) sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var XKB_BASE=$(DEB_DESTDIR)/usr/share/X11/xkb
+	dh_auto_install -Bbuild --destdir= -- prefix=$(DEB_DESTDIR) libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var XKB_BASE=$(DEB_DESTDIR)/usr/share/X11/xkb
 	$(MAKE) -C libdde_linux26 INSTALLDIR=$(CURDIR)/debian/tmp/usr/share/libdde_linux26/build/include install
 
 	# runsystem is managed by update-alternatives
@@ -68,7 +70,7 @@ override_dh_auto_install:
 	mv debian/tmp/sbin/reboot debian/tmp/sbin/reboot-hurd
 
 	# remove PIC static libraries
-	rm -f debian/tmp/lib/*_pic.a
+	rm -f debian/tmp/lib/$(DEB_HOST_MULTIARCH)/*_pic.a
 
 override_dh_install: $(INSTALL_generated)
 	dh_install --list-missing
@@ -90,5 +92,5 @@ override_dh_makeshlibs:
 	dh_makeshlibs --remaining-packages
 
 debian/%.install: debian/%.install.in
-	cat $^ > $@
+	cat $^ | sed -e 's/@DEB_HOST_MULTIARCH@/$(DEB_HOST_MULTIARCH)/g' > $@
 

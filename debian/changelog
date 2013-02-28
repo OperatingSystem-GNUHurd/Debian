@@ -14,6 +14,8 @@ hurd (20130226-2) UNRELEASED; urgency=low
   * Rename hurd{,-dev,-udeb}.install to hurd{,-dev,-udeb}.install.in, and
     generate the .install files at build time.
   * Call dh_install with --list-missing.
+  * Install the hurd libraries in multiarch library directories, but not in
+    the udeb.
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 26 Feb 2013 23:51:12 +0100
 

@@ -2,8 +2,8 @@ debian/local/setup-translators usr/lib/hurd
 debian/local/random-hurd.sh hurd
 debian/local/urandom-hurd.sh hurd
 debian/local/securetty etc
-debian/tmp/lib/*.so.*
-debian/tmp/lib/hurd/console/*.so.* usr/lib/hurd/console
+debian/tmp/lib/@DEB_HOST_MULTIARCH@/*.so.*
+debian/tmp/lib/@DEB_HOST_MULTIARCH@/hurd/console/*.so.* usr/lib/hurd/console
 debian/tmp/hurd/*
 debian/tmp/lib/hurd/rc etc/hurd
 debian/tmp/lib/hurd/getty sbin

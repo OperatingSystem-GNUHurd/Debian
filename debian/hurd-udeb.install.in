@@ -3,10 +3,10 @@ debian/local/setup-translators usr/lib/hurd
 debian/local/partman lib
 debian/local/finish-install.d usr/lib
 debian/local/X11/locale usr/share/X11
-debian/tmp/lib/*.so.*
-debian/tmp/lib/hurd/console/pc_kbd.so.* usr/lib/hurd/console
-debian/tmp/lib/hurd/console/pc_mouse.so.* usr/lib/hurd/console
-debian/tmp/lib/hurd/console/vga.so.* usr/lib/hurd/console
+debian/tmp/lib/@DEB_HOST_MULTIARCH@/*.so.* lib
+debian/tmp/lib/@DEB_HOST_MULTIARCH@/hurd/console/pc_kbd.so.* usr/lib/hurd/console
+debian/tmp/lib/@DEB_HOST_MULTIARCH@/hurd/console/pc_mouse.so.* usr/lib/hurd/console
+debian/tmp/lib/@DEB_HOST_MULTIARCH@/hurd/console/vga.so.* usr/lib/hurd/console
 debian/tmp/lib/hurd/console-run sbin
 debian/tmp/sbin/e2os
 debian/tmp/sbin/MAKEDEV

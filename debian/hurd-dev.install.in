@@ -1,9 +1,9 @@
 debian/tmp/bin/timertest
 debian/tmp/bin/fstests
-debian/tmp/lib/*.a lib
+debian/tmp/lib/@DEB_HOST_MULTIARCH@/*.a lib/@DEB_HOST_MULTIARCH@
 debian/tmp/include/* usr/include
-debian/tmp/lib/*.so lib
-libdde_linux26/lib/src/libdde_*.a usr/lib
+debian/tmp/lib/@DEB_HOST_MULTIARCH@/*.so lib/@DEB_HOST_MULTIARCH@
+libdde_linux26/lib/src/libdde_*.a usr/lib/@DEB_HOST_MULTIARCH@
 libdde_linux26/mk usr/share/libdde_linux26
 libdde_linux26/Makeconf* usr/share/libdde_linux26
 debian/tmp/usr/share/libdde_linux26/build usr/share/libdde_linux26
