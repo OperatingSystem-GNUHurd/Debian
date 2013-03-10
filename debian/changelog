@@ -1,5 +1,8 @@
 hurd (20130226-2) UNRELEASED; urgency=low
 
+  [ Pino Toscano ]
+  * Split the hurd libraries in own hurd-libs0.3{,-udeb} packages.
+
   [ Samuel Thibault ]
   * Bump netdde breaking version, our updated pfinet wants a rebuilt one.
 
@@ -16,7 +19,6 @@ hurd (20130226-2) UNRELEASED; urgency=low
   * Call dh_install with --list-missing.
   * Install the hurd libraries in multiarch library directories, but not in
     the udeb.
-  * Split the hurd libraries in own hurd-libs0.3{,-udeb} packages.
   * Update lintian overrides.
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 26 Feb 2013 23:51:12 +0100
