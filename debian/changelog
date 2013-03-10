@@ -1,4 +1,4 @@
-hurd (20130226-2) UNRELEASED; urgency=low
+hurd (20130226-1+exp1) experimental; urgency=low
 
   [ Pino Toscano ]
   * Split the hurd libraries in own hurd-libs0.3{,-udeb} packages.
