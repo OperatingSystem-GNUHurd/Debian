@@ -1,3 +1,8 @@
+hurd (20130226-3) UNRELEASED; urgency=low
+
+
+ -- GNU Hurd Maintainers <debian-hurd@lists.debian.org>  Sun, 24 Mar 2013 22:47:50 +0100
+
 hurd (20130226-2) unstable; urgency=low
 
   [ Pino Toscano ]
