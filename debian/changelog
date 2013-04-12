@@ -4,6 +4,7 @@ hurd (20130226-3) UNRELEASED; urgency=low
   * Stop installing the upstream ChangeLog, since it is just a pointer to the
     pre-Git ChangeLog files.
   * Install the Debian NEWS file only in the hurd binary.
+  * hurd: pre-depend on hurd-libs0.3. (Closes: #704998)
 
  -- GNU Hurd Maintainers <debian-hurd@lists.debian.org>  Sun, 24 Mar 2013 22:47:50 +0100
 
