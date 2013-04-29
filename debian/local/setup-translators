@@ -148,7 +148,7 @@ else
 	md ttyX 123456
 	md ptyp
 	md ptyq
-	md lprX 0123
+	md lprX 012
 	md comX 0123
 	st random /etc/alternatives/random.sh random
 	st urandom /etc/alternatives/urandom.sh urandom
