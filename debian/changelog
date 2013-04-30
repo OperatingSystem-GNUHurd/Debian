@@ -5,6 +5,7 @@ hurd (20130226-3) UNRELEASED; urgency=low
     pre-Git ChangeLog files.
   * Install the Debian NEWS file only in the hurd binary.
   * hurd: pre-depend on hurd-libs0.3. (Closes: #704998)
+  * control: build-depend on gawk.
 
   [ Samuel Thibault ]
   * Do not create lpr3, it does not exist in standard PC hardware.
