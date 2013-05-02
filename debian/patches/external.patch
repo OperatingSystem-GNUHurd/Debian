@@ -34,10 +34,10 @@ Index: hurd-debian/Makefile
  device_defs_names = dev_forward device device_reply device_request
 
  mach_defs = $(addsuffix .defs,$(mach_defs_names))
-diff --git a/configure.in b/configure.in
+diff --git a/configure.ac b/configure.ac
 index 05b959b..68ec159 100644
---- a/configure.in
-+++ b/configure.in
+--- a/configure.ac
++++ b/configure.ac
 @@ -227,6 +227,12 @@ AC_SUBST(boot_store_types)dnl
  AC_MSG_CHECKING(boot store types)
  AC_MSG_RESULT($boot_store_types)

@@ -1008,10 +1008,10 @@ Index: hurd-debian/libtrivfs/demuxer.c
  	  || ports_notify_server (inp, outp)
  	  || trivfs_fsys_server (inp, outp)
  	  || ports_interrupt_server (inp, outp));
-Index: hurd-debian/configure.in
+Index: hurd-debian/configure.ac
 ===================================================================
---- hurd-debian.orig/configure.in	2012-06-05 05:02:02.000000000 +0000
-+++ hurd-debian/configure.in	2012-06-05 05:06:02.000000000 +0000
+--- hurd-debian.orig/configure.ac	2012-06-05 05:02:02.000000000 +0000
++++ hurd-debian/configure.ac	2012-06-05 05:06:02.000000000 +0000
 @@ -161,7 +161,7 @@
  AC_SUBST(VERSIONING)
  

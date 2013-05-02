@@ -1,4 +1,6 @@
-hurd (20130226-3) UNRELEASED; urgency=low
+hurd (20130501-1) unreleased; urgency=low
+
+  * New upstream release.
 
   [ Pino Toscano ]
   * Stop installing the upstream ChangeLog, since it is just a pointer to the
@@ -9,8 +11,10 @@ hurd (20130226-3) UNRELEASED; urgency=low
 
   [ Samuel Thibault ]
   * Do not create lpr3, it does not exist in standard PC hardware.
+  * patches/exec_filename_fs.patch,exec_filename_use.patch,external.patch:
+    Refresh.
 
- -- GNU Hurd Maintainers <debian-hurd@lists.debian.org>  Sun, 24 Mar 2013 22:47:50 +0100
+ -- Samuel Thibault <sthibault@debian.org>  Sun, 24 Mar 2013 22:47:50 +0100
 
 hurd (20130226-2) unstable; urgency=low
 

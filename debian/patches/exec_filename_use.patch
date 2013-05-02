@@ -15,10 +15,10 @@ _hurd_exec if it's available.
  utils/shd.c      |    9 ++++++---
  4 files changed, 20 insertions(+), 8 deletions(-)
 
-Index: hurd-debian/configure.in
+Index: hurd-debian/configure.ac
 ===================================================================
---- hurd-debian.orig/configure.in	2012-06-05 00:38:18.000000000 +0000
-+++ hurd-debian/configure.in	2012-06-05 00:38:18.000000000 +0000
+--- hurd-debian.orig/configure.ac	2012-06-05 00:38:18.000000000 +0000
++++ hurd-debian/configure.ac	2012-06-05 00:38:18.000000000 +0000
 @@ -160,8 +160,8 @@
  fi
  AC_SUBST(VERSIONING)
