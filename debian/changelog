@@ -1,4 +1,4 @@
-hurd (20130226-3) UNRELEASED; urgency=low
+hurd (20130226-3) unstable; urgency=low
 
   [ Pino Toscano ]
   * Stop installing the upstream ChangeLog, since it is just a pointer to the
@@ -9,8 +9,11 @@ hurd (20130226-3) UNRELEASED; urgency=low
 
   [ Samuel Thibault ]
   * Do not create lpr3, it does not exist in standard PC hardware.
+  * Add doc-fix.patch to fix documentation build.
+  * Add io_select_timeout patch to introduce the RPC definition for libc to
+    build the RPC stubs.
 
- -- GNU Hurd Maintainers <debian-hurd@lists.debian.org>  Sun, 24 Mar 2013 22:47:50 +0100
+ -- Samuel Thibault <sthibault@debian.org>  Wed, 19 Jun 2013 10:56:03 +0000
 
 hurd (20130226-2) unstable; urgency=low
 
