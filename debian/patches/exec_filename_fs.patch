@@ -26,8 +26,8 @@ Change comments and documentation.
 
 Index: hurd-debian/TODO
 ===================================================================
---- hurd-debian.orig/TODO	2012-06-05 05:01:41.000000000 +0000
-+++ hurd-debian/TODO	2012-06-05 05:02:02.000000000 +0000
+--- hurd-debian.orig/TODO	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/TODO	2013-06-19 23:32:37.000000000 +0000
 @@ -136,7 +136,7 @@
  
  ** libtrivfs
@@ -39,9 +39,9 @@ Index: hurd-debian/TODO
  
 Index: hurd-debian/doc/hurd.texi
 ===================================================================
---- hurd-debian.orig/doc/hurd.texi	2012-06-05 05:02:02.000000000 +0000
-+++ hurd-debian/doc/hurd.texi	2012-06-05 05:02:02.000000000 +0000
-@@ -2741,10 +2741,10 @@
+--- hurd-debian.orig/doc/hurd.texi	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/doc/hurd.texi	2013-06-19 23:32:37.000000000 +0000
+@@ -2738,10 +2738,10 @@
  @node Program Execution
  @subsection Program Execution
  
@@ -55,7 +55,7 @@ Index: hurd-debian/doc/hurd.texi
  ports are necessary for setuid execution, and then invoke the standard
  execserver found on @file{/servers/exec}.
  
-@@ -2756,13 +2756,13 @@
+@@ -2753,13 +2753,13 @@
  be returned.  In addition, at least one of the execute bits must be on.  A
  failure of this check should result in @code{EACCES}---not
  @code{ENOEXEC}.  It is not proper for the fileserver ever to respond to
@@ -73,7 +73,7 @@ Index: hurd-debian/doc/hurd.texi
  it is not acceptable to return an error; in such a case the server
  should simply silently fail to implement the setuid/setgid semantics.
  
-@@ -2777,7 +2777,7 @@
+@@ -2774,7 +2774,7 @@
  opened with @code{O_READ}.  Finally, all the information (mutated
  appropriately for setuid/setgid) should be sent to the execserver with
  @code{exec_exec_file_name}.  Whatever error code @code{exec_exec_file_name}
@@ -84,8 +84,8 @@ Index: hurd-debian/doc/hurd.texi
  @subsection File Locking
 Index: hurd-debian/exec/hashexec.c
 ===================================================================
---- hurd-debian.orig/exec/hashexec.c	2012-06-05 05:02:02.000000000 +0000
-+++ hurd-debian/exec/hashexec.c	2012-06-05 05:06:23.000000000 +0000
+--- hurd-debian.orig/exec/hashexec.c	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/exec/hashexec.c	2013-06-19 23:32:37.000000000 +0000
 @@ -24,6 +24,9 @@
  #include <unistd.h>
  #include <envz.h>
@@ -140,8 +140,8 @@ Index: hurd-debian/exec/hashexec.c
    if (! e->error)
 Index: hurd-debian/hurd/fs.defs
 ===================================================================
---- hurd-debian.orig/hurd/fs.defs	2012-06-05 05:01:41.000000000 +0000
-+++ hurd-debian/hurd/fs.defs	2012-06-05 05:02:02.000000000 +0000
+--- hurd-debian.orig/hurd/fs.defs	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/hurd/fs.defs	2013-06-19 23:32:37.000000000 +0000
 @@ -1,5 +1,6 @@
  /* Definitions for the filesystem interface.
 -   Copyright (C) 1994,95,96,97,98,99,2002 Free Software Foundation, Inc.
@@ -173,8 +173,8 @@ Index: hurd-debian/hurd/fs.defs
  	file: file_t;
 Index: hurd-debian/hurd/hurd_types.h
 ===================================================================
---- hurd-debian.orig/hurd/hurd_types.h	2012-06-05 05:01:41.000000000 +0000
-+++ hurd-debian/hurd/hurd_types.h	2012-06-05 05:02:02.000000000 +0000
+--- hurd-debian.orig/hurd/hurd_types.h	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/hurd/hurd_types.h	2013-06-19 23:32:37.000000000 +0000
 @@ -1,5 +1,6 @@
  /* C declarations for Hurd server interfaces
 -   Copyright (C) 1993,94,95,96,98,99,2001,02 Free Software Foundation, Inc.
@@ -183,7 +183,7 @@ Index: hurd-debian/hurd/hurd_types.h
  
  This file is part of the GNU Hurd.
  
-@@ -76,7 +77,7 @@
+@@ -78,7 +79,7 @@
  /* Many such parameters and flags are also defined in various libc
     headers. */
  
@@ -192,7 +192,7 @@ Index: hurd-debian/hurd/hurd_types.h
  #define EXEC_NEWTASK	0x00000001 /* Create new task; kill old one.  */
  #define EXEC_SECURE	0x00000002 /* Use secure values of portarray, etc. */
  #define EXEC_DEFAULTS	0x00000004 /* Use defaults for unspecified ports.  */
-@@ -342,7 +343,7 @@
+@@ -344,7 +345,7 @@
  #define FSTYPE_MEMFS   0x00000019 /* In-core filesystem */
  #define FSTYPE_ISO9660 0x0000001a /* ISO9660 */
  
@@ -201,7 +201,7 @@ Index: hurd-debian/hurd/hurd_types.h
  enum
    {
      INIT_PORT_CWDIR,
-@@ -356,7 +357,7 @@
+@@ -358,7 +359,7 @@
      INIT_PORT_MAX
    };
  
@@ -212,8 +212,8 @@ Index: hurd-debian/hurd/hurd_types.h
      INIT_UMASK,
 Index: hurd-debian/init/init.c
 ===================================================================
---- hurd-debian.orig/init/init.c	2012-06-05 05:02:02.000000000 +0000
-+++ hurd-debian/init/init.c	2012-06-05 05:06:35.000000000 +0000
+--- hurd-debian.orig/init/init.c	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/init/init.c	2013-06-19 23:32:37.000000000 +0000
 @@ -1,7 +1,7 @@
  /* Start and maintain hurd core servers and system run state
  
@@ -338,11 +338,11 @@ Index: hurd-debian/init/init.c
 +
    mach_port_deallocate (mach_task_self (), default_ports[INIT_PORT_PROC]);
    mach_port_deallocate (mach_task_self (), file);
-   free (args);
+   if (err)
 Index: hurd-debian/libdiskfs/boot-start.c
 ===================================================================
---- hurd-debian.orig/libdiskfs/boot-start.c	2012-06-05 05:02:02.000000000 +0000
-+++ hurd-debian/libdiskfs/boot-start.c	2012-06-05 05:02:02.000000000 +0000
+--- hurd-debian.orig/libdiskfs/boot-start.c	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/libdiskfs/boot-start.c	2013-06-19 23:32:37.000000000 +0000
 @@ -207,7 +207,7 @@
        diskfs_exec_ctl = MACH_PORT_NULL;	/* Not used after this.  */
      }
@@ -354,8 +354,8 @@ Index: hurd-debian/libdiskfs/boot-start.c
    if (_diskfs_boot_command)
 Index: hurd-debian/libdiskfs/file-exec.c
 ===================================================================
---- hurd-debian.orig/libdiskfs/file-exec.c	2012-06-05 05:01:41.000000000 +0000
-+++ hurd-debian/libdiskfs/file-exec.c	2012-06-05 05:07:14.000000000 +0000
+--- hurd-debian.orig/libdiskfs/file-exec.c	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/libdiskfs/file-exec.c	2013-06-19 23:32:37.000000000 +0000
 @@ -1,5 +1,6 @@
 -/* File execution (file_exec RPC) for diskfs servers, using exec server.
 -   Copyright (C) 1993,94,95,96,97,98,2000,02 Free Software Foundation, Inc.
@@ -475,8 +475,8 @@ Index: hurd-debian/libdiskfs/file-exec.c
  	    {
 Index: hurd-debian/libfshelp/start-translator-long.c
 ===================================================================
---- hurd-debian.orig/libfshelp/start-translator-long.c	2012-06-05 05:01:41.000000000 +0000
-+++ hurd-debian/libfshelp/start-translator-long.c	2012-06-05 05:07:36.000000000 +0000
+--- hurd-debian.orig/libfshelp/start-translator-long.c	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/libfshelp/start-translator-long.c	2013-06-19 23:32:37.000000000 +0000
 @@ -1,5 +1,6 @@
  /*
 -   Copyright (C) 1995,96,99,2000,02, 04 Free Software Foundation, Inc.
@@ -495,7 +495,7 @@ Index: hurd-debian/libfshelp/start-translator-long.c
  
  
  /* The data passed in the various messages we're interested in.  */
-@@ -264,12 +268,22 @@
+@@ -272,12 +276,22 @@
    saveport = ports[INIT_PORT_BOOTSTRAP];
    ports[INIT_PORT_BOOTSTRAP] = bootstrap;
  
@@ -525,8 +525,8 @@ Index: hurd-debian/libfshelp/start-translator-long.c
    if (ports_type == MACH_MSG_TYPE_COPY_SEND)
 Index: hurd-debian/libnetfs/file-exec.c
 ===================================================================
---- hurd-debian.orig/libnetfs/file-exec.c	2012-06-05 05:01:41.000000000 +0000
-+++ hurd-debian/libnetfs/file-exec.c	2012-06-05 05:07:49.000000000 +0000
+--- hurd-debian.orig/libnetfs/file-exec.c	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/libnetfs/file-exec.c	2013-06-19 23:32:37.000000000 +0000
 @@ -1,5 +1,6 @@
  /*
 -   Copyright (C) 1996,97,2000,01,02 Free Software Foundation, Inc.
@@ -632,8 +632,8 @@ Index: hurd-debian/libnetfs/file-exec.c
  	    }
 Index: hurd-debian/libtrivfs/file-exec.c
 ===================================================================
---- hurd-debian.orig/libtrivfs/file-exec.c	2012-06-05 05:01:41.000000000 +0000
-+++ hurd-debian/libtrivfs/file-exec.c	2012-06-05 05:02:02.000000000 +0000
+--- hurd-debian.orig/libtrivfs/file-exec.c	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/libtrivfs/file-exec.c	2013-06-19 23:32:37.000000000 +0000
 @@ -1,5 +1,5 @@
  /*
 -   Copyright (C) 1994,2002 Free Software Foundation, Inc.
@@ -672,8 +672,8 @@ Index: hurd-debian/libtrivfs/file-exec.c
 +}
 Index: hurd-debian/trans/fakeroot.c
 ===================================================================
---- hurd-debian.orig/trans/fakeroot.c	2012-06-05 05:01:41.000000000 +0000
-+++ hurd-debian/trans/fakeroot.c	2012-06-05 05:08:00.000000000 +0000
+--- hurd-debian.orig/trans/fakeroot.c	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/trans/fakeroot.c	2013-06-19 23:32:37.000000000 +0000
 @@ -1,5 +1,5 @@
  /* fakeroot -- a translator for faking actions that aren't really permitted
 -   Copyright (C) 2002, 2003, 2008 Free Software Foundation, Inc.
@@ -783,8 +783,8 @@ Index: hurd-debian/trans/fakeroot.c
        /* XXX we should intercept interrupt_operation and do
 Index: hurd-debian/utils/login.c
 ===================================================================
---- hurd-debian.orig/utils/login.c	2012-06-05 05:01:41.000000000 +0000
-+++ hurd-debian/utils/login.c	2012-06-05 05:08:09.000000000 +0000
+--- hurd-debian.orig/utils/login.c	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/utils/login.c	2013-06-19 23:32:37.000000000 +0000
 @@ -1,6 +1,7 @@
  /* Hurdish login
  
@@ -836,7 +836,7 @@ Index: hurd-debian/utils/login.c
 Index: hurd-debian/hurd/fs_experimental.defs
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ hurd-debian/hurd/fs_experimental.defs	2012-06-05 05:02:02.000000000 +0000
++++ hurd-debian/hurd/fs_experimental.defs	2013-06-19 23:32:37.000000000 +0000
 @@ -0,0 +1,51 @@
 +/* Definitions for the filesystem interface.
 +   Copyright (C) 1994,95,96,97,98,99,2002 Free Software Foundation, Inc.
@@ -891,8 +891,8 @@ Index: hurd-debian/hurd/fs_experimental.defs
 +	destroynames: mach_port_name_array_t SCP);
 Index: hurd-debian/libdiskfs/Makefile
 ===================================================================
---- hurd-debian.orig/libdiskfs/Makefile	2012-06-05 05:01:41.000000000 +0000
-+++ hurd-debian/libdiskfs/Makefile	2012-06-05 05:02:02.000000000 +0000
+--- hurd-debian.orig/libdiskfs/Makefile	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/libdiskfs/Makefile	2013-06-19 23:32:37.000000000 +0000
 @@ -55,7 +55,7 @@
  SRCS = $(OTHERSRCS) $(FSSRCS) $(IOSRCS) $(FSYSSRCS) $(IFSOCKSRCS)
  installhdrs = diskfs.h diskfs-pager.h
@@ -902,7 +902,7 @@ Index: hurd-debian/libdiskfs/Makefile
  	fsys_replyUser.o fs_notifyUser.o ifsockServer.o \
  	startup_notifyServer.o
  OBJS = $(sort $(SRCS:.c=.o) $(MIGSTUBS))
-@@ -64,6 +64,7 @@
+@@ -65,6 +65,7 @@
  
  fsys-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h -DREPLY_PORTS
  fs-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h
@@ -912,8 +912,8 @@ Index: hurd-debian/libdiskfs/Makefile
  MIGCOMSFLAGS = -prefix diskfs_
 Index: hurd-debian/libdiskfs/demuxer.c
 ===================================================================
---- hurd-debian.orig/libdiskfs/demuxer.c	2012-06-05 05:01:41.000000000 +0000
-+++ hurd-debian/libdiskfs/demuxer.c	2012-06-05 05:02:02.000000000 +0000
+--- hurd-debian.orig/libdiskfs/demuxer.c	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/libdiskfs/demuxer.c	2013-06-19 23:32:37.000000000 +0000
 @@ -22,6 +22,7 @@
  		mach_msg_header_t *outp)
  {
@@ -932,9 +932,9 @@ Index: hurd-debian/libdiskfs/demuxer.c
  	  || diskfs_exec_startup_server (inp, outp)
 Index: hurd-debian/libnetfs/Makefile
 ===================================================================
---- hurd-debian.orig/libnetfs/Makefile	2012-06-05 05:01:41.000000000 +0000
-+++ hurd-debian/libnetfs/Makefile	2012-06-05 05:02:02.000000000 +0000
-@@ -57,12 +57,13 @@
+--- hurd-debian.orig/libnetfs/Makefile	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/libnetfs/Makefile	2013-06-19 23:32:37.000000000 +0000
+@@ -58,12 +58,13 @@
  
  installhdrs=netfs.h
  
@@ -951,8 +951,8 @@ Index: hurd-debian/libnetfs/Makefile
  MIGCOMSFLAGS = -prefix netfs_
 Index: hurd-debian/libnetfs/demuxer.c
 ===================================================================
---- hurd-debian.orig/libnetfs/demuxer.c	2012-06-05 05:01:41.000000000 +0000
-+++ hurd-debian/libnetfs/demuxer.c	2012-06-05 05:02:02.000000000 +0000
+--- hurd-debian.orig/libnetfs/demuxer.c	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/libnetfs/demuxer.c	2013-06-19 23:32:37.000000000 +0000
 @@ -25,12 +25,14 @@
  	       mach_msg_header_t *outp)
  {
@@ -970,8 +970,8 @@ Index: hurd-debian/libnetfs/demuxer.c
            || ports_interrupt_server (inp, outp)
 Index: hurd-debian/libtrivfs/Makefile
 ===================================================================
---- hurd-debian.orig/libtrivfs/Makefile	2012-06-05 05:01:41.000000000 +0000
-+++ hurd-debian/libtrivfs/Makefile	2012-06-05 05:02:02.000000000 +0000
+--- hurd-debian.orig/libtrivfs/Makefile	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/libtrivfs/Makefile	2013-06-19 23:32:37.000000000 +0000
 @@ -43,7 +43,7 @@
  
  SRCS=$(FSSRCS) $(IOSRCS) $(FSYSSRCS) $(OTHERSRCS)
@@ -992,8 +992,8 @@ Index: hurd-debian/libtrivfs/Makefile
  include ../Makeconf
 Index: hurd-debian/libtrivfs/demuxer.c
 ===================================================================
---- hurd-debian.orig/libtrivfs/demuxer.c	2012-06-05 05:01:41.000000000 +0000
-+++ hurd-debian/libtrivfs/demuxer.c	2012-06-05 05:02:02.000000000 +0000
+--- hurd-debian.orig/libtrivfs/demuxer.c	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/libtrivfs/demuxer.c	2013-06-19 23:32:37.000000000 +0000
 @@ -26,11 +26,13 @@
  		mach_msg_header_t *outp)
  {
@@ -1010,9 +1010,9 @@ Index: hurd-debian/libtrivfs/demuxer.c
  	  || ports_interrupt_server (inp, outp));
 Index: hurd-debian/configure.ac
 ===================================================================
---- hurd-debian.orig/configure.ac	2012-06-05 05:02:02.000000000 +0000
-+++ hurd-debian/configure.ac	2012-06-05 05:06:02.000000000 +0000
-@@ -161,7 +161,7 @@
+--- hurd-debian.orig/configure.ac	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/configure.ac	2013-06-19 23:32:37.000000000 +0000
+@@ -162,7 +162,7 @@
  AC_SUBST(VERSIONING)
  
  # Check if libc contains getgrouplist and/or uselocale.
@@ -1023,8 +1023,8 @@ Index: hurd-debian/configure.ac
  # From glibc HEAD, 2007-11-07.
 Index: hurd-debian/libtrivfs/trivfs.h
 ===================================================================
---- hurd-debian.orig/libtrivfs/trivfs.h	2012-06-05 05:01:41.000000000 +0000
-+++ hurd-debian/libtrivfs/trivfs.h	2012-06-05 05:02:02.000000000 +0000
+--- hurd-debian.orig/libtrivfs/trivfs.h	2013-06-19 23:32:37.000000000 +0000
++++ hurd-debian/libtrivfs/trivfs.h	2013-06-19 23:32:37.000000000 +0000
 @@ -293,6 +293,7 @@
  /* These are the MiG-generated headers that declare prototypes
     for the server functions.  */

@@ -41,4 +41,3 @@ libmachdev.patch
 exec_filename_exec.patch
 exec_filename_fs.patch
 exec_filename_use.patch
-doc-fix.patch

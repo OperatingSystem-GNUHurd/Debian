@@ -1,11 +1,12 @@
-hurd (20130501-1) unreleased; urgency=low
+hurd (20130620-1) unstable; urgency=low
 
   * New upstream release.
 
   * patches/exec_filename_fs.patch,exec_filename_use.patch,external.patch:
     Refresh.
+  * io_select_timeout, doc-fix.patch: Remove merged patches.
 
- -- Samuel Thibault <sthibault@debian.org>  Sun, 24 Mar 2013 22:47:50 +0100
+ -- Samuel Thibault <sthibault@debian.org>  Wed, 19 Jun 2013 23:32:07 +0000
 
 hurd (20130226-3) unstable; urgency=low
 
