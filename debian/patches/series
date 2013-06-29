@@ -45,3 +45,6 @@ mount-n.patch
 mount-f.patch
 mount-remount.patch
 mount-loop.patch
+procfs-update.patch
+procfs-default.patch
+procfs-get-options.patch
