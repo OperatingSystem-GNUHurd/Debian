@@ -1,0 +1,20 @@
+mount: Ignore `loop' option
+
+* utils/mount.c (do_mount): Ignore `loop' option.
+---
+ mount.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+diff --git a/utils/mount.c b/utils/mount.c
+index 8b059c2..8af055e 100644
+--- a/utils/mount.c
++++ b/utils/mount.c
+@@ -248,7 +248,8 @@ do_mount (struct fs *fs, int remount)
+       {
+ 	ARGZ (add (&fsopts, &fsopts_len, o));
+       }
+-    else if (strcmp (o, "defaults") != 0)
++    else if (strcmp (o, "defaults") != 0 &&
++	     strcmp (o, "loop") != 0)
+       {
+ 	/* Prepend `--' to the option to make a long option switch,
+ 	   e.g. `--ro' or `--rsize=1024'.  */

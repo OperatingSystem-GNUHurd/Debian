@@ -2,6 +2,7 @@ hurd (20130620-1.1) UNRELEASED; urgency=low
 
   * patches/mount-{f,n,remount}.patch: New patches from Justus Winter to make
     mount more compatible with Linux'.
+  * patches/mount-loop.patch: New patch to ignore loop option.
 
  -- Samuel Thibault <sthibault@debian.org>  Wed, 19 Jun 2013 23:32:07 +0000
 

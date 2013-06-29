@@ -44,3 +44,4 @@ exec_filename_use.patch
 mount-n.patch
 mount-f.patch
 mount-remount.patch
+mount-loop.patch
