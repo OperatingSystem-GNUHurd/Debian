@@ -2,6 +2,14 @@ hurd (20130707-1) UNRELEASED; urgency=low
 
   * New upstream snapshot (Closes: Bug#714733).
 
+  * patches/{mount-{f,n,remount,test-opts,ignore-mounted-all,t-auto},
+    sutils-{types,multiple-none}}.patch: New
+    patches from Justus Winter to make mount more compatible with Linux'.
+  * patches/mount-loop.patch: New patch to ignore loop option.
+  * patches/umount.patch: New patch to add umount tool.
+  * patches/procfs-{update,default,get-options}.patch: New patches from Justus
+    Winter to make procfs behave as sysvinit desires.
+
  -- Samuel Thibault <sthibault@debian.org>  Sun, 07 Jul 2013 22:08:24 +0000
 
 hurd (20130620-1) unstable; urgency=low
