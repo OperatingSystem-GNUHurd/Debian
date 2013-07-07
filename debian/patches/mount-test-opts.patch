@@ -1,0 +1,214 @@
+--test-opts in combination with --all mounts only those filesystems
+with options matching the given set of options.
+
+Note that the semantic of the inverting "no" prefix differs from
+--types: While --types=nonfs,ufs means neither nfs nor ufs,
+--test-opts=nofoo,bar means not foo, but bar.
+
+* utils/match-options.h: New file.
+* utils/match-options.c: Likewise.
+(test_opts): New variable.
+(test_opts_len): Likewise.
+(match_options): New function.
+* utils/mount.c (parse_opt): Handle -O, --test-opts.
+(main): Use match_options as filter.
+---
+ utils/Makefile        |    5 ++--
+ utils/match-options.c |   68 +++++++++++++++++++++++++++++++++++++++++++++++++
+ utils/match-options.h |   33 ++++++++++++++++++++++++
+ utils/mount.c         |   19 ++++++++++++--
+ 4 files changed, 121 insertions(+), 4 deletions(-)
+ create mode 100644 utils/match-options.c
+ create mode 100644 utils/match-options.h
+
+diff --git a/utils/Makefile b/utils/Makefile
+index e3bed0b..6975fb5 100644
+--- a/utils/Makefile
++++ b/utils/Makefile
+@@ -28,7 +28,8 @@ SRCS = shd.c ps.c settrans.c syncfs.c showtrans.c addauth.c rmauth.c \
+ 	uptime.sh psout.c ids.c vmstat.c portinfo.c devprobe.c vminfo.c \
+ 	parse.c frobauth.c frobauth-mod.c setauth.c pids.c nonsugid.c \
+ 	unsu.c ftpcp.c ftpdir.c storeread.c storecat.c msgport.c \
+-	rpctrace.c mount.c gcore.c fakeauth.c fakeroot.sh remap.sh
++	rpctrace.c mount.c gcore.c fakeauth.c fakeroot.sh remap.sh \
++	match-options.c
+ 
+ OBJS = $(filter-out %.sh,$(SRCS:.c=.o))
+ HURDLIBS = ps ihash store fshelp ports ftpconn shouldbeinlibc
+@@ -72,7 +73,7 @@ fakeauth-CPPFLAGS = -I$(srcdir)/../auth
+ authServer-CPPFLAGS = -I$(srcdir)/../auth
+ auth_requestUser-CPPFLAGS = -I$(srcdir)/../auth
+ 
+-mount: ../sutils/fstab.o ../sutils/clookup.o \
++mount: ../sutils/fstab.o ../sutils/clookup.o match-options.o \
+        $(foreach L,fshelp ports,../lib$L/lib$L.a)
+ ../sutils/fstab.o ../sutils/clookup.o: FORCE
+ 	$(MAKE) -C $(@D) $(@F)
+diff --git a/utils/match-options.c b/utils/match-options.c
+new file mode 100644
+index 0000000..11fc9dc
+--- /dev/null
++++ b/utils/match-options.c
+@@ -0,0 +1,68 @@
++/* Common functionality for the --test-opts flag of mount and umount.
++
++   Copyright (C) 2013 Free Software Foundation, Inc.
++   Written by Justus Winter <4winter@informatik.uni-hamburg.de>
++
++   This file is part of the GNU Hurd.
++
++   The GNU Hurd is free software; you can redistribute it and/or
++   modify it under the terms of the GNU General Public License as
++   published by the Free Software Foundation; either version 2, or (at
++   your option) any later version.
++
++   The GNU Hurd is distributed in the hope that it will be useful, but
++   WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this program; if not, write to the Free Software
++   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
++
++#include <argz.h>
++#include <error.h>
++#include <stdlib.h>
++#include <string.h>
++
++#include "match-options.h"
++
++char *test_opts;
++size_t test_opts_len;
++
++int
++match_options (struct mntent *mntent)
++{
++  char *opts;
++  size_t opts_len;
++
++  error_t err = argz_create_sep (mntent->mnt_opts, ',', &opts, &opts_len);
++  if (err)
++    error (3, err, "parsing mount options failed");
++
++  for (char *test = test_opts;
++       test; test = argz_next (test_opts, test_opts_len, test))
++    {
++      char *needle = test;
++      int inverse = strncmp("no", needle, 2) == 0;
++      if (inverse)
++        needle += 2;
++
++      int match = 0;
++      for (char *opt = opts; opt; opt = argz_next (opts, opts_len, opt))
++        {
++          if (strcmp (opt, needle) == 0) {
++            if (inverse)
++              return 0; /* foo in opts, nofoo in test_opts. */
++
++            /* foo in opts, foo in test_opts, record match. */
++            match = 1;
++          }
++        }
++
++      if (! inverse && ! match)
++        return 0; /* No foo in opts, but foo in test_opts. */
++    }
++
++  /* If no conflicting test_opt was encountered, return success. */
++  return 1;
++}
+diff --git a/utils/match-options.h b/utils/match-options.h
+new file mode 100644
+index 0000000..ea7ae70
+--- /dev/null
++++ b/utils/match-options.h
+@@ -0,0 +1,33 @@
++/* Common functionality for the --test-opts flag of mount and umount.
++
++   Copyright (C) 2013 Free Software Foundation, Inc.
++   Written by Justus Winter <4winter@informatik.uni-hamburg.de>
++
++   This file is part of the GNU Hurd.
++
++   The GNU Hurd is free software; you can redistribute it and/or
++   modify it under the terms of the GNU General Public License as
++   published by the Free Software Foundation; either version 2, or (at
++   your option) any later version.
++
++   The GNU Hurd is distributed in the hope that it will be useful, but
++   WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this program; if not, write to the Free Software
++   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
++
++#include <mntent.h>
++
++extern char *test_opts;
++extern size_t test_opts_len;
++
++/* Check whether the given mount entry matches the given set of
++   options.
++
++   Returns 0 if foo is in the options vector but nofoo is in test_opts.
++   Returns 0 if foo is in test_opts but foo is not in the options vector. */
++int
++match_options (struct mntent *mntent);
+diff --git a/utils/mount.c b/utils/mount.c
+index f8928f1..73a7539 100644
+--- a/utils/mount.c
++++ b/utils/mount.c
+@@ -29,6 +29,8 @@
+ #include <hurd/fshelp.h>
+ #include <hurd/paths.h>
+ 
++#include "match-options.h"
++
+ #define SEARCH_FMTS	_HURD "%sfs\0" _HURD "%s"
+ #define DEFAULT_FSTYPE	"ext2"
+ 
+@@ -57,6 +59,8 @@ static const struct argp_option argp_opts[] =
+   {"remount", 0, 0, OPTION_ALIAS},
+   {"verbose", 'v', 0, 0, "Give more detailed information"},
+   {"no-mtab", 'n', 0, 0, "Do not update /etc/mtab"},
++  {"test-opts", 'O', "OPTIONS", 0,
++   "Only mount fstab entries matching the given set of options"},
+   {"fake", 'f', 0, 0, "Do not actually mount, just pretend"},
+   {0, 0}
+ };
+@@ -122,6 +126,12 @@ parse_opt (int key, char *arg, struct argp_state *state)
+       fake = 1;
+       break;
+ 
++    case 'O':
++      err = argz_create_sep (arg, ',', &test_opts, &test_opts_len);
++      if (err)
++	argp_failure (state, 100, ENOMEM, "%s", arg);
++      break;
++
+     case ARGP_KEY_ARG:
+       if (mountpoint == 0)	/* One arg: mountpoint */
+ 	mountpoint = arg;
+@@ -615,8 +625,13 @@ main (int argc, char **argv)
+       case mount:
+ 	for (fs = fstab->entries; fs; fs = fs->next)
+ 	  {
+-	    if (fstab_params.do_all && hasmntopt (&fs->mntent, MNTOPT_NOAUTO))
+-	      continue;
++	    if (fstab_params.do_all) {
++              if (hasmntopt (&fs->mntent, MNTOPT_NOAUTO))
++                continue;
++
++              if (! match_options (&fs->mntent))
++                continue;
++            }
+ 	    err |= do_mount (fs, remount);
+ 	  }
+ 	break;
+-- 
+1.7.10.4
+
+

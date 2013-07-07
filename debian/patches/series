@@ -41,6 +41,8 @@ libmachdev.patch
 exec_filename_exec.patch
 exec_filename_fs.patch
 exec_filename_use.patch
+
+# Justus Winter's work, to be pushed
 mount-n.patch
 mount-f.patch
 mount-remount.patch
@@ -48,3 +50,9 @@ mount-loop.patch
 procfs-update.patch
 procfs-default.patch
 procfs-get-options.patch
+sutils-types.patch
+mount-test-opts.patch
+mount-ignore-mounted-all.patch
+mount-t-auto.patch
+sutils-multiple-none.patch
+umount.patch

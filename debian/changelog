@@ -1,8 +1,10 @@
 hurd (20130620-1.1) UNRELEASED; urgency=low
 
-  * patches/mount-{f,n,remount}.patch: New patches from Justus Winter to make
-    mount more compatible with Linux'.
+  * patches/{mount-{f,n,remount,test-opts,ignore-mounted-all,t-auto},
+    sutils-{types,multiple-none}}.patch: New
+    patches from Justus Winter to make mount more compatible with Linux'.
   * patches/mount-loop.patch: New patch to ignore loop option.
+  * patches/umount.patch: New patch to add umount tool.
   * patches/procfs-{update,default,get-options}.patch: New patches from Justus
     Winter to make procfs behave as sysvinit desires.
 

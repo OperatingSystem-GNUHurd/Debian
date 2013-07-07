@@ -1,0 +1,86 @@
+Use libblkid to detect the filesystem type if "auto" is given as
+type. Remove the translator localization from main, this is also done
+in do_mount and any errors are propagated properly. This way "auto" is
+handled correctly if given on the command line or used as filesystem
+type in the fstab.
+
+* utils/mount.c (DEFAULT_FSTYPE): Use "auto" as default type.
+(do_mount): Detect type using libblkid.
+(main): Drop translator localization.
+---
+ utils/Makefile |    1 +
+ utils/mount.c  |   27 +++++++++++++++++++--------
+ 2 files changed, 20 insertions(+), 8 deletions(-)
+
+diff --git a/utils/Makefile b/utils/Makefile
+index 6975fb5..207c904 100644
+--- a/utils/Makefile
++++ b/utils/Makefile
+@@ -37,6 +37,7 @@ LDLIBS += -lpthread
+ login-LDLIBS = -lutil $(LIBCRYPT)
+ addauth-LDLIBS = $(LIBCRYPT)
+ setauth-LDLIBS = $(LIBCRYPT)
++mount-LDLIBS = -lblkid
+ 
+ INSTALL-login-ops = -o root -m 4755
+ INSTALL-ids-ops = -o root -m 4755
+diff --git a/utils/mount.c b/utils/mount.c
+index 77b2138..5863f96 100644
+--- a/utils/mount.c
++++ b/utils/mount.c
+@@ -28,11 +28,12 @@
+ #include <hurd/fsys.h>
+ #include <hurd/fshelp.h>
+ #include <hurd/paths.h>
++#include <blkid/blkid.h>
+ 
+ #include "match-options.h"
+ 
+ #define SEARCH_FMTS	_HURD "%sfs\0" _HURD "%s"
+-#define DEFAULT_FSTYPE	"ext2"
++#define DEFAULT_FSTYPE	"auto"
+ 
+ static char *fstype = DEFAULT_FSTYPE;
+ static char *device, *mountpoint;
+@@ -338,6 +339,23 @@ do_mount (struct fs *fs, int remount)
+ 	  return EBUSY;
+ 	}
+ 
++      if (strcmp (fs->mntent.mnt_type, "auto") == 0)
++        {
++          char *type =
++            blkid_get_tag_value (NULL, "TYPE", fs->mntent.mnt_fsname);
++          if (! type)
++            {
++              error (0, 0, "failed to detect file system type");
++              return EFTYPE;
++            }
++          else
++            {
++              fs->mntent.mnt_type = strdup (type);
++              if (! fs->mntent.mnt_type)
++                error (3, ENOMEM, "failed to allocate memory");
++            }
++        }
++
+       err = fs_type (fs, &type);
+       if (err)
+ 	{
+@@ -579,13 +597,6 @@ main (int argc, char **argv)
+ 	mnt_opts: 0,
+ 	mnt_freq: 0, mnt_passno: 0
+       };
+-      struct fstype *fst;
+-
+-      err = fstypes_get (fstab->types, fstype, &fst);
+-      if (err)
+-	error (106, err, "cannot initialize type %s", fstype);
+-      if (fst->program == 0)
+-	error (2, 0, "filesystem type %s not recognized", fstype);
+ 
+       err = fstab_add_mntent (fstab, &m, &fs);
+       if (err)
+-- 
+1.7.10.4
+
+
