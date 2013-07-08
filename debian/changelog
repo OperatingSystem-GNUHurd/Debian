@@ -1,4 +1,4 @@
-hurd (20130707-1) UNRELEASED; urgency=low
+hurd (20130707-1) unstable; urgency=low
 
   * New upstream snapshot (Closes: Bug#714733).
 
@@ -10,7 +10,7 @@ hurd (20130707-1) UNRELEASED; urgency=low
   * patches/procfs-{update,default,get-options}.patch: New patches from Justus
     Winter to make procfs behave as sysvinit desires.
 
- -- Samuel Thibault <sthibault@debian.org>  Sun, 07 Jul 2013 22:08:24 +0000
+ -- Samuel Thibault <sthibault@debian.org>  Sun, 07 Jul 2013 22:25:25 +0000
 
 hurd (20130620-1) unstable; urgency=low
 
