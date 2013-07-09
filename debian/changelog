@@ -1,5 +1,7 @@
 hurd (20130707-2) UNRELEASED; urgency=low
 
+  [ Justus Winter ]
+  * Include the umount utility in hurd and hurd-udeb.
 
  -- GNU Hurd Maintainers <debian-hurd@lists.debian.org>  Tue, 09 Jul 2013 10:56:23 +0200
 
