@@ -1,3 +1,5 @@
+level 2 requires getting fed with entropy, which we don't have enough for now.
+
 diff --git a/random/random.c b/random/random.c
 index 0ae31f5..c732356 100644
 --- a/random/random.c
