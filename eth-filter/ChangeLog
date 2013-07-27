@@ -1,0 +1,127 @@
+2009-04-18  Zheng Da  <zhengda1936@gmail.com>
+
+	* filter.c (trivfs_allow_open): Change its value.
+	(ds_device_open): Change the mode for file_name_lookup().
+
+2009-01-02  Zheng Da  <zhengda1936@gmail.com>
+
+	* filter.c (ds_device_write): Deallocate the out-of-line data.
+
+2008-10-03  Zheng Da  <zhengda1936@gmail.com>
+
+	* Makefile: Remove the include paths from pfinet.
+
+	* util.h: Remove the line of including linux/if_ether.h
+	(ETH_ALEN): New macro.
+	(ethhdr): New structure.
+
+2008-09-26  Zheng Da  <zhengda1936@gmail.com>
+
+	* filter.c (ethernet_demuxer): Save and restore the message header.
+	(deliver_msg): Use the non-block send.
+
+2008-08-22 Zheng Da <zhengda1936@gmail.com>
+
+	* README: Update.
+
+	* filter.c (proxy_info): Removed.
+	(proxy_pfinetpi_ht): Removed.
+	(proxy_devicepi_ht): Removed.
+	(create_proxy): Removed.
+	(destroy_proxy): Removed.
+	(proxy_device): New structure.
+	(proxy_user): New structure.
+	(proxy): New structure.
+	(create_proxy_user): New function.
+	(create_proxy_device): New function.
+	(clean_proxy_user): New function.
+	(clean_proxy_device): New function.
+	(ethernet_demuxer): Get the data from proxy object instead of from
+	proxy_info.
+	(do_mach_notify_dead_name): Likewise.
+	(ds_device_write): Likewise.
+	(ds_device_write_inband): Likewise.
+	(ds_device_read): Likewise.
+	(ds_device_read_inband): Likewise.
+	(ds_device_map): Likewise.
+	(ds_device_set_status): Likewise.
+	(ds_device_get_status): Likewise.
+	(ds_device_set_filter): Likewise. Create the proxy_device object.
+	(do_mach_notify_no_senders): Use ports_do_mach_notify_no_senders().
+	(ds_device_open): Create proxy_user and proxy objects.
+	(main): Add the cleaning routine when creating the port class.
+
+2008-08-20 Zheng Da <zhengda1936@gmail.com>
+
+	* README: Update.
+
+	* filter.c (options): Update.
+
+2008-08-20 Zheng Da <zhengda1936@gmail.com>
+
+	* filter.c (destroy_proxy): Test p_deliverport_hashloc before removing
+	it from proxy_deliverport_ht, and reverse the order of calling
+	ports_destroy_right and ports_port_deref.
+	(ds_device_open): Test device_file and replace "eth" with the variable
+	name.
+
+2008-08-20 Zheng Da <zhengda1936@gmail.com>
+
+	* filter.c (device_file): Change the name of a variable.
+	(ds_device_open): Use device_file directly.
+
+2008-08-19 Zheng Da <zhengda1936@gmail.com>
+
+	* filter.c (ds_device_open): Generate the device file name, and use it
+	to open the device.
+
+2008-08-18 Zheng Da <zhengda1936@gmail.com>
+
+	* README: New file.
+
+
+2008-08-17 Zheng Da <zhengda1936@gmail.com>
+
+	* filter.c (device_name): Remove its default value.
+	(options): Remove the option '-M'.
+	(create_proxy): Get the port directly from port_right field in port_info.
+	(ds_device_open): Remove the code of checking the device name, 
+	and open the device from the device file.
+	(parse_opt): Remove the code of handling the option '-M'.
+	(main): Remove the code of getting the master device port.
+	
+
+2008-08-14 Zheng Da <zhengda1936@gmail.com>
+
+	* filter.c (pfinet_portclass, device_portclass, other_portclass): 
+	New variables.
+	(create_proxy): Use pfinet_portclass and device_portclass to create the
+	port.
+	(destroy_proxy): Dereference the port before destroying it.
+	(trivfs_goaway): Test the number of ports in pfinet_portclass and destroy
+	the master_device.
+	(main): Create pfinet_portclass, device_portclass, other_portclass.
+	(print_msg): Deleted.
+	(deliver_msg): Remove debuging print.
+
+	* ChangeLog: New file.
+	
+
+2008-08-13 Zheng Da <zhengda1936@gmail.com>
+
+	* bpf_impl.c: New file.
+
+	* Makefile: New file.
+
+	* queue.c: New file.
+
+	* util.h: New file.
+
+	* bpf_impl.h: New file.
+
+	* filter.c: New file.
+
+	* pcap_filter.c: New file.
+
+	* queue.h: New file.
+
