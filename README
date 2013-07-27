@@ -10,6 +10,9 @@ $ git push dde:upstream-dde-debian
 $ git tag -a upstream/dde/<date>
 $ git checkout dde-clean
 $ git pull . dde
+$ git checkout eth
+$ git pull . dde-upstream
+$ git tag -a upstream/eth/<date>
 $ git checkout random
 $ git pull upstream-random
 $ git tag -a upstream/random/<date>
@@ -28,6 +31,7 @@ $ git tag -a upstream/hurd/<date>
 $ git checkout upstream-merged
 $ git pull . upstream
 $ git pull . dde-clean
+$ git pull . eth
 $ git pull . random
 $ git pull . procfs-jkoenig-moved
 $ autoreconf -fi
