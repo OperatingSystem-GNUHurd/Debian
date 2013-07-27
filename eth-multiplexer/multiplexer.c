@@ -86,8 +86,8 @@ multiplexer_demuxer (mach_msg_header_t *inp,
 	   || ethernet_demuxer (inp, outp));
 }
 
-static any_t
-multiplexer_thread (any_t arg)
+static void *
+multiplexer_thread (void *arg)
 {
   ports_manage_port_operations_one_thread (port_bucket,
 					   multiplexer_demuxer,
@@ -120,6 +120,7 @@ main (int argc, char *argv[])
   mach_port_t bootstrap;
   mach_port_t master_device;
   const struct argp argp = { options, parse_opt, 0, doc };
+  pthread_t t;
 
   port_bucket = ports_create_bucket ();
   other_portclass = ports_create_class (0, 0);
@@ -149,7 +150,8 @@ main (int argc, char *argv[])
     error (1, 0, "must be started as a translator");
 
   /* Run the multiplexer server in another thread. */
-  cthread_detach (cthread_fork (multiplexer_thread, 0));
+  pthread_create (&t, NULL, multiplexer_thread, NULL);
+  pthread_detach (t);
 
   err = maptime_map (0, 0, &multiplexer_maptime);
   if (err)

@@ -813,7 +813,8 @@ main (int argc, char *argv[])
 
   pthread_create (&send_thread, NULL, send_thread_func, NULL);
   /* TODO if the main thread exits,
-   * does the created thread exit */
+   * does the created thread exit if pthread_detach is called */
+  pthread_detach (send_thread);
 
   /* Launch.  */
   do 
