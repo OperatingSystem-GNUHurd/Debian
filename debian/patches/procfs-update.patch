@@ -14,7 +14,7 @@ diff --git a/procfs/main.c b/procfs/main.c
 index 1b19c01..ba74e87 100644
 --- a/procfs/main.c
 +++ b/procfs/main.c
-@@ -109,45 +109,82 @@ argp_parser (int key, char *arg, struct argp_state *state)
+@@ -109,51 +109,88 @@ argp_parser (int key, char *arg, struct argp_state *state)
    return 0;
  }
  
@@ -44,6 +44,12 @@ index 1b19c01..ba74e87 100644
 +      "Be aware that USER will be granted access to the environment and "
 +      "other sensitive information about the processes in question.  "
 +      "(default: use uid 0)" },
++  { "nodev", NODEV_KEY, NULL, 0,
++      "Ignored for compatibility with Linux' procfs." },
++  { "noexec", NOEXEC_KEY, NULL, 0,
++      "Ignored for compatibility with Linux' procfs." },
++  { "nosuid", NOSUID_KEY, NULL, 0,
++      "Ignored for compatibility with Linux' procfs." },
 +  {}
 +};
 +
@@ -74,6 +80,12 @@ index 1b19c01..ba74e87 100644
 -	"Be aware that USER will be granted access to the environment and "
 -	"other sensitive information about the processes in question.  "
 -	"(default: use uid 0)" },
+-    { "nodev", NODEV_KEY, NULL, 0,
+-	"Ignored for compatibility with Linux' procfs." },
+-    { "noexec", NOEXEC_KEY, NULL, 0,
+-	"Ignored for compatibility with Linux' procfs." },
+-    { "nosuid", NOSUID_KEY, NULL, 0,
+-	"Ignored for compatibility with Linux' procfs." },
 +  .options = common_options,
 +  .parser = argp_parser,
 +  .doc = "A virtual filesystem emulating the Linux procfs.",
