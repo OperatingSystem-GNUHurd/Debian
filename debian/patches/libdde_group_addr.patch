@@ -26,10 +26,10 @@ Date:   Wed Jun 17 01:12:19 2009 +0000
      9 files changed, 89 insertions(+), 90 deletions(-)
     Signed-off-by: David S. Miller <davem@davemloft.net>
 
-Index: hurd-debian/libdde_linux26/contrib/include/linux/netdevice.h
+Index: hurd-debian/libdde-linux26/contrib/include/linux/netdevice.h
 ===================================================================
---- hurd-debian.orig/libdde_linux26/contrib/include/linux/netdevice.h	2012-04-16 00:34:46.000000000 +0000
-+++ hurd-debian/libdde_linux26/contrib/include/linux/netdevice.h	2012-04-16 00:34:51.000000000 +0000
+--- hurd-debian.orig/libdde-linux26/contrib/include/linux/netdevice.h	2012-04-16 00:34:46.000000000 +0000
++++ hurd-debian/libdde-linux26/contrib/include/linux/netdevice.h	2012-04-16 00:34:51.000000000 +0000
 @@ -224,6 +224,11 @@
  	struct rcu_head		rcu_head;
  };
@@ -78,10 +78,10 @@ Index: hurd-debian/libdde_linux26/contrib/include/linux/netdevice.h
  
  /* These functions live elsewhere (drivers/net/net_init.c, but related) */
  
-Index: hurd-debian/libdde_linux26/lib/src/net/core/dev.c
+Index: hurd-debian/libdde-linux26/lib/src/net/core/dev.c
 ===================================================================
---- hurd-debian.orig/libdde_linux26/lib/src/net/core/dev.c	2012-04-16 00:34:49.000000000 +0000
-+++ hurd-debian/libdde_linux26/lib/src/net/core/dev.c	2012-04-16 00:34:51.000000000 +0000
+--- hurd-debian.orig/libdde-linux26/lib/src/net/core/dev.c	2012-04-16 00:34:49.000000000 +0000
++++ hurd-debian/libdde-linux26/lib/src/net/core/dev.c	2012-04-16 00:34:51.000000000 +0000
 @@ -3377,10 +3377,10 @@
  		/* Unicast addresses changes may only happen under the rtnl,
  		 * therefore calling __dev_set_promiscuity here is safe.

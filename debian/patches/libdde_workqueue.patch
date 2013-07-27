@@ -1,7 +1,7 @@
-diff --git a/libdde_linux26/contrib/include/linux/workqueue.h b/libdde_linux26/contrib/include/linux/workqueue.h
+diff --git a/libdde-linux26/contrib/include/linux/workqueue.h b/libdde-linux26/contrib/include/linux/workqueue.h
 index 3cd51e5..cf24c20 100644
---- a/libdde_linux26/contrib/include/linux/workqueue.h
-+++ b/libdde_linux26/contrib/include/linux/workqueue.h
+--- a/libdde-linux26/contrib/include/linux/workqueue.h
++++ b/libdde-linux26/contrib/include/linux/workqueue.h
 @@ -41,6 +41,11 @@ struct delayed_work {
  	struct timer_list timer;
  };

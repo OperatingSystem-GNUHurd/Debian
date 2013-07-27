@@ -1,7 +1,10 @@
 hurd (20130727-1) UNRELEASED; urgency=low
 
   [ Samuel Thibault ]
-  * New upstream snapshot.  Adds firewalling support.
+  * New upstream snapshot.
+    - Adds firewalling support.
+    - Move to multiple orig tarballs.
+    - Rename libdde_linux26 into libdde-linux26
 
   [ Justus Winter ]
   * Include the umount utility in hurd and hurd-udeb.

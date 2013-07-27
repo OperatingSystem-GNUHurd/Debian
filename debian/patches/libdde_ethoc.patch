@@ -1,5 +1,5 @@
 --- /dev/null	2011-08-03 18:03:30.000000000 +0000
-+++ b/libdde_linux26/contrib/include/net/ethoc.h	2012-04-15 22:19:57.000000000 +0000
++++ b/libdde-linux26/contrib/include/net/ethoc.h	2012-04-15 22:19:57.000000000 +0000
 @@ -0,0 +1,22 @@
 +/*
 + * linux/include/net/ethoc.h

@@ -25,10 +25,10 @@ Date:   Thu Jul 30 15:33:21 2009 -0700
     Signed-off-by: Richard Lary <rlary@us.ibm.com>
     Signed-off-by: Jesse Barnes <jbarnes@virtuousgeek.org>
 
-Index: hurd-debian/libdde_linux26/contrib/include/linux/pci.h
+Index: hurd-debian/libdde-linux26/contrib/include/linux/pci.h
 ===================================================================
---- hurd-debian.orig/libdde_linux26/contrib/include/linux/pci.h	2012-04-16 00:26:44.000000000 +0000
-+++ hurd-debian/libdde_linux26/contrib/include/linux/pci.h	2012-04-16 00:34:37.000000000 +0000
+--- hurd-debian.orig/libdde-linux26/contrib/include/linux/pci.h	2012-04-16 00:26:44.000000000 +0000
++++ hurd-debian/libdde-linux26/contrib/include/linux/pci.h	2012-04-16 00:34:37.000000000 +0000
 @@ -256,6 +256,7 @@
  	unsigned int	ari_enabled:1;	/* ARI forwarding */
  	unsigned int	is_managed:1;

@@ -13,8 +13,8 @@ Date:   Mon Aug 31 19:50:40 2009 +0000
 
 diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
 index 60d3aac..376a2e1 100644
---- a/libdde_linux26/contrib/include/linux/netdevice.h
-+++ b/libdde_linux26/contrib/include/linux/netdevice.h
+--- a/libdde-linux26/contrib/include/linux/netdevice.h
++++ b/libdde-linux26/contrib/include/linux/netdevice.h
 @@ -79,17 +79,19 @@ struct wireless_dev;
  #define net_xmit_eval(e)	((e) == NET_XMIT_CN? 0 : (e))
  #define net_xmit_errno(e)	((e) != NET_XMIT_CN ? -ENOBUFS : 0)

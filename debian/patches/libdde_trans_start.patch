@@ -23,10 +23,10 @@ Date:   Sun May 17 20:55:16 2009 -0700
     Signed-off-by: Eric Dumazet <dada1@cosmosbay.com>
     Signed-off-by: David S. Miller <davem@davemloft.net>
 
-Index: hurd-debian/libdde_linux26/contrib/include/linux/netdevice.h
+Index: hurd-debian/libdde-linux26/contrib/include/linux/netdevice.h
 ===================================================================
---- hurd-debian.orig/libdde_linux26/contrib/include/linux/netdevice.h	2012-04-16 00:34:54.000000000 +0000
-+++ hurd-debian/libdde_linux26/contrib/include/linux/netdevice.h	2012-04-16 00:35:04.000000000 +0000
+--- hurd-debian.orig/libdde-linux26/contrib/include/linux/netdevice.h	2012-04-16 00:34:54.000000000 +0000
++++ hurd-debian/libdde-linux26/contrib/include/linux/netdevice.h	2012-04-16 00:35:04.000000000 +0000
 @@ -462,6 +462,10 @@
  	spinlock_t		_xmit_lock;
  	int			xmit_lock_owner;
@@ -59,10 +59,10 @@ Index: hurd-debian/libdde_linux26/contrib/include/linux/netdevice.h
  extern void __netdev_watchdog_up(struct net_device *dev);
  
  extern void netif_carrier_on(struct net_device *dev);
-Index: hurd-debian/libdde_linux26/lib/src/net/sched/sch_generic.c
+Index: hurd-debian/libdde-linux26/lib/src/net/sched/sch_generic.c
 ===================================================================
---- hurd-debian.orig/libdde_linux26/lib/src/net/sched/sch_generic.c	2012-04-16 00:26:38.000000000 +0000
-+++ hurd-debian/libdde_linux26/lib/src/net/sched/sch_generic.c	2012-04-16 00:35:04.000000000 +0000
+--- hurd-debian.orig/libdde-linux26/lib/src/net/sched/sch_generic.c	2012-04-16 00:26:38.000000000 +0000
++++ hurd-debian/libdde-linux26/lib/src/net/sched/sch_generic.c	2012-04-16 00:35:04.000000000 +0000
 @@ -200,6 +200,21 @@
  	clear_bit(__QDISC_STATE_RUNNING, &q->state);
  }

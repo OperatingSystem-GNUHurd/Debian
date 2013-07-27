@@ -1,7 +1,7 @@
-diff --git a/libdde_linux26/contrib/include/linux/netdevice.h b/libdde_linux26/contrib/include/linux/netdevice.h
+diff --git a/libdde-linux26/contrib/include/linux/netdevice.h b/libdde-linux26/contrib/include/linux/netdevice.h
 index 6593667..bb4fca1 100644
---- a/libdde_linux26/contrib/include/linux/netdevice.h
-+++ b/libdde_linux26/contrib/include/linux/netdevice.h
+--- a/libdde-linux26/contrib/include/linux/netdevice.h
++++ b/libdde-linux26/contrib/include/linux/netdevice.h
 @@ -37,6 +37,7 @@
  #include <asm/byteorder.h>
  

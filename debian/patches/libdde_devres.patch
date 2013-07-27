@@ -1,5 +1,5 @@
 --- /dev/null	2011-08-03 18:03:30.000000000 +0000
-+++ b/libdde_linux26/contrib/lib/devres.c	2012-04-15 23:14:01.000000000 +0000
++++ b/libdde-linux26/contrib/lib/devres.c	2012-04-15 23:14:01.000000000 +0000
 @@ -0,0 +1,351 @@
 +#include <linux/pci.h>
 +#include <linux/io.h>
@@ -352,11 +352,11 @@
 +EXPORT_SYMBOL(pcim_iounmap_regions);
 +#endif
 +#endif
-diff --git a/libdde_linux26/lib/src/Makefile b/libdde_linux26/lib/src/Makefile
+diff --git a/libdde-linux26/lib/src/Makefile b/libdde-linux26/lib/src/Makefile
 index 358196b..f7a64da 100644
---- a/libdde_linux26/lib/src/Makefile
-+++ b/libdde_linux26/lib/src/Makefile
-@@ -103,6 +103,7 @@ SRC_C_libdde_linux26.o.a += \
+--- a/libdde-linux26/lib/src/Makefile
++++ b/libdde-linux26/lib/src/Makefile
+@@ -103,6 +103,7 @@ SRC_C_libdde-linux26.o.a += \
  				lib/crc32.c \
  				lib/ctype.c \
  				lib/cpumask.c \

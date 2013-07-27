@@ -1,5 +1,5 @@
 --- /dev/null	2011-08-03 18:03:30.000000000 +0000
-+++ b/libdde_linux26/contrib/include/linux/mdio.h	2012-04-15 22:16:31.000000000 +0000
++++ b/libdde-linux26/contrib/include/linux/mdio.h	2012-04-15 22:16:31.000000000 +0000
 @@ -0,0 +1,356 @@
 +/*
 + * linux/mdio.h: definitions for MDIO (clause 45) transceivers

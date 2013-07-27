@@ -4,7 +4,7 @@ on Tue,  4 Aug 1998 21:52:45 +0200
 It is currently maintained by the Debian GNU Hurd maintainers, who can be
 reached via <debian-hurd@lists.debian.org>.
 
-libdde_linux26/ is from http://svn.tudos.org/repos/tudos/trunk/l4/pkg/dde/linux26
+libdde-linux26/ is from http://svn.tudos.org/repos/tudos/trunk/l4/pkg/dde/linux26
 and is a modified copy of the Linux kernel.
 
 Copyright:

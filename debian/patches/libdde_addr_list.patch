@@ -39,10 +39,10 @@ Date:   Tue May 5 02:48:28 2009 +0000
     Signed-off-by: Jiri Pirko <jpirko@redhat.com>
     Signed-off-by: David S. Miller <davem@davemloft.net>
 
-Index: hurd-debian/libdde_linux26/contrib/include/linux/etherdevice.h
+Index: hurd-debian/libdde-linux26/contrib/include/linux/etherdevice.h
 ===================================================================
---- hurd-debian.orig/libdde_linux26/contrib/include/linux/etherdevice.h	2012-04-16 00:26:43.000000000 +0000
-+++ hurd-debian/libdde_linux26/contrib/include/linux/etherdevice.h	2012-04-16 00:34:43.000000000 +0000
+--- hurd-debian.orig/libdde-linux26/contrib/include/linux/etherdevice.h	2012-04-16 00:26:43.000000000 +0000
++++ hurd-debian/libdde-linux26/contrib/include/linux/etherdevice.h	2012-04-16 00:34:43.000000000 +0000
 @@ -182,6 +182,33 @@
  	return compare_ether_addr(addr1, addr2);
  #endif
@@ -77,10 +77,10 @@ Index: hurd-debian/libdde_linux26/contrib/include/linux/etherdevice.h
  #endif	/* __KERNEL__ */
  
  #endif	/* _LINUX_ETHERDEVICE_H */
-Index: hurd-debian/libdde_linux26/contrib/include/linux/netdevice.h
+Index: hurd-debian/libdde-linux26/contrib/include/linux/netdevice.h
 ===================================================================
---- hurd-debian.orig/libdde_linux26/contrib/include/linux/netdevice.h	2012-04-16 00:33:34.000000000 +0000
-+++ hurd-debian/libdde_linux26/contrib/include/linux/netdevice.h	2012-04-16 00:34:43.000000000 +0000
+--- hurd-debian.orig/libdde-linux26/contrib/include/linux/netdevice.h	2012-04-16 00:33:34.000000000 +0000
++++ hurd-debian/libdde-linux26/contrib/include/linux/netdevice.h	2012-04-16 00:34:43.000000000 +0000
 @@ -211,6 +211,16 @@
  #define dmi_users	da_users
  #define dmi_gusers	da_gusers
@@ -146,10 +146,10 @@ Index: hurd-debian/libdde_linux26/contrib/include/linux/netdevice.h
  /* Functions used for secondary unicast and multicast support */
  extern void		dev_set_rx_mode(struct net_device *dev);
  extern void		__dev_set_rx_mode(struct net_device *dev);
-Index: hurd-debian/libdde_linux26/lib/src/net/core/dev.c
+Index: hurd-debian/libdde-linux26/lib/src/net/core/dev.c
 ===================================================================
---- hurd-debian.orig/libdde_linux26/lib/src/net/core/dev.c	2012-04-16 00:26:43.000000000 +0000
-+++ hurd-debian/libdde_linux26/lib/src/net/core/dev.c	2012-04-16 00:34:43.000000000 +0000
+--- hurd-debian.orig/libdde-linux26/lib/src/net/core/dev.c	2012-04-16 00:26:43.000000000 +0000
++++ hurd-debian/libdde-linux26/lib/src/net/core/dev.c	2012-04-16 00:34:43.000000000 +0000
 @@ -3397,6 +3397,252 @@
  	netif_addr_unlock_bh(dev);
  }

@@ -1,5 +1,5 @@
---- a/libdde_linux26/contrib/include/linux/pci_ids.h	2012-04-15 20:31:32.000000000 +0000
-+++ b/libdde_linux26/contrib/include/linux/pci_ids.h	2012-03-17 10:14:52.000000000 +0000
+--- a/libdde-linux26/contrib/include/linux/pci_ids.h	2012-04-15 20:31:32.000000000 +0000
++++ b/libdde-linux26/contrib/include/linux/pci_ids.h	2012-03-17 10:14:52.000000000 +0000
 @@ -2,6 +2,9 @@
   *	PCI Class, Vendor and Device IDs
   *

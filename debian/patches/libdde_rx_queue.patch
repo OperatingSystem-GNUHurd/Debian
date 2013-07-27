@@ -16,10 +16,10 @@ Date:   Tue Jan 27 16:22:11 2009 -0800
     
     Signed-off-by: David S. Miller <davem@davemloft.net>
 
-Index: hurd-debian/libdde_linux26/contrib/include/linux/skbuff.h
+Index: hurd-debian/libdde-linux26/contrib/include/linux/skbuff.h
 ===================================================================
---- hurd-debian.orig/libdde_linux26/contrib/include/linux/skbuff.h	2012-04-16 00:34:56.000000000 +0000
-+++ hurd-debian/libdde_linux26/contrib/include/linux/skbuff.h	2012-04-16 00:35:11.000000000 +0000
+--- hurd-debian.orig/libdde-linux26/contrib/include/linux/skbuff.h	2012-04-16 00:34:56.000000000 +0000
++++ hurd-debian/libdde-linux26/contrib/include/linux/skbuff.h	2012-04-16 00:35:11.000000000 +0000
 @@ -1903,6 +1903,21 @@
  	to->queue_mapping = from->queue_mapping;
  }
@@ -42,10 +42,10 @@ Index: hurd-debian/libdde_linux26/contrib/include/linux/skbuff.h
  #ifdef CONFIG_XFRM
  static inline struct sec_path *skb_sec_path(struct sk_buff *skb)
  {
-Index: hurd-debian/libdde_linux26/lib/src/net/core/dev.c
+Index: hurd-debian/libdde-linux26/lib/src/net/core/dev.c
 ===================================================================
---- hurd-debian.orig/libdde_linux26/lib/src/net/core/dev.c	2012-04-16 00:34:51.000000000 +0000
-+++ hurd-debian/libdde_linux26/lib/src/net/core/dev.c	2012-04-16 00:35:11.000000000 +0000
+--- hurd-debian.orig/libdde-linux26/lib/src/net/core/dev.c	2012-04-16 00:34:51.000000000 +0000
++++ hurd-debian/libdde-linux26/lib/src/net/core/dev.c	2012-04-16 00:35:11.000000000 +0000
 @@ -1731,6 +1731,13 @@
  		simple_tx_hashrnd_initialized = 1;
  	}

@@ -38,19 +38,19 @@ override_dh_auto_configure:
 override_dh_auto_build:
 	dh_auto_build -Bbuild
 	cd build/doc && texi2html -split chapter ../../doc/hurd.texi
-	$(MAKE) -C libdde_linux26 BUILDDIR=$(CURDIR)/build
+	$(MAKE) -C libdde-linux26 BUILDDIR=$(CURDIR)/build
 
 override_dh_auto_clean:
 	dh_auto_clean
-	$(MAKE) -C libdde_linux26 cleanall
-	rm -f $$(find libdde_linux26 -name \*.d)
-	rm -fr libdde_linux26/build
-	rm -fr libdde_linux26/lib/src/gen_crc32table libdde_linux26/lib/src/crc32table.h libdde_linux26/lib/src/timeconst.h
+	$(MAKE) -C libdde-linux26 cleanall
+	rm -f $$(find libdde-linux26 -name \*.d)
+	rm -fr libdde-linux26/build
+	rm -fr libdde-linux26/lib/src/gen_crc32table libdde-linux26/lib/src/crc32table.h libdde-linux26/lib/src/timeconst.h
 	rm -f $(INSTALL_generated)
 
 override_dh_auto_install:
 	dh_auto_install -Bbuild --destdir= -- prefix=$(DEB_DESTDIR) libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var XKB_BASE=$(DEB_DESTDIR)/usr/share/X11/xkb
-	$(MAKE) -C libdde_linux26 INSTALLDIR=$(CURDIR)/debian/tmp/usr/share/libdde_linux26/build/include install
+	$(MAKE) -C libdde-linux26 INSTALLDIR=$(CURDIR)/debian/tmp/usr/share/libdde-linux26/build/include install
 
 	# runsystem is managed by update-alternatives
 	mv debian/tmp/lib/hurd/runsystem debian/tmp/lib/hurd/runsystem.gnu

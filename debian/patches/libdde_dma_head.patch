@@ -18,10 +18,10 @@ Date:   Fri Jun 5 04:04:16 2009 +0000
     Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
     Signed-off-by: David S. Miller <davem@davemloft.net>
 
-Index: hurd-debian/libdde_linux26/contrib/include/linux/skbuff.h
+Index: hurd-debian/libdde-linux26/contrib/include/linux/skbuff.h
 ===================================================================
---- hurd-debian.orig/libdde_linux26/contrib/include/linux/skbuff.h	2012-04-16 00:26:40.000000000 +0000
-+++ hurd-debian/libdde_linux26/contrib/include/linux/skbuff.h	2012-04-16 00:34:56.000000000 +0000
+--- hurd-debian.orig/libdde-linux26/contrib/include/linux/skbuff.h	2012-04-16 00:26:40.000000000 +0000
++++ hurd-debian/libdde-linux26/contrib/include/linux/skbuff.h	2012-04-16 00:34:56.000000000 +0000
 @@ -142,6 +142,9 @@
  	atomic_t	dataref;
  	unsigned short	nr_frags;
@@ -41,10 +41,10 @@ Index: hurd-debian/libdde_linux26/contrib/include/linux/skbuff.h
  #endif
  };
  
-Index: hurd-debian/libdde_linux26/contrib/net/core/skb_dma_map.c
+Index: hurd-debian/libdde-linux26/contrib/net/core/skb_dma_map.c
 ===================================================================
---- hurd-debian.orig/libdde_linux26/contrib/net/core/skb_dma_map.c	2012-04-16 00:26:40.000000000 +0000
-+++ hurd-debian/libdde_linux26/contrib/net/core/skb_dma_map.c	2012-04-16 00:34:56.000000000 +0000
+--- hurd-debian.orig/libdde-linux26/contrib/net/core/skb_dma_map.c	2012-04-16 00:26:40.000000000 +0000
++++ hurd-debian/libdde-linux26/contrib/net/core/skb_dma_map.c	2012-04-16 00:34:56.000000000 +0000
 @@ -20,7 +20,7 @@
  	if (dma_mapping_error(dev, map))
  		goto out_err;

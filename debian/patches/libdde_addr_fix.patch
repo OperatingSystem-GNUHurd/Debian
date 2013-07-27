@@ -22,8 +22,8 @@ Date:   Mon Jun 8 03:49:24 2009 +0000
 
 diff --git a/net/core/dev.c b/net/core/dev.c
 index 4913089..81b392e 100644
---- a/libdde_linux26/lib/src/net/core/dev.c
-+++ b/libdde_linux26/lib/src/net/core/dev.c
+--- a/libdde-linux26/lib/src/net/core/dev.c
++++ b/libdde-linux26/lib/src/net/core/dev.c
 @@ -3577,8 +3577,8 @@ static int dev_addr_init(struct net_device *dev)
  	/* rtnl_mutex must be held here */
  
