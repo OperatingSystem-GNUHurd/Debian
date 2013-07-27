@@ -30,7 +30,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <cthreads.h>
+#include <pthread.h>
 #include <fcntl.h>
 #include <elf.h>
 #include <mach/mig_support.h>
@@ -128,8 +128,8 @@ struct port_info *pseudo_priv_host_pi;
 
 struct store *root_store;
 
-spin_lock_t queuelock = SPIN_LOCK_INITIALIZER;
-spin_lock_t readlock = SPIN_LOCK_INITIALIZER;
+pthread_spinlock_t queuelock = PTHREAD_SPINLOCK_INITIALIZER;
+pthread_spinlock_t readlock = PTHREAD_SPINLOCK_INITIALIZER;
 
 mach_port_t php_child_name, psmdp_child_name, taskname;
 
@@ -337,7 +337,7 @@ load_image (task_t t,
 
 
 void read_reply ();
-void msg_thread ();
+void * msg_thread (void *);
 
 /* Callbacks for boot_script.c; see boot_script.h.  */
 
@@ -649,6 +649,7 @@ main (int argc, char **argv, char **envp)
   mach_port_t foo;
   char *buf = 0;
   int i, len;
+  pthread_t pthread_id;
   char *root_store_name;
   const struct argp_child kids[] = { { &store_argp }, { 0 }};
   struct argp argp = { options, parse_opt, args_doc, doc, kids };
@@ -905,7 +906,14 @@ main (int argc, char **argv, char **envp)
   if (is_user)
     mach_port_deallocate (mach_task_self (), subhurd_privileged_host_port);
 
-  cthread_detach (cthread_fork ((cthread_fn_t) msg_thread, (any_t) 0));
+  err = pthread_create (&pthread_id, NULL, msg_thread, NULL);
+  if (!err)
+    pthread_detach (pthread_id);
+  else
+    {
+      errno = err;
+      perror ("pthread_create");
+    }
 
   for (;;)
     {
@@ -922,8 +930,8 @@ main (int argc, char **argv, char **envp)
 /*  mach_msg_server (request_server, __vm_page_size * 2, receive_set); */
 }
 
-void
-msg_thread()
+void *
+msg_thread (void *arg)
 {
   while (1)
     mach_msg_server (request_server, 0, receive_set);
@@ -959,7 +967,7 @@ queue_read (enum read_type type,
   if (!qr)
     return D_NO_MEMORY;
 
-  spin_lock (&queuelock);
+  pthread_spin_lock (&queuelock);
 
   qr->type = type;
   qr->reply_port = reply_port;
@@ -971,7 +979,7 @@ queue_read (enum read_type type,
   else
     qrhead = qrtail = qr;
 
-  spin_unlock (&queuelock);
+  pthread_spin_unlock (&queuelock);
   return D_SUCCESS;
 }
 
@@ -992,25 +1000,25 @@ read_reply ()
      either we get the lock ourselves or that whoever currently holds the
      lock will service this read when he unlocks it.  */
   should_read = 1;
-  if (! spin_try_lock (&readlock))
+  if (pthread_spin_trylock (&readlock))
     return;
 
-  /* Since we're commited to servicing the read, no one else need do so.  */
+  /* Since we're committed to servicing the read, no one else need do so.  */
   should_read = 0;
 
   ioctl (0, FIONREAD, &avail);
   if (!avail)
     {
-      spin_unlock (&readlock);
+      pthread_spin_unlock (&readlock);
       return;
     }
 
-  spin_lock (&queuelock);
+  pthread_spin_lock (&queuelock);
 
   if (!qrhead)
     {
-      spin_unlock (&queuelock);
-      spin_unlock (&readlock);
+      pthread_spin_unlock (&queuelock);
+      pthread_spin_unlock (&readlock);
       return;
     }
 
@@ -1019,7 +1027,7 @@ read_reply ()
   if (qr == qrtail)
     qrtail = 0;
 
-  spin_unlock (&queuelock);
+  pthread_spin_unlock (&queuelock);
 
   if (qr->type == DEV_READ)
     buf = mmap (0, qr->amount, PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);
@@ -1027,7 +1035,7 @@ read_reply ()
     buf = alloca (qr->amount);
   amtread = read (0, buf, qr->amount);
 
-  spin_unlock (&readlock);
+  pthread_spin_unlock (&readlock);
 
   switch (qr->type)
     {
@@ -1065,7 +1073,7 @@ read_reply ()
 static void
 unlock_readlock ()
 {
-  spin_unlock (&readlock);
+  pthread_spin_unlock (&readlock);
   while (should_read)
     read_reply ();
 }
@@ -1315,7 +1323,7 @@ ds_device_read (device_t device,
 	}
 #endif
 
-      spin_lock (&readlock);
+      pthread_spin_lock (&readlock);
       ioctl (0, FIONREAD, &avail);
       if (avail)
 	{
@@ -1370,7 +1378,7 @@ ds_device_read_inband (device_t device,
 	}
 #endif
 
-      spin_lock (&readlock);
+      pthread_spin_lock (&readlock);
       ioctl (0, FIONREAD, &avail);
       if (avail)
 	{
@@ -1678,7 +1686,7 @@ S_io_read (mach_port_t object,
     }
 #endif
 
-  spin_lock (&readlock);
+  pthread_spin_lock (&readlock);
   ioctl (0, FIONREAD, &avail);
   if (avail)
     {

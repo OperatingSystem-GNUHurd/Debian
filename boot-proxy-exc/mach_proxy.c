@@ -25,7 +25,7 @@
 
 static LIST_HEADER (tasks_head);
 
-static struct mutex tasks_lock = MUTEX_INITIALIZER;
+static struct pthread_mutex_t tasks_lock = PTHREAD_MUTEX_INITIALIZER;
 
 int create_pseudo_task (task_t real_task, task_t *ret_pseudo_task)
 {
@@ -42,11 +42,11 @@ int create_pseudo_task (task_t real_task, task_t *ret_pseudo_task)
   task_pi->task_port = real_task;
   task_pi->exc_pi = NULL;
   task_pi->user_exc_port = 0;
-  mutex_init (&task_pi->lock);
+  pthread_mutex_init (&task_pi->lock, NULL);
   entry_init (&task_pi->list);
-  mutex_lock (&tasks_lock);
+  pthread_mutex_lock (&tasks_lock);
   add_entry_end (&tasks_head, &task_pi->list);
-  mutex_unlock (&tasks_lock);
+  pthread_mutex_unlock (&tasks_lock);
 
   pseudo_task = ports_get_right (task_pi);
   mach_port_insert_right (mach_task_self (), pseudo_task, pseudo_task,
@@ -71,9 +71,9 @@ void clean_pseudo_task (void *pi)
   struct task_info *task = pi;
 
   debug ("remove a pseudo task from the list");
-  mutex_lock (&tasks_lock);
+  pthread_mutex_lock (&tasks_lock);
   remove_entry (&task->list);
-  mutex_unlock (&tasks_lock);
+  pthread_mutex_unlock (&tasks_lock);
   
   if (task->exc_pi)
     ports_destroy_right (task->exc_pi);
@@ -84,14 +84,14 @@ void clean_pseudo_task (void *pi)
 void foreach_task (task_callback_t callback)
 {
   struct list *entry = &tasks_head;
-  mutex_lock (&tasks_lock);
+  pthread_mutex_lock (&tasks_lock);
   for (entry = tasks_head.next; entry != &tasks_head; entry = entry->next) 
     {
-//      mutex_unlock (&tasks_lock);
+//      pthread_mutex_unlock (&tasks_lock);
       struct task_info *task_pi = LIST_ENTRY (entry, struct task_info, list);
       if (callback (task_pi))
 	break;
-//      mutex_lock (&tasks_lock);
+//      pthread_mutex_lock (&tasks_lock);
     }
-  mutex_unlock (&tasks_lock);
+  pthread_mutex_unlock (&tasks_lock);
 }

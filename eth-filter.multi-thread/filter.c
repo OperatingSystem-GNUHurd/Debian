@@ -33,7 +33,7 @@
 
 #include <hurd.h>
 #include <mach.h>
-#include <cthreads.h>
+#include <pthread.h>
 #include <device/device.h>
 #include <hurd/trivfs.h>
 #include <hurd/ports.h>
@@ -92,7 +92,7 @@ static int snd_filter_length;
 static struct bpf_insn *rcv_filter = NULL;
 static int rcv_filter_length;
 
-static cthread_t send_thread;
+static pthread_t send_thread;
 static int send_thread_running = 1;
 
 /* Port bucket we service requests on.  */
@@ -626,7 +626,7 @@ trivfs_goaway (struct trivfs_control *fsys, int flags)
 
   queue_flush ();
   send_thread_running = 0;
-//  cthread_join (send_thread);
+//  pthread_join (send_thread);
 
 #ifdef DEBUG
   fclose (logfile);
@@ -811,11 +811,9 @@ main (int argc, char *argv[])
   if (err)
     error (1, err, "set the receiving filter");
 
-  cthread_init ();
-  send_thread = cthread_fork (send_thread_func, NULL);
+  pthread_create (&send_thread, NULL, send_thread_func, NULL);
   /* TODO if the main thread exits,
-   * does the created thread exit if cthread_detach is called */
-  cthread_detach (send_thread);
+   * does the created thread exit */
 
   /* Launch.  */
   do 

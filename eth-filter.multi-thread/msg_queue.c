@@ -31,16 +31,16 @@ static struct filter_msg *queue_head;
 static struct filter_msg *queue_tail;
 static int queue_len = 0;
 
-static struct mutex queuelock = MUTEX_INITIALIZER;
-static struct mutex condition_mutex = MUTEX_INITIALIZER;
-static struct condition condition_cond = CONDITION_INITIALIZER;
+static pthread_mutex_t queuelock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t condition_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t condition_cond = PTHREAD_COND_INITIALIZER;
 
 void
 queue_msg (struct filter_msg *msg)
 {
   msg->next = NULL;
   // TODO what kind of lock do I need?
-  mutex_lock (&queuelock);
+  pthread_mutex_lock (&queuelock);
   if (queue_head == NULL)
     {
       assert (queue_tail == NULL);
@@ -56,7 +56,7 @@ queue_msg (struct filter_msg *msg)
     }
   queue_len++;
   debug ("queue a message, queue length: %d.\n", queue_len);
-  mutex_unlock (&queuelock);
+  pthread_mutex_unlock (&queuelock);
 //  queue_wakeup ();
 }
 
@@ -65,7 +65,7 @@ dequeue_msg ()
 {
   struct filter_msg *msg;
 
-  mutex_lock (&queuelock);
+  pthread_mutex_lock (&queuelock);
   if (queue_head == NULL)
     {
       assert (queue_tail == NULL);
@@ -81,7 +81,7 @@ dequeue_msg ()
       queue_len--;
     }
   debug ("dequeue a message, the queue length: %d.\n", queue_len);
-  mutex_unlock (&queuelock);
+  pthread_mutex_unlock (&queuelock);
 
   return msg;
 }
@@ -93,11 +93,11 @@ queue_flush ()
   struct filter_msg *msg;
   struct filter_msg *tmp;
 
-  mutex_lock (&queuelock);
+  pthread_mutex_lock (&queuelock);
   msg = queue_head;
   queue_head = queue_tail = NULL;
   queue_len = 0;
-  mutex_unlock (&queuelock);
+  pthread_mutex_unlock (&queuelock);
 
   while (msg)
     {
@@ -202,14 +202,14 @@ queue_deliver (struct net_rcv_msg *msg, struct proxy *proxy)
 void
 queue_empty_wait ()
 {
-  mutex_lock (&condition_mutex);
+  pthread_mutex_lock (&condition_mutex);
 //  debug ("queue length is %d\n", queue_len);
   while (queue_head == NULL)
     {
       debug ("thread waits for a signal.\n");
-      condition_wait (&condition_cond, &condition_mutex);
+      pthread_cond_wait (&condition_cond, &condition_mutex);
     }
-  mutex_unlock (&condition_mutex);
+  pthread_mutex_unlock (&condition_mutex);
 }
 
 void
@@ -218,7 +218,7 @@ queue_wakeup ()
   if (queue_head)
     {
       debug ("wake up a thread.\n");
-      condition_signal (&condition_cond);
+      pthread_cond_signal (&condition_cond);
     }
 }
 

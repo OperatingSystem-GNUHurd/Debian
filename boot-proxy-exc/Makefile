@@ -27,11 +27,11 @@ COMMON-OBJS = notifyServer.o ourdeviceServer.o \
 OBJS = boot.o mach_host_impl.o mach_impl.o mach_port_impl.o \
        exc_impl.o list.o mach_proxy.o $(COMMON-OBJS)
 UX-OBJS = mach-crt0.o uxboot.o sigvec.o syscall.o ux.o $(COMMON-OBJS)
-LCLHDRS = boot_script.h ux.h util.h
 target = boot
 io-MIGSFLAGS=-DREPLY_PORTS
+HURDLIBS=store shouldbeinlibc ports
+OTHERLIBS = -lpthread
 DIST_FILES=frank1.ld frankemul.ld
-HURDLIBS=store shouldbeinlibc threads ports
 
 include ../Makeconf
 
@@ -48,7 +48,7 @@ ourdevice.defs: device.defs
 uxboot.o: boot.c
 	$(COMPILE.c) -DUX $< -o $@
 
-uxboot.0: $(UX-OBJS) ../libthreads/libthreads.a
+uxboot.0: $(UX-OBJS)
 	$(LINK.o) -o $@ -static -nostartfiles -Wl,-T -Wl,$(srcdir)/frank1.ld $^
 uxboot.1: frankemul.ld uxboot.0
 	$(LD) -o $@ -T $^

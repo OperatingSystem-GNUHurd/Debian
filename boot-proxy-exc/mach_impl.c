@@ -457,14 +457,14 @@ S_task_set_special_port (mach_port_t target_task, int which_port,
 	}
       new_exc_port = ports_get_send_right (new_exc_pi);
 
-      mutex_lock (&target_task_pi->lock);
+      pthread_mutex_lock (&target_task_pi->lock);
       old_exc_pi = target_task_pi->exc_pi;
       old_user_exc_port = target_task_pi->user_exc_port;
       err = task_set_special_port (target_task_pi->task_port,
 				   which_port, new_exc_port);
       target_task_pi->user_exc_port = special_port;
       target_task_pi->exc_pi = new_exc_pi;
-      mutex_unlock (&target_task_pi->lock);
+      pthread_mutex_unlock (&target_task_pi->lock);
 
       ports_port_deref (new_exc_pi);
       if (old_user_exc_port)
