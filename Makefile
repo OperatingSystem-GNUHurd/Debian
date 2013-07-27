@@ -1,7 +1,7 @@
 TARGET = procfs
 OBJS = procfs.o netfs.o procfs_dir.o \
        process.o proclist.o rootdir.o dircat.o main.o
-LIBS = -lnetfs -lps -lfshelp
+LIBS = -lnetfs -lps -lfshelp -lpthread
 
 CC = gcc
 CFLAGS = -Wall -g
@@ -12,7 +12,7 @@ ifdef PROFILE
 CFLAGS= -g -pg
 CPPFLAGS= -DPROFILE
 LDFLAGS= -static
-LIBS= -lnetfs -lfshelp -liohelp -lps -lports -lthreads -lihash -lshouldbeinlibc
+LIBS= -lnetfs -lfshelp -liohelp -lps -lports -lpthread -lihash -lshouldbeinlibc
 endif
 
 CPPFLAGS += -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64
