@@ -30,7 +30,7 @@ INSTALL_in := $(wildcard debian/*.install.in)
 INSTALL_generated := $(patsubst %.in,%,$(INSTALL_in))
 
 %:
-	dh $@ -Bbuild --with autotools_dev
+	dh $@ -Bbuild --with autotools_dev,autoreconf
 
 override_dh_auto_configure:
 	dh_auto_configure -Bbuild -- $(CONFIGURE_ARGS) $(shell dpkg-buildflags --export=configure)

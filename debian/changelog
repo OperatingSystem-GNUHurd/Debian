@@ -4,6 +4,7 @@ hurd (20130727-1) UNRELEASED; urgency=low
   * New upstream snapshot.
     - Adds firewalling support.
     - Move to multiple orig tarballs.
+    - Use autoreconf.
     - Rename libdde_linux26 into libdde-linux26
 
   [ Justus Winter ]
