@@ -10,6 +10,10 @@ hurd (20130727-1) UNRELEASED; urgency=low
   [ Justus Winter ]
   * Include the umount utility in hurd and hurd-udeb.
 
+  [ Samuel Thibault ]
+  * Bump Standards-Version to 3.9.4 (no changes).
+  * control: Remove Neal and Jeff from uploaders.
+
  -- GNU Hurd Maintainers <debian-hurd@lists.debian.org>  Tue, 09 Jul 2013 10:56:23 +0200
 
 hurd (20130707-1) unstable; urgency=low
