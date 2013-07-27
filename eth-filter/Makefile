@@ -21,7 +21,7 @@ makemode := server
 SRCS = bpf_impl.c filter.c queue.c pcap_filter.c
 LCLHDRS = bpf_impl.h queue.h util.h
 DIST_FILES = ourdevice.defs notify.defs
-HURDLIBS = threads ports trivfs fshelp ihash shouldbeinlibc
+HURDLIBS = ports trivfs fshelp ihash shouldbeinlibc
 target = eth-filter
 MIGSTUBS = ourdeviceServer.o notifyServer.o
 OBJS = $(SRCS:.c=.o) $(MIGSTUBS)

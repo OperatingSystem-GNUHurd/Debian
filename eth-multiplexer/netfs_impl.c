@@ -111,7 +111,7 @@ netfs_attempt_create_file (struct iouser *user, struct node *dir,
 {
   debug("");
   *node = 0;
-  mutex_unlock (&dir->lock);
+  pthread_mutex_unlock (&dir->lock);
   return EOPNOTSUPP;
 }
 
@@ -298,15 +298,15 @@ error_t netfs_attempt_lookup (struct iouser *user, struct node *dir,
       *node = NULL;
 
       /*unlock the directory*/
-      mutex_unlock (&dir->lock);
+      pthread_mutex_unlock (&dir->lock);
 
       /*stop here*/
       return err;
     }
 
   *node = lookup (name);
-  mutex_lock (&(*node)->lock);
-  mutex_unlock (&dir->lock);
+  pthread_mutex_lock (&(*node)->lock);
+  pthread_mutex_unlock (&dir->lock);
   return 0;
 }
 
@@ -463,7 +463,7 @@ error_t netfs_attempt_mkfile (struct iouser *user, struct node *dir,
 {
   debug("");
   *node = 0;
-  mutex_unlock (&dir->lock);
+  pthread_mutex_unlock (&dir->lock);
   return EOPNOTSUPP;
 }
 

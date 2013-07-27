@@ -100,8 +100,10 @@ static struct bpf_insn default_rcv_filter[] =
     {NETF_IN|NETF_BPF, 0, 0, 0},
     {6, 0, 0, 1500}
 };
+static char *snd_string = NULL;
 static struct bpf_insn *snd_filter = NULL;
 static int snd_filter_length;
+static char *rcv_string = NULL;
 static struct bpf_insn *rcv_filter = NULL;
 static int rcv_filter_length;
 
@@ -671,30 +673,50 @@ parse_opt (int opt, char *arg, struct argp_state *state)
       device_file = arg;
       break;
     case 's':
-      if (snd_filter) 
+      if (snd_filter && snd_filter != default_snd_filter)
 	free (snd_filter);
+      if (snd_string)
+	free (snd_string);
+      snd_string = strdup (arg);
       snd_filter = trans_filter_program (arg, 1, &snd_filter_length);
+      if (!snd_filter)
+	return ARGP_ERR_UNKNOWN;
       break;
     case 'r':
-      if (rcv_filter)
+      if (rcv_filter && rcv_filter != default_rcv_filter)
 	free (rcv_filter);
+      if (rcv_string)
+	free (rcv_string);
+      rcv_string = strdup (arg);
       rcv_filter = trans_filter_program (arg, 0, &rcv_filter_length);
+      if (!rcv_filter)
+	return ARGP_ERR_UNKNOWN;
       break;
     case 'S':
       if (correct_net_addr (arg, addr, INET_ADDRSTRLEN+4) < 0)
 	return 0;
       snprintf (buf, sizeof (buf), "arp or (ip and src net %s)", addr);
-      if (snd_filter) 
+      if (snd_filter && snd_filter != default_snd_filter) 
 	free (snd_filter);
+      if (snd_string)
+	free (snd_string);
+      snd_string = strdup (buf);
       snd_filter = trans_filter_program (buf, 1, &snd_filter_length);
+      if (!snd_filter)
+	return ARGP_ERR_UNKNOWN;
       break;
     case 'R':
       if (correct_net_addr (arg, addr, INET_ADDRSTRLEN+4) < 0)
 	return 0;
       snprintf (buf, sizeof (buf), "arp or (ip and dst net %s)", addr);
-      if (rcv_filter) 
+      if (rcv_filter && rcv_filter != default_rcv_filter) 
 	free (rcv_filter);
+      if (rcv_string)
+	free (rcv_string);
+      rcv_string = strdup (buf);
       rcv_filter = trans_filter_program (buf, 0, &rcv_filter_length);
+      if (!rcv_filter)
+	return ARGP_ERR_UNKNOWN;
       break;
     case ARGP_KEY_ERROR:
     case ARGP_KEY_SUCCESS:
@@ -706,13 +728,65 @@ parse_opt (int opt, char *arg, struct argp_state *state)
   return 0;
 }
 
+static const struct argp argp = { options, parse_opt, 0, doc };
+
+error_t
+trivfs_append_args (struct trivfs_control *fsys,
+		    char **argz, size_t *argz_len)
+{
+  error_t err;
+  char *opt;
+
+  if (device_file)
+    {
+      asprintf(&opt, "--interface=\"%s\"", device_file);
+      argz_add (argz, argz_len, opt);
+      free (opt);
+    }
+
+  if (snd_string)
+    {
+      asprintf(&opt, "--send-filter=\"%s\"", snd_string);
+      argz_add (argz, argz_len, opt);
+      free (opt);
+    }
+
+  if (rcv_string)
+    {
+      asprintf(&opt, "--receive-filter=\"%s\"", rcv_string);
+      argz_add (argz, argz_len, opt);
+      free (opt);
+    }
+
+  return 0;
+}
+
+error_t
+trivfs_set_options (struct trivfs_control *fsys, char *argz, size_t argz_len)
+{
+  error_t err;
+
+  err = fshelp_set_options (&argp, 0, argz, argz_len, fsys);
+  if (err)
+    return err;
+
+  err = net_set_filter (MACH_PORT_DEAD, 0, (filter_t *) snd_filter,
+			snd_filter_length);
+  if (err)
+    return err;
+
+  err = net_set_filter (MACH_PORT_DEAD, 0, (filter_t *) rcv_filter,
+			rcv_filter_length);
+  if (err)
+    return err;
+}
+
 int
 main (int argc, char *argv[])
 {
   error_t err;
   mach_port_t bootstrap;
   struct trivfs_control *fsys;
-  const struct argp argp = { options, parse_opt, 0, doc };
 
   port_bucket = ports_create_bucket ();
   user_portclass = ports_create_class (clean_proxy_user, 0);
