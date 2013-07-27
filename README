@@ -1,41 +1,54 @@
-In order to merge various upstream sources into the hurd sources, the
-files have to be moved to subdirectories. This is what '*-moved' branches are
-for, i.e. the merge process is:
+We gather pieces from various repositories, here is the snapshot process:
 
-$ git checkout dde-upstream
-$ git pull upstream-dde
-$ git checkout dde
-$ git pull . dde-upstream
-$ git push dde:upstream-dde-debian
-$ git tag -a upstream/dde/<date>
-$ git checkout dde-clean
-$ git pull . dde
-$ git checkout eth
-$ git pull . dde-upstream
-$ git tag -a upstream/eth/<date>
-$ git checkout random
-$ git pull upstream-random
-$ git tag -a upstream/random/<date>
-$ git checkout random-moved
-$ git pull . random
-# Check that no new file has appeared, else move them.
-$ git checkout procfs-jkoenig
-$ git pull upstream-procfs-jkoenig
-$ git tag -a upstream/procfs/<date>
-$ git checkout procfs-jkoenig-moved
-$ git pull . procfs-jkoenig
-# Check that no new file has appeared, else move them.
-$ git checkout upstream
-$ git pull upstream
-$ git tag -a upstream/hurd/<date>
-$ git checkout upstream-merged
-$ git pull . upstream
-$ git pull . dde-clean
-$ git pull . eth
-$ git pull . random
-$ git pull . procfs-jkoenig-moved
-$ autoreconf -fi
-$ git commit ...
-$ git tag -a upstream/<date>
-$ git checkout master
-$ git pull . upstream-merged
+date=<date>
+
+git fetch --all
+
+git checkout dde-upstream
+git pull incubator dde:dde-upstream
+
+git checkout dde
+git pull . dde-upstream
+# Remove files added outside DDE
+git push incubator dde:dde-debian
+git tag -m "New upstream snapshot" -a upstream/dde/$date
+for dir in devnode libbpf libdde-linux26 libddekit libhurd-slab libmachdev
+do
+	git archive HEAD $dir | bzip2 > ../hurd_$date.orig-$dir.tar.bz2
+done
+
+git checkout eth
+git pull . dde-upstream
+# Remove files added outside eth-*
+git tag -m "New upstream snapshot" -a upstream/eth/$date
+for dir in eth-filter eth-multiplexer
+do
+	git archive HEAD $dir | bzip2 > ../hurd_$date.orig-$dir.tar.bz2
+done
+
+git checkout random
+git pull incubator random
+git tag -m "New upstream snapshot" -a upstream/random/$date
+git archive --prefix=random/ HEAD | bzip2 > ../hurd_$date.orig-random.tar.bz2
+
+git checkout procfs-jkoenig
+git pull procfs master:procfs-jkoenig
+git tag -m "New upstream snapshot" -a upstream/procfs/$date
+git archive --prefix=procfs/ HEAD | bzip2 > ../hurd_$date.orig-procfs.tar.bz2
+
+git checkout upstream
+git pull upstream master:upstream
+git tag -m "New upstream snapshot" -a upstream/hurd/$date
+git archive --prefix=hurd-$date/ HEAD | bzip2 > ../hurd_$date.orig.tar.bz2
+
+git checkout upstream-merged
+for dir in devnode libbpf libdde_linux26 libhurd-slab libmachdev eth-filter eth-multiplexer random procfs
+do
+	tar -xf ../hurd_$date.orig-$dir.tar.bz2
+done
+tar --strip-components=1 -xf ../hurd_$date.orig.tar.bz2
+git add -A
+git commit -m "New upstream snapshot"
+
+git checkout master
+git pull . upstream-merged
