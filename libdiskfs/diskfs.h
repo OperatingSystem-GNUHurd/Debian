@@ -22,14 +22,17 @@
 
 #include <assert.h>
 #include <unistd.h>
-#include <rwlock.h>
+#include <pthread.h>
 #include <hurd/ports.h>
 #include <hurd/fshelp.h>
 #include <hurd/iohelp.h>
 #include <idvec.h>
+#include <features.h>
 
-#ifndef DISKFS_EXTERN_INLINE
-#define DISKFS_EXTERN_INLINE extern inline
+#ifdef DISKFS_DEFINE_EXTERN_INLINE
+#define DISKFS_EXTERN_INLINE
+#else
+#define DISKFS_EXTERN_INLINE __extern_inline
 #endif
 
 /* Each user port referring to a file points to one of these
@@ -87,7 +90,7 @@ struct node
   int dn_set_mtime;
   int dn_stat_dirty;
 
-  struct mutex lock;
+  pthread_mutex_t lock;
 
   int references;		/* hard references */
   int light_references;		/* light references */
@@ -171,7 +174,7 @@ extern const char *diskfs_boot_init_program;
 /* Hold this lock while do fsys level operations.  Innocuous users can just
    hold a reader lock, and anyone who's going to do nasty things that would
    screw anyone else should hold a writer lock.  */
-extern struct rwlock diskfs_fsys_lock;
+extern pthread_rwlock_t diskfs_fsys_lock;
 
 extern volatile struct mapped_time_value *diskfs_mtime;
 
@@ -181,7 +184,7 @@ extern volatile struct mapped_time_value *diskfs_mtime;
    be done by format independent code. */
 extern int diskfs_synchronous;
 
-extern spin_lock_t diskfs_node_refcnt_lock;
+extern pthread_spinlock_t diskfs_node_refcnt_lock;
 
 extern int pager_port_type;
 
@@ -781,6 +784,12 @@ error_t diskfs_start_protid (struct peropen *po, struct protid **cred);
    the user to install is USER.  */
 void diskfs_finish_protid (struct protid *cred, struct iouser *user);
 
+extern struct protid * diskfs_begin_using_protid_port (file_t port);
+
+extern void diskfs_end_using_protid_port (struct protid *cred);
+
+#if defined(__USE_EXTERN_INLINES) || defined(DISKFS_DEFINE_EXTERN_INLINE)
+
 /* Called by MiG to translate ports into struct protid *.
    fsmutations.h arranges for this to happen for the io and
    fs interfaces. */
@@ -799,6 +808,8 @@ diskfs_end_using_protid_port (struct protid *cred)
   if (cred)
     ports_port_deref (cred);
 }
+
+#endif /* Use extern inlines.  */
 
 /* Called when a protid CRED has no more references.  (Because references\
    to protids are maintained by the port management library, this is

@@ -22,8 +22,15 @@
 #define __HOSTMUX_H__
 
 #include <hurd/netfs.h>
-#include <rwlock.h>
+#include <pthread.h>
 #include <maptime.h>
+#include <features.h>
+
+#ifdef HOSTMUX_DEFINE_EI
+#define HOSTMUX_EI
+#else
+#define HOSTMUX_EI __extern_inline
+#endif
 
 /* Handy source of time.  */
 volatile struct mapped_time_value *hostmux_maptime;
@@ -33,7 +40,7 @@ struct hostmux
 {
   /* The host hodes in this mux.  */
   struct hostmux_name *names;
-  struct rwlock names_lock;
+  pthread_rwlock_t names_lock;
 
   /* The next inode number we'll use; protected by NAMES_LOCK.  */
   ino_t next_fileno;
@@ -47,6 +54,9 @@ struct hostmux
      0, or it doesn't occur, the host name is appended as an additional
      argument.  */
   char *host_pat;
+
+  /* Whether we should canonicalize host names or not.  */
+  boolean_t canonicalize;
 
   /* Constant fields for host stat entries.  */
   struct stat stat_template;
@@ -62,9 +72,10 @@ struct hostmux_name
   const char *name;		/* Looked up name (may be a number).  */
   const char *canon;		/* The canonical (fq) host name.  */
 
-  /* A filesystem node associated with NAME.  If NAME = CANON, then this will
-     refer to a node with a translator for that host, otherwise, the node
-     will be a symbolic link to the canonical name.  */
+  /* A filesystem node associated with NAME.  If canonicalize is 0 or
+     NAME = CANON, then this will refer to a node with a translator for that
+     host, otherwise, the node will be a symbolic link to the canonical name.
+     */
   struct node *node;
 
   ino_t fileno;			/* The inode number for this entry.  */
@@ -84,9 +95,5 @@ struct netnode
      looked up. */
   struct hostmux_name *name;
 };
-
-#ifndef HOSTMUX_EI
-# define HOSTMUX_EI extern inline
-#endif
 
 #endif /* __HOSTMUX_H__ */

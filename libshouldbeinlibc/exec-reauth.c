@@ -41,7 +41,7 @@ exec_reauth (auth_t auth, int secure, int must_reauth,
 	     mach_port_t *ports, unsigned num_ports,
 	     mach_port_t *fds, unsigned num_fds)
 {
-  int i;
+  unsigned int i;
   error_t err = 0;
 
   error_t reauth (mach_port_t *port, int isproc)
@@ -59,7 +59,7 @@ exec_reauth (auth_t auth, int secure, int must_reauth,
 	  if (!err)
 	    err = auth_user_authenticate (auth, ref, MACH_MSG_TYPE_MAKE_SEND,
 					  &newport);
-	  mach_port_destroy (mach_task_self (), ref);
+	  mach_port_mod_refs (mach_task_self (), ref, MACH_PORT_RIGHT_RECEIVE, -1);
 	  if (err)
 	    {
 	      if (must_reauth)

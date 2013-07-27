@@ -1,5 +1,6 @@
+#   Copyright (C) 1995,96,97,99, 2000, 2002, 2012 Free Software Foundation,
+#   Inc.
 #
-#   Copyright (C) 1995,96,97,99, 2000, 2002 Free Software Foundation, Inc.
 #   Written by Michael I. Bushnell, p/BSG.
 #
 #   This file is part of the GNU Hurd.
@@ -22,11 +23,10 @@ dir := term
 makemode := server
 
 target = term
-SRCS = devio.c munge.c users.c main.c ptyio.c hurdio.c
-LCLHDRS = term.h
-DIST_FILES = ourmsg.defs
+SRCS = devio.c munge.c users.c main.c ptyio.c hurdio.c xinl.c
 
-HURDLIBS = trivfs fshelp iohelp threads ports ihash shouldbeinlibc
+HURDLIBS = trivfs fshelp iohelp ports ihash shouldbeinlibc
+OTHERLIBS = -lpthread
 OBJS = $(subst .c,.o,$(SRCS)) termServer.o device_replyServer.o tioctlServer.o ourmsgUser.o
 
 include ../Makeconf

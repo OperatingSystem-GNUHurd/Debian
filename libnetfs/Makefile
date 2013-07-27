@@ -1,5 +1,4 @@
-# 
-#   Copyright (C) 1995, 1996, 1997, 1999, 2001, 2002, 2008 Free Software
+#   Copyright (C) 1995, 1996, 1997, 1999, 2001, 2002, 2008, 2012 Free Software
 #   Foundation
 #
 #   Written by Michael I. Bushnell.
@@ -24,7 +23,8 @@ dir := libnetfs
 makemode := library
 libname = libnetfs
 
-HURDLIBS = fshelp iohelp threads ports shouldbeinlibc
+HURDLIBS = fshelp iohelp ports shouldbeinlibc
+LDLIBS += -lpthread
 
 FSSRCS= dir-link.c dir-lookup.c dir-mkdir.c dir-mkfile.c \
 	dir-notice-changes.c dir-readdir.c dir-rename.c \
@@ -56,7 +56,6 @@ OTHERSRCS= drop-node.c init-init.c make-node.c make-peropen.c make-protid.c   \
 
 SRCS= $(OTHERSRCS) $(FSSRCS) $(IOSRCS) $(FSYSSRCS) $(IFSOCKSRCS)
 
-LCLHDRS = netfs.h callbacks.h misc.h modes.h mutations.h priv.h execserver.h
 installhdrs=netfs.h
 
 MIGSTUBS= ioServer.o fsServer.o fsysServer.o fsys_replyUser.o ifsockServer.o

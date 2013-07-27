@@ -1,5 +1,4 @@
-#
-#   Copyright (C) 1994,95,96,97,2000,2010 Free Software Foundation, Inc.
+#   Copyright (C) 1994,95,96,97,2000,2010,2012 Free Software Foundation, Inc.
 #
 #   This program is free software; you can redistribute it and/or
 #   modify it under the terms of the GNU General Public License as
@@ -20,16 +19,15 @@ makemode := library
 
 # In GNU mig_support.c, sync.c and machine/lock.s are omitted; that work is
 # all done in libc.
-SRCS := call.c cprocs.c cthread_data.c cthreads.c stack.c \
-	cancel-cond.c rwlock.c lockfile.c
-I386SRCS := i386/csw.S i386/thread.c
+#SRCS := call.c cprocs.c cthread_data.c cthreads.c stack.c \
+#	cancel-cond.c rwlock.c lockfile.c
+#I386SRCS := i386/csw.S i386/thread.c
 
 # In GNU machine/cthreads.h is omitted; that work is done in libc headers.
-LCLHDRS := cthread_internals.h options.h cthreads.h rwlock.h
 
-OBJS = $(addsuffix .o,$(basename $(notdir $(SRCS) $(I386SRCS))))
+#OBJS = $(addsuffix .o,$(basename $(notdir $(SRCS) $(I386SRCS))))
 
-OTHERTAGS = $(I386SRCS) $(I386HDRS)
+#OTHERTAGS = $(I386SRCS) $(I386HDRS)
 
 libname = libthreads
 installhdrs = cthreads.h rwlock.h
@@ -41,25 +39,10 @@ include ../Makeconf
 
 # The threads library was written by CMU.  If you've ever experienced
 # what that means, you'll understand this line.
-CFLAGS := $(filter-out -Wall,$(CFLAGS))
+#CFLAGS := $(filter-out -Wall,$(CFLAGS))
 
-lndist: lndist-i386-files
-
-lndist-i386-files: $(top_srcdir)/hurd-snap/$(dir)/i386
-	ln $(addprefix $(srcdir)/,$(I386SRCS) $(I386HDRS)) $<
-
-$(top_srcdir)/hurd-snap/$(dir)/i386:
-	mkdir $@
-
-ifeq ($(VERSIONING),yes)
-
+#ifeq ($(VERSIONING),yes)
 # Adding this dependency gets it included in the command line,
 # where ld will read it as a linker script.
-$(libname).so.$(hurd-version): $(srcdir)/$(libname).map
-
-lndist: lndist-map-file
-
-lndist-map-file: $(top_srcdir)/hurd-snap/$(dir)
-	ln $(addprefix $(srcdir)/,$(libname).map) $<
-
-endif
+#$(libname).so.$(hurd-version): $(srcdir)/$(libname).map
+#endif

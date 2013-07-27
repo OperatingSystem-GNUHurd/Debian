@@ -23,6 +23,7 @@
 #include <error.h>
 #include <string.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <sys/mman.h>
 
 #include "kdioctl_S.h"
@@ -44,15 +45,15 @@ static struct kbdbuf
   char keybuffer[KBDBUFSZ];
   int pos;
   size_t size;
-  struct condition readcond;
-  struct condition writecond;
+  pthread_cond_t readcond;
+  pthread_cond_t writecond;
 } kbdbuf;
 
 /* Wakeup for select */
-static struct condition select_alert;
+static pthread_cond_t select_alert;
 
 /* The global lock */
-static struct mutex global_lock;
+static pthread_mutex_t global_lock;
 
 /* Amount of times the device was opened.  Normally this translator
    should be only opened once.  */ 
@@ -65,30 +66,31 @@ kbd_repeat_key (kd_event *key)
 {
   kd_event *ev;
 
-  mutex_lock (&global_lock);
+  pthread_mutex_lock (&global_lock);
   while (kbdbuf.size + sizeof (kd_event) > KBDBUFSZ)
     {
-      /* The input buffer is full, wait until there is some space.  */
-      if (hurd_condition_wait (&kbdbuf.writecond, &global_lock))
-	{
-	  mutex_unlock (&global_lock);
-	  /* Interrupt, silently continue.  */
-	}
+      /* The input buffer is full, wait until there is some space.  If this call
+         is interrupted, silently continue.  */
+      (void) pthread_hurd_cond_wait_np (&kbdbuf.writecond, &global_lock);
     }
   ev = (kd_event *) &kbdbuf.keybuffer[KBDBUF_POS (kbdbuf.pos 
 						  + kbdbuf.size)];
   kbdbuf.size += sizeof (kd_event);
   memcpy (ev, key, sizeof (kd_event));
   
-  condition_broadcast (&kbdbuf.readcond);
-  mutex_unlock (&global_lock);
+  pthread_cond_broadcast (&kbdbuf.readcond);
+  pthread_cond_broadcast (&select_alert);
+  pthread_mutex_unlock (&global_lock);
 }
 
 
 static error_t
 repeater_select (struct protid *cred, mach_port_t reply,
-		 mach_msg_type_name_t replytype, int *type)
+		 mach_msg_type_name_t replytype,
+		 struct timespec *tsp, int *type)
 {
+  error_t err;
+
   if (!cred)
     return EOPNOTSUPP;
 
@@ -98,24 +100,28 @@ repeater_select (struct protid *cred, mach_port_t reply,
   if (*type == 0)
     return 0;
 
-  mutex_lock (&global_lock);
+  pthread_mutex_lock (&global_lock);
   while (1)
     {
       if (kbdbuf.size > 0)
 	{
 	  *type = SELECT_READ;
-	  mutex_unlock (&global_lock);
+	  pthread_mutex_unlock (&global_lock);
 
 	  return 0;
 	}
       
       ports_interrupt_self_on_port_death (cred, reply);
-      if (hurd_condition_wait (&select_alert, &global_lock))
+      err = pthread_hurd_cond_timedwait_np (&select_alert, &global_lock, tsp);
+      if (err)
 	{
 	  *type = 0;
-	  mutex_unlock (&global_lock);
+	  pthread_mutex_unlock (&global_lock);
 
-	  return EINTR;
+	  if (err == ETIMEDOUT)
+	    err = 0;
+
+	  return err;
 	}
     }
 }
@@ -132,18 +138,18 @@ repeater_read (struct protid *cred, char **data,
   else if (! (cred->po->openstat & O_READ))
     return EBADF;
   
-  mutex_lock (&global_lock);
+  pthread_mutex_lock (&global_lock);
   while (amount > kbdbuf.size)
     {
       if (cred->po->openstat & O_NONBLOCK && amount > kbdbuf.size)
 	{
-	  mutex_unlock (&global_lock);
+	  pthread_mutex_unlock (&global_lock);
 	  return EWOULDBLOCK;
 	}
       
-      if (hurd_condition_wait (&kbdbuf.readcond, &global_lock))
+      if (pthread_hurd_cond_wait_np (&kbdbuf.readcond, &global_lock))
 	{
-	  mutex_unlock (&global_lock);
+	  pthread_mutex_unlock (&global_lock);
 	  return EINTR;
 	}
     }
@@ -159,7 +165,7 @@ repeater_read (struct protid *cred, char **data,
 	  *data = mmap (0, amount, PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);
 	  if (*data == MAP_FAILED)
 	    {
-	      mutex_unlock (&global_lock);
+	      pthread_mutex_unlock (&global_lock);
 	      return ENOMEM;
 	    }
 	}
@@ -173,11 +179,11 @@ repeater_read (struct protid *cred, char **data,
 	  kbdbuf.pos = KBDBUF_POS (kbdbuf.pos);
 	}
       kbdbuf.size -= amount;
-      condition_broadcast (&kbdbuf.writecond);
+      pthread_cond_broadcast (&kbdbuf.writecond);
     }
   
   *datalen = amount;
-  mutex_unlock (&global_lock);
+  pthread_mutex_unlock (&global_lock);
 
   return 0;
 }
@@ -227,13 +233,11 @@ kbd_setrepeater (const char *nodename, consnode_t *cn)
   (*cn)->close = repeater_close;
   (*cn)->demuxer = kdioctl_server;
   
-  mutex_init (&global_lock);
+  pthread_mutex_init (&global_lock, NULL);
 
-  condition_init (&kbdbuf.readcond);
-  condition_init (&kbdbuf.writecond);
-
-  condition_init (&select_alert);
-  condition_implies (&kbdbuf.readcond, &select_alert);
+  pthread_cond_init (&kbdbuf.readcond, NULL);
+  pthread_cond_init (&kbdbuf.writecond, NULL);
+  pthread_cond_init (&select_alert, NULL);
   
   console_register_consnode (*cn);
   

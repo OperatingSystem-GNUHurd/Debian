@@ -1,6 +1,6 @@
 /* Socket I/O operations
 
-   Copyright (C) 1995, 1996, 1998, 1999, 2000, 2002, 2007
+   Copyright (C) 1995, 1996, 1998, 1999, 2000, 2002, 2007, 2012
      Free Software Foundation, Inc.
 
    Written by Miles Bader <miles@gnu.org>
@@ -172,10 +172,10 @@ S_io_duplicate (struct sock_user *user,
 /* SELECT_TYPE is the bitwise OR of SELECT_READ, SELECT_WRITE, and SELECT_URG.
    Block until one of the indicated types of i/o can be done "quickly", and
    return the types that are then available.  */
-error_t
-S_io_select (struct sock_user *user,
-	     mach_port_t reply, mach_msg_type_name_t reply_type,
-	     int *select_type)
+static error_t
+io_select_common (struct sock_user *user,
+		  mach_port_t reply, mach_msg_type_name_t reply_type,
+		  struct timespec *tsp, int *select_type)
 {
   error_t err = 0;
   struct sock *sock;
@@ -186,29 +186,37 @@ S_io_select (struct sock_user *user,
   *select_type &= SELECT_READ | SELECT_WRITE;
 
   sock = user->sock;
-  mutex_lock (&sock->lock);
+  pthread_mutex_lock (&sock->lock);
 
   if (sock->listen_queue)
     /* Sock is used for accepting connections, not I/O.  For these, you can
        only select for reading, which will block until a connection request
        comes along.  */
     {
-      mutex_unlock (&sock->lock);
+      pthread_mutex_unlock (&sock->lock);
 
       *select_type &= SELECT_READ;
 
       if (*select_type & SELECT_READ)
 	{
-	  /* Wait for a connect.  Passing in NULL for REQ means that the
-	     request won't be dequeued.  */
-	  if (connq_listen (sock->listen_queue, 1, NULL, NULL) == 0)
+	  struct timespec noblock = {0, 0};
+
+	  /* Wait for a connect.  Passing in NULL for SOCK means that
+	     the request won't be dequeued.  */
+	  if (connq_listen (sock->listen_queue, &noblock, NULL) == 0)
 	    /* We can satisfy this request immediately. */
 	    return 0;
 	  else
 	    /* Gotta wait...  */
 	    {
 	      ports_interrupt_self_on_port_death (user, reply);
-	      return connq_listen (sock->listen_queue, 0, NULL, NULL);
+	      err = connq_listen (sock->listen_queue, tsp, NULL);
+	      if (err == ETIMEDOUT)
+		{
+		  *select_type = 0;
+		  err = 0;
+		}
+	      return err;
 	    }
 	}
     }
@@ -231,19 +239,28 @@ S_io_select (struct sock_user *user,
       if (valid & SELECT_READ)
 	{
 	  pipe_acquire_reader (read_pipe);
-	  if (pipe_wait_readable (read_pipe, 1, 1) != EWOULDBLOCK)
-	    ready |= SELECT_READ; /* Data immediately readable (or error). */
-	  mutex_unlock (&read_pipe->lock);
+	  err = pipe_wait_readable (read_pipe, 1, 1);
+	  if (err == EWOULDBLOCK)
+	    err = 0; /* Not readable, actually not an error.  */
+	  else
+	    ready |= SELECT_READ; /* Data immediately readable (or error).  */
+	  pthread_mutex_unlock (&read_pipe->lock);
+	  if (err)
+	    /* Prevent write test from overwriting err.  */
+	    valid &= ~SELECT_WRITE;
 	}
       if (valid & SELECT_WRITE)
 	{
 	  pipe_acquire_writer (write_pipe);
-	  if (pipe_wait_writable (write_pipe, 1) != EWOULDBLOCK)
-	    ready |= SELECT_WRITE; /* Data immediately writable (or error). */
-	  mutex_unlock (&write_pipe->lock);
+	  err = pipe_wait_writable (write_pipe, 1);
+	  if (err == EWOULDBLOCK)
+	    err = 0; /* Not writable, actually not an error.  */
+	  else
+	    ready |= SELECT_WRITE; /* Data immediately writable (or error).  */
+	  pthread_mutex_unlock (&write_pipe->lock);
 	}
 
-      mutex_unlock (&sock->lock);
+      pthread_mutex_unlock (&sock->lock);
 
       if (ready)
 	/* No need to block, we've already got some results.  */
@@ -252,7 +269,7 @@ S_io_select (struct sock_user *user,
 	/* Wait for something to change.  */
 	{
 	  ports_interrupt_self_on_port_death (user, reply);
-	  err = pipe_pair_select (read_pipe, write_pipe, select_type, 1);
+	  err = pipe_pair_select (read_pipe, write_pipe, tsp, select_type, 1);
 	}
 
       if (valid & SELECT_READ)
@@ -262,6 +279,23 @@ S_io_select (struct sock_user *user,
     }
 
   return err;
+}
+
+error_t
+S_io_select (struct sock_user *user,
+	     mach_port_t reply, mach_msg_type_name_t reply_type,
+	     int *select_type)
+{
+  return io_select_common (user, reply, reply_type, NULL, select_type);
+}
+
+error_t
+S_io_select_timeout (struct sock_user *user,
+		     mach_port_t reply, mach_msg_type_name_t reply_type,
+		     struct timespec ts,
+		     int *select_type)
+{
+  return io_select_common (user, reply, reply_type, &ts, select_type);
 }
 
 /* Return the current status of the object.  Not all the fields of the
@@ -294,30 +328,30 @@ S_io_stat (struct sock_user *user, struct stat *st)
   /* As we try to be clever with large transfers, ask for them. */
   st->st_blksize = vm_page_size * 16;
 
-  mutex_lock (&sock->lock);	/* Make sure the pipes don't go away...  */
+  pthread_mutex_lock (&sock->lock);	/* Make sure the pipes don't go away...  */
 
   rpipe = sock->read_pipe;
   wpipe = sock->write_pipe;
 
   if (rpipe)
     {
-      mutex_lock (&rpipe->lock);
+      pthread_mutex_lock (&rpipe->lock);
       copy_time (&rpipe->read_time, &st->st_atim.tv_sec, &st->st_atim.tv_nsec);
       /* This seems useful.  */
       st->st_size = pipe_readable (rpipe, 1);
-      mutex_unlock (&rpipe->lock);
+      pthread_mutex_unlock (&rpipe->lock);
     }
 
   if (wpipe)
     {
-      mutex_lock (&wpipe->lock);
+      pthread_mutex_lock (&wpipe->lock);
       copy_time (&wpipe->write_time, &st->st_mtim.tv_sec, &st->st_mtim.tv_nsec);
-      mutex_unlock (&wpipe->lock);
+      pthread_mutex_unlock (&wpipe->lock);
     }
 
   copy_time (&sock->change_time, &st->st_ctim.tv_sec, &st->st_ctim.tv_nsec);
 
-  mutex_unlock (&sock->lock);
+  pthread_mutex_unlock (&sock->lock);
 
   return 0;
 }
@@ -343,12 +377,12 @@ S_io_set_all_openmodes (struct sock_user *user, int bits)
   if (!user)
     return EOPNOTSUPP;
 
-  mutex_lock (&user->sock->lock);
+  pthread_mutex_lock (&user->sock->lock);
   if (bits & O_NONBLOCK)
     user->sock->flags |= SOCK_NONBLOCK;
   else
     user->sock->flags &= ~SOCK_NONBLOCK;
-  mutex_unlock (&user->sock->lock);
+  pthread_mutex_unlock (&user->sock->lock);
 
   return 0;
 }
@@ -359,10 +393,10 @@ S_io_set_some_openmodes (struct sock_user *user, int bits)
   if (!user)
     return EOPNOTSUPP;
 
-  mutex_lock (&user->sock->lock);
+  pthread_mutex_lock (&user->sock->lock);
   if (bits & O_NONBLOCK)
     user->sock->flags |= SOCK_NONBLOCK;
-  mutex_unlock (&user->sock->lock);
+  pthread_mutex_unlock (&user->sock->lock);
 
   return 0;
 }
@@ -373,10 +407,10 @@ S_io_clear_some_openmodes (struct sock_user *user, int bits)
   if (!user)
     return EOPNOTSUPP;
 
-  mutex_lock (&user->sock->lock);
+  pthread_mutex_lock (&user->sock->lock);
   if (bits & O_NONBLOCK)
     user->sock->flags &= ~SOCK_NONBLOCK;
-  mutex_unlock (&user->sock->lock);
+  pthread_mutex_unlock (&user->sock->lock);
 
   return 0;
 }
@@ -454,12 +488,12 @@ S_io_pathconf (struct sock_user *user, int name, int *value)
     return EOPNOTSUPP;
   else if (name == _PC_PIPE_BUF)
     {
-      mutex_lock (&user->sock->lock);
+      pthread_mutex_lock (&user->sock->lock);
       if (user->sock->write_pipe == NULL)
 	*value = 0;
       else
 	*value = user->sock->write_pipe->write_atomic;
-      mutex_unlock (&user->sock->lock);
+      pthread_mutex_unlock (&user->sock->lock);
       return 0;
     }
   else
@@ -481,13 +515,13 @@ S_io_identity (struct sock_user *user,
 
   if (server_id == MACH_PORT_NULL)
     {
-      static struct mutex server_id_lock = MUTEX_INITIALIZER;
+      static pthread_mutex_t server_id_lock = PTHREAD_MUTEX_INITIALIZER;
 
-      mutex_lock (&server_id_lock);
+      pthread_mutex_lock (&server_id_lock);
       if (server_id == MACH_PORT_NULL) /* Recheck with the lock held.  */
 	err = mach_port_allocate (mach_task_self (), MACH_PORT_RIGHT_RECEIVE,
 				  &server_id);
-      mutex_unlock (&server_id_lock);
+      pthread_mutex_unlock (&server_id_lock);
 
       if (err)
 	return err;
@@ -495,11 +529,11 @@ S_io_identity (struct sock_user *user,
 
   sock = user->sock;
 
-  mutex_lock (&sock->lock);
+  pthread_mutex_lock (&sock->lock);
   if (sock->id == MACH_PORT_NULL)
     err = mach_port_allocate (mach_task_self (), MACH_PORT_RIGHT_RECEIVE,
 			      &sock->id);
-  mutex_unlock (&sock->lock);
+  pthread_mutex_unlock (&sock->lock);
 
   if (! err)
     {

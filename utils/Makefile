@@ -1,5 +1,5 @@
-#
-#   Copyright (C) 1994,95,96,97,98,99,2000,01,02 Free Software Foundation, Inc.
+#   Copyright (C) 1994,95,96,97,98,99,2000,01,02,12 Free Software Foundation,
+#   Inc.
 #
 #   This program is free software; you can redistribute it and/or
 #   modify it under the terms of the GNU General Public License as
@@ -21,18 +21,18 @@ makemode := utilities
 targets = shd ps settrans showtrans syncfs fsysopts \
 	storeinfo login w uptime ids loginpr sush vmstat portinfo \
 	devprobe vminfo addauth rmauth unsu setauth ftpcp ftpdir storecat \
-	storeread msgport rpctrace mount gcore fakeauth fakeroot
-special-targets = loginpr sush uptime fakeroot
+	storeread msgport rpctrace mount gcore fakeauth fakeroot remap
+special-targets = loginpr sush uptime fakeroot remap
 SRCS = shd.c ps.c settrans.c syncfs.c showtrans.c addauth.c rmauth.c \
 	fsysopts.c storeinfo.c login.c loginpr.sh sush.sh w.c \
 	uptime.sh psout.c ids.c vmstat.c portinfo.c devprobe.c vminfo.c \
 	parse.c frobauth.c frobauth-mod.c setauth.c pids.c nonsugid.c \
 	unsu.c ftpcp.c ftpdir.c storeread.c storecat.c msgport.c \
-	rpctrace.c mount.c gcore.c fakeauth.c fakeroot.sh
-LCLHDRS = psout.h parse.h pids.h frobauth.h
+	rpctrace.c mount.c gcore.c fakeauth.c fakeroot.sh remap.sh
 
 OBJS = $(filter-out %.sh,$(SRCS:.c=.o))
-HURDLIBS = ps ihash store fshelp threads ports ftpconn shouldbeinlibc
+HURDLIBS = ps ihash store fshelp ports ftpconn shouldbeinlibc
+LDLIBS += -lpthread
 login-LDLIBS = -lutil $(LIBCRYPT)
 addauth-LDLIBS = $(LIBCRYPT)
 setauth-LDLIBS = $(LIBCRYPT)
@@ -53,9 +53,7 @@ ps w: psout.o ../libps/libps.a ../libihash/libihash.a
 storeinfo storecat storeread: ../libstore/libstore.a
 ftpcp ftpdir: ../libftpconn/libftpconn.a
 
-# We must include libthreads because of a bug in the way shared libraries
-# work: all libraries that *any* routine in libfshelp uses must be defined.
-settrans: ../libfshelp/libfshelp.a ../libports/libports.a ../libthreads/libthreads.a
+settrans: ../libfshelp/libfshelp.a ../libports/libports.a
 ps w ids settrans syncfs showtrans fsysopts storeinfo login vmstat portinfo \
   devprobe vminfo addauth rmauth setauth unsu ftpcp ftpdir storeread \
   storecat msgport mount: \
@@ -63,12 +61,10 @@ ps w ids settrans syncfs showtrans fsysopts storeinfo login vmstat portinfo \
 
 $(filter-out $(special-targets), $(targets)): %: %.o
 
-rpctrace: ../libthreads/libthreads.a \
-	  ../libports/libports.a ../libihash/libihash.a
+rpctrace: ../libports/libports.a ../libihash/libihash.a
 rpctrace-CPPFLAGS = -DDATADIR=\"${datadir}\"
 
 fakeauth: authServer.o auth_requestUser.o interruptServer.o \
-	  ../libthreads/libthreads.a \
 	  ../libports/libports.a ../libihash/libihash.a \
 	  ../libshouldbeinlibc/libshouldbeinlibc.a
 auth-MIGSFLAGS = -imacros $(srcdir)/../auth/authmutations.h

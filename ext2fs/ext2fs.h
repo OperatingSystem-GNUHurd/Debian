@@ -25,7 +25,7 @@
 #include <hurd/iohelp.h>
 #include <hurd/diskfs.h>
 #include <assert.h>
-#include <rwlock.h>
+#include <pthread.h>
 #include <sys/mman.h>
 
 #define __hurd__		/* Enable some hurd-specific fields.  */
@@ -80,7 +80,7 @@ struct poke
 struct pokel
 {
   struct poke *pokes, *free_pokes;
-  spin_lock_t lock;
+  pthread_spinlock_t lock;
   struct pager *pager;
   void *image;
 };
@@ -101,8 +101,11 @@ void pokel_flush (struct pokel *pokel);
 /* Transfer all regions from FROM to POKEL, which must have the same pager. */
 void pokel_inherit (struct pokel *pokel, struct pokel *from);
 
-#ifndef EXT2FS_EI
-#define EXT2FS_EI extern inline
+#include <features.h>
+#ifdef EXT2FS_DEFINE_EI
+#define EXT2FS_EI
+#else
+#define EXT2FS_EI __extern_inline
 #endif
 
 /* ---------------------------------------------------------------- */
@@ -110,6 +113,11 @@ void pokel_inherit (struct pokel *pokel, struct pokel *from);
 
 #include <stdint.h>
 
+extern int test_bit (unsigned num, char *bitmap);
+
+extern int set_bit (unsigned num, char *bitmap);
+
+#if defined(__USE_EXTERN_INLINES) || defined(EXT2FS_DEFINE_EI)
 /* Returns TRUE if bit NUM is set in BITMAP.  */
 EXT2FS_EI int
 test_bit (unsigned num, char *bitmap)
@@ -138,6 +146,7 @@ clear_bit (unsigned num, char *bitmap)
   const uint_fast32_t mask = 1 << (num & 31);
   return (*bw & mask) ? (*bw &= ~mask, mask) : 0;
 }
+#endif /* Use extern inlines.  */
 
 /* ---------------------------------------------------------------- */
 
@@ -152,7 +161,7 @@ struct disknode
   struct node *hnext, **hprevp;
 
   /* Lock to lock while fiddling with this inode's block allocation info.  */
-  struct rwlock alloc_lock;
+  pthread_rwlock_t alloc_lock;
 
   /* Where changes to our indirect blocks are added.  */
   struct pokel indir_pokel;
@@ -259,9 +268,9 @@ unsigned long groups_count;	/* Number of groups in the fs */
 
 /* ---------------------------------------------------------------- */
 
-spin_lock_t node_to_page_lock;
+pthread_spinlock_t node_to_page_lock;
 
-spin_lock_t generation_lock;
+pthread_spinlock_t generation_lock;
 unsigned long next_generation;
 
 /* ---------------------------------------------------------------- */
@@ -294,6 +303,9 @@ struct ext2_group_desc *group_desc_image;
 
 #define inode_group_num(inum) (((inum) - 1) / sblock->s_inodes_per_group)
 
+extern struct ext2_inode *dino (ino_t inum);
+
+#if defined(__USE_EXTERN_INLINES) || defined(EXT2FS_DEFINE_EI)
 /* Convert an inode number to the dinode on disk. */
 EXT2FS_EI struct ext2_inode *
 dino (ino_t inum)
@@ -305,6 +317,7 @@ dino (ino_t inum)
   block_t block = bg->bg_inode_table + (group_inum / inodes_per_block);
   return ((struct ext2_inode *)bptr(block)) + group_inum % inodes_per_block;
 }
+#endif /* Use extern inlines.  */
 
 /* ---------------------------------------------------------------- */
 /* inode.c */
@@ -322,7 +335,7 @@ void inode_init (void);
 
 /* What to lock if changing global data data (e.g., the superblock or block
    group descriptors or bitmaps).  */
-spin_lock_t global_lock;
+pthread_spinlock_t global_lock;
 
 /* Where to record such changes.  */
 struct pokel global_pokel;
@@ -331,8 +344,16 @@ struct pokel global_pokel;
    record which disk blocks are actually modified, so we don't stomp on parts
    of the disk which are backed by file pagers.  */
 char *modified_global_blocks;
-spin_lock_t modified_global_blocks_lock;
+pthread_spinlock_t modified_global_blocks_lock;
 
+extern int global_block_modified (block_t block);
+extern void record_global_poke (void *ptr);
+extern void sync_global_ptr (void *bptr, int wait);
+extern void record_indir_poke (struct node *node, void *ptr);
+extern void sync_global (int wait);
+extern void alloc_sync (struct node *np);
+
+#if defined(__USE_EXTERN_INLINES) || defined(EXT2FS_DEFINE_EI)
 /* Marks the global block BLOCK as being modified, and returns true if we
    think it may have been clean before (but we may not be sure).  Note that
    this isn't enough to cause the block to be synced; you must call
@@ -343,9 +364,9 @@ global_block_modified (block_t block)
   if (modified_global_blocks)
     {
       int was_clean;
-      spin_lock (&modified_global_blocks_lock);
+      pthread_spin_lock (&modified_global_blocks_lock);
       was_clean = !set_bit(block, modified_global_blocks);
-      spin_unlock (&modified_global_blocks_lock);
+      pthread_spin_unlock (&modified_global_blocks_lock);
       return was_clean;
     }
   else
@@ -401,6 +422,7 @@ alloc_sync (struct node *np)
       diskfs_set_hypermetadata (1, 0);
     }
 }
+#endif /* Use extern inlines.  */
 
 /* ---------------------------------------------------------------- */
 /* getblk.c */

@@ -23,6 +23,7 @@
 #include <hurd/ports.h>
 #include <device/device.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <sys/mman.h>
 #include "driver.h"
 #include "mach-inputdev.h"
@@ -60,15 +61,15 @@ static struct mousebuf
   char evtbuffer[MOUSEBUFSZ];
   int pos;
   size_t size;
-  struct condition readcond;
-  struct condition writecond;
+  pthread_cond_t readcond;
+  pthread_cond_t writecond;
 } mousebuf;
 
 /* Wakeup for select */
-static struct condition select_alert;
+static pthread_cond_t select_alert;
 
 /* The global lock */
-static struct mutex global_lock;
+static pthread_mutex_t global_lock;
 
 /* Amount of times the device was opened.  Normally this translator
    should be only opened once.  */ 
@@ -89,30 +90,31 @@ repeat_event (kd_event *evt)
 {
   kd_event *ev;
 
-  mutex_lock (&global_lock);
+  pthread_mutex_lock (&global_lock);
   while (mousebuf.size + sizeof (kd_event) > MOUSEBUFSZ)
     {
-      /* The input buffer is full, wait until there is some space.  */
-      if (hurd_condition_wait (&mousebuf.writecond, &global_lock))
-	{
-	  mutex_unlock (&global_lock);
-	  /* Interrupt, silently continue.  */
-	}
+      /* The input buffer is full, wait until there is some space. If this call
+       * is interrupted, silently continue */
+      (void) pthread_hurd_cond_wait_np (&mousebuf.writecond, &global_lock);
     }
   ev = (kd_event *) &mousebuf.evtbuffer[MOUSEBUF_POS (mousebuf.pos 
 						      + mousebuf.size)];
   mousebuf.size += sizeof (kd_event);
   memcpy (ev, evt, sizeof (kd_event));
   
-  condition_broadcast (&mousebuf.readcond);
-  mutex_unlock (&global_lock);
+  pthread_cond_broadcast (&mousebuf.readcond);
+  pthread_cond_broadcast (&select_alert);
+  pthread_mutex_unlock (&global_lock);
 }
 
 
 static error_t
 repeater_select (struct protid *cred, mach_port_t reply,
-		 mach_msg_type_name_t replytype, int *type)
+		 mach_msg_type_name_t replytype,
+		 struct timespec *tsp, int *type)
 {
+  error_t err;
+
   if (!cred)
     return EOPNOTSUPP;
 
@@ -122,24 +124,28 @@ repeater_select (struct protid *cred, mach_port_t reply,
   if (*type == 0)
     return 0;
   
-  mutex_lock (&global_lock);
+  pthread_mutex_lock (&global_lock);
   while (1)
     {
       if (mousebuf.size > 0)
 	{
 	  *type = SELECT_READ;
-	  mutex_unlock (&global_lock);
+	  pthread_mutex_unlock (&global_lock);
 
 	  return 0;
 	}
 
       ports_interrupt_self_on_port_death (cred, reply);
-      if (hurd_condition_wait (&select_alert, &global_lock))
+      err = pthread_hurd_cond_timedwait_np (&select_alert, &global_lock, tsp);
+      if (err)
 	{
 	  *type = 0;
-	  mutex_unlock (&global_lock);
+	  pthread_mutex_unlock (&global_lock);
 
-	  return EINTR;
+	  if (err == ETIMEDOUT)
+	    err = 0;
+
+	  return err;
 	}
     }
 }
@@ -175,18 +181,18 @@ repeater_read (struct protid *cred, char **data,
   else if (! (cred->po->openstat & O_READ))
     return EBADF;
   
-  mutex_lock (&global_lock);
+  pthread_mutex_lock (&global_lock);
   while (!mousebuf.size)
     {
       if (cred->po->openstat & O_NONBLOCK && mousebuf.size == 0)
 	{
-	  mutex_unlock (&global_lock);
+	  pthread_mutex_unlock (&global_lock);
 	  return EWOULDBLOCK;
 	}
       
-      if (hurd_condition_wait (&mousebuf.readcond, &global_lock))
+      if (pthread_hurd_cond_wait_np (&mousebuf.readcond, &global_lock))
 	{
-	  mutex_unlock (&global_lock);
+	  pthread_mutex_unlock (&global_lock);
 	  return EINTR;
 	}
     }
@@ -206,7 +212,7 @@ repeater_read (struct protid *cred, char **data,
 	  *data = mmap (0, amount, PROT_READ|PROT_WRITE, MAP_ANON, 0, 0);
 	  if (*data == MAP_FAILED)
 	    {
-	      mutex_unlock (&global_lock);
+	      pthread_mutex_unlock (&global_lock);
 	      return ENOMEM;
 	    }
 	}
@@ -220,19 +226,19 @@ repeater_read (struct protid *cred, char **data,
 	  mousebuf.pos = MOUSEBUF_POS (mousebuf.pos);
 	}
       mousebuf.size -= amount;
-      condition_broadcast (&mousebuf.writecond);
+      pthread_cond_broadcast (&mousebuf.writecond);
     }
   
   *datalen = amount;
-  mutex_unlock (&global_lock);
+  pthread_mutex_unlock (&global_lock);
 
   return 0;
 }
 
 
 
-static any_t
-input_loop (any_t unused)
+static void *
+input_loop (void *unused)
 {
   kd_event *ev;
   vm_offset_t buf;
@@ -419,6 +425,7 @@ static error_t
 pc_mouse_start (void *handle)
 {
   error_t err;
+  pthread_t thread;
   char device_name[9];
   int devnum = majordev << 3 | minordev;
   device_t device_master;
@@ -442,7 +449,14 @@ pc_mouse_start (void *handle)
       return err;
     }
 
-  cthread_detach (cthread_fork (input_loop, NULL));
+  err = pthread_create (&thread, NULL, input_loop, NULL);
+  if (!err)
+    pthread_detach (thread);
+  else
+    {
+      errno = err;
+      perror ("pthread_create");
+    }
   
   if (repeater_node)
     setrepeater (repeater_node);
@@ -495,13 +509,11 @@ setrepeater (const char *nodename)
   cnode->close = repeater_close;
   cnode->demuxer = 0;
   
-  mutex_init (&global_lock);
+  pthread_mutex_init (&global_lock, NULL);
   
-  condition_init (&mousebuf.readcond);
-  condition_init (&mousebuf.writecond);
-  
-  condition_init (&select_alert);
-  condition_implies (&mousebuf.readcond, &select_alert);
+  pthread_cond_init (&mousebuf.readcond, NULL);
+  pthread_cond_init (&mousebuf.writecond, NULL);
+  pthread_cond_init (&select_alert, NULL);
   
   console_register_consnode (cnode);
   

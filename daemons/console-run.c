@@ -49,6 +49,7 @@ int
 main (int argc, char **argv)
 {
   mach_port_t consdev = get_console ();
+  mach_port_t runsystem;
   char *consname;
 
   if (consdev == MACH_PORT_NULL)
@@ -62,6 +63,12 @@ main (int argc, char **argv)
   if (argc < 2)
     error (1, 0, "Usage: %s PROGRAM [ARG...]", program_invocation_short_name);
 
+  /* Check whether runsystem exists before opening a console for it.  */
+  runsystem = file_name_lookup (argv[1], O_RDONLY, 0);
+  if (runsystem == MACH_PORT_NULL)
+    error (127, errno, "cannot open file `%s' for execution", argv[1]);
+  mach_port_deallocate (mach_task_self (), runsystem);
+
   if (open_console (&consname))
     setenv ("FALLBACK_CONSOLE", consname, 1);
 
@@ -72,17 +79,17 @@ main (int argc, char **argv)
 }
 
 /* Open /dev/console.  If it isn't there, or it isn't a terminal, then
-   create /tmp/console and put the terminal on it.  If we get EROFS,
-   in trying to create /tmp/console then as a last resort, put the
-   console on /tmp itself.  If all fail, we exit.
+   create /dev/console and put the terminal on it.  If we get EROFS,
+   in trying to create /dev/console then as a last resort, create
+   /tmp/console.  If all fail, we exit.
 
    Return nonzero if the vanilla open of /dev/console didn't work.
    In any case, after the console has been opened, put it on fds 0, 1, 2.  */
 static int
 open_console (char **namep)
 {
-#define TERMINAL_FIRST_TRY "/hurd/term\0/tmp/console\0device\0console"
-#define TERMINAL_SECOND_TRY "/hurd/term\0/tmp\0device\0console"
+#define TERMINAL_FIRST_TRY "/hurd/term\0/dev/console\0device\0console"
+#define TERMINAL_SECOND_TRY "/hurd/term\0/tmp/console\0device\0console"
   mach_port_t term, proc;
   static char *termname;
   struct stat st;
@@ -183,7 +190,13 @@ open_console (char **namep)
 
 	  if (term != MACH_PORT_NULL)
 	    {
-	      error (0, 0, "Using temporary console %s", termname);
+	      if (try == 1)
+		/* We created /dev/console, started, and installed the
+		   translator on it, so it really isn't a fallback
+		   console.  */
+		fallback = 0;
+	      else
+		error (0, 0, "Using temporary console %s", termname);
 	      break;
 	    }
 	}

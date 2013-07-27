@@ -86,28 +86,28 @@ static struct bpf_insn ether_filter[] =
 };
 static int ether_filter_len = sizeof (ether_filter) / sizeof (short);
 
-/* The BPF instruction allows IP and ARP packets */
 static struct bpf_insn bpf_ether_filter[] =
 {
-    {NETF_IN|NETF_BPF, /* Header. */ 0, 0, 0},
-    {40, 0, 0, 12},
-    {21, 1, 0, 2054},
-    {21, 0, 1, 2048},
-    {6, 0, 0, 1500},
-    {6, 0, 0, 0},
+    {NETF_IN|NETF_BPF, 0, 0, 0},		/* Header. */
+    {BPF_LD|BPF_H|BPF_ABS, 0, 0, 12},		/* Load Ethernet type */
+    {BPF_JMP|BPF_JEQ|BPF_K, 2, 0, 0x0806},	/* Accept ARP */
+    {BPF_JMP|BPF_JEQ|BPF_K, 1, 0, 0x0800},	/* Accept IPv4 */
+    {BPF_JMP|BPF_JEQ|BPF_K, 0, 1, 0x86DD},	/* Accept IPv6 */
+    {BPF_RET|BPF_K, 0, 0, 1500},		/* And return 1500 bytes */
+    {BPF_RET|BPF_K, 0, 0, 0},			/* Or discard it all */
 };
 static int bpf_ether_filter_len = sizeof (bpf_ether_filter) / sizeof (short);
 
 static struct port_bucket *etherport_bucket;
 
 
-static any_t
-ethernet_thread (any_t arg)
+static void *
+ethernet_thread (void *arg)
 {
   ports_manage_port_operations_one_thread (etherport_bucket,
 					   ethernet_demuxer,
 					   0);
-  return 0;
+  return NULL;
 }
 
 int
@@ -137,7 +137,7 @@ ethernet_demuxer (mach_msg_header_t *inp,
   datalen = ETH_HLEN
     + msg->packet_type.msgt_number - sizeof (struct packet_header);
 
-  __mutex_lock (&net_bh_lock);
+  pthread_mutex_lock (&net_bh_lock);
   skb = alloc_skb (datalen, GFP_ATOMIC);
   skb_put (skb, datalen);
   skb->dev = dev;
@@ -151,7 +151,7 @@ ethernet_demuxer (mach_msg_header_t *inp,
   /* Drop it on the queue. */
   skb->protocol = eth_type_trans (skb, dev);
   netif_rx (skb);
-  __mutex_unlock (&net_bh_lock);
+  pthread_mutex_unlock (&net_bh_lock);
 
   return 1;
 }
@@ -160,10 +160,19 @@ ethernet_demuxer (mach_msg_header_t *inp,
 void
 ethernet_initialize (void)
 {
+  pthread_t thread;
+  error_t err;
   etherport_bucket = ports_create_bucket ();
   etherreadclass = ports_create_class (0, 0);
 
-  cthread_detach (cthread_fork (ethernet_thread, 0));
+  err = pthread_create (&thread, NULL, ethernet_thread, NULL);
+  if (!err)
+    pthread_detach (thread);
+  else
+    {
+      errno = err;
+      perror ("pthread_create");
+    }
 }
 
 int
@@ -244,7 +253,7 @@ ethernet_xmit (struct sk_buff *skb, struct device *dev)
 }
 
 /* Set device flags (e.g. promiscuous) */
-int
+static int
 ethernet_change_flags (struct device *dev, short flags)
 {
   error_t err = 0;
@@ -302,6 +311,13 @@ setup_ethernet_device (char *name, struct device **device)
   dev->addr_len = ETH_ALEN;
   memset (dev->broadcast, 0xff, ETH_ALEN);
   dev->flags = IFF_BROADCAST | IFF_MULTICAST;
+
+  /* FIXME: Receive all multicast to fix IPv6, until we implement
+     ethernet_set_multi.  */
+  dev->flags |= IFF_ALLMULTI;
+
+  dev->change_flags = ethernet_change_flags;
+
   dev_init_buffers (dev);
 
   ethernet_open (dev);

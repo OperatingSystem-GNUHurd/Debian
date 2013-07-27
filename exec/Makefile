@@ -1,4 +1,6 @@
-# Copyright (C) 1993,94,95,96,98,99,2000,01,02,10 Free Software Foundation, Inc.
+# Copyright (C) 1993,94,95,96,98,99,2000,01,02,10,12 Free Software Foundation,
+# Inc.
+#
 # This file is part of the GNU Hurd.
 #
 # The GNU Hurd is free software; you can redistribute it and/or modify
@@ -28,12 +30,11 @@ gzip-objects = $(gzip-sources:%.c=%.o)
 bzip2-sources = do-bunzip2.c
 bzip2-objects = $(bzip2-sources:%.c=%.o)
 
-LCLHDRS = gzip.h crypt.h tailor.h priv.h execmutations.h
 target = exec
 #targets = exec exec.static
-DIST_FILES = elfcore.c
 #OTHERLIBS = -lbfd -liberty
-HURDLIBS = trivfs fshelp iohelp threads ports ihash shouldbeinlibc
+HURDLIBS = trivfs fshelp iohelp ports ihash shouldbeinlibc
+OTHERLIBS = -lpthread
 
 exec-MIGSFLAGS = -imacros $(srcdir)/execmutations.h
 
