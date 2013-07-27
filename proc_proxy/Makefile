@@ -21,7 +21,7 @@ makemode := server
 SRCS = proc_proxy.c process_ops.c
 LCLHDRS = proc_proxy.h
 DIST_FILES = process.defs
-HURDLIBS = threads ports
+HURDLIBS = ports
 target = proc_proxy
 MIGSTUBS = processServer.o
 OBJS = $(SRCS:.c=.o) $(MIGSTUBS)

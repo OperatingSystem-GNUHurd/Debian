@@ -23,13 +23,16 @@
 
 #define EWOULDBLOCK EAGAIN /* XXX */
 
-#include <cthreads.h>		/* For conditions & mutexes */
+#include <pthread.h>		/* For conditions & mutexes */
+#include <features.h>
+
+#ifdef PIPE_DEFINE_EI
+#define PIPE_EI
+#else
+#define PIPE_EI __extern_inline
+#endif
 
 #include "pq.h"
-
-#ifndef PIPE_EI
-#define PIPE_EI extern inline
-#endif
 
 
 /* A description of a class of pipes and how to operate on them.  */
@@ -59,6 +62,13 @@ extern struct pipe_class *stream_pipe_class;
 extern struct pipe_class *dgram_pipe_class;
 extern struct pipe_class *seqpack_pipe_class;
 
+struct pipe_select_cond
+{
+  struct pipe_select_cond *next;
+  struct pipe_select_cond *prev;
+  pthread_cond_t cond;
+};
+
 /* A unidirectional data pipe; it transfers data from READER to WRITER.  */
 struct pipe
 {
@@ -79,11 +89,13 @@ struct pipe
   time_value_t read_time;
   time_value_t write_time;
 
-  struct condition pending_reads;
-  struct condition pending_read_selects;
+  pthread_cond_t pending_reads;
+  pthread_cond_t pending_read_selects;
 
-  struct condition pending_writes;
-  struct condition pending_write_selects;
+  pthread_cond_t pending_writes;
+  pthread_cond_t pending_write_selects;
+
+  struct pipe_select_cond *pending_selects;
 
   /* The maximum number of characters that this pipe will hold without
      further writes blocking.  */
@@ -92,7 +104,7 @@ struct pipe
   /* Write requests of less than this much are always done atomically.  */
   size_t write_atomic;
 
-  struct mutex lock;
+  pthread_mutex_t lock;
 
   /* A queue of incoming packets, of type either PACKET_TYPE_DATA or
      PACKET_TYPE_CONTROL.  Each data packet represents one datagram for
@@ -107,6 +119,22 @@ struct pipe
 /* Pipe flags.  */
 #define PIPE_BROKEN	0x1	/* This pipe isn't connected.  */
 
+
+extern size_t pipe_readable (struct pipe *pipe, int data_only);
+
+extern int pipe_is_readable (struct pipe *pipe, int data_only);
+
+extern error_t pipe_wait_readable (struct pipe *pipe, int noblock, int data_only);
+
+extern error_t pipe_select_readable (struct pipe *pipe, struct timespec *tsp,
+				     int data_only);
+
+extern error_t pipe_wait_writable (struct pipe *pipe, int noblock);
+
+extern error_t pipe_select_writable (struct pipe *pipe, struct timespec *tsp);
+
+#if defined(__USE_EXTERN_INLINES) || defined(PIPE_DEFINE_EI)
+
 /* Returns the number of characters quickly readable from PIPE.  If DATA_ONLY
    is true, then `control' packets are ignored.  */
 PIPE_EI size_t
@@ -150,7 +178,7 @@ pipe_wait_readable (struct pipe *pipe, int noblock, int data_only)
     {
       if (noblock)
 	return EWOULDBLOCK;
-      if (hurd_condition_wait (&pipe->pending_reads, &pipe->lock))
+      if (pthread_hurd_cond_wait_np (&pipe->pending_reads, &pipe->lock))
 	return EINTR;
     }
   return 0;
@@ -161,12 +189,17 @@ pipe_wait_readable (struct pipe *pipe, int noblock, int data_only)
    given a chance to read, and if there is still data available thereafter.
    If DATA_ONLY is true, then `control' packets are ignored.  */
 PIPE_EI error_t
-pipe_select_readable (struct pipe *pipe, int data_only)
+pipe_select_readable (struct pipe *pipe, struct timespec *tsp, int data_only)
 {
+  error_t err = 0;
   while (! pipe_is_readable (pipe, data_only) && ! (pipe->flags & PIPE_BROKEN))
-    if (hurd_condition_wait (&pipe->pending_read_selects, &pipe->lock))
-      return EINTR;
-  return 0;
+    {
+      err = pthread_hurd_cond_timedwait_np (&pipe->pending_read_selects,
+					    &pipe->lock, tsp);
+      if (err)
+	break;
+    }
+  return err;
 }
 
 /* Block until data can be written to PIPE.  If NOBLOCK is true, then
@@ -182,7 +215,7 @@ pipe_wait_writable (struct pipe *pipe, int noblock)
     {
       if (noblock)
 	return EWOULDBLOCK;
-      if (hurd_condition_wait (&pipe->pending_writes, &pipe->lock))
+      if (pthread_hurd_cond_wait_np (&pipe->pending_writes, &pipe->lock))
 	return EINTR;
       if (pipe->flags & PIPE_BROKEN)
 	return EPIPE;
@@ -194,14 +227,21 @@ pipe_wait_writable (struct pipe *pipe, int noblock)
    threads waiting using pipe_wait_writable have been woken and given a
    chance to write, and if there is still space available thereafter.  */
 PIPE_EI error_t
-pipe_select_writable (struct pipe *pipe)
+pipe_select_writable (struct pipe *pipe, struct timespec *tsp)
 {
   size_t limit = pipe->write_limit;
+  error_t err = 0;
   while (! (pipe->flags & PIPE_BROKEN) && pipe_readable (pipe, 1) >= limit)
-    if (hurd_condition_wait (&pipe->pending_writes, &pipe->lock))
-      return EINTR;
-  return 0;
+    {
+      err = pthread_hurd_cond_timedwait_np (&pipe->pending_writes,
+					    &pipe->lock, tsp);
+      if (err)
+	break;
+    }
+  return err;
 }
+
+#endif /* Use extern inlines.  */
 
 /* Creates a new pipe of class CLASS and returns it in RESULT.  */
 error_t pipe_create (struct pipe_class *class, struct pipe **pipe);
@@ -223,11 +263,31 @@ void _pipe_no_readers (struct pipe *pipe);
    should be locked.  */
 void _pipe_no_writers (struct pipe *pipe);
 
+extern void pipe_acquire_reader (struct pipe *pipe);
+
+extern void pipe_acquire_writer (struct pipe *pipe);
+
+extern void pipe_release_reader (struct pipe *pipe);
+
+extern void pipe_release_writer (struct pipe *pipe);
+
+extern void pipe_add_reader (struct pipe *pipe);
+
+extern void pipe_add_writer (struct pipe *pipe);
+
+extern void pipe_remove_reader (struct pipe *pipe);
+
+extern void pipe_remove_writer (struct pipe *pipe);
+
+extern void pipe_drain (struct pipe *pipe);
+
+#if defined(__USE_EXTERN_INLINES) || defined(PIPE_DEFINE_EI)
+
 /* Lock PIPE and increment its readers count.  */
 PIPE_EI void
 pipe_acquire_reader (struct pipe *pipe)
 {
-  mutex_lock (&pipe->lock);
+  pthread_mutex_lock (&pipe->lock);
   if (pipe->readers++ == 0)
     _pipe_first_reader (pipe);
 }
@@ -236,7 +296,7 @@ pipe_acquire_reader (struct pipe *pipe)
 PIPE_EI void
 pipe_acquire_writer (struct pipe *pipe)
 {
-  mutex_lock (&pipe->lock);
+  pthread_mutex_lock (&pipe->lock);
   if (pipe->writers++ == 0)
     _pipe_first_writer (pipe);
 }
@@ -249,7 +309,7 @@ pipe_release_reader (struct pipe *pipe)
   if (--pipe->readers == 0)
     _pipe_no_readers (pipe);
   else
-    mutex_unlock (&pipe->lock);
+    pthread_mutex_unlock (&pipe->lock);
 }
 
 /* Decrement PIPE's (which should be locked) writer count and unlock it.  If
@@ -260,7 +320,7 @@ pipe_release_writer (struct pipe *pipe)
   if (--pipe->writers == 0)
     _pipe_no_writers (pipe);
   else
-    mutex_unlock (&pipe->lock);
+    pthread_mutex_unlock (&pipe->lock);
 }
 
 /* Increment PIPE's reader count.  PIPE should be unlocked.  */
@@ -268,7 +328,7 @@ PIPE_EI void
 pipe_add_reader (struct pipe *pipe)
 {
   pipe_acquire_reader (pipe);
-  mutex_unlock (&pipe->lock);
+  pthread_mutex_unlock (&pipe->lock);
 }
 
 /* Increment PIPE's writer count.  PIPE should be unlocked.  */
@@ -276,7 +336,7 @@ PIPE_EI void
 pipe_add_writer (struct pipe *pipe)
 {
   pipe_acquire_writer (pipe);
-  mutex_unlock (&pipe->lock);
+  pthread_mutex_unlock (&pipe->lock);
 }
 
 /* Decrement PIPE's (which should be unlocked) reader count and unlock it.  If
@@ -284,7 +344,7 @@ pipe_add_writer (struct pipe *pipe)
 PIPE_EI void
 pipe_remove_reader (struct pipe *pipe)
 {
-  mutex_lock (&pipe->lock);
+  pthread_mutex_lock (&pipe->lock);
   pipe_release_reader (pipe);
 }
 
@@ -293,7 +353,7 @@ pipe_remove_reader (struct pipe *pipe)
 PIPE_EI void
 pipe_remove_writer (struct pipe *pipe)
 {
-  mutex_lock (&pipe->lock);
+  pthread_mutex_lock (&pipe->lock);
   pipe_release_writer (pipe);
 }
 
@@ -303,6 +363,8 @@ pipe_drain (struct pipe *pipe)
 {
   pq_drain (pipe->queue);
 }
+
+#endif /* Use extern inlines.  */
 
 /* Writes up to LEN bytes of DATA, to PIPE, which should be locked, and
    returns the amount written in AMOUNT.  If present, the information in
@@ -359,7 +421,7 @@ error_t pipe_recv (struct pipe *pipe, int noblock, unsigned *flags,
   pipe_recv (pipe, noblock, 0, source, data, data_len, amount, 0,0,0,0)
 
 /* Hold this lock before attempting to lock multiple pipes. */
-extern struct mutex pipe_multiple_lock;
+extern pthread_mutex_t pipe_multiple_lock;
 
 /* Return when either RPIPE is available for reading (if SELECT_READ is set
    in *SELECT_TYPE), or WPIPE is available for writing (if select_write is
@@ -368,7 +430,8 @@ extern struct mutex pipe_multiple_lock;
    waited for on RPIPE.  Neither RPIPE or WPIPE should be locked when calling
    this function (unlike most pipe functions).  */
 error_t pipe_pair_select (struct pipe *rpipe, struct pipe *wpipe,
-			  int *select_type, int data_only);
+			  struct timespec *tsp, int *select_type,
+			  int data_only);
 
 /* ---------------------------------------------------------------- */
 /* User-provided functions.  */

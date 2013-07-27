@@ -61,7 +61,7 @@ diskfs_drop_node (struct node *np)
 	     will notice that the size is zero, and not have to
 	     do anything. */
 	  np->references++;
-	  spin_unlock (&diskfs_node_refcnt_lock);
+	  pthread_spin_unlock (&diskfs_node_refcnt_lock);
 	  diskfs_truncate (np, 0);
 	  
 	  /* Force allocsize to zero; if truncate consistently fails this
@@ -78,7 +78,7 @@ diskfs_drop_node (struct node *np)
       np->dn_stat.st_mode = 0;
       np->dn_stat.st_rdev = 0;
       np->dn_set_ctime = np->dn_set_atime = 1;
-      diskfs_node_update (np, 1);
+      diskfs_node_update (np, diskfs_synchronous);
       diskfs_free_node (np, savemode);
     }
   else
@@ -94,7 +94,7 @@ diskfs_drop_node (struct node *np)
   assert (!np->sockaddr);
 
   diskfs_node_norefs (np);
-  spin_unlock (&diskfs_node_refcnt_lock);
+  pthread_spin_unlock (&diskfs_node_refcnt_lock);
 }
 
       

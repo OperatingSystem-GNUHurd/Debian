@@ -67,10 +67,10 @@ diskfs_set_statfs (struct statfs *st)
   st->f_bsize = vm_page_size;
   st->f_blocks = tmpfs_page_limit;
 
-  spin_lock (&diskfs_node_refcnt_lock);
+  pthread_spin_lock (&diskfs_node_refcnt_lock);
   st->f_files = num_files;
   pages = round_page (tmpfs_space_used) / vm_page_size;
-  spin_unlock (&diskfs_node_refcnt_lock);
+  pthread_spin_unlock (&diskfs_node_refcnt_lock);
 
   st->f_bfree = pages < tmpfs_page_limit ? tmpfs_page_limit - pages : 0;
   st->f_bavail = st->f_bfree;
@@ -100,9 +100,12 @@ diskfs_reload_global_state ()
 
 int diskfs_synchronous = 0;
 
+#define OPT_SIZE 600	/* --size */
+
 static const struct argp_option options[] =
 {
   {"mode", 'm', "MODE", 0, "Permissions (octal) for root directory"},
+  {"size", OPT_SIZE, "MAX-BYTES", 0, "Maximum size"},
   {NULL,}
 };
 
@@ -111,6 +114,66 @@ struct option_values
   off_t size;
   mode_t mode;
 };
+
+/* Parse the size string ARG, and set *NEWSIZE with the resulting size.  */
+static error_t
+parse_opt_size (const char *arg, struct argp_state *state, off_t *newsize)
+{
+  char *end = NULL;
+  intmax_t size = strtoimax (arg, &end, 0);
+  if (end == NULL || end == arg)
+    {
+      argp_error (state, "argument must be a number");
+      return EINVAL;
+    }
+  if (size < 0)
+    {
+      argp_error (state, "negative size not meaningful");
+      return EINVAL;
+    }
+  switch (*end)
+    {
+      case 'g':
+      case 'G':
+	size <<= 10;
+      case 'm':
+      case 'M':
+	size <<= 10;
+      case 'k':
+      case 'K':
+	size <<= 10;
+	break;
+      case '%':
+	{
+	  /* Set as a percentage of the machine's physical memory.  */
+	  struct vm_statistics vmstats;
+	  error_t err = vm_statistics (mach_task_self (), &vmstats);
+	  if (err)
+	    {
+	      argp_error (state, "cannot find total physical memory: %s",
+			  strerror (err));
+	      return err;
+	    }
+	  size = round_page ((((vmstats.free_count
+				+ vmstats.active_count
+				+ vmstats.inactive_count
+				+ vmstats.wire_count)
+			       * vm_page_size)
+			      * size + 99) / 100);
+	  break;
+	}
+    }
+  size = (off_t) size;
+  if (size < 0)
+    {
+      argp_error (state, "size too large");
+      return EINVAL;
+    }
+
+  *newsize = size;
+
+  return 0;
+}
 
 /* Parse a command line option.  */
 static error_t
@@ -128,7 +191,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
       if (values == 0)
 	return ENOMEM;
       state->hook = values;
-      values->size = 0;
+      values->size = -1;
       values->mode = -1;
       break;
     case ARGP_KEY_FINI:
@@ -154,9 +217,21 @@ parse_opt (int key, char *arg, struct argp_state *state)
       }
       break;
 
+    case OPT_SIZE:		/* --size=MAX-BYTES */
+      {
+	error_t err = parse_opt_size (arg, state, &values->size);
+	if (err)
+	  return err;
+      }
+      break;
+
     case ARGP_KEY_NO_ARGS:
-      argp_error (state, "must supply maximum size");
-      return EINVAL;
+      if (values->size < 0)
+	{
+	  argp_error (state, "must supply maximum size");
+	  return EINVAL;
+	}
+      break;
 
     case ARGP_KEY_ARGS:
       if (state->argv[state->next + 1] != 0)
@@ -164,59 +239,20 @@ parse_opt (int key, char *arg, struct argp_state *state)
 	  argp_error (state, "too many arguments");
 	  return EINVAL;
 	}
+      else if (values->size >= 0)
+	{
+	  if (strcmp (state->argv[state->next], "tmpfs") != 0)
+	    {
+	      argp_error (state, "size specified with --size and argument is not \"tmpfs\"");
+	      return EINVAL;
+	    }
+	}
       else
 	{
-	  char *end = NULL;
-	  intmax_t size = strtoimax (state->argv[state->next], &end, 0);
-	  if (end == NULL || end == arg)
-	    {
-	      argp_error (state, "argument must be a number");
-	      return EINVAL;
-	    }
-	  if (size < 0)
-	    {
-	      argp_error (state, "negative size not meaningful");
-	      return EINVAL;
-	    }
-	  switch (*end)
-	    {
-	    case 'g':
-	    case 'G':
-	      size <<= 10;
-	    case 'm':
-	    case 'M':
-	      size <<= 10;
-	    case 'k':
-	    case 'K':
-	      size <<= 10;
-	      break;
-	    case '%':
-	      {
-		/* Set as a percentage of the machine's physical memory.  */
-		struct vm_statistics vmstats;
-		error_t err = vm_statistics (mach_task_self (), &vmstats);
-		if (err)
-		  {
-		    argp_error (state, "cannot find total physical memory: %s",
-				strerror (err));
-		    return err;
-		  }
-		size = round_page ((((vmstats.free_count
-				      + vmstats.active_count
-				      + vmstats.inactive_count
-				      + vmstats.wire_count)
-				     * vm_page_size)
-				    * size + 99) / 100);
-		break;
-	      }
-	    }
-	  size = (off_t) size;
-	  if (size < 0)
-	    {
-	      argp_error (state, "size too large");
-	      return EINVAL;
-	    }
-	  values->size = size;
+	  error_t err = parse_opt_size (state->argv[state->next], state,
+					&values->size);
+	  if (err)
+	    return err;
 	}
       break;
 
@@ -255,6 +291,30 @@ diskfs_append_args (char **argz, size_t *argz_len)
   return err;
 }
 
+/* Handling of operations for the ports in diskfs_port_bucket, calling 
+ * demuxer for each incoming message */
+static void *
+diskfs_thread_function (void *demuxer)
+{
+  error_t err;
+
+  do
+    {
+      ports_manage_port_operations_multithread (diskfs_port_bucket,
+						(ports_demuxer_type) demuxer,
+						0,
+						0,
+						0);
+      err = diskfs_shutdown (0);
+    }
+  while (err);
+
+  exit (0);
+  /* NOTREACHED */
+  return NULL;
+}
+
+
 /* Add our startup arguments to the standard diskfs set.  */
 static const struct argp_child startup_children[] =
   {{&diskfs_startup_argp}, {0}};
@@ -267,7 +327,7 @@ m or M for megabytes, g or G for gigabytes.",
 /* Similarly at runtime.  */
 static const struct argp_child runtime_children[] =
   {{&diskfs_std_runtime_argp}, {0}};
-static struct argp runtime_argp = {0, parse_opt, 0, 0, runtime_children};
+static struct argp runtime_argp = {options, parse_opt, 0, 0, runtime_children};
 
 struct argp *diskfs_runtime_argp = (struct argp *)&runtime_argp;
 
@@ -278,6 +338,7 @@ main (int argc, char **argv)
 {
   error_t err;
   mach_port_t bootstrap, realnode, host_priv;
+  pthread_t pthread_id;
   struct stat st;
 
   err = argp_parse (&startup_argp, argc, argv, ARGP_IN_ORDER, NULL, NULL);
@@ -317,7 +378,16 @@ main (int argc, char **argv)
   if (err)
     error (4, err, "cannot create root directory");
 
-  diskfs_spawn_first_thread (diskfs_demuxer);
+  /* Like diskfs_spawn_first_thread. But do it manually, without timeout */
+  err = pthread_create (&pthread_id, NULL, diskfs_thread_function,
+			diskfs_demuxer);
+  if (!err)
+    pthread_detach (pthread_id);
+  else
+    {
+      errno = err;
+      perror ("pthread_create");
+    }
 
   /* Now that we are all set up to handle requests, and diskfs_root_node is
      set properly, it is safe to export our fsys control port to the
@@ -367,10 +437,10 @@ main (int argc, char **argv)
   /* We must keep the REALNODE send right to remain the active
      translator for the underlying node.  */
 
-  mutex_unlock (&diskfs_root_node->lock);
+  pthread_mutex_unlock (&diskfs_root_node->lock);
 
   /* and so we die, leaving others to do the real work.  */
-  cthread_exit (0);
+  pthread_exit (NULL);
   /* NOTREACHED */
   return 0;
 }

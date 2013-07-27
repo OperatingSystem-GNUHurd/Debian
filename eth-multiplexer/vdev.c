@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <error.h>
 
-#include <cthreads.h>
+#include <pthread.h>
 
 #include "vdev.h"
 #include "queue.h"
@@ -42,7 +42,7 @@ static int dev_num;
 
 /* This lock is only used to protected the virtual device list.
  * TODO every device structure should has its own lock to protect itself. */
-static struct mutex dev_list_lock = MUTEX_INITIALIZER;
+static pthread_mutex_t dev_list_lock = PTHREAD_MUTEX_INITIALIZER;
 
 mach_msg_type_t header_type = 
 {
@@ -75,13 +75,13 @@ struct vether_device *
 lookup_dev_by_name (char *name)
 {
   struct vether_device *vdev;
-  mutex_lock (&dev_list_lock);
+  pthread_mutex_lock (&dev_list_lock);
   for (vdev = dev_head; vdev; vdev = vdev->next)
     {
       if (strncmp (vdev->name, name, IFNAMSIZ) == 0)
 	break;
     }
-  mutex_unlock (&dev_list_lock);
+  pthread_mutex_unlock (&dev_list_lock);
   return vdev;
 }
 
@@ -90,17 +90,17 @@ foreach_dev_do (int (func) (struct vether_device *))
 {
   struct vether_device *vdev;
   int rval = 0;
-  mutex_lock (&dev_list_lock);
+  pthread_mutex_lock (&dev_list_lock);
   for (vdev = dev_head; vdev; vdev = vdev->next)
     {
-      mutex_unlock (&dev_list_lock);
+      pthread_mutex_unlock (&dev_list_lock);
       /* func() can stop the loop by returning <> 0 */
       rval = func (vdev);
-      mutex_lock (&dev_list_lock);
+      pthread_mutex_lock (&dev_list_lock);
       if (rval)
 	break;
     }
-  mutex_unlock (&dev_list_lock);
+  pthread_mutex_unlock (&dev_list_lock);
   return rval;
 }
 
@@ -109,7 +109,7 @@ int
 remove_dead_port_from_dev (mach_port_t dead_port)
 {
   struct vether_device *vdev;
-  mutex_lock (&dev_list_lock);
+  pthread_mutex_lock (&dev_list_lock);
   for (vdev = dev_head; vdev; vdev = vdev->next)
     {
       remove_dead_filter (&vdev->port_list,
@@ -117,7 +117,7 @@ remove_dead_port_from_dev (mach_port_t dead_port)
       remove_dead_filter (&vdev->port_list,
 			  &vdev->port_list.if_snd_port_list, dead_port);
     }
-  mutex_unlock (&dev_list_lock);
+  pthread_mutex_unlock (&dev_list_lock);
   return 0;
 }
 
@@ -150,14 +150,14 @@ add_vdev (char *name, int size,
   queue_init (&vdev->port_list.if_rcv_port_list);
   queue_init (&vdev->port_list.if_snd_port_list);
 
-  mutex_lock (&dev_list_lock);
+  pthread_mutex_lock (&dev_list_lock);
   vdev->next = dev_head;
   dev_head = vdev;
   vdev->pprev = &dev_head;
   if (vdev->next)
     vdev->next->pprev = &vdev->next;
   dev_num++;
-  mutex_unlock (&dev_list_lock);
+  pthread_mutex_unlock (&dev_list_lock);
 
   debug ("initialize the virtual device\n");
   return vdev;
@@ -170,12 +170,12 @@ destroy_vdev (void *port)
 
   debug ("device %s is going to be destroyed\n", vdev->name);
   /* Delete it from the virtual device list */
-  mutex_lock (&dev_list_lock);
+  pthread_mutex_lock (&dev_list_lock);
   *vdev->pprev = vdev->next;
   if (vdev->next)
     vdev->next->pprev = vdev->pprev;
   dev_num--;
-  mutex_unlock (&dev_list_lock);
+  pthread_mutex_unlock (&dev_list_lock);
 
   /* TODO Delete all filters in the interface,
    * there shouldn't be any filters left */

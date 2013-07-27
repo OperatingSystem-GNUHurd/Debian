@@ -18,14 +18,21 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA. */
 
-#include <cthreads.h>
+#include <pthread.h>
 #include <assert.h>
 #include <errno.h>
 #include <hurd/trivfs.h>
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <features.h>
 #include <hurd/hurd_types.h>
+
+#ifdef TERM_DEFINE_EI
+#define TERM_EI
+#else
+#define TERM_EI __extern_inline
+#endif
 
 #undef MDMBUF
 #undef ECHO
@@ -88,13 +95,16 @@ long termflags;
 #define QUEUE_HIWAT 8100
 
 /* Global lock */
-struct mutex global_lock;
+pthread_mutex_t global_lock;
 
 /* Wakeup when NO_CARRIER turns off */
-struct condition carrier_alert;
+pthread_cond_t carrier_alert;
 
 /* Wakeup for select */
-struct condition select_alert;
+pthread_cond_t select_alert;
+
+/* Wakeup for pty select, if not null */
+pthread_cond_t *pty_select_alert;
 
 /* Bucket for all our ports. */
 struct port_bucket *term_bucket;
@@ -178,40 +188,58 @@ struct queue
   int hiwat;
   short *cs, *ce;
   int arraylen;
-  struct condition *wait;
+  pthread_cond_t *wait;
   quoted_char array[0];
 };
 
 struct queue *create_queue (int size, int lowat, int hiwat);
 
+extern int qsize (struct queue *q);
+extern int qavail (struct queue *q);
+extern void clear_queue (struct queue *q);
+extern quoted_char dequeue_quote (struct queue *q);
+extern char dequeue (struct queue *q);
+extern void enqueue_internal (struct queue **qp, quoted_char c);
+extern void enqueue (struct queue **qp, char c);
+extern void enqueue_quote (struct queue **qp, char c);
+extern char unquote_char (quoted_char c);
+extern int char_quoted_p (quoted_char c);
+extern short queue_erase (struct queue *q);
+
+#if defined(__USE_EXTERN_INLINES) || defined(TERM_DEFINE_EI)
 /* Return the number of characters in Q. */
-extern inline int
+TERM_EI int
 qsize (struct queue *q)
 {
   return q->ce - q->cs;
 }
 
 /* Return nonzero if characters can be added to Q. */
-extern inline int
+TERM_EI int
 qavail (struct queue *q)
 {
   return !q->susp;
 }
 
 /* Flush all the characters from Q. */
-extern inline void
+TERM_EI void
 clear_queue (struct queue *q)
 {
   q->susp = 0;
   q->cs = q->ce = q->array;
-  condition_broadcast (q->wait);
+  pthread_cond_broadcast (q->wait);
+  pthread_cond_broadcast (&select_alert);
+  if (q == inputq && pty_select_alert != NULL)
+    pthread_cond_broadcast (pty_select_alert);
 }
+#endif /* Use extern inlines.  */
 
 /* Should be below, but inlines need it. */
 void call_asyncs (int dir);
 
+#if defined(__USE_EXTERN_INLINES) || defined(TERM_DEFINE_EI)
 /* Return the next character off Q; leave the quoting bit on. */
-extern inline quoted_char
+TERM_EI quoted_char
 dequeue_quote (struct queue *q)
 {
   int beep = 0;
@@ -226,24 +254,29 @@ dequeue_quote (struct queue *q)
     beep = 1;
   if (beep)
     {
-      condition_broadcast (q->wait);
-      if (q == outputq)
+      pthread_cond_broadcast (q->wait);
+      pthread_cond_broadcast (&select_alert);
+      if (q == inputq && pty_select_alert != NULL)
+	pthread_cond_broadcast (pty_select_alert);
+      else if (q == outputq)
 	call_asyncs (O_WRITE);
     }
   return *q->cs++;
 }
 
 /* Return the next character off Q. */
-extern inline char
+TERM_EI char
 dequeue (struct queue *q)
 {
   return dequeue_quote (q) & ~QUEUE_QUOTE_MARK;
 }
+#endif /* Use extern inlines.  */
 
 struct queue *reallocate_queue (struct queue *);
 
+#if defined(__USE_EXTERN_INLINES) || defined(TERM_DEFINE_EI)
 /* Add C to *QP. */
-extern inline void
+TERM_EI void
 enqueue_internal (struct queue **qp, quoted_char c)
 {
   struct queue *q = *qp;
@@ -255,9 +288,14 @@ enqueue_internal (struct queue **qp, quoted_char c)
 
   if (qsize (q) == 1)
     {
-      condition_broadcast (q->wait);
+      pthread_cond_broadcast (q->wait);
+      pthread_cond_broadcast (&select_alert);
       if (q == inputq)
-	call_asyncs (O_READ);
+	{
+	  if (pty_select_alert != NULL)
+	    pthread_cond_broadcast (pty_select_alert);
+	  call_asyncs (O_READ);
+	}
     }
 
   if (!q->susp && (qsize (q) > q->hiwat))
@@ -265,28 +303,28 @@ enqueue_internal (struct queue **qp, quoted_char c)
 }
 
 /* Add C to *QP. */
-extern inline void
+TERM_EI void
 enqueue (struct queue **qp, char c)
 {
   enqueue_internal (qp, c);
 }
 
 /* Add C to *QP, marking it with a quote. */
-extern inline void
+TERM_EI void
 enqueue_quote (struct queue **qp, char c)
 {
   enqueue_internal (qp, c | QUEUE_QUOTE_MARK);
 }
 
 /* Return the unquoted version of a quoted_char. */
-extern inline char
+TERM_EI char
 unquote_char (quoted_char c)
 {
   return c & ~QUEUE_QUOTE_MARK;
 }
 
 /* Tell if a quoted_char is actually quoted. */
-extern inline int
+TERM_EI int
 char_quoted_p (quoted_char c)
 {
   return c & QUEUE_QUOTE_MARK;
@@ -294,7 +332,7 @@ char_quoted_p (quoted_char c)
 
 /* Remove the most recently enqueue character from Q; leaving
    the quote mark on. */
-extern inline short
+TERM_EI short
 queue_erase (struct queue *q)
 {
   short answer;
@@ -310,9 +348,15 @@ queue_erase (struct queue *q)
   if (qsize (q) == 0)
     beep = 1;
   if (beep)
-    condition_broadcast (q->wait);
+    {
+      pthread_cond_broadcast (q->wait);
+      pthread_cond_broadcast (&select_alert);
+      if (q == inputq && pty_select_alert != NULL)
+	pthread_cond_broadcast (pty_select_alert);
+    }
   return answer;
 }
+#endif /* Use extern inlines.  */
 
 
 /* Functions devio is supposed to call */
@@ -342,7 +386,8 @@ error_t pty_io_write (struct trivfs_protid *, char *,
 error_t pty_io_read (struct trivfs_protid *, char **,
 		     mach_msg_type_number_t *, mach_msg_type_number_t);
 error_t pty_io_readable (size_t *);
-error_t pty_io_select (struct trivfs_protid *, mach_port_t, int *);
+error_t pty_io_select (struct trivfs_protid *, mach_port_t,
+		       struct timespec *, int *);
 error_t pty_open_hook (struct trivfs_control *, struct iouser *, int);
 error_t pty_po_create_hook (struct trivfs_peropen *);
 error_t pty_po_destroy_hook (struct trivfs_peropen *);

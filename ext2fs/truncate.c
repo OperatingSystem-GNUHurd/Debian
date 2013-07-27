@@ -224,11 +224,11 @@ force_delayed_copies (struct node *node, off_t length)
 {
   struct pager *pager;
 
-  spin_lock (&node_to_page_lock);
+  pthread_spin_lock (&node_to_page_lock);
   pager = node->dn->pager;
   if (pager)
     ports_port_ref (pager);
-  spin_unlock (&node_to_page_lock);
+  pthread_spin_unlock (&node_to_page_lock);
 
   if (pager)
     {
@@ -254,11 +254,11 @@ enable_delayed_copies (struct node *node)
 {
   struct pager *pager;
 
-  spin_lock (&node_to_page_lock);
+  pthread_spin_lock (&node_to_page_lock);
   pager = node->dn->pager;
   if (pager)
     ports_port_ref (pager);
-  spin_unlock (&node_to_page_lock);
+  pthread_spin_unlock (&node_to_page_lock);
 
   if (pager)
     {
@@ -294,7 +294,7 @@ diskfs_truncate (struct node *node, off_t length)
       node->dn_stat.st_size = length;
       node->dn_set_mtime = 1;
       node->dn_set_ctime = 1;
-      diskfs_node_update (node, 1);
+      diskfs_node_update (node, diskfs_synchronous);
       return 0;
     }
 
@@ -309,6 +309,7 @@ diskfs_truncate (struct node *node, off_t length)
     {
       diskfs_node_rdwr (node, (void *)zeroblock, length, block_size - offset,
 			1, 0, 0);
+      /* Make sure that really happens to avoid leaks.  */
       diskfs_file_update (node, 1);
     }
 
@@ -316,14 +317,14 @@ diskfs_truncate (struct node *node, off_t length)
 
   force_delayed_copies (node, length);
 
-  rwlock_writer_lock (&node->dn->alloc_lock);
+  pthread_rwlock_wrlock (&node->dn->alloc_lock);
 
   /* Update the size on disk; fsck will finish freeing blocks if necessary
      should we crash. */
   node->dn_stat.st_size = length;
   node->dn_set_mtime = 1;
   node->dn_set_ctime = 1;
-  diskfs_node_update (node, 1);
+  diskfs_node_update (node, diskfs_synchronous);
 
   err = diskfs_catch_exception ();
   if (!err)
@@ -362,7 +363,7 @@ diskfs_truncate (struct node *node, off_t length)
   /* Now we can permit delayed copies again. */
   enable_delayed_copies (node);
 
-  rwlock_writer_unlock (&node->dn->alloc_lock);
+  pthread_rwlock_unlock (&node->dn->alloc_lock);
 
   return err;
 }

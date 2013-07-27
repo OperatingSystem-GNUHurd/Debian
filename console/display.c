@@ -29,7 +29,7 @@
 #include <assert.h>
 #include <error.h>
 
-#include <cthreads.h>
+#include <pthread.h>
 
 #include <hurd.h>
 #include <hurd/ports.h>
@@ -119,7 +119,7 @@ struct output
      multi-byte or composed character at the end of the buffer, so we
      have to keep them around.  */
   int stopped;
-  struct condition resumed;
+  pthread_cond_t resumed;
   char *buffer;
   size_t allocated;
   size_t size;
@@ -159,7 +159,7 @@ struct notify
 struct display
 {
   /* The lock for the virtual console display structure.  */
-  struct mutex lock;
+  pthread_mutex_t lock;
 
   /* Indicates if OWNER_ID is initialized.  */
   int has_owner;
@@ -341,7 +341,7 @@ do_mach_notify_dead_name (mach_port_t notify, mach_port_t dead_name)
     return EOPNOTSUPP;
 
   display = notify_port->display;
-  mutex_lock (&display->lock);
+  pthread_mutex_lock (&display->lock);
   
   /* Find request in pending queue.  */
   preq = &display->filemod_reqs_pending;
@@ -363,7 +363,7 @@ do_mach_notify_dead_name (mach_port_t notify, mach_port_t dead_name)
       mach_port_deallocate (mach_task_self (), req->port);
       free (req);
     }
-  mutex_unlock (&display->lock);
+  pthread_mutex_unlock (&display->lock);
   
   /* Drop gratuitous extra reference that the notification creates. */
   mach_port_deallocate (mach_task_self (), dead_name);
@@ -408,7 +408,7 @@ do_mach_notify_msg_accepted (mach_port_t notify, mach_port_t send)
     }
 
   display = notify_port->display;
-  mutex_lock (&display->lock);
+  pthread_mutex_lock (&display->lock);
   /* Find request in pending queue.  */
   preq = &display->filemod_reqs_pending;
   while (*preq && (*preq)->port != send)
@@ -419,7 +419,7 @@ do_mach_notify_msg_accepted (mach_port_t notify, mach_port_t send)
   if (! *preq)
     {
       assert(0);
-      mutex_unlock (&display->lock);
+      pthread_mutex_unlock (&display->lock);
       ports_port_deref (notify_port);
       return 0;
     }
@@ -438,7 +438,7 @@ do_mach_notify_msg_accepted (mach_port_t notify, mach_port_t send)
 	  error_t err;
 	  mach_port_t old;
 	  *preq = req->next;
-	  mutex_unlock (&display->lock);
+	  pthread_mutex_unlock (&display->lock);
 
 	  /* Cancel the dead-name notification.  */
 	  err = mach_port_request_notification (mach_task_self (), req->port,
@@ -455,7 +455,7 @@ do_mach_notify_msg_accepted (mach_port_t notify, mach_port_t send)
 	}
       if (err == MACH_SEND_WILL_NOTIFY)
 	{
-	  mutex_unlock (&display->lock);
+	  pthread_mutex_unlock (&display->lock);
 	  return 0;
 	}
       /* The message was successfully queued, fall through.  */
@@ -465,15 +465,15 @@ do_mach_notify_msg_accepted (mach_port_t notify, mach_port_t send)
   /* Insert request into active queue.  */
   req->next = display->filemod_reqs;
   display->filemod_reqs = req;
-  mutex_unlock (&display->lock);
+  pthread_mutex_unlock (&display->lock);
   ports_port_deref (notify_port);
   return 0;
 }
 
 /* A top-level function for the notification thread that just services
    notification messages.  */
-static void
-service_notifications (any_t arg)
+static void *
+service_notifications (void *arg)
 {
   struct port_bucket *notify_bucket = arg;
   extern int notify_server (mach_msg_header_t *inp, mach_msg_header_t *outp);
@@ -482,6 +482,7 @@ service_notifications (any_t arg)
     ports_manage_port_operations_one_thread (notify_bucket,
 					     notify_server,
 					     1000 * 60 * 10);
+  return NULL;
 }
 
 error_t
@@ -492,19 +493,19 @@ display_notice_changes (display_t display, mach_port_t notify)
   mach_port_t notify_port;
   mach_port_t old;
 
-  mutex_lock (&display->lock);
+  pthread_mutex_lock (&display->lock);
   err = nowait_file_changed (notify, 0, FILE_CHANGED_NULL, 0, 0,
 			     MACH_PORT_NULL);
   if (err)
     {
-      mutex_unlock (&display->lock);
+      pthread_mutex_unlock (&display->lock);
       return err;
     }
 
   req = malloc (sizeof (struct modreq));
   if (!req)
     {
-      mutex_unlock (&display->lock);
+      pthread_mutex_unlock (&display->lock);
       return errno;
     }
 
@@ -518,7 +519,7 @@ display_notice_changes (display_t display, mach_port_t notify)
   if (err)
     {
       free (req);
-      mutex_unlock (&display->lock);
+      pthread_mutex_unlock (&display->lock);
       return err;
     }
   assert (old == MACH_PORT_NULL);
@@ -527,7 +528,7 @@ display_notice_changes (display_t display, mach_port_t notify)
   req->pending = 0;
   req->next = display->filemod_reqs;
   display->filemod_reqs = req;
-  mutex_unlock (&display->lock);
+  pthread_mutex_unlock (&display->lock);
   return 0;
 }
 
@@ -933,7 +934,7 @@ screen_shift_right (display_t display, size_t col1, size_t row1, size_t col2,
 static error_t
 output_init (output_t output, const char *encoding)
 {
-  condition_init (&output->resumed);
+  pthread_cond_init (&output->resumed, NULL);
   output->stopped = 0;
   output->buffer = NULL;
   output->allocated = 0;
@@ -1815,6 +1816,9 @@ void display_destroy_complete (void *pi);
 void
 display_init (void)
 {
+  pthread_t thread;
+  error_t err;
+
   user_pager_init ();
 
   /* Create the notify bucket, and start to serve notifications.  */
@@ -1825,8 +1829,14 @@ display_init (void)
   if (! notify_class)
     error (5, errno, "Cannot create notify class");
 
-  cthread_detach (cthread_fork ((cthread_fn_t) service_notifications,
-                                (any_t) notify_bucket));
+  err = pthread_create (&thread, NULL, service_notifications, notify_bucket);
+  if (!err)
+    pthread_detach (thread);
+  else
+    {
+      errno = err;
+      perror ("pthread_create");
+    }
 }
 
 
@@ -1854,7 +1864,7 @@ display_create (display_t *r_display, const char *encoding,
     }
   display->notify_port->display = display;
 
-  mutex_init (&display->lock);
+  pthread_mutex_init (&display->lock, NULL);
   display->attr.attr_def = def_attr;
   display->attr.current = display->attr.attr_def;
   display->csr.bottom = height - 1;
@@ -1884,7 +1894,7 @@ display_create (display_t *r_display, const char *encoding,
 void
 display_destroy (display_t display)
 {
-  mutex_lock (&display->lock);
+  pthread_mutex_lock (&display->lock);
   if (display->filemod_reqs_pending)
     {
       free_modreqs (display->filemod_reqs_pending);
@@ -1898,7 +1908,7 @@ display_destroy (display_t display)
   ports_destroy_right (display->notify_port);
   output_deinit (&display->output);
   user_destroy (display);
-  mutex_unlock (&display->lock);
+  pthread_mutex_unlock (&display->lock);
 
   /* We can not free the display structure here, because it might
      still be needed by pending modification requests when msg
@@ -1932,12 +1942,12 @@ display_get_size (display_t display)
 void
 display_getsize (display_t display, struct winsize *winsize)
 {
-  mutex_lock (&display->lock);
+  pthread_mutex_lock (&display->lock);
   winsize->ws_row = display->user->screen.height;
   winsize->ws_col = display->user->screen.width;
   winsize->ws_xpixel = 0;
   winsize->ws_ypixel = 0;
-  mutex_unlock (&display->lock);
+  pthread_mutex_unlock (&display->lock);
 }
 
 
@@ -1946,10 +1956,10 @@ display_getsize (display_t display, struct winsize *winsize)
 error_t
 display_set_owner (display_t display, pid_t pid)
 {
-  mutex_lock (&display->lock);
+  pthread_mutex_lock (&display->lock);
   display->has_owner = 1;
   display->owner_id = pid;
-  mutex_unlock (&display->lock);
+  pthread_mutex_unlock (&display->lock);
   return 0;
 }
 
@@ -1960,12 +1970,12 @@ error_t
 display_get_owner (display_t display, pid_t *pid)
 {
   error_t err = 0;
-  mutex_lock (&display->lock);
+  pthread_mutex_lock (&display->lock);
   if (!display->has_owner)
     err = ENOTTY;
   else
     *pid = display->owner_id;
-  mutex_unlock (&display->lock);
+  pthread_mutex_unlock (&display->lock);
   return err;
 }
 
@@ -2003,18 +2013,18 @@ display_output (display_t display, int nonblock, char *data, size_t datalen)
       return 0;
     }
 
-  mutex_lock (&display->lock);
+  pthread_mutex_lock (&display->lock);
   while (output->stopped)
     {
       if (nonblock)
         {
-          mutex_unlock (&display->lock);
+          pthread_mutex_unlock (&display->lock);
           errno = EWOULDBLOCK;
           return -1;
         }
-      if (hurd_condition_wait (&output->resumed, &display->lock))
+      if (pthread_hurd_cond_wait_np (&output->resumed, &display->lock))
         {
-          mutex_unlock (&display->lock);
+          pthread_mutex_unlock (&display->lock);
           errno = EINTR;
           return -1;
         }
@@ -2025,7 +2035,7 @@ display_output (display_t display, int nonblock, char *data, size_t datalen)
       err = ensure_output_buffer_size (output->size + datalen);
       if (err)
         {
-          mutex_unlock (&display->lock);
+          pthread_mutex_unlock (&display->lock);
           errno = ENOMEM;
           return -1;
         }
@@ -2045,7 +2055,7 @@ display_output (display_t display, int nonblock, char *data, size_t datalen)
 
   if (err && !amount)
     {
-      mutex_unlock (&display->lock);
+      pthread_mutex_unlock (&display->lock);
       errno = err;
       return err;
     }
@@ -2058,7 +2068,7 @@ display_output (display_t display, int nonblock, char *data, size_t datalen)
       err = ensure_output_buffer_size (buffer_size);
       if (err)
         {
-          mutex_unlock (&display->lock);
+          pthread_mutex_unlock (&display->lock);
           return err;
         }
       memmove (output->buffer, buffer, buffer_size);
@@ -2066,7 +2076,7 @@ display_output (display_t display, int nonblock, char *data, size_t datalen)
   output->size = buffer_size;
   amount += buffer_size;
 
-  mutex_unlock (&display->lock);
+  pthread_mutex_unlock (&display->lock);
   return amount;
 }
 
@@ -2075,9 +2085,9 @@ ssize_t
 display_read (display_t display, int nonblock, off_t off,
 	      char *data, size_t len)
 {
-  mutex_lock (&display->lock);
+  pthread_mutex_lock (&display->lock);
   memcpy (data, ((char *) display->user) + off, len);
-  mutex_unlock (&display->lock);
+  pthread_mutex_unlock (&display->lock);
   return len;
 }
 
@@ -2086,17 +2096,17 @@ display_read (display_t display, int nonblock, off_t off,
 void
 display_start_output (display_t display)
 {
-  mutex_lock (&display->lock);
+  pthread_mutex_lock (&display->lock);
   if (display->output.stopped)
     {
       display->output.stopped = 0;
-      condition_broadcast (&display->output.resumed);
+      pthread_cond_broadcast (&display->output.resumed);
     }
   display->changes.flags = display->user->flags;
   display->changes.which = DISPLAY_CHANGE_FLAGS;
   display->user->flags &= ~CONS_FLAGS_SCROLL_LOCK;
   display_flush_filechange (display, DISPLAY_CHANGE_FLAGS);
-  mutex_unlock (&display->lock);
+  pthread_mutex_unlock (&display->lock);
 }
 
 
@@ -2104,13 +2114,13 @@ display_start_output (display_t display)
 void
 display_stop_output (display_t display)
 {
-  mutex_lock (&display->lock);
+  pthread_mutex_lock (&display->lock);
   display->output.stopped = 1;
   display->changes.flags = display->user->flags;
   display->changes.which = DISPLAY_CHANGE_FLAGS;
   display->user->flags |= CONS_FLAGS_SCROLL_LOCK;
   display_flush_filechange (display, DISPLAY_CHANGE_FLAGS);
-  mutex_unlock (&display->lock);
+  pthread_mutex_unlock (&display->lock);
 }
 
 
@@ -2119,9 +2129,9 @@ size_t
 display_pending_output (display_t display)
 {
   int output_size;
-  mutex_lock (&display->lock);
+  pthread_mutex_lock (&display->lock);
   output_size = display->output.size;
-  mutex_unlock (&display->lock);
+  pthread_mutex_unlock (&display->lock);
   return output_size;
 }
 
@@ -2130,9 +2140,9 @@ display_pending_output (display_t display)
 void
 display_discard_output (display_t display)
 {
-  mutex_lock (&display->lock);
+  pthread_mutex_lock (&display->lock);
   display->output.size = 0;
-  mutex_unlock (&display->lock);
+  pthread_mutex_unlock (&display->lock);
 }
 
 
@@ -2140,8 +2150,8 @@ mach_port_t
 display_get_filemap (display_t display, vm_prot_t prot)
 {
   mach_port_t memobj;
-  mutex_lock (&display->lock);
+  pthread_mutex_lock (&display->lock);
   memobj = user_pager_get_filemap (&display->user_pager, prot);
-  mutex_unlock (&display->lock);
+  pthread_mutex_unlock (&display->lock);
   return memobj;
 }

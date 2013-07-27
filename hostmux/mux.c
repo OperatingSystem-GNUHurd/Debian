@@ -80,11 +80,11 @@ netfs_attempt_lookup (struct iouser *user, struct node *dir,
       fshelp_touch (&dir->nn_stat, TOUCH_ATIME, hostmux_maptime);
     }
 
-  mutex_unlock (&dir->lock);
+  pthread_mutex_unlock (&dir->lock);
   if (err)
     *node = 0;
   else
-    mutex_lock (&(*node)->lock);
+    pthread_mutex_lock (&(*node)->lock);
 
   return err;
 }
@@ -123,7 +123,7 @@ netfs_get_dirents (struct iouser *cred, struct node *dir,
   if (dir->nn->name)
     return ENOTDIR;
 
-  rwlock_reader_lock (&dir->nn->mux->names_lock);
+  pthread_rwlock_rdlock (&dir->nn->mux->names_lock);
 
   /* Find the first entry.  */
   for (first_name = dir->nn->mux->names, count = 2;
@@ -204,7 +204,7 @@ netfs_get_dirents (struct iouser *cred, struct node *dir,
 	  break;
     }
 
-  rwlock_reader_unlock (&dir->nn->mux->names_lock);
+  pthread_rwlock_unlock (&dir->nn->mux->names_lock);
 
   fshelp_touch (&dir->nn_stat, TOUCH_ATIME, hostmux_maptime);
 
@@ -240,10 +240,10 @@ lookup_cached (struct hostmux *mux, const char *host, int purge,
 
       if (strcasecmp (host, nm->name) == 0)
 	{
-	  spin_lock (&netfs_node_refcnt_lock);
+	  pthread_spin_lock (&netfs_node_refcnt_lock);
 	  if (nm->node)
 	    nm->node->references++;
-	  spin_unlock (&netfs_node_refcnt_lock);
+	  pthread_spin_unlock (&netfs_node_refcnt_lock);
 
 	  if (nm->node)
 	    {
@@ -283,7 +283,7 @@ lookup_addrinfo (struct hostmux *mux, const char *host, struct addrinfo *he,
     return ENOMEM;
 
   nm->name = strdup (host);
-  if (strcmp (host, he->ai_canonname) == 0)
+  if (!he || strcmp (host, he->ai_canonname) == 0)
     nm->canon = nm->name;
   else
     nm->canon = strdup (he->ai_canonname);
@@ -295,13 +295,13 @@ lookup_addrinfo (struct hostmux *mux, const char *host, struct addrinfo *he,
       return err;
     }
 
-  rwlock_writer_lock (&mux->names_lock);
+  pthread_rwlock_wrlock (&mux->names_lock);
   if (lookup_cached (mux, host, 1, node))
     /* An entry for HOST has already been created between the time we last
        looked and now (which is possible because we didn't lock MUX).
        Just throw away our version and return the one already in the cache.  */
     {
-      rwlock_writer_unlock (&mux->names_lock);
+      pthread_rwlock_unlock (&mux->names_lock);
       nm->node->nn->name = 0;	/* Avoid touching the mux name list.  */
       netfs_nrele (nm->node);	/* Free the tentative new node.  */
       free_name (nm);		/* And the name it was under.  */
@@ -312,7 +312,7 @@ lookup_addrinfo (struct hostmux *mux, const char *host, struct addrinfo *he,
       nm->fileno = mux->next_fileno++; /* Now that we hold the lock...  */
       nm->next = mux->names;
       mux->names = nm;
-      rwlock_writer_unlock (&mux->names_lock);
+      pthread_rwlock_unlock (&mux->names_lock);
     }
 
   return 0;
@@ -333,19 +333,24 @@ lookup_host (struct hostmux *mux, const char *host, struct node **node)
   hints.ai_socktype = SOCK_DGRAM;
   hints.ai_protocol  = IPPROTO_IP;
 
-  rwlock_reader_lock (&mux->names_lock);
+  pthread_rwlock_rdlock (&mux->names_lock);
   was_cached = lookup_cached (mux, host, 0, node);
-  rwlock_reader_unlock (&mux->names_lock);
+  pthread_rwlock_unlock (&mux->names_lock);
 
   if (was_cached)
     return 0;
 
-  h_err = getaddrinfo (host, NULL, &hints, &ai);
-  if (! h_err)
+  if (mux->canonicalize)
     {
-      h_err = lookup_addrinfo (mux, host, ai, node);
-      freeaddrinfo (ai);
+      h_err = getaddrinfo (host, NULL, &hints, &ai);
+      if (! h_err)
+	{
+	  h_err = lookup_addrinfo (mux, host, ai, node);
+	  freeaddrinfo (ai);
+	}
     }
+  else
+    h_err = lookup_addrinfo (mux, host, NULL, node);
 
   return h_err;
 }
@@ -381,14 +386,14 @@ netfs_attempt_chown (struct iouser *cred, struct node *node, uid_t uid, uid_t gi
 	  node->nn_stat.st_gid = gid;
 
 	  /* Change the owner of each leaf node.  */
-	  rwlock_reader_lock (&mux->names_lock);
+	  pthread_rwlock_rdlock (&mux->names_lock);
 	  for (nm = mux->names; nm; nm = nm->next)
 	    if (nm->node)
 	      {
 		nm->node->nn_stat.st_uid = uid;
 		nm->node->nn_stat.st_gid = gid;
 	      }
-	  rwlock_reader_unlock (&mux->names_lock);
+	  pthread_rwlock_unlock (&mux->names_lock);
 
 	  fshelp_touch (&node->nn_stat, TOUCH_CTIME, hostmux_maptime);
 	}
@@ -418,11 +423,11 @@ netfs_attempt_chauthor (struct iouser *cred, struct node *node, uid_t author)
 	  node->nn_stat.st_author = author;
 
 	  /* Change the owner of each leaf node.  */
-	  rwlock_reader_lock (&mux->names_lock);
+	  pthread_rwlock_rdlock (&mux->names_lock);
 	  for (nm = mux->names; nm; nm = nm->next)
 	    if (nm->node)
 	      nm->node->nn_stat.st_author = author;
-	  rwlock_reader_unlock (&mux->names_lock);
+	  pthread_rwlock_unlock (&mux->names_lock);
 
 	  fshelp_touch (&node->nn_stat, TOUCH_CTIME, hostmux_maptime);
 	}

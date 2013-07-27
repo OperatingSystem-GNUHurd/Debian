@@ -1452,6 +1452,9 @@ int dev_change_flags(struct device *dev, unsigned flags)
 		dev_set_allmulti(dev, inc);
 	}
 
+	if (!ret && dev->change_flags)
+		ret = dev->change_flags(dev, dev->flags);
+
 	return ret;
 }
 

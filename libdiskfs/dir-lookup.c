@@ -77,14 +77,14 @@ diskfs_S_dir_lookup (struct protid *dircred,
       /* Set things up in the state expected by the code from gotit: on. */
       dnp = 0;
       np = dircred->po->np;
-      mutex_lock (&np->lock);
+      pthread_mutex_lock (&np->lock);
       diskfs_nref (np);
       goto gotit;
     }
 
   dnp = dircred->po->np;
 
-  mutex_lock (&dnp->lock);
+  pthread_mutex_lock (&dnp->lock);
   np = 0;
 
   diskfs_nref (dnp);		/* acquire a reference for later diskfs_nput */
@@ -270,7 +270,7 @@ diskfs_S_dir_lookup (struct protid *dircred,
 	  dirport = ports_get_send_right (newpi);
 	  ports_port_deref (newpi);
 	  if (np != dnp)
-	    mutex_unlock (&dnp->lock);
+	    pthread_mutex_unlock (&dnp->lock);
 
 	  error = fshelp_fetch_root (&np->transbox, dircred->po,
 				     dirport, dircred->user,
@@ -306,12 +306,15 @@ diskfs_S_dir_lookup (struct protid *dircred,
 	  if (np != dnp)
 	    {
 	      if (!strcmp (path, ".."))
-		mutex_lock (&dnp->lock);
+		pthread_mutex_lock (&dnp->lock);
 	      else
 		{
-		  mutex_unlock (&np->lock);
-		  mutex_lock (&dnp->lock);
-		  mutex_lock (&np->lock);
+		  if (pthread_mutex_trylock (&dnp->lock))
+		    {
+		      pthread_mutex_unlock (&np->lock);
+		      pthread_mutex_lock (&dnp->lock);
+		      pthread_mutex_lock (&np->lock);
+		    }
 		}
 	    }
 	}

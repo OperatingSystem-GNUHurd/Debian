@@ -1,5 +1,4 @@
-#
-#   Copyright (C) 1994, 1995, 1996 Free Software Foundation
+#   Copyright (C) 1994, 1995, 1996, 2012 Free Software Foundation
 #
 #   This program is free software; you can redistribute it and/or
 #   modify it under the terms of the GNU General Public License as
@@ -26,10 +25,10 @@ SRCS = data-request.c data-return.c data-unlock.c pager-port.c \
 	stubs.c seqnos.c demuxer.c chg-compl.c pager-attr.c clean.c \
 	dropweak.c notify-stubs.c get-upi.c pager-memcpy.c pager-return.c \
 	offer-page.c
-LCLHDRS = pager.h priv.h
 installhdrs = pager.h
 
-HURDLIBS= threads ports
+HURDLIBS= ports
+LDLIBS += -lpthread
 OBJS = $(SRCS:.c=.o) memory_objectServer.o notifyServer.o
 
 MIGSFLAGS = -DSEQNOS

@@ -38,18 +38,18 @@ diskfs_alloc_node (struct node *dp, mode_t mode, struct node **npp)
   dn = calloc (1, sizeof *dn);
   if (dn == 0)
     return ENOSPC;
-  spin_lock (&diskfs_node_refcnt_lock);
+  pthread_spin_lock (&diskfs_node_refcnt_lock);
   if (round_page (tmpfs_space_used + sizeof *dn) / vm_page_size
       > tmpfs_page_limit)
     {
-      spin_unlock (&diskfs_node_refcnt_lock);
+      pthread_spin_unlock (&diskfs_node_refcnt_lock);
       free (dn);
       return ENOSPC;
     }
   dn->gen = gen++;
   ++num_files;
   tmpfs_space_used += sizeof *dn;
-  spin_unlock (&diskfs_node_refcnt_lock);
+  pthread_spin_unlock (&diskfs_node_refcnt_lock);
 
   dn->type = IFTODT (mode & S_IFMT);
   return diskfs_cached_lookup ((ino_t) (uintptr_t) dn, npp);
@@ -179,13 +179,13 @@ diskfs_cached_lookup (ino_t inum, struct node **npp)
       np = diskfs_make_node (dn);
       np->cache_id = (ino_t) (uintptr_t) dn;
 
-      spin_lock (&diskfs_node_refcnt_lock);
+      pthread_spin_lock (&diskfs_node_refcnt_lock);
       dn->hnext = all_nodes;
       if (dn->hnext)
 	dn->hnext->dn->hprevp = &dn->hnext;
       dn->hprevp = &all_nodes;
       all_nodes = np;
-      spin_unlock (&diskfs_node_refcnt_lock);
+      pthread_spin_unlock (&diskfs_node_refcnt_lock);
 
       st = &np->dn_stat;
       memset (st, 0, sizeof *st);
@@ -212,7 +212,7 @@ diskfs_cached_lookup (ino_t inum, struct node **npp)
       recompute_blocks (np);
     }
 
-  mutex_lock (&np->lock);
+  pthread_mutex_lock (&np->lock);
   *npp = np;
   return 0;
 }
@@ -224,7 +224,7 @@ diskfs_node_iterate (error_t (*fun) (struct node *))
   unsigned int num_nodes = 0;
   struct node *node, **node_list, **p;
 
-  spin_lock (&diskfs_node_refcnt_lock);
+  pthread_spin_lock (&diskfs_node_refcnt_lock);
 
   /* We must copy everything from the hash table into another data structure
      to avoid running into any problems with the hash-table being modified
@@ -242,7 +242,7 @@ diskfs_node_iterate (error_t (*fun) (struct node *))
       node->references++;
     }
 
-  spin_unlock (&diskfs_node_refcnt_lock);
+  pthread_spin_unlock (&diskfs_node_refcnt_lock);
 
   p = node_list;
   while (num_nodes-- > 0)
@@ -250,9 +250,9 @@ diskfs_node_iterate (error_t (*fun) (struct node *))
       node = *p++;
       if (!err)
 	{
-	  mutex_lock (&node->lock);
+	  pthread_mutex_lock (&node->lock);
 	  err = (*fun) (node);
-	  mutex_unlock (&node->lock);
+	  pthread_mutex_unlock (&node->lock);
 	}
       diskfs_nrele (node);
     }
@@ -403,13 +403,12 @@ diskfs_truncate (struct node *np, off_t size)
 
   np->dn_stat.st_size = size;
 
+  off_t set_size = size;
   size = round_page (size);
-  if (size == np->allocsize)
-    return 0;
 
   if (np->dn->u.reg.memobj != MACH_PORT_NULL)
     {
-      error_t err = default_pager_object_set_size (np->dn->u.reg.memobj, size);
+      error_t err = default_pager_object_set_size (np->dn->u.reg.memobj, set_size);
       if (err == MIG_BAD_ID)
 	/* This is an old default pager.  We have no way to truncate the
 	   memory object.  Note that the behavior here will be wrong in
@@ -442,8 +441,10 @@ diskfs_grow (struct node *np, off_t size, struct protid *cred)
   if (np->allocsize >= size)
     return 0;
 
+  off_t set_size = size;
   size = round_page (size);
-  if (round_page (tmpfs_space_used + size) / vm_page_size > tmpfs_page_limit)
+  if (round_page (tmpfs_space_used + size - np->allocsize)
+      / vm_page_size > tmpfs_page_limit)
     return ENOSPC;
 
   if (default_pager == MACH_PORT_NULL)
@@ -452,7 +453,7 @@ diskfs_grow (struct node *np, off_t size, struct protid *cred)
   if (np->dn->u.reg.memobj != MACH_PORT_NULL)
     {
       /* Increase the limit the memory object will allow to be accessed.  */
-      error_t err = default_pager_object_set_size (np->dn->u.reg.memobj, size);
+      error_t err = default_pager_object_set_size (np->dn->u.reg.memobj, set_size);
       if (err == MIG_BAD_ID)	/* Old default pager, never limited it.  */
 	err = 0;
       if (err)
@@ -506,11 +507,6 @@ diskfs_get_filemap (struct node *np, vm_prot_t prot)
       vm_map (mach_task_self (), &np->dn->u.reg.memref, 4096, 0, 1,
 	      np->dn->u.reg.memobj, 0, 0, VM_PROT_NONE, VM_PROT_NONE,
 	      VM_INHERIT_NONE);
-
-      /* A new-fangled default pager lets us prevent user accesses
-	 past the specified size of the file.  */
-      err = default_pager_object_set_size (np->dn->u.reg.memobj,
-					   np->allocsize);
       assert_perror (err);
     }
 

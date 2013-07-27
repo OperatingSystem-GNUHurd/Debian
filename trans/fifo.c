@@ -26,7 +26,7 @@
 #include <fcntl.h>
 #include <argp.h>
 
-#include <cthreads.h>
+#include <pthread.h>
 #include <hurd.h>
 #include <hurd/ports.h>
 #include <hurd/trivfs.h>
@@ -46,9 +46,9 @@ struct pipe_class *fifo_pipe_class;
 struct pipe *active_fifo = NULL;
 
 /* Lock this when changing ACTIVE_FIFO.  */
-struct mutex active_fifo_lock;
+pthread_mutex_t active_fifo_lock;
 /* Signal this when ACTIVE_FIFO may have changed.  */
-struct condition active_fifo_changed;
+pthread_cond_t active_fifo_changed;
 
 const char *argp_program_version = STANDARD_HURD_VERSION (fifo);
 
@@ -121,7 +121,7 @@ open_hook (struct trivfs_peropen *po)
 
   if (flags & (O_READ | O_WRITE))
     {
-      mutex_lock (&active_fifo_lock);
+      pthread_mutex_lock (&active_fifo_lock);
 
 /* Wait until the active fifo has changed so that CONDITION is true.  */
 #define WAIT(condition, noblock_err)					      \
@@ -132,7 +132,8 @@ open_hook (struct trivfs_peropen *po)
 	  err = noblock_err;						      \
 	  break;							      \
 	}								      \
-      else if (hurd_condition_wait (&active_fifo_changed, &active_fifo_lock)) \
+      else if (pthread_hurd_cond_wait_np (&active_fifo_changed,		      \
+					  &active_fifo_lock))		      \
 	err = EINTR;							      \
     }
 
@@ -160,7 +161,7 @@ open_hook (struct trivfs_peropen *po)
 	  if (!err)
 	    {
 	      pipe_add_reader (active_fifo);
-	      condition_broadcast (&active_fifo_changed);
+	      pthread_cond_broadcast (&active_fifo_changed);
 	      /* We'll unlock ACTIVE_FIFO_LOCK below; the writer code won't
 		 make us block because we've ensured that there's a reader
 		 for it.  */
@@ -174,7 +175,7 @@ open_hook (struct trivfs_peropen *po)
 		    {
 		      pipe_remove_reader (active_fifo);
 		      active_fifo = NULL;
-		      condition_broadcast (&active_fifo_changed);
+		      pthread_cond_broadcast (&active_fifo_changed);
 		    }
 		}
 	    }
@@ -199,13 +200,13 @@ open_hook (struct trivfs_peropen *po)
 	  if (!err)
 	    {
 	      pipe_add_writer (active_fifo);
-	      condition_broadcast (&active_fifo_changed);
+	      pthread_cond_broadcast (&active_fifo_changed);
 	    }
 	}
 
       po->hook = active_fifo;
 
-      mutex_unlock (&active_fifo_lock);
+      pthread_mutex_unlock (&active_fifo_lock);
     }
 
   return err;
@@ -221,7 +222,7 @@ close_hook (struct trivfs_peropen *po)
   if (!pipe)
     return;
 
-  mutex_lock (&active_fifo_lock);
+  pthread_mutex_lock (&active_fifo_lock);
   was_active = (active_fifo == pipe);
 
   if (was_active)
@@ -231,7 +232,7 @@ close_hook (struct trivfs_peropen *po)
 	|| ((flags & O_WRITE) && pipe->writers == 1);
   else
     /* Let others have their fun.  */
-    mutex_unlock (&active_fifo_lock);
+    pthread_mutex_unlock (&active_fifo_lock);
 
   if (flags & O_READ)
     pipe_remove_reader (pipe);
@@ -243,8 +244,8 @@ close_hook (struct trivfs_peropen *po)
     {
       if (detach)
 	active_fifo = NULL;
-      condition_broadcast (&active_fifo_changed);
-      mutex_unlock (&active_fifo_lock);
+      pthread_cond_broadcast (&active_fifo_changed);
+      pthread_mutex_unlock (&active_fifo_lock);
     }
 }
 
@@ -272,10 +273,10 @@ trivfs_modify_stat (struct trivfs_protid *cred, struct stat *st)
 
   if (pipe)
     {
-      mutex_lock (&pipe->lock);
+      pthread_mutex_lock (&pipe->lock);
       st->st_size = pipe_readable (pipe, 1);
       st->st_blocks = st->st_size >> 9;
-      mutex_unlock (&pipe->lock);
+      pthread_mutex_unlock (&pipe->lock);
     }
   else
     st->st_size = st->st_blocks = 0;
@@ -347,10 +348,10 @@ trivfs_S_io_read (struct trivfs_protid *cred,
   else
     {
       struct pipe *pipe = cred->po->hook;
-      mutex_lock (&pipe->lock);
+      pthread_mutex_lock (&pipe->lock);
       err = pipe_read (pipe, cred->po->openmodes & O_NONBLOCK, NULL,
 		       data, data_len, amount);
-      mutex_unlock (&pipe->lock);
+      pthread_mutex_unlock (&pipe->lock);
     }
 
   return err;
@@ -375,9 +376,9 @@ trivfs_S_io_readable (struct trivfs_protid *cred,
   else
     {
       struct pipe *pipe = cred->po->hook;
-      mutex_lock (&pipe->lock);
+      pthread_mutex_lock (&pipe->lock);
       *amount = pipe_readable (pipe, 1);
-      mutex_unlock (&pipe->lock);
+      pthread_mutex_unlock (&pipe->lock);
       err = 0;
     }
 
@@ -404,10 +405,10 @@ trivfs_S_io_seek (struct trivfs_protid *cred,
    return the types that are then available.  ID_TAG is returned as passed; it
    is just for the convenience of the user in matching up reply messages with
    specific requests sent.  */
-error_t
-trivfs_S_io_select (struct trivfs_protid *cred,
-		    mach_port_t reply, mach_msg_type_name_t reply_type,
-		    int *select_type)
+static error_t
+io_select_common (struct trivfs_protid *cred,
+		  mach_port_t reply, mach_msg_type_name_t reply_type,
+		  struct timespec *tsp, int *select_type)
 {
   struct pipe *pipe;
   error_t err = 0;
@@ -422,26 +423,41 @@ trivfs_S_io_select (struct trivfs_protid *cred,
     {
       if (cred->po->openmodes & O_READ)
 	{
-	  mutex_lock (&pipe->lock);
-	  if (pipe_wait_readable (pipe, 1, 1) != EWOULDBLOCK)
-	    ready |= SELECT_READ; /* Data immediately readable (or error). */
-	  mutex_unlock (&pipe->lock);
+	  pthread_mutex_lock (&pipe->lock);
+	  err = pipe_wait_readable (pipe, 1, 1);
+	  if (err == EWOULDBLOCK)
+	    err = 0; /* Not readable, actually not an error.  */
+	  else
+	    ready |= SELECT_READ; /* Data immediately readable (or error).  */
+	  pthread_mutex_unlock (&pipe->lock);
 	}
       else
-	ready |= SELECT_READ;	/* Error immediately available...  */
+	{
+	  err = EBADF;
+	  ready |= SELECT_READ;	/* Error immediately available...  */
+	}
+      if (err)
+	/* Prevent write test from overwriting err.  */
+	*select_type &= ~SELECT_WRITE;
     }
 
   if (*select_type & SELECT_WRITE)
     {
       if (cred->po->openmodes & O_WRITE)
 	{
-	  mutex_lock (&pipe->lock);
-	  if (pipe_wait_writable (pipe, 1) != EWOULDBLOCK)
-	    ready |= SELECT_WRITE; /* Data immediately writable (or error). */
-	  mutex_unlock (&pipe->lock);
+	  pthread_mutex_lock (&pipe->lock);
+	  err = pipe_wait_writable (pipe, 1);
+	  if (err == EWOULDBLOCK)
+	    err = 0; /* Not writable, actually not an error.  */
+	  else
+	    ready |= SELECT_WRITE; /* Data immediately writable (or error).  */
+	  pthread_mutex_unlock (&pipe->lock);
 	}
       else
-	ready |= SELECT_WRITE;	/* Error immediately available...  */
+	{
+	  err = EBADF;
+	  ready |= SELECT_WRITE;	/* Error immediately available...  */
+	}
     }
 
   if (ready)
@@ -450,10 +466,27 @@ trivfs_S_io_select (struct trivfs_protid *cred,
     /* Wait for something to change.  */
     {
       ports_interrupt_self_on_port_death (cred, reply);
-      err = pipe_pair_select (pipe, pipe, select_type, 1);
+      err = pipe_pair_select (pipe, pipe, tsp, select_type, 1);
     }
 
   return err;
+}
+
+error_t
+trivfs_S_io_select (struct trivfs_protid *cred,
+		    mach_port_t reply, mach_msg_type_name_t reply_type,
+		    int *select_type)
+{
+  return io_select_common (cred, reply, reply_type, NULL, select_type);
+}
+
+error_t
+trivfs_S_io_select_timeout (struct trivfs_protid *cred,
+			    mach_port_t reply, mach_msg_type_name_t reply_type,
+			    struct timespec ts,
+			    int *select_type)
+{
+  return io_select_common (cred, reply, reply_type, &ts, select_type);
 }
 
 /* ---------------------------------------------------------------- */
@@ -484,10 +517,10 @@ trivfs_S_io_write (struct trivfs_protid *cred,
 	err = EBADF;
       else
 	{
-	  mutex_lock (&pipe->lock);
+	  pthread_mutex_lock (&pipe->lock);
 	  err = pipe_write (pipe, flags & O_NONBLOCK, NULL,
 			    data, data_len, amount);
-	  mutex_unlock (&pipe->lock);
+	  pthread_mutex_unlock (&pipe->lock);
 	}
     }
 
