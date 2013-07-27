@@ -19,6 +19,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <mach.h>
 #include <hurd/netfs.h>
@@ -76,6 +77,9 @@ struct node *procfs_make_node (const struct procfs_node_ops *ops, void *hook)
   else
     np->nn_stat.st_mode = S_IFREG | 0444;
 
+  np->nn_stat.st_uid = getuid ();
+  np->nn_stat.st_gid = getgid ();
+
   return np;
 
 fail:
@@ -93,7 +97,7 @@ void procfs_node_chown (struct node *np, uid_t owner)
 
 void procfs_node_chmod (struct node *np, mode_t mode)
 {
-  np->nn_stat.st_mode = (np->nn_stat.st_mode & S_IFMT) | mode;
+  np->nn_stat.st_mode = (np->nn_stat.st_mode & ~ALLPERMS) | mode;
   np->nn_translated = np->nn_stat.st_mode;
 }
 
@@ -200,4 +204,16 @@ void procfs_cleanup (struct node *np)
     netfs_nrele (np->nn->parent);
 
   free (np->nn);
+}
+
+error_t procfs_get_translator (struct node *np,
+                               char **argz,
+                               size_t *argz_len)
+{
+  if (np->nn->ops->get_translator)
+    return np->nn->ops->get_translator (np->nn->hook, argz, argz_len);
+
+  *argz = NULL;
+  *argz_len = 0;
+  return 0;
 }
