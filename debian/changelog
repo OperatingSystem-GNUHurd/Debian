@@ -14,6 +14,8 @@ hurd (20130916-1) UNRELEASED; urgency=low
   * patches/hurd_console_startup.patch: Drop, this is no longer necessary with
     the initscript in place.
   * control: Add build dependency on libdaemon
+  * patches/newRPC.patch: New patch to fix link until libc gets rebuilt
+    against new .defs.
 
  -- Samuel Thibault <sthibault@debian.org>  Sat, 27 Jul 2013 22:37:17 +0000
 

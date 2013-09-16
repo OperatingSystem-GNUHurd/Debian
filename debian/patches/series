@@ -40,3 +40,4 @@ exec_filename_fs.patch
 exec_filename_use.patch
 mount-loop.patch
 mount-test-opts.patch
+newRPC.patch

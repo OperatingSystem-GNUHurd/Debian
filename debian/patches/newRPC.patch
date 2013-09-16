@@ -1,0 +1,100 @@
+Index: hurd-debian/init/Makefile
+===================================================================
+--- hurd-debian.orig/init/Makefile	2013-09-16 00:16:22.000000000 +0000
++++ hurd-debian/init/Makefile	2013-09-16 01:01:11.000000000 +0000
+@@ -21,7 +21,7 @@
+ SRCS = init.c stubs.c
+ OBJS = $(SRCS:.c=.o) \
+        startupServer.o notifyServer.o startup_replyUser.o msgServer.o \
+-       startup_notifyUser.o
++       startup_notifyUser.o processUser.o
+ target = init
+ HURDLIBS = shouldbeinlibc
+ 
+Index: hurd-debian/libdiskfs/Makefile
+===================================================================
+--- hurd-debian.orig/libdiskfs/Makefile	2013-09-16 00:37:43.000000000 +0000
++++ hurd-debian/libdiskfs/Makefile	2013-09-16 01:01:58.000000000 +0000
+@@ -58,7 +58,7 @@
+ 
+ MIGSTUBS = fsServer.o fs_experimentalServer.o ioServer.o fsysServer.o exec_startupServer.o \
+ 	fsys_replyUser.o fs_notifyUser.o ifsockServer.o \
+-	startup_notifyServer.o
++	startup_notifyServer.o processUser.o
+ OBJS = $(sort $(SRCS:.c=.o) $(MIGSTUBS))
+ 
+ HURDLIBS = fshelp iohelp store ports shouldbeinlibc pager
+Index: hurd-debian/libnetfs/Makefile
+===================================================================
+--- hurd-debian.orig/libnetfs/Makefile	2013-09-16 00:37:43.000000000 +0000
++++ hurd-debian/libnetfs/Makefile	2013-09-16 01:02:10.000000000 +0000
+@@ -59,7 +59,7 @@
+ 
+ installhdrs=netfs.h
+ 
+-MIGSTUBS= ioServer.o fsServer.o fs_experimentalServer.o fsysServer.o fsys_replyUser.o ifsockServer.o
++MIGSTUBS= ioServer.o fsServer.o fs_experimentalServer.o fsysServer.o fsys_replyUser.o ifsockServer.o processUser.o
+ 
+ OBJS=$(sort $(SRCS:.c=.o) $(MIGSTUBS))
+ 
+Index: hurd-debian/libtrivfs/Makefile
+===================================================================
+--- hurd-debian.orig/libtrivfs/Makefile	2013-09-16 00:37:43.000000000 +0000
++++ hurd-debian/libtrivfs/Makefile	2013-09-16 01:02:24.000000000 +0000
+@@ -44,7 +44,7 @@
+ 
+ SRCS=$(FSSRCS) $(IOSRCS) $(FSYSSRCS) $(OTHERSRCS)
+ 
+-MIGSTUBS=fsServer.o fs_experimentalServer.o ioServer.o fsysServer.o fsys_replyUser.o
++MIGSTUBS=fsServer.o fs_experimentalServer.o ioServer.o fsysServer.o fsys_replyUser.o processUser.o
+ 
+ libname = libtrivfs
+ HURDLIBS = fshelp iohelp ports shouldbeinlibc
+Index: hurd-debian/mach-defpager/Makefile
+===================================================================
+--- hurd-debian.orig/mach-defpager/Makefile	2013-09-16 00:16:22.000000000 +0000
++++ hurd-debian/mach-defpager/Makefile	2013-09-16 01:02:39.000000000 +0000
+@@ -27,7 +27,7 @@
+ OBJS 	:= $(SRCS:.c=.o) \
+ 	   $(addsuffix Server.o,\
+ 		       memory_object default_pager memory_object_default exc) \
+-	   default_pager_replyUser.o
++	   default_pager_replyUser.o processUser.o
+ 
+ OTHERLIBS:= -lpthread
+ LDFLAGS += -static
+Index: hurd-debian/trans/Makefile
+===================================================================
+--- hurd-debian.orig/trans/Makefile	2013-09-16 00:37:41.000000000 +0000
++++ hurd-debian/trans/Makefile	2013-09-16 01:03:10.000000000 +0000
+@@ -28,7 +28,7 @@
+ OBJS = $(SRCS:.c=.o) fsysServer.o ifsockServer.o passwordServer.o \
+ 	crashServer.o crash_replyUser.o msgServer.o \
+ 	ourdefault_pagerServer.o ourdefault_pagerUser.o \
+-	device_replyServer.o elfcore.o fsysUser.o
++	device_replyServer.o elfcore.o fsysUser.o processUser.o
+ HURDLIBS = ports netfs trivfs iohelp fshelp pipe ihash shouldbeinlibc
+ LDLIBS += -lpthread
+ password-LDLIBS = $(LIBCRYPT)
+@@ -40,7 +40,7 @@
+ 
+ vpath elfcore.c $(top_srcdir)/exec
+ 
+-symlink: fsysServer.o
++symlink: fsysServer.o processUser.o
+ ifsock: ifsockServer.o
+ crash: crashServer.o crash_replyUser.o msgServer.o elfcore.o
+ password: passwordServer.o
+Index: hurd-debian/exec/Makefile
+===================================================================
+--- hurd-debian.orig/exec/Makefile	2013-09-16 00:37:43.000000000 +0000
++++ hurd-debian/exec/Makefile	2013-09-16 01:04:27.000000000 +0000
+@@ -22,7 +22,7 @@
+ 
+ SRCS = exec.c main.c hashexec.c hostarch.c
+ OBJS = main.o hostarch.o exec.o hashexec.o \
+-       execServer.o exec_startupServer.o exec_experimentalServer.o
++       execServer.o exec_startupServer.o exec_experimentalServer.o processUser.o
+ 
+ target = exec
+ #targets = exec exec.static
