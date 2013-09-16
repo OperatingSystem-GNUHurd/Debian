@@ -56,6 +56,7 @@ debian/tmp/hurd/init
 debian/tmp/hurd/iso9660fs
 debian/tmp/hurd/mach-defpager
 debian/tmp/hurd/magic
+debian/tmp/hurd/mtab
 debian/tmp/hurd/new-fifo
 debian/tmp/hurd/null
 debian/tmp/hurd/pfinet
