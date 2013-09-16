@@ -1,5 +1,5 @@
 /* Definitions for process server interface
-   Copyright (C) 1992,93,94,95,96,97,2001 Free Software Foundation
+   Copyright (C) 1992,93,94,95,96,97,2001,2013 Free Software Foundation
 
 This file is part of the GNU Hurd.
 
@@ -370,3 +370,33 @@ routine proc_getnports (
 	process: process_t;
 	which: pid_t;
 	out nports: mach_msg_type_number_t);
+
+/*** Routines related to early server bootstrapping ***/
+
+skip;  /* Reserved for proc_set_init_task */
+
+/* Inform the process server that the process is important.  */
+routine proc_mark_important (
+	process: process_t);
+
+/* Query whether the process is important.  */
+routine proc_is_important (
+	process: process_t;
+	out essential: boolean_t);
+
+/* Set the processes start_code and end_code locations.  Any
+   executable segments loaded from the ELF binary are in this
+   range.  */
+routine proc_set_code (
+	process: process_t;
+	start_code: vm_address_t;
+	end_code: vm_address_t);
+
+/* Get the processes start_code and end_code locations.  Any
+   executable segments loaded from the ELF binary are in this range.
+   If zero is returned for these values, the requested information has
+   never been set.  */
+routine proc_get_code (
+	process: process_t;
+	out start_code: vm_address_t;
+	out end_code: vm_address_t);
