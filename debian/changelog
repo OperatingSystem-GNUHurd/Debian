@@ -1,4 +1,4 @@
-hurd (20130916-1) UNRELEASED; urgency=low
+hurd (20130916-1) unstable; urgency=low
 
   * New upstream snapshot. Closes: Bug#701516, Bug#313560.
     - patches/{ext2fs_large_stores.patch, ext2fs_large_stores_pthread.patch,
@@ -8,6 +8,7 @@ hurd (20130916-1) UNRELEASED; urgency=low
     sutils-multiple-none.patch, umount.patch}: Remove, merged upstream.
     - patches/{exec_filename_exec.patch, exec_filename_fs.patch,
     mount-test-opts.patch, proxy-defpager.diff}: Refresh.
+  * debian/rc.patch: point /run/mtab to /proc/mounts.
 
   [ Justus Winter ]
   * hurd.hurd-console.init: Add an initscript for hurd-console.
@@ -17,7 +18,7 @@ hurd (20130916-1) UNRELEASED; urgency=low
   * patches/newRPC.patch: New patch to fix link until libc gets rebuilt
     against new .defs.
 
- -- Samuel Thibault <sthibault@debian.org>  Sat, 27 Jul 2013 22:37:17 +0000
+ -- Samuel Thibault <sthibault@debian.org>  Mon, 16 Sep 2013 01:36:12 +0000
 
 hurd (20130727-1) unstable; urgency=low
 
