@@ -218,8 +218,8 @@ Index: hurd-debian/init/init.c
  /* Start and maintain hurd core servers and system run state
  
     Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
--     2005, 2008 Free Software Foundation, Inc.
-+     2005, 2008, 2010 Free Software Foundation, Inc.
+-     2005, 2008, 2013 Free Software Foundation, Inc.
++     2005, 2008, 2010, 2013 Free Software Foundation, Inc.
     This file is part of the GNU Hurd.
  
     The GNU Hurd is free software; you can redistribute it and/or modify
@@ -336,9 +336,9 @@ Index: hurd-debian/init/init.c
 +		     default_ints, INIT_INT_MAX,
 +		     NULL, 0, NULL, 0);
 +
+   proc_mark_important (default_ports[INIT_PORT_PROC]);
    mach_port_deallocate (mach_task_self (), default_ports[INIT_PORT_PROC]);
    mach_port_deallocate (mach_task_self (), file);
-   if (err)
 Index: hurd-debian/libdiskfs/boot-start.c
 ===================================================================
 --- hurd-debian.orig/libdiskfs/boot-start.c	2013-06-19 23:32:37.000000000 +0000

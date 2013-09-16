@@ -16,12 +16,12 @@ Index: hurd-debian/trans/Makefile
 --- hurd-debian.orig/trans/Makefile	2012-11-26 00:23:22.000000000 +0000
 +++ hurd-debian/trans/Makefile	2012-11-26 00:25:32.000000000 +0000
 @@ -26,7 +26,7 @@
- 	fakeroot.c proxy-defpager.c remap.c
+ 	fakeroot.c proxy-defpager.c remap.c mtab.c
  OBJS = $(SRCS:.c=.o) fsysServer.o ifsockServer.o passwordServer.o \
  	crashServer.o crash_replyUser.o msgServer.o \
 -	default_pagerServer.o default_pagerUser.o \
 +	ourdefault_pagerServer.o ourdefault_pagerUser.o \
- 	device_replyServer.o elfcore.o
+ 	device_replyServer.o elfcore.o fsysUser.o
  HURDLIBS = ports netfs trivfs iohelp fshelp pipe ihash shouldbeinlibc
  LDLIBS += -lpthread
 @@ -34,6 +34,9 @@

@@ -134,15 +134,6 @@ Index: hurd-debian/exec/exec.c
    if (! protid)
      return EOPNOTSUPP;
  
-@@ -2111,7 +2151,7 @@
- 					 trivfs_protid_portclasses[0]);
- 		  if (protid)
- 		    {
--		      err = do_exec (file, oldtask, 0,
-+		      err = do_exec (file, oldtask, 0, filename,
- 				     argv, argvlen, argv_copy,
- 				     envp, envplen, envp_copy,
- 				     dtable, dtablesize, dtable_copy,
 @@ -2158,7 +2198,7 @@
    /* There were no user-specified exec servers,
       or none of them could be found.  */
@@ -304,14 +295,14 @@ Index: hurd-debian/exec/Makefile
 --- hurd-debian.orig/exec/Makefile	2012-06-03 17:08:36.000000000 +0000
 +++ hurd-debian/exec/Makefile	2012-06-05 03:39:06.000000000 +0000
 @@ -23,7 +23,7 @@
- SRCS = exec.c main.c hashexec.c hostarch.c \
-        $(gzip-sources) $(bzip2-sources)
+ 
+ SRCS = exec.c main.c hashexec.c hostarch.c
  OBJS = main.o hostarch.o exec.o hashexec.o \
--       execServer.o exec_startupServer.o \
-+       execServer.o exec_startupServer.o exec_experimentalServer.o \
-        $(gzip-objects) $(bzip2-objects)
- gzip-sources = unzip.c util.c inflate.c
- gzip-objects = $(gzip-sources:%.c=%.o)
+-       execServer.o exec_startupServer.o
++       execServer.o exec_startupServer.o exec_experimentalServer.o
+ 
+ target = exec
+ #targets = exec exec.static
 @@ -37,6 +37,7 @@
  OTHERLIBS = -lpthread
  

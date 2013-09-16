@@ -164,6 +164,16 @@ ds_device_open (mach_port_t master_port, mach_port_t reply_port,
       || device_name == NULL) 
       return D_NO_SUCH_DEVICE;
 
+  if (master_file != NULL)
+    {
+      if (master_device != MACH_PORT_NULL)
+        mach_port_deallocate (mach_task_self (), master_device);
+
+      master_device = file_name_lookup (master_file, 0, 0);
+      if (master_device == MACH_PORT_NULL)
+        error (1, errno, "file_name_lookup");
+    }
+
   err = device_open (master_device, mode, device_name, device); 
   *devicetype = MACH_MSG_TYPE_MOVE_SEND;
   return err;
