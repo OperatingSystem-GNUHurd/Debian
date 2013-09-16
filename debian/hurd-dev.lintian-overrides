@@ -13,3 +13,4 @@ unstripped-binary-or-object lib/*/libstore_part.a
 unstripped-binary-or-object lib/*/libstore_remap.a
 unstripped-binary-or-object lib/*/libstore_task.a
 unstripped-binary-or-object lib/*/libstore_zero.a
+unstripped-binary-or-object usr/lib/*/libdde_linux26.o.a

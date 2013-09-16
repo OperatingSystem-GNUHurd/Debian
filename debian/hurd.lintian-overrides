@@ -3,5 +3,5 @@ setuid-binary bin/ids 4755 root/root
 setuid-binary bin/login 4755 root/root
 setuid-binary bin/ps-hurd 4755 root/root
 setuid-binary usr/bin/w-hurd 4755 root/root
-possibly-insecure-handling-of-tmp-files-in-maintainer-script postinst:75
+possibly-insecure-handling-of-tmp-files-in-maintainer-script postinst:81
 package-contains-empty-directory servers/socket/

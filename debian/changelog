@@ -8,7 +8,9 @@ hurd (20130916-1) unstable; urgency=low
     sutils-multiple-none.patch, umount.patch}: Remove, merged upstream.
     - patches/{exec_filename_exec.patch, exec_filename_fs.patch,
     mount-test-opts.patch, proxy-defpager.diff}: Refresh.
-  * debian/rc.patch: point /run/mtab to /proc/mounts.
+  * patches/rc.patch: point /run/mtab to /proc/mounts.
+  * rules, control: Switch to makeinfo.
+  * Refresh lintian overrides.
 
   [ Justus Winter ]
   * hurd.hurd-console.init: Add an initscript for hurd-console.
