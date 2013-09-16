@@ -25,7 +25,7 @@ FSSRCS= dir-link.c dir-mkdir.c dir-mkfile.c dir-lookup.c dir-readdir.c \
 	file-getlinknode.c file-lock.c file-set-trans.c file-statfs.c \
 	file-sync.c file-syncfs.c file-set-size.c file-utimes.c file-exec.c \
 	file-access.c dir-chg.c file-chg.c file-get-storage-info.c \
-	file-get-fs-options.c file-reparent.c
+	file-get-fs-options.c file-reparent.c get-source.c
 
 IOSRCS=io-async-icky.c io-async.c io-duplicate.c io-map.c io-modes-get.c \
 	io-modes-off.c io-modes-on.c io-modes-set.c io-owner-get.c \
@@ -34,7 +34,8 @@ IOSRCS=io-async-icky.c io-async.c io-duplicate.c io-map.c io-modes-get.c \
 	io-stat.c io-stubs.c io-write.c io-version.c io-identity.c
 
 FSYSSRCS=fsys-getroot.c fsys-goaway.c fsys-stubs.c fsys-syncfs.c \
-	fsys-forward.c fsys-set-options.c fsys-get-options.c
+	fsys-forward.c fsys-set-options.c fsys-get-options.c \
+	fsys-get-children.c fsys-get-source.c
 
 OTHERSRCS=demuxer.c protid-clean.c protid-dup.c cntl-create.c \
 	cntl-clean.c migsupport.c times.c startup.c open.c \
