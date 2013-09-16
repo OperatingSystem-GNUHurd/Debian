@@ -20,7 +20,7 @@ hurd (20130916-1) unstable; urgency=low
   * patches/newRPC.patch: New patch to fix link until libc gets rebuilt
     against new .defs.
 
- -- Samuel Thibault <sthibault@debian.org>  Mon, 16 Sep 2013 01:36:12 +0000
+ -- Samuel Thibault <sthibault@debian.org>  Mon, 16 Sep 2013 14:30:13 +0000
 
 hurd (20130727-1) unstable; urgency=low
 
