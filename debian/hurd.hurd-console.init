@@ -1,13 +1,11 @@
 #! /bin/sh
 ### BEGIN INIT INFO
 # Provides:          hurd-console
-# Required-Start:    $all
+# Required-Start:    $local_fs $all
 # Required-Stop:     
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Example initscript
-# Description:       This file should be used to construct scripts to be
-#                    placed in /etc/init.d.
+# Short-Description: Start userland console
 ### END INIT INFO
 
 # Author: Justus Winter <4winter@informatik.uni-hamburg.de>
