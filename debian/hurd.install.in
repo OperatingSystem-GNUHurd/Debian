@@ -17,10 +17,6 @@ debian/tmp/sbin/reboot-hurd
 debian/tmp/sbin/halt-hurd
 debian/tmp/sbin/swapon
 debian/tmp/sbin/swapoff
-debian/tmp/sbin/fsck.ufs
-debian/tmp/sbin/mkfs.ufs
-debian/tmp/sbin/clri.ufs
-debian/tmp/sbin/stati.ufs
 debian/tmp/bin/boot
 debian/tmp/bin/console
 debian/tmp/bin/shd
