@@ -3,9 +3,11 @@ More debianish rc scripts
  daemons/rc.sh |   43 ++++++++++++++++++++++++++++++++-----------
  1 file changed, 32 insertions(+), 11 deletions(-)
 
---- a/daemons/rc.sh
-+++ b/daemons/rc.sh
-@@ -19,14 +19,17 @@ then
+Index: hurd-debian/daemons/rc.sh
+===================================================================
+--- hurd-debian.orig/daemons/rc.sh	2013-09-16 07:43:39.000000000 +0000
++++ hurd-debian/daemons/rc.sh	2013-09-16 07:44:04.000000000 +0000
+@@ -19,14 +19,17 @@
  	echo Automatic boot in progress...
  	date
  
@@ -24,7 +26,7 @@ More debianish rc scripts
  		;;
  	# Fsck couldn't fix it.
  	4 | 8)
-@@ -85,7 +88,15 @@ if test -d /tmp; then
+@@ -85,12 +88,20 @@
  
  fi
  if test -d /var/run; then
@@ -41,7 +43,14 @@ More debianish rc scripts
  fi
  echo done
  
-@@ -104,15 +115,25 @@ touch /var/run/mtab
+-# This file must exist for e2fsck to work. XXX
+-touch /var/run/mtab
++# This file must exist for e2fsck to work.
++ln -s /proc/mounts /var/run/mtab
+ 
+ #echo -n restoring pty permissions...
+ #chmod 666 /dev/tty[pqrs]*
+@@ -104,15 +115,25 @@
  
  chmod 664 /etc/motd
  

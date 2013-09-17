@@ -37,7 +37,7 @@ override_dh_auto_configure:
 
 override_dh_auto_build:
 	dh_auto_build -Bbuild
-	cd build/doc && texi2html -split chapter ../../doc/hurd.texi
+	cd build/doc && make && makeinfo --html --split=chapter ../../doc/hurd.texi
 	$(MAKE) -C libdde-linux26 BUILDDIR=$(CURDIR)/build
 
 override_dh_auto_clean:

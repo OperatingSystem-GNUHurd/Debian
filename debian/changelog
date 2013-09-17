@@ -1,8 +1,32 @@
-hurd (20130727-2) UNRELEASED; urgency=low
+hurd (20130916-2) UNRELEASED; urgency=low
 
   * control, hurd.install.in, rules: Remove ufs parts.
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 17 Sep 2013 19:42:22 +0200
+
+hurd (20130916-1) unstable; urgency=low
+
+  * New upstream snapshot. Closes: Bug#701516, Bug#313560.
+    - patches/{ext2fs_large_stores.patch, ext2fs_large_stores_pthread.patch,
+    mount-n.patch, mount-f.patch, mount-remount.patch, procfs-update.patch,
+    procfs-default.patch, procfs-get-options.patch, sutils-types.patch,
+    mount-ignore-mounted-all.patch, mount-t-auto.patch,
+    sutils-multiple-none.patch, umount.patch}: Remove, merged upstream.
+    - patches/{exec_filename_exec.patch, exec_filename_fs.patch,
+    mount-test-opts.patch, proxy-defpager.diff}: Refresh.
+  * patches/rc.patch: point /run/mtab to /proc/mounts.
+  * rules, control: Switch to makeinfo.
+  * Refresh lintian overrides.
+
+  [ Justus Winter ]
+  * hurd.hurd-console.init: Add an initscript for hurd-console.
+  * patches/hurd_console_startup.patch: Drop, this is no longer necessary with
+    the initscript in place.
+  * control: Add build dependency on libdaemon
+  * patches/newRPC.patch: New patch to fix link until libc gets rebuilt
+    against new .defs.
+
+ -- Samuel Thibault <sthibault@debian.org>  Mon, 16 Sep 2013 14:30:13 +0000
 
 hurd (20130727-1) unstable; urgency=low
 

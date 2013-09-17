@@ -1,6 +1,6 @@
 /* Definitions for process server interface (request-only version)
 
-   Copyright (C) 1992, 93, 94, 95, 96, 98 Free Software Foundation, Inc.
+   Copyright (C) 1992, 93, 94, 95, 96, 98, 2013 Free Software Foundation, Inc.
 
 This file is part of the GNU Hurd.
 
@@ -371,3 +371,34 @@ simpleroutine proc_getnports_request (
 	process: process_t;
 	ureplyport reply: reply_port_t;
 	which: pid_t);
+
+/*** Routines related to early server bootstrapping ***/
+
+skip;  /* Reserved for proc_set_init_task */
+
+/* Inform the process server that the process is important.  */
+simpleroutine proc_mark_important_request (
+	process: process_t;
+	ureplyport reply: reply_port_t);
+
+/* Query whether the process is important.  */
+simpleroutine proc_is_important_request (
+	process: process_t;
+	ureplyport reply: reply_port_t);
+
+/* Set the processes start_code and end_code locations.  Any
+   executable segments loaded from the ELF binary are in this
+   range.  */
+simpleroutine proc_set_code_request (
+	process: process_t;
+	ureplyport reply: reply_port_t;
+	start_code: vm_address_t;
+	end_code: vm_address_t);
+
+/* Get the processes start_code and end_code locations.  Any
+   executable segments loaded from the ELF binary are in this range.
+   If zero is returned for these values, the requested information has
+   never been set.  */
+simpleroutine proc_get_code_request (
+	process: process_t;
+	ureplyport reply: reply_port_t);
