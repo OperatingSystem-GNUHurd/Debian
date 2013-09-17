@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <argp.h>
+#include <nullauth.h>
 
 const char *argp_program_version = STANDARD_HURD_VERSION (null);
 
@@ -77,6 +78,10 @@ main (int argc, char **argv)
   mach_port_deallocate (mach_task_self (), bootstrap);
   if (err)
     error(3, err, "Contacting parent");
+
+  err = setnullauth ();
+  if (err)
+    error(4, err, "Dropping privileges");
 
   /* Launch. */
   ports_manage_port_operations_multithread (fsys->pi.bucket, trivfs_demuxer,
@@ -202,6 +207,15 @@ trivfs_S_io_select (struct trivfs_protid *cred,
   else
     *type &= ~SELECT_URG;
   return 0;
+}
+
+kern_return_t
+trivfs_S_io_select_timeout (struct trivfs_protid *cred,
+			    mach_port_t reply, mach_msg_type_name_t replytype,
+			    struct timespec ts,
+			    int *type)
+{
+  return trivfs_S_io_select (cred, reply, replytype, type);
 }
 
 /* Write data to an IO object.  If offset is -1, write at the object

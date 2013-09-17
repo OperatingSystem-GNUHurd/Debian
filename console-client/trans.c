@@ -332,9 +332,10 @@ netfs_S_io_seek (struct protid *user, off_t offset,
 }
 
 
-error_t
-netfs_S_io_select (struct protid *user, mach_port_t reply,
-		   mach_msg_type_name_t replytype, int *type)
+static error_t
+io_select_common (struct protid *user, mach_port_t reply,
+		  mach_msg_type_name_t replytype,
+		  struct timespec *tsp, int *type)
 {
   struct node *np;
   
@@ -344,8 +345,25 @@ netfs_S_io_select (struct protid *user, mach_port_t reply,
   np = user->po->np;
   
   if (np->nn->node && np->nn->node->select)
-    return np->nn->node->select (user, reply, replytype, type);
+    return np->nn->node->select (user, reply, replytype, tsp, type);
   return EOPNOTSUPP;
+}
+
+
+error_t
+netfs_S_io_select (struct protid *user, mach_port_t reply,
+		   mach_msg_type_name_t replytype, int *type)
+{
+  return io_select_common (user, reply, replytype, NULL, type);
+}
+
+
+error_t
+netfs_S_io_select_timeout (struct protid *user, mach_port_t reply,
+			   mach_msg_type_name_t replytype,
+			   struct timespec ts, int *type)
+{
+  return io_select_common (user, reply, replytype, &ts, type);
 }
 
 
@@ -826,7 +844,6 @@ console_unregister_consnode (consnode_t cn)
 error_t
 console_setup_node (char *path)
 {
-  mach_port_t underlying;
   mach_port_t bootstrap;
   error_t err;
   struct stat ul_stat;
@@ -856,7 +873,6 @@ console_setup_node (char *path)
   err = file_set_translator (node, 0, FS_TRANS_EXCL | FS_TRANS_SET, 0, 0, 0,
 			     right, MACH_MSG_TYPE_COPY_SEND); 
   mach_port_deallocate (mach_task_self (), right);
-  underlying = node;
   
   err = io_stat (node, &ul_stat);
   if (err)

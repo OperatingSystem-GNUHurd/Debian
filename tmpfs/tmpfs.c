@@ -29,6 +29,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include <fcntl.h>
 #include <hurd.h>
 #include <hurd/paths.h>
+#include <nullauth.h>
 
 char *diskfs_server_name = "tmpfs";
 char *diskfs_server_version = HURD_VERSION;
@@ -327,7 +328,7 @@ m or M for megabytes, g or G for gigabytes.",
 /* Similarly at runtime.  */
 static const struct argp_child runtime_children[] =
   {{&diskfs_std_runtime_argp}, {0}};
-static struct argp runtime_argp = {0, parse_opt, 0, 0, runtime_children};
+static struct argp runtime_argp = {options, parse_opt, 0, 0, runtime_children};
 
 struct argp *diskfs_runtime_argp = (struct argp *)&runtime_argp;
 
@@ -436,6 +437,11 @@ main (int argc, char **argv)
 
   /* We must keep the REALNODE send right to remain the active
      translator for the underlying node.  */
+
+  /* Drop all privileges.  */
+  err = setnullauth();
+  if (err)
+    error (1, err, "Could not drop privileges");
 
   pthread_mutex_unlock (&diskfs_root_node->lock);
 

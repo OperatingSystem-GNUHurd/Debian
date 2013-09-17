@@ -28,6 +28,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <version.h>
+#include <pids.h>
 
 /* Include Hurd's errno.h file, but don't include glue-include/hurd/errno.h,
    since it #undef's the errno macro. */
@@ -153,7 +154,7 @@ arrange_shutdown_notification ()
   if (!procserver)
     return;
 
-  err = proc_getmsgport (procserver, 1, &initport);
+  err = proc_getmsgport (procserver, HURD_PID_STARTUP, &initport);
   mach_port_deallocate (mach_task_self (), procserver);
   if (err)
     return;
@@ -174,6 +175,7 @@ error_t
 find_device (char *name, struct device **device)
 {
   struct device *dev = dev_base;
+  char *base_name;
 
   /* Skip loopback interface. */
   assert (dev);
@@ -202,9 +204,15 @@ find_device (char *name, struct device **device)
 	return 0;
       }
 
-  if (strncmp(name, "tun", 3) == 0)
+  base_name = strrchr(name, '/');
+  if (base_name)
+    base_name++;
+  else
+    base_name = name;
+
+  if (strncmp(base_name, "tun", 3) == 0)
     setup_tunnel_device (name, device);
-  else if (strncmp(name, "dummy", 5) == 0)
+  else if (strncmp(base_name, "dummy", 5) == 0)
     setup_dummy_device (name, device);
   else
     setup_ethernet_device (name, device);

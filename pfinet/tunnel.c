@@ -149,6 +149,7 @@ setup_tunnel_device (char *name, struct device **device)
   error_t err;
   struct tunnel_device *tdev;
   struct device *dev;
+  char *base_name;
 
   /* Do global initialization before setting up first tunnel device. */
   if (!tunnel_dev)
@@ -165,7 +166,13 @@ setup_tunnel_device (char *name, struct device **device)
 
   *device = dev = &tdev->dev;
 
-  dev->name = strdup (name);
+  base_name = strrchr (name, '/');
+  if (base_name)
+    base_name++;
+  else
+    base_name = name;
+
+  dev->name = strdup (base_name);
 
   dev->priv = tdev;
   dev->get_stats = tunnel_get_stats;
@@ -187,8 +194,11 @@ setup_tunnel_device (char *name, struct device **device)
 
   dev_init_buffers (dev);
 
-  /* Setting up the translator at /dev/tunX.  */
-  asprintf (&tdev->devname, "/dev/%s", tdev->dev.name);
+  if (base_name != name)
+    tdev->devname = strdup (name);
+  else
+    /* Setting up the translator at /dev/tunX.  */
+    asprintf (&tdev->devname, "/dev/%s", tdev->dev.name);
   tdev->underlying = file_name_lookup (tdev->devname, O_CREAT|O_NOTRANS, 0664);
 
   if (tdev->underlying == MACH_PORT_NULL)
@@ -452,13 +462,14 @@ trivfs_S_io_readable (struct trivfs_protid *cred,
    return the types that are then available.  ID_TAG is returned as passed; it
    is just for the convenience of the user in matching up reply messages with
    specific requests sent.  */
-error_t
-trivfs_S_io_select (struct trivfs_protid *cred,
-                    mach_port_t reply,
-                    mach_msg_type_name_t reply_type,
-                    int *type)
+static error_t
+io_select_common (struct trivfs_protid *cred,
+		  mach_port_t reply,
+		  mach_msg_type_name_t reply_type,
+		  struct timespec *tsp, int *type)
 {
   struct tunnel_device *tdev;
+  error_t err;
 
   if (!cred)
     return EOPNOTSUPP;
@@ -468,13 +479,22 @@ trivfs_S_io_select (struct trivfs_protid *cred,
 
   tdev = (struct tunnel_device *) cred->po->cntl->hook;
 
-  /* We only deal with SELECT_READ here.  */
-  *type &= SELECT_READ;
+  /* We only deal with SELECT_READ and SELECT_WRITE here.  */
+  *type &= SELECT_READ | SELECT_WRITE;
 
   if (*type == 0)
     return 0;
 
   pthread_mutex_lock (&tdev->lock);
+
+  if (*type & SELECT_WRITE)
+    {
+      /* We are always writable.  */
+      if (skb_queue_len (&tdev->xq) == 0)
+	*type &= ~SELECT_READ;
+      pthread_mutex_unlock (&tdev->lock);
+      return 0;
+    }
 
   while (1)
     {
@@ -487,13 +507,38 @@ trivfs_S_io_select (struct trivfs_protid *cred,
 
       ports_interrupt_self_on_port_death (cred, reply);
       tdev->read_blocked = 1;
-      if (pthread_hurd_cond_wait_np (&tdev->select_alert, &tdev->lock))
+      err = pthread_hurd_cond_timedwait_np (&tdev->select_alert, &tdev->lock,
+					    tsp);
+      if (err)
         {
           *type = 0;
           pthread_mutex_unlock (&tdev->lock);
-          return EINTR;
+
+          if (err == ETIMEDOUT)
+            err = 0;
+
+          return err;
         }
     }
+}
+
+error_t
+trivfs_S_io_select (struct trivfs_protid *cred,
+                    mach_port_t reply,
+                    mach_msg_type_name_t reply_type,
+                    int *type)
+{
+  return io_select_common (cred, reply, reply_type, NULL, type);
+}
+
+error_t
+trivfs_S_io_select_timeout (struct trivfs_protid *cred,
+			    mach_port_t reply,
+			    mach_msg_type_name_t reply_type,
+			    struct timespec ts,
+			    int *type)
+{
+  return io_select_common (cred, reply, reply_type, &ts, type);
 }
 
 /* Change current read/write offset */

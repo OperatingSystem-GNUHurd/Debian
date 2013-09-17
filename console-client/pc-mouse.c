@@ -93,12 +93,9 @@ repeat_event (kd_event *evt)
   pthread_mutex_lock (&global_lock);
   while (mousebuf.size + sizeof (kd_event) > MOUSEBUFSZ)
     {
-      /* The input buffer is full, wait until there is some space.  */
-      if (pthread_hurd_cond_wait_np (&mousebuf.writecond, &global_lock))
-	{
-	  pthread_mutex_unlock (&global_lock);
-	  /* Interrupt, silently continue.  */
-	}
+      /* The input buffer is full, wait until there is some space. If this call
+       * is interrupted, silently continue */
+      (void) pthread_hurd_cond_wait_np (&mousebuf.writecond, &global_lock);
     }
   ev = (kd_event *) &mousebuf.evtbuffer[MOUSEBUF_POS (mousebuf.pos 
 						      + mousebuf.size)];
@@ -113,8 +110,11 @@ repeat_event (kd_event *evt)
 
 static error_t
 repeater_select (struct protid *cred, mach_port_t reply,
-		 mach_msg_type_name_t replytype, int *type)
+		 mach_msg_type_name_t replytype,
+		 struct timespec *tsp, int *type)
 {
+  error_t err;
+
   if (!cred)
     return EOPNOTSUPP;
 
@@ -136,12 +136,16 @@ repeater_select (struct protid *cred, mach_port_t reply,
 	}
 
       ports_interrupt_self_on_port_death (cred, reply);
-      if (pthread_hurd_cond_wait_np (&select_alert, &global_lock))
+      err = pthread_hurd_cond_timedwait_np (&select_alert, &global_lock, tsp);
+      if (err)
 	{
 	  *type = 0;
 	  pthread_mutex_unlock (&global_lock);
 
-	  return EINTR;
+	  if (err == ETIMEDOUT)
+	    err = 0;
+
+	  return err;
 	}
     }
 }

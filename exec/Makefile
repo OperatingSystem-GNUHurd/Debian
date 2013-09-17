@@ -20,15 +20,9 @@
 dir := exec
 makemode := server
 
-SRCS = exec.c main.c hashexec.c hostarch.c \
-       $(gzip-sources) $(bzip2-sources)
+SRCS = exec.c main.c hashexec.c hostarch.c
 OBJS = main.o hostarch.o exec.o hashexec.o \
-       execServer.o exec_startupServer.o \
-       $(gzip-objects) $(bzip2-objects)
-gzip-sources = unzip.c util.c inflate.c
-gzip-objects = $(gzip-sources:%.c=%.o)
-bzip2-sources = do-bunzip2.c
-bzip2-objects = $(bzip2-sources:%.c=%.o)
+       execServer.o exec_startupServer.o
 
 target = exec
 #targets = exec exec.static
@@ -40,6 +34,6 @@ exec-MIGSFLAGS = -imacros $(srcdir)/execmutations.h
 
 include ../Makeconf
 
-CPPFLAGS += -DGZIP -DBZIP2 # -DBFD
+CPPFLAGS += # -DBFD
 
 exec.static exec: $(OBJS) $(library_deps)

@@ -24,16 +24,23 @@
 #include <error.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <hurd/fsys.h>
 #include <hurd/fshelp.h>
 #include <hurd/paths.h>
+#ifdef HAVE_BLKID
+#include <blkid/blkid.h>
+#endif
+
+#include "match-options.h"
 
 #define SEARCH_FMTS	_HURD "%sfs\0" _HURD "%s"
-#define DEFAULT_FSTYPE	"ext2"
+#define DEFAULT_FSTYPE	"auto"
 
 static char *fstype = DEFAULT_FSTYPE;
 static char *device, *mountpoint;
 static int verbose;
+static int fake;
 static char *options;
 static size_t options_len;
 static mach_msg_timeout_t timeout;
@@ -54,6 +61,10 @@ static const struct argp_option argp_opts[] =
   {"update", 'u', 0, 0, "Flush any meta-data cached in core"},
   {"remount", 0, 0, OPTION_ALIAS},
   {"verbose", 'v', 0, 0, "Give more detailed information"},
+  {"no-mtab", 'n', 0, 0, "Do not update /etc/mtab"},
+  {"test-opts", 'O', "OPTIONS", 0,
+   "Only mount fstab entries matching the given set of options"},
+  {"fake", 'f', 0, 0, "Do not actually mount, just pretend"},
   {0, 0}
 };
 
@@ -108,6 +119,20 @@ parse_opt (int key, char *arg, struct argp_state *state)
 	  argp_error (state, "invalid argument to --format");
 	  return EINVAL;
 	}
+      break;
+
+    case 'n':
+      /* do nothing */
+      break;
+
+    case 'f':
+      fake = 1;
+      break;
+
+    case 'O':
+      err = argz_create_sep (arg, ',', &test_opts, &test_opts_len);
+      if (err)
+	argp_failure (state, 100, ENOMEM, "%s", arg);
       break;
 
     case ARGP_KEY_ARG:
@@ -307,11 +332,37 @@ do_mount (struct fs *fs, int remount)
 	  return 0;
 	}
 
-      if (mounted != MACH_PORT_NULL)
+      /* Do not fail if there is an active translator if --fake is
+         given. This mimics Linux mount utility more closely which
+         just looks into the mtab file. */
+      if (mounted != MACH_PORT_NULL && !fake)
 	{
 	  error (0, 0, "%s already mounted", fs->mntent.mnt_fsname);
 	  return EBUSY;
 	}
+
+      if (strcmp (fs->mntent.mnt_type, "auto") == 0)
+        {
+#if HAVE_BLKID
+          char *type =
+            blkid_get_tag_value (NULL, "TYPE", fs->mntent.mnt_fsname);
+          if (! type)
+            {
+              error (0, 0, "failed to detect file system type");
+              return EFTYPE;
+            }
+          else
+            {
+              fs->mntent.mnt_type = strdup (type);
+              if (! fs->mntent.mnt_type)
+                error (3, ENOMEM, "failed to allocate memory");
+            }
+#else
+	  fs->mntent.mnt_type = strdup ("ext2");
+	  if (! fs->mntent.mnt_type)
+	    error (3, ENOMEM, "failed to allocate memory");
+#endif
+        }
 
       err = fs_type (fs, &type);
       if (err)
@@ -336,6 +387,23 @@ do_mount (struct fs *fs, int remount)
 	error (3, ENOMEM, "collecting mount options");
 
       /* Now we have a translator command line argz in FSOPTS.  */
+
+      if (fake) {
+        /* Fake the translator startup. */
+        mach_port_t underlying;
+        mach_msg_type_name_t underlying_type;
+        err = open_node (O_READ, &underlying, &underlying_type, 0, NULL);
+        if (err)
+          error (1, errno, "cannot mount on %s", fs->mntent.mnt_dir);
+
+        mach_port_deallocate (mach_task_self (), underlying);
+
+        /* See if the translator is at least executable. */
+        if (access(type->program, X_OK) == -1)
+          error (1, errno, "can not execute %s", type->program);
+
+        return 0;
+      }
 
       explain ("settrans -a");
       err = fshelp_start_translator (open_node, NULL, fsopts,
@@ -521,6 +589,12 @@ main (int argc, char **argv)
 
   fstab = fstab_argp_create (&fstab_params, SEARCH_FMTS, sizeof SEARCH_FMTS);
 
+  /* This is a convenient way of checking for any `remount' options.  */
+  remount = 0;
+  err = argz_replace (&options, &options_len, "remount", "update", &remount);
+  if (err)
+    error (3, ENOMEM, "collecting mount options");
+
   if (device)			/* two-argument form */
     {
       struct mntent m =
@@ -531,13 +605,23 @@ main (int argc, char **argv)
 	mnt_opts: 0,
 	mnt_freq: 0, mnt_passno: 0
       };
-      struct fstype *fst;
 
-      err = fstypes_get (fstab->types, fstype, &fst);
+      err = fstab_add_mntent (fstab, &m, &fs);
       if (err)
-	error (106, err, "cannot initialize type %s", fstype);
-      if (fst->program == 0)
-	error (2, 0, "filesystem type %s not recognized", fstype);
+	error (2, err, "%s", mountpoint);
+    }
+  else if (mountpoint && remount)	/* one-argument remount */
+    {
+      struct mntent m =
+      {
+	mnt_fsname: mountpoint, /* since we cannot know the device,
+				   using mountpoint here leads to more
+				   helpful error messages */
+	mnt_dir: mountpoint,
+	mnt_type: fstype,
+	mnt_opts: 0,
+	mnt_freq: 0, mnt_passno: 0
+      };
 
       err = fstab_add_mntent (fstab, &m, &fs);
       if (err)
@@ -552,12 +636,6 @@ main (int argc, char **argv)
   else
     fs = 0;
 
-  /* This is a convenient way of checking for any `remount' options.  */
-  remount = 0;
-  err = argz_replace (&options, &options_len, "remount", "update", &remount);
-  if (err)
-    error (3, ENOMEM, "collecting mount options");
-
   if (fs != 0)
     err = do_mount (fs, remount);
   else
@@ -566,8 +644,22 @@ main (int argc, char **argv)
       case mount:
 	for (fs = fstab->entries; fs; fs = fs->next)
 	  {
-	    if (fstab_params.do_all && hasmntopt (&fs->mntent, MNTOPT_NOAUTO))
-	      continue;
+	    if (fstab_params.do_all) {
+              if (hasmntopt (&fs->mntent, MNTOPT_NOAUTO))
+                continue;
+
+              if (! match_options (&fs->mntent))
+                continue;
+
+              fsys_t mounted;
+              err = fs_fsys (fs, &mounted);
+              if (err)
+                  error (0, err, "cannot determine if %s is already mounted",
+                         fs->mntent.mnt_fsname);
+
+              if (mounted != MACH_PORT_NULL)
+                continue;
+            }
 	    err |= do_mount (fs, remount);
 	  }
 	break;
