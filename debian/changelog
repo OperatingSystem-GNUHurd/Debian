@@ -3,7 +3,7 @@ hurd (20130916-2) UNRELEASED; urgency=low
   * control, hurd.install.in, rules: Remove ufs parts.
 
   [ Justus Winter ]
-  * Include the nullpriv utility in hurd and hurd-udeb.
+  * Include the nullauth utility in hurd and hurd-udeb.
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 17 Sep 2013 19:42:22 +0200
 
