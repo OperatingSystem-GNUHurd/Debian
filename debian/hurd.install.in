@@ -40,6 +40,7 @@ debian/tmp/bin/addauth
 debian/tmp/bin/rmauth
 debian/tmp/bin/unsu
 debian/tmp/bin/setauth
+debian/tmp/bin/nullauth
 debian/tmp/bin/ftpcp
 debian/tmp/bin/ftpdir
 debian/tmp/bin/storecat
