@@ -9,6 +9,7 @@ hurd (20130916-2) UNRELEASED; urgency=low
   * Add missing libpcap0.8-dev build dependency.
   * Add ${perl:Depends} in hurd-dev.
   * Add ${shlibs:Depends} in hurd-libs0.3-udeb.
+  * Rename the installed libdde-linux26 stuff back to libdde_linux26.
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 17 Sep 2013 19:42:22 +0200
 
