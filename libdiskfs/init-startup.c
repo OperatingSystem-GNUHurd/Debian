@@ -26,6 +26,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include <error.h>
 #include <hurd/fsys.h>
 #include <hurd/startup.h>
+#include <pids.h>
 
 char *_diskfs_chroot_directory;
 
@@ -196,7 +197,14 @@ _diskfs_init_completed ()
   if (err)
     goto errout;
 
-  err = proc_getmsgport (proc, 1, &init);
+  /* Mark us as important.  */
+  err = proc_mark_important (proc);
+  /* This might fail due to permissions or because the old proc server
+     is still running, ignore any such errors.  */
+  if (err && err != EPERM && err != EMIG_BAD_ID)
+    goto errout;
+
+  err = proc_getmsgport (proc, HURD_PID_STARTUP, &init);
   mach_port_deallocate (mach_task_self (), proc);
   if (err)
     goto errout;

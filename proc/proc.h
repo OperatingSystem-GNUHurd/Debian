@@ -64,6 +64,8 @@ struct proc
 
   /* Miscellaneous information */
   vm_address_t p_argv, p_envp;
+  vm_address_t start_code;	/* all executable segments are in this range */
+  vm_address_t end_code;
   int p_status;			/* to return via wait */
   int p_sigcode;
   struct rusage p_rusage;	/* my usage if I'm dead, to return via wait */
@@ -84,6 +86,7 @@ struct proc
   unsigned int p_noowner:1;	/* has no owner known */
   unsigned int p_loginleader:1;	/* leader of login collection */
   unsigned int p_dead:1;	/* process is dead */
+  unsigned int p_important:1;	/* has called proc_mark_important */
 };
 
 typedef struct proc *pstruct_t;
@@ -129,8 +132,6 @@ struct exc
   natural_t thread_state[0];
 };
 
-struct zombie *zombie_list;
-
 mach_port_t authserver;
 struct proc *self_proc;		/* process 0 (us) */
 struct proc *startup_proc;	/* process 1 (init) */
@@ -157,6 +158,7 @@ process_drop (struct proc *p)
 /* Forward declarations */
 void complete_wait (struct proc *, int);
 int check_uid (struct proc *, uid_t);
+int check_owner (struct proc *, struct proc *);
 void addalltasks (void);
 void prociterate (void (*)(struct proc *, void *), void *);
 void count_up (void *);
