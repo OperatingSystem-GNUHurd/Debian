@@ -71,7 +71,7 @@ Section: debian-installer
 Package-Type: udeb
 Priority: optional
 Architecture: hurd-any
-Depends: ${misc:Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: GNU Hurd (libraries) - udeb
  This package contains the libraries used by GNU Hurd udeb.
 
