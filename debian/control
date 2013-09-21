@@ -42,7 +42,8 @@ Package: hurd-dev
 Priority: standard
 Section: libdevel
 Architecture: hurd-any
-Depends: ${misc:Depends}, ${shlibs:Depends}, libc0.3-dev (>= 2.13-31~), hurd (= ${binary:Version})
+Depends: ${misc:Depends}, ${shlibs:Depends}, ${perl:Depends},
+ libc0.3-dev (>= 2.13-31~), hurd (= ${binary:Version})
 Replaces: hurd (<< 20130226-2~)
 Breaks: hurd (<< 20130226-2~)
 Description: GNU Hurd (development files)
