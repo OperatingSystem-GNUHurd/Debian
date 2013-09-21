@@ -166,7 +166,7 @@ ds_device_open (mach_port_t open_port, mach_port_t reply_port,
 		char *name, device_t *devp, mach_msg_type_name_t *devicePoly)
 {
   int i;
-  io_return_t err;
+  io_return_t err = D_NO_SUCH_DEVICE;
 
   /* Open must be called on the master device port.  */
   if (!is_master_device (open_port))
