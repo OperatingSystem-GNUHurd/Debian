@@ -156,7 +156,7 @@ ds_device_write (device_t device, mach_port_t reply_port,
 						  vdev_portclass);
   if (vdev == NULL)
     {
-      vm_deallocate (mach_task_self (), data, datalen);
+      vm_deallocate (mach_task_self (), (vm_address_t) data, datalen);
       return D_NO_SUCH_DEVICE;
     }
   /* The packet is forwarded to all virtual interfaces and
@@ -168,7 +168,7 @@ ds_device_write (device_t device, mach_port_t reply_port,
 			data, datalen, bytes_written);
   /* The data in device_write() is transmifered out of line,
    * so the server-side function has to deallocate it. */
-  vm_deallocate (mach_task_self (), data, datalen);
+  vm_deallocate (mach_task_self (), (vm_address_t) data, datalen);
   ports_port_deref (vdev);
   return ret;
 }
