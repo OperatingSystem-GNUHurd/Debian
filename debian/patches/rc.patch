@@ -3,11 +3,9 @@ More debianish rc scripts
  daemons/rc.sh |   43 ++++++++++++++++++++++++++++++++-----------
  1 file changed, 32 insertions(+), 11 deletions(-)
 
-Index: hurd-debian/daemons/rc.sh
-===================================================================
---- hurd-debian.orig/daemons/rc.sh	2013-09-16 07:43:39.000000000 +0000
-+++ hurd-debian/daemons/rc.sh	2013-09-16 07:44:04.000000000 +0000
-@@ -19,14 +19,17 @@
+--- a/daemons/rc.sh
++++ b/daemons/rc.sh
+@@ -19,14 +19,17 @@ then
  	echo Automatic boot in progress...
  	date
  
@@ -26,7 +24,7 @@ Index: hurd-debian/daemons/rc.sh
  		;;
  	# Fsck couldn't fix it.
  	4 | 8)
-@@ -85,12 +88,20 @@
+@@ -85,12 +88,25 @@ if test -d /tmp; then
  
  fi
  if test -d /var/run; then
@@ -45,26 +43,31 @@ Index: hurd-debian/daemons/rc.sh
  
 -# This file must exist for e2fsck to work. XXX
 -touch /var/run/mtab
++# See whether procfs is set up
++if ! test -e /proc/cmdline ; then
++  settrans -c /proc /hurd/procfs --compatible
++fi
++
 +# This file must exist for e2fsck to work.
 +ln -s /proc/mounts /var/run/mtab
  
  #echo -n restoring pty permissions...
  #chmod 666 /dev/tty[pqrs]*
-@@ -104,15 +115,25 @@
+@@ -104,15 +120,25 @@ touch /var/run/mtab
  
  chmod 664 /etc/motd
  
 -echo -n starting daemons:
-+(
-+	trap ":" INT QUIT TSTP
- 
+-
 -/sbin/syslogd	&& echo -n ' syslogd'
 -/sbin/inetd	&& echo -n ' inetd'
 -
 -if test -x /sbin/sendmail -a -r /etc/sendmail.cf; then
 -  /sbin/sendmail -bd -q30m	&& echo -n ' sendmail'
 -fi
--
++(
++	trap ":" INT QUIT TSTP
+ 
 -echo .
 +	if [ -d /etc/rc.boot ]
 +	then

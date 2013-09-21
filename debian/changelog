@@ -1,6 +1,8 @@
 hurd (20130916-2) UNRELEASED; urgency=low
 
+  [ Samuel Thibault ]
   * control, hurd.install.in, rules: Remove ufs parts.
+  * patches/rc.patch: Make sure /proc is mounted at boot.
 
   [ Justus Winter ]
   * Include the nullauth utility in hurd and hurd-udeb.
