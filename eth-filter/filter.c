@@ -26,6 +26,7 @@
  */
 
 #include <argp.h>
+#include <argz.h>
 #include <errno.h>
 #include <error.h>
 #include <stddef.h>
@@ -37,6 +38,7 @@
 #include <hurd/trivfs.h>
 #include <hurd/ports.h>
 #include <hurd/ihash.h>
+#include <hurd/fshelp.h>
 
 #include "ourdevice_S.h"
 #include "notify_S.h"
@@ -379,7 +381,7 @@ ds_device_write (device_t device, mach_port_t reply_port,
   user = ports_lookup_port (port_bucket, device, user_portclass);
   if (user == NULL)
     {
-      vm_deallocate (mach_task_self (), data, datalen);
+      vm_deallocate (mach_task_self (), (vm_address_t) data, datalen);
       return D_INVALID_OPERATION;
     }
   proxy = user->proxy;
@@ -414,7 +416,7 @@ ds_device_write (device_t device, mach_port_t reply_port,
       *bytes_written = datalen;
       err = 0;
     }
-  vm_deallocate (mach_task_self (), data, datalen);
+  vm_deallocate (mach_task_self (), (vm_address_t) data, datalen);
   return err;
 }
 
@@ -734,7 +736,6 @@ error_t
 trivfs_append_args (struct trivfs_control *fsys,
 		    char **argz, size_t *argz_len)
 {
-  error_t err;
   char *opt;
 
   if (device_file)
@@ -779,6 +780,8 @@ trivfs_set_options (struct trivfs_control *fsys, char *argz, size_t argz_len)
 			rcv_filter_length);
   if (err)
     return err;
+
+  return 0;
 }
 
 int
