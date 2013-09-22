@@ -30,15 +30,15 @@ INSTALL_in := $(wildcard debian/*.install.in)
 INSTALL_generated := $(patsubst %.in,%,$(INSTALL_in))
 
 %:
-	dh $@ -Bbuild --with autotools_dev,autoreconf
+	dh $@ -Bbuild-deb --with autotools_dev,autoreconf
 
 override_dh_auto_configure:
-	dh_auto_configure -Bbuild -- $(CONFIGURE_ARGS) $(shell dpkg-buildflags --export=configure)
+	dh_auto_configure -Bbuild-deb -- $(CONFIGURE_ARGS) $(shell dpkg-buildflags --export=configure)
 
 override_dh_auto_build:
-	dh_auto_build -Bbuild
-	cd build/doc && make && makeinfo --html --split=chapter ../../doc/hurd.texi
-	$(MAKE) -C libdde-linux26 BUILDDIR=$(CURDIR)/build
+	dh_auto_build -Bbuild-deb
+	cd build-deb/doc && make && makeinfo --html --split=chapter ../../doc/hurd.texi
+	$(MAKE) -C libdde-linux26 BUILDDIR=$(CURDIR)/build-deb
 
 override_dh_auto_clean:
 	dh_auto_clean
@@ -49,7 +49,7 @@ override_dh_auto_clean:
 	rm -f $(INSTALL_generated)
 
 override_dh_auto_install:
-	dh_auto_install -Bbuild --destdir= -- prefix=$(DEB_DESTDIR) libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var XKB_BASE=$(DEB_DESTDIR)/usr/share/X11/xkb
+	dh_auto_install -Bbuild-deb --destdir= -- prefix=$(DEB_DESTDIR) libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var XKB_BASE=$(DEB_DESTDIR)/usr/share/X11/xkb
 	$(MAKE) -C libdde-linux26 INSTALLDIR=$(CURDIR)/debian/tmp/usr/share/libdde_linux26/build/include install
 
 	# runsystem is managed by update-alternatives

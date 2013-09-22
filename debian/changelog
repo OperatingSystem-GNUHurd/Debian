@@ -16,6 +16,7 @@ hurd (20130916-2) UNRELEASED; urgency=low
     of the shlibs for hurd, which has no public libraries anymore after the
     hurd-libs0.3 split.
   * run.patch: refresh to apply without fuzz.
+  * Rename the "build" build dir to "build-deb".
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 17 Sep 2013 19:42:22 +0200
 
