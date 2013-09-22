@@ -1,7 +1,5 @@
-Index: hurd-debian/daemons/rc.sh
-===================================================================
---- hurd-debian.orig/daemons/rc.sh	2013-09-16 10:29:05.000000000 +0000
-+++ hurd-debian/daemons/rc.sh	2013-09-16 10:29:05.000000000 +0000
+--- a/daemons/rc.sh
++++ b/daemons/rc.sh
 @@ -98,6 +98,13 @@
  	chgrp utmp utmp
      fi; })
@@ -15,4 +13,4 @@ Index: hurd-debian/daemons/rc.sh
 +
  echo done
  
- # This file must exist for e2fsck to work.
+ # See whether procfs is set up
