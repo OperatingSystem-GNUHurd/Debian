@@ -10,7 +10,7 @@ hurd (20130916-2) UNRELEASED; urgency=low
   [ Pino Toscano ]
   * Add missing libpcap0.8-dev build dependency.
   * Add ${perl:Depends} in hurd-dev.
-  * Add ${shlibs:Depends} in hurd-libs0.3-udeb.
+  * Add ${shlibs:Depends} in hurd-libs0.3-udeb and hurd-udeb.
   * Rename the installed libdde-linux26 stuff back to libdde_linux26.
   * Exclude shlibs for private modules in /usr/lib/hurd; this allows the drop
     of the shlibs for hurd, which has no public libraries anymore after the

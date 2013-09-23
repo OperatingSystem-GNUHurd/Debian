@@ -80,7 +80,7 @@ Package-Type: udeb
 Priority: optional
 Section: debian-installer
 Architecture: hurd-any
-Depends: ${misc:Depends}, hurd-libs0.3-udeb (= ${binary:Version}), xkb-data-udeb
+Depends: ${misc:Depends}, ${shlibs:Depends}, hurd-libs0.3-udeb (= ${binary:Version}), xkb-data-udeb
 Provides: hurd, ext2-modules, fat-modules, ipv6-modules, isofs-modules, loop-modules, mouse-modules, nfs-modules, socket-modules
 Description: GNU Hurd - udeb
  This is the GNU Hurd udeb package. It contains essential system software and
