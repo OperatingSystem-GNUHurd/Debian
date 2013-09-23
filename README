@@ -14,7 +14,7 @@ git push incubator dde:dde-debian
 git tag -m "New upstream snapshot" -a upstream/dde/$date
 for dir in devnode libbpf libdde-linux26 libddekit libhurd-slab libmachdev
 do
-	git archive HEAD $dir | bzip2 > ../hurd_$date.orig-$dir.tar.bz2
+  git archive HEAD $dir | bzip2 > ../hurd_$date.orig-$dir.tar.bz2
 done
 
 git checkout eth
@@ -23,7 +23,7 @@ git pull . dde-upstream
 git tag -m "New upstream snapshot" -a upstream/eth/$date
 for dir in eth-filter eth-multiplexer
 do
-	git archive HEAD $dir | bzip2 > ../hurd_$date.orig-$dir.tar.bz2
+  git archive HEAD $dir | bzip2 > ../hurd_$date.orig-$dir.tar.bz2
 done
 
 git checkout random
@@ -42,9 +42,10 @@ git tag -m "New upstream snapshot" -a upstream/hurd/$date
 git archive --prefix=hurd-$date/ HEAD | bzip2 > ../hurd_$date.orig.tar.bz2
 
 git checkout upstream-merged
-for dir in devnode libbpf libdde-linux26 libhurd-slab libmachdev eth-filter eth-multiplexer random procfs
+rm * -fr
+for dir in devnode libbpf libdde-linux26 libddekit libhurd-slab libmachdev eth-filter eth-multiplexer random procfs
 do
-	tar -xf ../hurd_$date.orig-$dir.tar.bz2
+  tar -xf ../hurd_$date.orig-$dir.tar.bz2
 done
 tar --strip-components=1 -xf ../hurd_$date.orig.tar.bz2
 git add -A
