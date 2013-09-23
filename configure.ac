@@ -59,7 +59,7 @@ AC_ARG_ENABLE(profile,
 [  --disable-profile	  do not build profiled libraries and programs])
 AC_SUBST(enable_profile)
 
-define([default_static],['ext2fs,ufs'])dnl
+define([default_static],['ext2fs'])dnl
 AC_ARG_ENABLE(static-progs,
 [  --enable-static-progs=PROGRAMS...
                           build statically-linked PROGRAM.static versions
@@ -297,9 +297,16 @@ else
 			    echo ${file}:build.mk.in; done`"
 fi
 
-PKG_CHECK_MODULES([libdaemon], [libdaemon],
-  [AC_DEFINE([HAVE_DAEMON], [1], [Use libdaemon])],
-  [true])
+AC_ARG_WITH([libdaemon],
+  [AS_HELP_STRING([--without-libdaemon], [disable libdaemon use in console client])],
+  [],
+  [with_libdaemon=yes])
+
+AS_IF([test "x$with_libdaemon" != xno], [
+  PKG_CHECK_MODULES([libdaemon], [libdaemon],
+    [AC_DEFINE([HAVE_DAEMON], [1], [Use libdaemon])],
+    [true])
+])
 AC_SUBST([libdaemon_LIBS])
 AC_SUBST([libdaemon_CFLAGS])
 
