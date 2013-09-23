@@ -41,7 +41,7 @@ override_dh_auto_build:
 	$(MAKE) -C libdde-linux26 BUILDDIR=$(CURDIR)/build-deb
 
 override_dh_auto_clean:
-	dh_auto_clean
+	dh_auto_clean -Bbuild-deb
 	$(MAKE) -C libdde-linux26 cleanall
 	rm -f $$(find libdde-linux26 -name \*.d)
 	rm -fr libdde-linux26/build
