@@ -18,6 +18,7 @@
 # 02111-1307 USA.
 
 DEB_DESTDIR = $(CURDIR)/debian/tmp
+DEB_DESTDIR_UDEB = $(CURDIR)/debian/tmp-udeb
 
 CONFIGURE_ARGS = --disable-profile --enable-static-progs='ext2fs,iso9660fs'
 SUID_PROGRAMS = /bin/ids /bin/login /bin/ps-hurd /usr/bin/w-hurd
@@ -34,14 +35,17 @@ INSTALL_generated := $(patsubst %.in,%,$(INSTALL_in))
 
 override_dh_auto_configure:
 	dh_auto_configure -Bbuild-deb -- $(CONFIGURE_ARGS) $(shell dpkg-buildflags --export=configure)
+	dh_auto_configure -Bbuild-udeb -- $(CONFIGURE_ARGS) $(shell dpkg-buildflags --export=configure)
 
 override_dh_auto_build:
 	dh_auto_build -Bbuild-deb
+	dh_auto_build -Bbuild-udeb
 	cd build-deb/doc && make && makeinfo --html --split=chapter ../../doc/hurd.texi
 	$(MAKE) -C libdde-linux26 BUILDDIR=$(CURDIR)/build-deb
 
 override_dh_auto_clean:
 	dh_auto_clean -Bbuild-deb
+	dh_auto_clean -Bbuild-udeb
 	$(MAKE) -C libdde-linux26 cleanall
 	rm -f $$(find libdde-linux26 -name \*.d)
 	rm -fr libdde-linux26/build
@@ -50,6 +54,7 @@ override_dh_auto_clean:
 
 override_dh_auto_install:
 	dh_auto_install -Bbuild-deb --destdir= -- prefix=$(DEB_DESTDIR) libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var XKB_BASE=$(DEB_DESTDIR)/usr/share/X11/xkb
+	dh_auto_install -Bbuild-udeb --destdir= -- prefix=$(DEB_DESTDIR_UDEB) libdir=$(DEB_DESTDIR_UDEB)/lib/$(DEB_HOST_MULTIARCH) sysconfdir=$(DEB_DESTDIR_UDEB)/etc localstatedir=$(DEB_DESTDIR_UDEB)/var XKB_BASE=$(DEB_DESTDIR_UDEB)/usr/share/X11/xkb
 	$(MAKE) -C libdde-linux26 INSTALLDIR=$(CURDIR)/debian/tmp/usr/share/libdde_linux26/build/include install
 
 	# runsystem is managed by update-alternatives
@@ -63,6 +68,11 @@ override_dh_auto_install:
 	mv debian/tmp/bin/uptime debian/tmp/usr/bin/uptime-hurd
 	mv debian/tmp/bin/vmstat debian/tmp/usr/bin/vmstat-hurd
 	mv debian/tmp/bin/w debian/tmp/usr/bin/w-hurd
+	mkdir -p debian/tmp-udeb/usr/bin
+	mv debian/tmp-udeb/bin/ps debian/tmp-udeb/bin/ps-hurd
+	mv debian/tmp-udeb/bin/uptime debian/tmp-udeb/usr/bin/uptime-hurd
+	mv debian/tmp-udeb/bin/vmstat debian/tmp-udeb/usr/bin/vmstat-hurd
+	mv debian/tmp-udeb/bin/w debian/tmp-udeb/usr/bin/w-hurd
 
 	# move away halt and reboot to not conflict with sysvinit
 	# (they will be handled as alternatives)
@@ -71,8 +81,10 @@ override_dh_auto_install:
 
 	# remove PIC static libraries
 	rm -f debian/tmp/lib/$(DEB_HOST_MULTIARCH)/*_pic.a
+	rm -f debian/tmp-udeb/lib/$(DEB_HOST_MULTIARCH)/*_pic.a
 
 override_dh_install: $(INSTALL_generated)
+	dh_install $(addprefix -p,$(filter %-udeb,$(shell dh_listpackages))) --sourcedir=debian/tmp-udeb
 	dh_install --list-missing --sourcedir=debian/tmp
 
 override_dh_installinit:
@@ -93,6 +105,10 @@ override_dh_fixperms:
 override_dh_makeshlibs:
 	dh_makeshlibs -phurd-libs0.3 --add-udeb=hurd-libs0.3-udeb
 	dh_makeshlibs --remaining-packages -Xusr/lib/hurd/
+
+override_dh_clean:
+	dh_clean
+	rm -rf debian/tmp-udeb
 
 debian/%.install: debian/%.install.in
 	cat $^ | sed -e 's/@DEB_HOST_MULTIARCH@/$(DEB_HOST_MULTIARCH)/g' > $@

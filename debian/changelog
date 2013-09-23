@@ -19,6 +19,11 @@ hurd (20130916-2) UNRELEASED; urgency=low
   * Rename the "build" build dir to "build-deb".
   * Force the sourcedir for dh_install to debian/tmp, and strip/fix the paths
     in *.install.in files according to the new root.
+  * Do a separate build for the udeb variant, so it can have a different
+    configuration:
+    - Use build-udeb as build dir.
+    - Use debian/tmp-udeb as DESTDIR, and use it as sourcedir for dh_install
+      of *-udeb binaries.
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 17 Sep 2013 19:42:22 +0200
 
