@@ -12,6 +12,7 @@
  */
 
 #include <unistd.h>
+#include <stdlib.h>
 #include <error.h>
 #include <errno.h>
 #include <mach.h>
