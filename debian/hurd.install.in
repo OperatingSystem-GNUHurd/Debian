@@ -1,68 +1,68 @@
-debian/local/setup-translators usr/lib/hurd
-debian/local/random-hurd.sh hurd
-debian/local/urandom-hurd.sh hurd
-debian/local/securetty etc
-debian/tmp/lib/@DEB_HOST_MULTIARCH@/hurd/console/*.so.* usr/lib/hurd/console
-debian/tmp/hurd/*
-debian/tmp/lib/hurd/rc etc/hurd
-debian/tmp/lib/hurd/getty sbin
-debian/tmp/lib/hurd/console-run sbin
-debian/tmp/lib/hurd/runttys sbin
-debian/tmp/lib/hurd/runsystem.gnu etc/hurd
-debian/tmp/sbin/nfsd
-debian/tmp/sbin/e2os
-debian/tmp/sbin/MAKEDEV
-debian/tmp/sbin/losetup
-debian/tmp/sbin/reboot-hurd
-debian/tmp/sbin/halt-hurd
-debian/tmp/sbin/swapon
-debian/tmp/sbin/swapoff
-debian/tmp/bin/boot
-debian/tmp/bin/console
-debian/tmp/bin/shd
-debian/tmp/bin/ps-hurd
-debian/tmp/bin/settrans
-debian/tmp/bin/showtrans
-debian/tmp/bin/syncfs
-debian/tmp/bin/fsysopts
-debian/tmp/bin/storeinfo
-debian/tmp/bin/login
-debian/tmp/usr/bin/w-hurd
-debian/tmp/usr/bin/uptime-hurd
-debian/tmp/bin/ids
-debian/tmp/bin/loginpr
-debian/tmp/bin/sush
-debian/tmp/usr/bin/vmstat-hurd
-debian/tmp/bin/portinfo
-debian/tmp/bin/devprobe
-debian/tmp/bin/vminfo
-debian/tmp/bin/addauth
-debian/tmp/bin/rmauth
-debian/tmp/bin/unsu
-debian/tmp/bin/setauth
-debian/tmp/bin/nullauth
-debian/tmp/bin/ftpcp
-debian/tmp/bin/ftpdir
-debian/tmp/bin/storecat
-debian/tmp/bin/storeread
-debian/tmp/bin/msgport
-debian/tmp/bin/rpctrace
-debian/tmp/bin/mount
-debian/tmp/bin/umount
-debian/tmp/bin/gcore
-debian/tmp/bin/fakeauth
-debian/tmp/usr/bin/fakeroot-hurd
-debian/tmp/bin/forks
-debian/tmp/bin/remap
-debian/tmp/etc/login
-debian/tmp/etc/login/.bash_login
-debian/tmp/etc/login/.bashrc
-debian/tmp/etc/login/.hushlogin
-debian/tmp/etc/login/.profile
-debian/tmp/etc/login/README
-debian/tmp/etc/ttys
-debian/tmp/dev/MAKEDEV
-debian/tmp/share/msgids/*.msgids usr/share/msgids
-debian/tmp/usr/share/X11/xkb
-console/motd.UTF8 etc
-release/servers.boot boot
+../local/setup-translators usr/lib/hurd
+../local/random-hurd.sh hurd
+../local/urandom-hurd.sh hurd
+../local/securetty etc
+lib/@DEB_HOST_MULTIARCH@/hurd/console/*.so.* usr/lib/hurd/console
+hurd/*
+lib/hurd/rc etc/hurd
+lib/hurd/getty sbin
+lib/hurd/console-run sbin
+lib/hurd/runttys sbin
+lib/hurd/runsystem.gnu etc/hurd
+sbin/nfsd
+sbin/e2os
+sbin/MAKEDEV
+sbin/losetup
+sbin/reboot-hurd
+sbin/halt-hurd
+sbin/swapon
+sbin/swapoff
+bin/boot
+bin/console
+bin/shd
+bin/ps-hurd
+bin/settrans
+bin/showtrans
+bin/syncfs
+bin/fsysopts
+bin/storeinfo
+bin/login
+usr/bin/w-hurd
+usr/bin/uptime-hurd
+bin/ids
+bin/loginpr
+bin/sush
+usr/bin/vmstat-hurd
+bin/portinfo
+bin/devprobe
+bin/vminfo
+bin/addauth
+bin/rmauth
+bin/unsu
+bin/setauth
+bin/nullauth
+bin/ftpcp
+bin/ftpdir
+bin/storecat
+bin/storeread
+bin/msgport
+bin/rpctrace
+bin/mount
+bin/umount
+bin/gcore
+bin/fakeauth
+usr/bin/fakeroot-hurd
+bin/forks
+bin/remap
+etc/login
+etc/login/.bash_login
+etc/login/.bashrc
+etc/login/.hushlogin
+etc/login/.profile
+etc/login/README
+etc/ttys
+dev/MAKEDEV
+share/msgids/*.msgids usr/share/msgids
+usr/share/X11/xkb
+../../console/motd.UTF8 etc
+../../release/servers.boot boot

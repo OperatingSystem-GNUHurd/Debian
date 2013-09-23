@@ -17,6 +17,8 @@ hurd (20130916-2) UNRELEASED; urgency=low
     hurd-libs0.3 split.
   * run.patch: refresh to apply without fuzz.
   * Rename the "build" build dir to "build-deb".
+  * Force the sourcedir for dh_install to debian/tmp, and strip/fix the paths
+    in *.install.in files according to the new root.
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 17 Sep 2013 19:42:22 +0200
 
