@@ -6,6 +6,6 @@
 bin/fstests
 bin/timertest
 include/* usr/include
-lib/@DEB_HOST_MULTIARCH@/*.a lib/@DEB_HOST_MULTIARCH@
-lib/@DEB_HOST_MULTIARCH@/*.so lib/@DEB_HOST_MULTIARCH@
+lib/@DEB_HOST_MULTIARCH@/*.a
+lib/@DEB_HOST_MULTIARCH@/*.so
 usr/share/libdde_linux26/build usr/share/libdde_linux26
