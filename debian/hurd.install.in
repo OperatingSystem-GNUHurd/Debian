@@ -1,59 +1,43 @@
-../local/setup-translators usr/lib/hurd
+../../console/motd.UTF8 etc
+../../release/servers.boot boot
 ../local/random-hurd.sh hurd
-../local/urandom-hurd.sh hurd
 ../local/securetty etc
-lib/@DEB_HOST_MULTIARCH@/hurd/console/*.so.* usr/lib/hurd/console
-hurd/*
-lib/hurd/rc etc/hurd
-lib/hurd/getty sbin
-lib/hurd/console-run sbin
-lib/hurd/runttys sbin
-lib/hurd/runsystem.gnu etc/hurd
-sbin/nfsd
-sbin/e2os
-sbin/MAKEDEV
-sbin/losetup
-sbin/reboot-hurd
-sbin/halt-hurd
-sbin/swapon
-sbin/swapoff
+../local/setup-translators usr/lib/hurd
+../local/urandom-hurd.sh hurd
+bin/addauth
 bin/boot
 bin/console
-bin/shd
-bin/ps-hurd
-bin/settrans
-bin/showtrans
-bin/syncfs
-bin/fsysopts
-bin/storeinfo
-bin/login
-usr/bin/w-hurd
-usr/bin/uptime-hurd
-bin/ids
-bin/loginpr
-bin/sush
-usr/bin/vmstat-hurd
-bin/portinfo
 bin/devprobe
-bin/vminfo
-bin/addauth
-bin/rmauth
-bin/unsu
-bin/setauth
-bin/nullauth
+bin/fakeauth
+bin/forks
+bin/fsysopts
 bin/ftpcp
 bin/ftpdir
-bin/storecat
-bin/storeread
-bin/msgport
-bin/rpctrace
-bin/mount
-bin/umount
 bin/gcore
-bin/fakeauth
-usr/bin/fakeroot-hurd
-bin/forks
+bin/ids
+bin/login
+bin/loginpr
+bin/mount
+bin/msgport
+bin/nullauth
+bin/portinfo
+bin/ps-hurd
 bin/remap
+bin/rmauth
+bin/rpctrace
+bin/setauth
+bin/settrans
+bin/shd
+bin/showtrans
+bin/storecat
+bin/storeinfo
+bin/storeread
+bin/sush
+bin/syncfs
+bin/umount
+bin/unsu
+bin/vminfo
+dev/MAKEDEV
 etc/login
 etc/login/.bash_login
 etc/login/.bashrc
@@ -61,8 +45,24 @@ etc/login/.hushlogin
 etc/login/.profile
 etc/login/README
 etc/ttys
-dev/MAKEDEV
+hurd/*
+lib/@DEB_HOST_MULTIARCH@/hurd/console/*.so.* usr/lib/hurd/console
+lib/hurd/console-run sbin
+lib/hurd/getty sbin
+lib/hurd/rc etc/hurd
+lib/hurd/runsystem.gnu etc/hurd
+lib/hurd/runttys sbin
+sbin/MAKEDEV
+sbin/e2os
+sbin/halt-hurd
+sbin/losetup
+sbin/nfsd
+sbin/reboot-hurd
+sbin/swapoff
+sbin/swapon
 share/msgids/*.msgids usr/share/msgids
+usr/bin/fakeroot-hurd
+usr/bin/uptime-hurd
+usr/bin/vmstat-hurd
+usr/bin/w-hurd
 usr/share/X11/xkb
-../../console/motd.UTF8 etc
-../../release/servers.boot boot

@@ -1,11 +1,11 @@
-bin/timertest
-bin/fstests
-lib/@DEB_HOST_MULTIARCH@/*.a lib/@DEB_HOST_MULTIARCH@
-include/* usr/include
-lib/@DEB_HOST_MULTIARCH@/*.so lib/@DEB_HOST_MULTIARCH@
+../../libdde-linux26/Makeconf* usr/share/libdde_linux26
 ../../libdde-linux26/lib/src/libdde_*.a usr/lib/@DEB_HOST_MULTIARCH@
 ../../libdde-linux26/mk usr/share/libdde_linux26
-../../libdde-linux26/Makeconf* usr/share/libdde_linux26
-usr/share/libdde_linux26/build usr/share/libdde_linux26
 ../local/cdrom.h usr/include/sys
 ../local/soundcard.h usr/include/sys
+bin/fstests
+bin/timertest
+include/* usr/include
+lib/@DEB_HOST_MULTIARCH@/*.a lib/@DEB_HOST_MULTIARCH@
+lib/@DEB_HOST_MULTIARCH@/*.so lib/@DEB_HOST_MULTIARCH@
+usr/share/libdde_linux26/build usr/share/libdde_linux26

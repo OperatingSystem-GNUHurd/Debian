@@ -1,46 +1,34 @@
+../local/X11/locale usr/share/X11
+../local/finish-install.d usr/lib
+../local/partman lib
 ../local/runsystem etc/hurd
 ../local/setup-translators usr/lib/hurd
-../local/partman lib
-../local/finish-install.d usr/lib
-../local/X11/locale usr/share/X11
-lib/@DEB_HOST_MULTIARCH@/hurd/console/pc_kbd.so.* usr/lib/hurd/console
-lib/@DEB_HOST_MULTIARCH@/hurd/console/pc_mouse.so.* usr/lib/hurd/console
-lib/@DEB_HOST_MULTIARCH@/hurd/console/vga.so.* usr/lib/hurd/console
-lib/hurd/console-run sbin
-sbin/e2os
-sbin/MAKEDEV
-sbin/losetup
-sbin/swapon
-sbin/swapoff
+bin/addauth
 bin/boot
 bin/console
-bin/shd
-bin/ps-hurd
-bin/settrans
-bin/showtrans
-bin/syncfs
-bin/fsysopts
-bin/storeinfo
-bin/login
-usr/bin/w-hurd
-usr/bin/uptime-hurd
-bin/ids
-bin/loginpr
-bin/sush
-usr/bin/vmstat-hurd
-bin/portinfo
 bin/devprobe
-bin/vminfo
-bin/addauth
-bin/rmauth
-bin/unsu
-bin/setauth
-bin/storecat
-bin/storeread
-bin/msgport
+bin/fsysopts
+bin/ids
+bin/login
+bin/loginpr
 bin/mount
-bin/umount
+bin/msgport
 bin/nullauth
+bin/portinfo
+bin/ps-hurd
+bin/rmauth
+bin/setauth
+bin/settrans
+bin/shd
+bin/showtrans
+bin/storecat
+bin/storeinfo
+bin/storeread
+bin/sush
+bin/syncfs
+bin/umount
+bin/unsu
+bin/vminfo
 dev/MAKEDEV
 hurd/auth
 hurd/console
@@ -70,4 +58,16 @@ hurd/streamio
 hurd/symlink
 hurd/term
 hurd/tmpfs
+lib/@DEB_HOST_MULTIARCH@/hurd/console/pc_kbd.so.* usr/lib/hurd/console
+lib/@DEB_HOST_MULTIARCH@/hurd/console/pc_mouse.so.* usr/lib/hurd/console
+lib/@DEB_HOST_MULTIARCH@/hurd/console/vga.so.* usr/lib/hurd/console
+lib/hurd/console-run sbin
+sbin/MAKEDEV
+sbin/e2os
+sbin/losetup
+sbin/swapoff
+sbin/swapon
+usr/bin/uptime-hurd
+usr/bin/vmstat-hurd
+usr/bin/w-hurd
 usr/share/X11
