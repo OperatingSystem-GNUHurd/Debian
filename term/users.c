@@ -438,7 +438,7 @@ S_term_open_ctty (mach_port_t arg,
 
   pthread_mutex_lock (&global_lock);
 
-  if (!cred->po->openmodes & (O_READ|O_WRITE))
+  if (!(cred->po->openmodes & (O_READ|O_WRITE)))
     {
       pthread_mutex_unlock (&global_lock);
       err = EBADF;
@@ -679,7 +679,7 @@ trivfs_S_io_read (struct trivfs_protid *cred,
 
   while (!qsize (inputq))
     {
-      if ((termflags & NO_CARRIER) && !(termstate.c_cflag & CLOCAL) || !amount)
+      if (((termflags & NO_CARRIER) && !(termstate.c_cflag & CLOCAL)) || !amount)
 	{
 	  /* Return EOF, Posix.1 7.1.1.10. */
 	  pthread_mutex_unlock (&global_lock);
@@ -1269,7 +1269,7 @@ S_tioctl_tiocsetd (io_t port,
     err = 0;
 
   ports_port_deref (cred);
-  return 0;
+  return err;
 }
 
 /* TIOCDRAIN -- Wait for output to drain */
