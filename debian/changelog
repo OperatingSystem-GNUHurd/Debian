@@ -6,6 +6,8 @@ hurd (20130916-2) UNRELEASED; urgency=low
   * control, hurd.install.in, rules: Remove ufs parts.
   * patches/rc.patch: Make sure /proc is mounted at boot.
   * hurd-udeb.install.in: Add hurd/mtab.
+  * control: Bump libc0.3-dev build dep to get new RPC stubs.
+  * patches/newRPC: Drop accordingly.
 
   [ Justus Winter ]
   * Include the nullauth utility in hurd and hurd-udeb.
