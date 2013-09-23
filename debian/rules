@@ -56,7 +56,7 @@ override_dh_auto_clean:
 
 override_dh_auto_install:
 	dh_auto_install -Bbuild-deb --destdir= -- prefix=$(DEB_DESTDIR) libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var XKB_BASE=$(DEB_DESTDIR)/usr/share/X11/xkb
-	dh_auto_install -Bbuild-udeb --destdir= -- prefix=$(DEB_DESTDIR_UDEB) libdir=$(DEB_DESTDIR_UDEB)/lib/$(DEB_HOST_MULTIARCH) sysconfdir=$(DEB_DESTDIR_UDEB)/etc localstatedir=$(DEB_DESTDIR_UDEB)/var XKB_BASE=$(DEB_DESTDIR_UDEB)/usr/share/X11/xkb
+	dh_auto_install -Bbuild-udeb --destdir= -- prefix=$(DEB_DESTDIR_UDEB) libdir=$(DEB_DESTDIR_UDEB)/lib sysconfdir=$(DEB_DESTDIR_UDEB)/etc localstatedir=$(DEB_DESTDIR_UDEB)/var XKB_BASE=$(DEB_DESTDIR_UDEB)/usr/share/X11/xkb
 	$(MAKE) -C libdde-linux26 INSTALLDIR=$(CURDIR)/debian/tmp/usr/share/libdde_linux26/build/include install
 
 	# runsystem is managed by update-alternatives
@@ -83,7 +83,7 @@ override_dh_auto_install:
 
 	# remove PIC static libraries
 	rm -f debian/tmp/lib/$(DEB_HOST_MULTIARCH)/*_pic.a
-	rm -f debian/tmp-udeb/lib/$(DEB_HOST_MULTIARCH)/*_pic.a
+	rm -f debian/tmp-udeb/lib/*_pic.a
 
 override_dh_install: $(INSTALL_generated)
 	dh_install $(addprefix -p,$(filter %-udeb,$(shell dh_listpackages))) --sourcedir=debian/tmp-udeb
