@@ -2,6 +2,7 @@ hurd (20130924-1) UNRELEASED; urgency=low
 
   [ Samuel Thibault ]
   * New upstream snapshot
+    - patches/mount-test-opts.patch: Drop, merged upstream
   * control, hurd.install.in, rules: Remove ufs parts.
   * patches/rc.patch: Make sure /proc is mounted at boot.
   * hurd-udeb.install.in: Add hurd/mtab.

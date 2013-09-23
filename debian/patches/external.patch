@@ -17,7 +17,7 @@ Index: hurd-debian/Makefile
 @@ -40,7 +41,7 @@
  	       login daemons boot console \
  	       hostmux usermux ftpfs trans \
- 	       console-client utils sutils ufs-fsck ufs-utils \
+ 	       console-client utils sutils \
 -	       benchmarks fstests
 +	       benchmarks fstests procfs random devnode
  
