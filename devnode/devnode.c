@@ -24,6 +24,7 @@
  */
 
 #include <argp.h>
+#include <argz.h>
 #include <errno.h>
 #include <error.h>
 #include <stddef.h>
