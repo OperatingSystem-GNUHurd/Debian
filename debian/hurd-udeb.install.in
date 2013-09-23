@@ -1,73 +1,74 @@
-debian/local/runsystem etc/hurd
-debian/local/setup-translators usr/lib/hurd
-debian/local/partman lib
-debian/local/finish-install.d usr/lib
-debian/local/X11/locale usr/share/X11
-debian/tmp/lib/@DEB_HOST_MULTIARCH@/hurd/console/pc_kbd.so.* usr/lib/hurd/console
-debian/tmp/lib/@DEB_HOST_MULTIARCH@/hurd/console/pc_mouse.so.* usr/lib/hurd/console
-debian/tmp/lib/@DEB_HOST_MULTIARCH@/hurd/console/vga.so.* usr/lib/hurd/console
-debian/tmp/lib/hurd/console-run sbin
-debian/tmp/sbin/e2os
-debian/tmp/sbin/MAKEDEV
-debian/tmp/sbin/losetup
-debian/tmp/sbin/swapon
-debian/tmp/sbin/swapoff
-debian/tmp/bin/boot
-debian/tmp/bin/console
-debian/tmp/bin/shd
-debian/tmp/bin/ps-hurd
-debian/tmp/bin/settrans
-debian/tmp/bin/showtrans
-debian/tmp/bin/syncfs
-debian/tmp/bin/fsysopts
-debian/tmp/bin/storeinfo
-debian/tmp/bin/login
-debian/tmp/usr/bin/w-hurd
-debian/tmp/usr/bin/uptime-hurd
-debian/tmp/bin/ids
-debian/tmp/bin/loginpr
-debian/tmp/bin/sush
-debian/tmp/usr/bin/vmstat-hurd
-debian/tmp/bin/portinfo
-debian/tmp/bin/devprobe
-debian/tmp/bin/vminfo
-debian/tmp/bin/addauth
-debian/tmp/bin/rmauth
-debian/tmp/bin/unsu
-debian/tmp/bin/setauth
-debian/tmp/bin/storecat
-debian/tmp/bin/storeread
-debian/tmp/bin/msgport
-debian/tmp/bin/mount
-debian/tmp/bin/umount
-debian/tmp/dev/MAKEDEV
-debian/tmp/hurd/auth
-debian/tmp/hurd/console
-debian/tmp/hurd/devnode
-debian/tmp/hurd/exec
-debian/tmp/hurd/ext2fs
-debian/tmp/hurd/ext2fs.static /boot
-debian/tmp/hurd/fatfs
-debian/tmp/hurd/fifo
-debian/tmp/hurd/firmlink
-debian/tmp/hurd/fwd
-debian/tmp/hurd/ifsock
-debian/tmp/hurd/init
-debian/tmp/hurd/iso9660fs
-debian/tmp/hurd/mach-defpager
-debian/tmp/hurd/magic
-debian/tmp/hurd/mtab
-debian/tmp/hurd/new-fifo
-debian/tmp/hurd/null
-debian/tmp/hurd/pfinet
-debian/tmp/hurd/pflocal
-debian/tmp/hurd/proc
-debian/tmp/hurd/procfs
-debian/tmp/hurd/proxy-defpager
-debian/tmp/hurd/random
-debian/tmp/hurd/storeio
-debian/tmp/hurd/streamio
-debian/tmp/hurd/symlink
-debian/tmp/hurd/term
-debian/tmp/hurd/tmpfs
-debian/tmp/usr/share/X11
+../local/X11/locale usr/share/X11
+../local/finish-install.d usr/lib
+../local/partman lib
+../local/runsystem etc/hurd
+../local/setup-translators usr/lib/hurd
+bin/addauth
+bin/boot
+bin/console
+bin/devprobe
+bin/fsysopts
+bin/ids
+bin/login
+bin/loginpr
+bin/mount
+bin/msgport
+bin/nullauth
+bin/portinfo
+bin/ps-hurd
+bin/rmauth
+bin/setauth
+bin/settrans
+bin/shd
+bin/showtrans
+bin/storecat
+bin/storeinfo
+bin/storeread
+bin/sush
+bin/syncfs
+bin/umount
+bin/unsu
+bin/vminfo
+dev/MAKEDEV
+hurd/auth
+hurd/console
+hurd/devnode
+hurd/exec
+hurd/ext2fs
+hurd/ext2fs.static /boot
+hurd/fatfs
+hurd/fifo
+hurd/firmlink
+hurd/fwd
+hurd/ifsock
+hurd/init
+hurd/iso9660fs
+hurd/mach-defpager
+hurd/magic
+hurd/mtab
+hurd/new-fifo
+hurd/null
+hurd/pfinet
+hurd/pflocal
+hurd/proc
+hurd/procfs
+hurd/proxy-defpager
+hurd/random
+hurd/storeio
+hurd/streamio
+hurd/symlink
+hurd/term
+hurd/tmpfs
+lib/hurd/console/pc_kbd.so.* usr/lib/hurd/console
+lib/hurd/console/pc_mouse.so.* usr/lib/hurd/console
+lib/hurd/console/vga.so.* usr/lib/hurd/console
+lib/hurd/console-run sbin
+sbin/MAKEDEV
+sbin/e2os
+sbin/losetup
+sbin/swapoff
+sbin/swapon
+usr/bin/uptime-hurd
+usr/bin/vmstat-hurd
+usr/bin/w-hurd
+usr/share/X11

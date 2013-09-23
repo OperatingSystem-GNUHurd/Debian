@@ -1,9 +1,35 @@
 hurd (20130916-2) UNRELEASED; urgency=low
 
-  * hurd-udeb.install.in: Add hurd/mtab.
   * TODO: drop libdaemon dependency for hurd-udeb.
 
- -- Samuel Thibault <sthibault@debian.org>  Mon, 16 Sep 2013 15:21:43 +0000
+  [ Samuel Thibault ]
+  * control, hurd.install.in, rules: Remove ufs parts.
+  * patches/rc.patch: Make sure /proc is mounted at boot.
+  * hurd-udeb.install.in: Add hurd/mtab.
+
+  [ Justus Winter ]
+  * Include the nullauth utility in hurd and hurd-udeb.
+
+  [ Pino Toscano ]
+  * Add missing libpcap0.8-dev build dependency.
+  * Add ${perl:Depends} in hurd-dev.
+  * Add ${shlibs:Depends} in hurd-libs0.3-udeb and hurd-udeb.
+  * Rename the installed libdde-linux26 stuff back to libdde_linux26.
+  * Exclude shlibs for private modules in /usr/lib/hurd; this allows the drop
+    of the shlibs for hurd, which has no public libraries anymore after the
+    hurd-libs0.3 split.
+  * run.patch: refresh to apply without fuzz.
+  * Rename the "build" build dir to "build-deb".
+  * Force the sourcedir for dh_install to debian/tmp, and strip/fix the paths
+    in *.install.in files according to the new root.
+  * Do a separate build for the udeb variant, so it can have a different
+    configuration:
+    - Use build-udeb as build dir.
+    - Use debian/tmp-udeb as DESTDIR, and use it as sourcedir for dh_install
+      of *-udeb binaries.
+  * Remove duplicated texinfo build dependency.
+
+ -- Samuel Thibault <sthibault@debian.org>  Tue, 17 Sep 2013 19:42:22 +0200
 
 hurd (20130916-1) unstable; urgency=low
 
