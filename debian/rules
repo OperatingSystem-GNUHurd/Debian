@@ -87,7 +87,7 @@ override_dh_auto_install:
 
 override_dh_install: $(INSTALL_generated)
 	dh_install $(addprefix -p,$(filter %-udeb,$(shell dh_listpackages))) --sourcedir=debian/tmp-udeb
-	dh_install --list-missing --sourcedir=debian/tmp
+	dh_install --remaining-packages --list-missing --sourcedir=debian/tmp
 
 override_dh_installinit:
 	dh_installinit -phurd --name=hurd-console
