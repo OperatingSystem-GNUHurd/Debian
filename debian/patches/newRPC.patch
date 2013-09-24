@@ -1,0 +1,26 @@
+diff --git a/init/Makefile b/init/Makefile
+index ffb82ff..5ae3b50 100644
+--- a/init/Makefile
++++ b/init/Makefile
+@@ -21,7 +21,7 @@ makemode := server
+ SRCS = init.c stubs.c
+ OBJS = $(SRCS:.c=.o) \
+        startupServer.o notifyServer.o startup_replyUser.o msgServer.o \
+-       startup_notifyUser.o
++       startup_notifyUser.o processUser.o
+ target = init
+ HURDLIBS = shouldbeinlibc
+ 
+diff --git a/proc/Makefile b/proc/Makefile
+index 2eed13c..dc768d3 100644
+--- a/proc/Makefile
++++ b/proc/Makefile
+@@ -29,7 +29,7 @@ MIGSFLAGS="-DPROCESS_INTRAN=pstruct_t reqport_find (process_t)" \
+ 	"-DPROCESS_IMPORTS=import \"proc.h\";"
+ 
+ MIGSTUBS = processServer.o notifyServer.o \
+-	ourmsgUser.o proc_excUser.o proc_excServer.o
++	ourmsgUser.o proc_excUser.o proc_excServer.o processUser.o
+ OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
+ HURDLIBS = ihash ports shouldbeinlibc
+ OTHERLIBS = -lpthread

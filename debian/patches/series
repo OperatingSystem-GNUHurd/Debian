@@ -39,3 +39,5 @@ exec_filename_exec.patch
 exec_filename_fs.patch
 exec_filename_use.patch
 mount-loop.patch
+proc_set_init_task.patch
+newRPC.patch
