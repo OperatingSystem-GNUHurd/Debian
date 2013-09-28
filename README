@@ -50,6 +50,7 @@ done
 tar --strip-components=1 -xf ../hurd_$date.orig.tar.bz2
 git add -A
 git commit -m "New upstream snapshot"
+git tag -m "New upstream snapshot" -a upstream/$date
 
 git checkout master
 git pull . upstream-merged
