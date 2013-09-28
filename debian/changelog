@@ -1,8 +1,8 @@
-hurd (1:0.5.git20130928-1) UNRELEASED; urgency=low
+hurd (1:0.5.git20130928-1) unstable; urgency=low
 
   * New upstream release, yay!
 
- -- Samuel Thibault <sthibault@debian.org>  Sat, 28 Sep 2013 12:38:05 +0000
+ -- Samuel Thibault <sthibault@debian.org>  Sat, 28 Sep 2013 14:25:53 +0000
 
 hurd (20130924-2) unstable; urgency=low
 
