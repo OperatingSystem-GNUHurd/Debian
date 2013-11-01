@@ -181,6 +181,7 @@ console_move_mouse (mouse_event_t ev)
     {
       err = cons_vcons_move_mouse (vcons, ev);
       ports_port_deref (vcons);
+      return err;
     }
 
   return 0;
@@ -275,6 +276,10 @@ void
 console_exit (void)
 {
   driver_fini ();
+#if HAVE_DAEMON
+  if (daemonize)
+    daemon_pid_file_remove ();
+#endif /* HAVE_DAEMON */
   exit (0);
 }
 
@@ -626,6 +631,7 @@ static struct argp startup_argp = {options, parse_opt, 0,
 	    {								\
 	      /* Signal parent.	 */					\
 	      daemon_retval_send (status);				\
+	      daemon_pid_file_remove ();				\
 	      return 0;							\
 	    }								\
 	}								\
@@ -734,12 +740,11 @@ main (int argc, char *argv[])
 #if HAVE_DAEMON
   if (daemonize)
     /* Signal parent that all went well.  */
-    daemon_retval_send(0);
+    daemon_retval_send (0);
 #endif
 
   cons_server_loop ();
 
   /* Never reached.  */
-  driver_fini ();
-  return 0;
+  console_exit ();
 }
