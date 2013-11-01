@@ -19,11 +19,11 @@ More debianish rc scripts
 +		fsysopts / --update --writable
  		;;
  	# Filesystem modified (but ok now)
- 	1 | 2)
+ 	1)
 +		fsysopts / --update --writable
  		;;
- 	# Fsck couldn't fix it.
- 	4 | 8)
+ 	# Filesystem modified, filesystem should be restarted
+ 	# Ideally we would only restart the filesystem
 @@ -85,12 +88,25 @@ if test -d /tmp; then
  
  fi

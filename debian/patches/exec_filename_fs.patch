@@ -136,8 +136,8 @@ Index: hurd-debian/exec/hashexec.c
 +
 +
    mach_port_deallocate (mach_task_self (), interp_file);
+   munmap (new_argv, new_argvlen);
  
-   if (! e->error)
 Index: hurd-debian/hurd/fs.defs
 ===================================================================
 --- hurd-debian.orig/hurd/fs.defs	2013-06-19 23:32:37.000000000 +0000
