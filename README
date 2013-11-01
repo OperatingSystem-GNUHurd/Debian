@@ -2,6 +2,9 @@ We gather pieces from various repositories, here is the snapshot process:
 
 date=<date>
 
+epoch=1
+version=0.5
+
 git fetch --all
 
 git checkout dde-upstream
@@ -11,46 +14,46 @@ git checkout dde
 git pull . dde-upstream
 # Remove files added outside DDE
 git push incubator dde:dde-debian
-git tag -m "New upstream snapshot" -a upstream/dde/$date
+git tag -m "New upstream snapshot" -a upstream/dde/$version.git$date
 for dir in devnode libbpf libdde-linux26 libddekit libhurd-slab libmachdev
 do
-  git archive HEAD $dir | bzip2 > ../hurd_$date.orig-$dir.tar.bz2
+  git archive HEAD $dir | bzip2 > ../hurd_$version.git$date.orig-$dir.tar.bz2
 done
 
 git checkout eth
 git pull . dde-upstream
 # Remove files added outside eth-*
-git tag -m "New upstream snapshot" -a upstream/eth/$date
+git tag -m "New upstream snapshot" -a upstream/eth/$version.git$date
 for dir in eth-filter eth-multiplexer
 do
-  git archive HEAD $dir | bzip2 > ../hurd_$date.orig-$dir.tar.bz2
+  git archive HEAD $dir | bzip2 > ../hurd_$version.git$date.orig-$dir.tar.bz2
 done
 
 git checkout random
 git pull incubator random
-git tag -m "New upstream snapshot" -a upstream/random/$date
-git archive --prefix=random/ HEAD | bzip2 > ../hurd_$date.orig-random.tar.bz2
+git tag -m "New upstream snapshot" -a upstream/random/$version.git$date
+git archive --prefix=random/ HEAD | bzip2 > ../hurd_$version.git$date.orig-random.tar.bz2
 
 git checkout procfs-jkoenig
 git pull procfs master:procfs-jkoenig
-git tag -m "New upstream snapshot" -a upstream/procfs/$date
-git archive --prefix=procfs/ HEAD | bzip2 > ../hurd_$date.orig-procfs.tar.bz2
+git tag -m "New upstream snapshot" -a upstream/procfs/$version.git$date
+git archive --prefix=procfs/ HEAD | bzip2 > ../hurd_$version.git$date.orig-procfs.tar.bz2
 
 git checkout upstream
 git pull upstream master:upstream
-git tag -m "New upstream snapshot" -a upstream/hurd/$date
-git archive --prefix=hurd-$date/ HEAD | bzip2 > ../hurd_$date.orig.tar.bz2
+git tag -m "New upstream snapshot" -a upstream/hurd/$version.git$date
+git archive --prefix=hurd-$version.git$date/ HEAD | bzip2 > ../hurd_$version.git$date.orig.tar.bz2
 
 git checkout upstream-merged
 rm * -fr
 for dir in devnode libbpf libdde-linux26 libddekit libhurd-slab libmachdev eth-filter eth-multiplexer random procfs
 do
-  tar -xf ../hurd_$date.orig-$dir.tar.bz2
+  tar -xf ../hurd_$version.git$date.orig-$dir.tar.bz2
 done
-tar --strip-components=1 -xf ../hurd_$date.orig.tar.bz2
+tar --strip-components=1 -xf ../hurd_$version.git$date.orig.tar.bz2
 git add -A
 git commit -m "New upstream snapshot"
-git tag -m "New upstream snapshot" -a upstream/$date
+git tag -m "New upstream snapshot" -a upstream/$version.git$date
 
 git checkout master
 git pull . upstream-merged
