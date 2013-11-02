@@ -276,3 +276,25 @@ index 80f8397..b544b8d 100644
  struct proc *allocate_proc (task_t);
  void proc_death_notify (struct proc *);
  void complete_proc (struct proc *, pid_t);
+diff --git a/procfs/main.c b/procfs/main.c
+index 54e9682..8727f86 100644
+--- a/procfs/main.c
++++ b/procfs/main.c
+@@ -42,7 +42,7 @@ uid_t opt_anon_owner;
+ #define OPT_CLK_TCK    sysconf(_SC_CLK_TCK)
+ #define OPT_STAT_MODE  0400
+ #define OPT_FAKE_SELF  -1
+-#define OPT_KERNEL_PID 2
++#define OPT_KERNEL_PID 3
+ #define OPT_ANON_OWNER 0
+ 
+ #define NODEV_KEY  -1 /* <= 0, so no short option. */
+@@ -153,7 +153,7 @@ struct argp_option common_options[] = {
+   { "kernel-process", 'k', "PID", 0,
+       "Process identifier for the kernel, used to retreive its command "
+       "line, as well as the global up and idle times. "
+-      "(default: 2)" },
++      "(default: 3)" },
+   { "compatible", 'c', NULL, 0,
+       "Try to be compatible with the Linux procps utilities.  "
+       "Currently equivalent to -h 100 -s 0444 -S 1." },

@@ -1,10 +1,17 @@
 hurd (1:0.5.git20131101-1) UNRELEASED; urgency=low
 
+  [ Samuel Thibault ]
   * New upstream snapshot.
   * control: bump libc0.3-dev dependency to make sure we don't get internal
     inlines exported by previous versions.
+  * patches/proc_set_init_task.patch: Fix kernel pid in procfs too.
+  * Remove dpkg | install-info dependency.
+  * Bump Standards-Version to 3.9.5.
 
- -- Samuel Thibault <sthibault@debian.org>  Sat, 28 Sep 2013 14:25:53 +0000
+  [ Justus Winter ]
+  * hurd.hurd-console.init: Clean up pid if any.
+
+ -- Samuel Thibault <sthibault@debian.org>  Sat, 05 Oct 2013 13:30:05 +0200
 
 hurd (1:0.5.git20130928-1) unstable; urgency=low
 
