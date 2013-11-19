@@ -1,5 +1,6 @@
 hurd (1:0.5.git20130928-2) UNRELEASED; urgency=low
 
+  [ Justus Winter ]
   * patches/exec_filename_fix.patch: Fix passing path in hurdish
   fakeroot/chroot.
 

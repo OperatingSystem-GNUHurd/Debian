@@ -1,3 +1,5 @@
+From: Justus Winter <4winter@informatik.uni-hamburg.de>
+
 This patch is an amendment of exec_filename_exec.patch.
 
 If file_name_exec is not given, check_hashbang will try to locate the
