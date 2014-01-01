@@ -1,3 +1,5 @@
+TODO: the console should just not use keymaps at all any more, and use layout/variant...
+
 diff --git a/console-client/xkb/xkb-data/keymap/hurd b/console-client/xkb/xkb-data/keymap/hurd
 index b123f2b..3d47277 100644
 --- a/console-client/xkb/xkb-data/keymap/hurd
