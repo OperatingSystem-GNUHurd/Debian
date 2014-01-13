@@ -458,6 +458,8 @@ S_proc_exception_raise (mach_port_t excport,
       ports_port_deref (e);
       mach_port_deallocate (mach_task_self (), thread);
       mach_port_deallocate (mach_task_self (), task);
+      if (err)
+	return err;
       return MIG_NO_REPLY;
 
     default:
@@ -514,6 +516,20 @@ S_proc_exception_raise (mach_port_t excport,
 
 }
 
+/* This function is used as callback in S_proc_getallpids.  */
+static void
+count_up (struct proc *p, void *counter)
+{
+  ++*(int *)counter;
+}
+
+/* This function is used as callback in S_proc_getallpids.  */
+static void
+store_pid (struct proc *p, void *loc)
+{
+  *(*(pid_t **)loc)++ = p->p_pid;
+}
+
 /* Implement proc_getallpids as described in <hurd/process.defs>. */
 kern_return_t
 S_proc_getallpids (struct proc *p,
@@ -522,15 +538,6 @@ S_proc_getallpids (struct proc *p,
 {
   int nprocs;
   pid_t *loc;
-
-  void count_up (struct proc *p, void *counter)
-    {
-      ++*(int *)counter;
-    }
-  void store_pid (struct proc *p, void *loc)
-    {
-      *(*(pid_t **)loc)++ = p->p_pid;
-    }
 
   /* No need to check P here; we don't use it. */
 
@@ -821,7 +828,7 @@ add_tasks (task_t task)
 
       if (!foundp)
 	{
-	  host_processor_set_priv (master_host_port, psets[i], &psetpriv);
+	  host_processor_set_priv (_hurd_host_priv, psets[i], &psetpriv);
 	  processor_set_tasks (psetpriv, &tasks, &ntasks);
 	  for (j = 0; j < ntasks; j++)
 	    {

@@ -26,13 +26,11 @@
 #endif
 
 #include <errno.h>
-#include <string.h>
 #include <stdlib.h>
-#include <limits.h>
 #include <stdint.h>
 #include <assert.h>
 
-#include <hurd/ihash.h>
+#include "ihash.h"
 
 
 /* The prime numbers of the form 4 * i + 3 for some i, all greater
@@ -374,9 +372,6 @@ hurd_ihash_add (hurd_ihash_t ht, hurd_ihash_key_t key, hurd_ihash_value_t item)
 
   if (ht->items == NULL)
     {
-      if (ht->items)
-	free(ht->items);
-
       *ht = old_ht;
       return ENOMEM;
     }

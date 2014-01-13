@@ -1,10 +1,14 @@
-hurd (1:0.5.git20131101-2) UNRELEASED; urgency=low
+hurd (1:0.5.git20140113-1) unstable; urgency=low
+
+  [ Samuel Thibault ]
+  * New upstream snapshot.
+    - refresh patches.
 
   [ Justus Winter ]
   * patches/exec_filename_fix.patch: Fix passing path in hurdish
   fakeroot/chroot.
 
- -- Samuel Thibault <sthibault@debian.org>  Tue, 19 Nov 2013 00:21:47 +0100
+ -- Samuel Thibault <sthibault@debian.org>  Mon, 13 Jan 2014 22:52:51 +0000
 
 hurd (1:0.5.git20131101-1) unstable; urgency=low
 

@@ -84,7 +84,7 @@ index 73abbc0..6fe2330 100644
 +  startup_proc->p_deadmsg = 1;
 +  complete_proc (startup_proc, HURD_PID_STARTUP);
  
-   /* Create our own proc object (we are PID 0).  */
+   /* Create our own proc object.  */
    self_proc = allocate_proc (mach_task_self ());
 diff --git a/proc/mgt.c b/proc/mgt.c
 index d7ad296..6d3df7e 100644
@@ -260,7 +260,7 @@ index 80f8397..b544b8d 100644
 @@ -134,7 +135,8 @@ struct exc
  
  mach_port_t authserver;
- struct proc *self_proc;		/* process 0 (us) */
+ struct proc *self_proc;		/* process HURD_PID_PROC (us) */
 -struct proc *startup_proc;	/* process 1 (init) */
 +struct proc *init_proc;		/* process 1 (sysvinit) */
 +struct proc *startup_proc;	/* process 2 (hurd/init) */

@@ -38,18 +38,24 @@ int
 message_demuxer (mach_msg_header_t *inp,
 		 mach_msg_header_t *outp)
 {
-  extern int process_server (mach_msg_header_t *, mach_msg_header_t *);
-  extern int notify_server (mach_msg_header_t *, mach_msg_header_t *);
-  extern int proc_exc_server (mach_msg_header_t *, mach_msg_header_t *);
-  int status;
+  mig_routine_t process_server_routine (mach_msg_header_t *);
+  mig_routine_t notify_server_routine (mach_msg_header_t *);
+  mig_routine_t ports_interrupt_server_routine (mach_msg_header_t *);
+  mig_routine_t proc_exc_server_routine (mach_msg_header_t *);
 
-  pthread_mutex_lock (&global_lock);
-  status = (process_server (inp, outp)
-	    || notify_server (inp, outp)
-	    || ports_interrupt_server (inp, outp)
-	    || proc_exc_server (inp, outp));
-  pthread_mutex_unlock (&global_lock);
-  return status;
+  mig_routine_t routine;
+  if ((routine = process_server_routine (inp)) ||
+      (routine = notify_server_routine (inp)) ||
+      (routine = ports_interrupt_server_routine (inp)) ||
+      (routine = proc_exc_server_routine (inp)))
+    {
+      pthread_mutex_lock (&global_lock);
+      (*routine) (inp, outp);
+      pthread_mutex_unlock (&global_lock);
+      return TRUE;
+    }
+  else
+    return FALSE;
 }
 
 pthread_mutex_t global_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -84,7 +90,7 @@ main (int argc, char **argv, char **envp)
   /* Create the initial proc object for init (PID 1).  */
   startup_proc = create_startup_proc ();
 
-  /* Create our own proc object (we are PID 0).  */
+  /* Create our own proc object.  */
   self_proc = allocate_proc (mach_task_self ());
   assert (self_proc);
 
@@ -92,7 +98,7 @@ main (int argc, char **argv, char **envp)
 
   startup_port = ports_get_send_right (startup_proc);
   err = startup_procinit (boot, startup_port, &startup_proc->p_task,
-			  &authserver, &master_host_port, &master_device_port);
+			  &authserver, &_hurd_host_priv, &_hurd_device_master);
   assert_perror (err);
   mach_port_deallocate (mach_task_self (), startup_port);
 
@@ -111,7 +117,7 @@ main (int argc, char **argv, char **envp)
      important. */
   err = thread_get_assignment (mach_thread_self (), &pset);
   assert_perror (err);
-  err = host_processor_set_priv (master_host_port, pset, &psetcntl);
+  err = host_processor_set_priv (_hurd_host_priv, pset, &psetcntl);
   assert_perror (err);
   thread_max_priority (mach_thread_self (), psetcntl, 0);
   assert_perror (err);
@@ -126,7 +132,7 @@ main (int argc, char **argv, char **envp)
        to panic or something.  */
     mach_port_t cons;
     error_t err;
-    err = device_open (master_device_port, D_READ|D_WRITE, "console", &cons);
+    err = device_open (_hurd_device_master, D_READ|D_WRITE, "console", &cons);
     assert_perror (err);
     stdin = mach_open_devstream (cons, "r");
     stdout = stderr = mach_open_devstream (cons, "w");
