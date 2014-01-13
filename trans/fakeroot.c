@@ -1,5 +1,5 @@
 /* fakeroot -- a translator for faking actions that aren't really permitted
-   Copyright (C) 2002, 2003, 2008 Free Software Foundation, Inc.
+   Copyright (C) 2002, 2003, 2008, 2013 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License as
@@ -41,6 +41,7 @@ static auth_t fakeroot_auth_port;
 
 struct netnode
 {
+  struct node *np;		/* our node */
   hurd_ihash_locp_t idport_locp;/* easy removal pointer in idport ihash */
   mach_port_t idport;		/* port from io_identity */
   int openmodes;		/* O_READ | O_WRITE | O_EXEC */
@@ -60,7 +61,8 @@ struct hurd_ihash idport_ihash
   = HURD_IHASH_INITIALIZER (offsetof (struct netnode, idport_locp));
 
 
-/* Make a new virtual node.  Always consumes the ports.  */
+/* Make a new virtual node.  Always consumes the ports.  If
+   successful, NP will be locked.  */
 static error_t
 new_node (file_t file, mach_port_t idport, int locked, int openmodes,
 	  struct node **np)
@@ -93,28 +95,31 @@ new_node (file_t file, mach_port_t idport, int locked, int openmodes,
 	  return err;
 	}
     }
-  *np = netfs_make_node (nn);
+
+  if (!locked)
+    pthread_mutex_lock (&idport_ihash_lock);
+  err = hurd_ihash_add (&idport_ihash, nn->idport, nn);
+  if (err)
+    goto lose;
+
+  *np = nn->np = netfs_make_node (nn);
   if (*np == 0)
     {
-      if (locked)
-	pthread_mutex_unlock (&idport_ihash_lock);
       err = ENOMEM;
+      goto lose_hash;
     }
-  else
-    {
-      if (!locked)
-	pthread_mutex_lock (&idport_ihash_lock);
-      err = hurd_ihash_add (&idport_ihash, nn->idport, *np);
-      if (!err)
-	netfs_nref (*np);	/* Return a reference to the caller.  */
-      pthread_mutex_unlock (&idport_ihash_lock);
-    }
-  if (err)
-    {
-      mach_port_deallocate (mach_task_self (), nn->idport);
-      mach_port_deallocate (mach_task_self (), file);
-      free (nn);
-    }
+
+  pthread_mutex_lock (&(*np)->lock);
+  pthread_mutex_unlock (&idport_ihash_lock);
+  return 0;
+
+ lose_hash:
+  hurd_ihash_locp_remove (&idport_ihash, nn->idport_locp);
+ lose:
+  pthread_mutex_unlock (&idport_ihash_lock);
+  mach_port_deallocate (mach_task_self (), nn->idport);
+  mach_port_deallocate (mach_task_self (), file);
+  free (nn);
   return err;
 }
 
@@ -122,6 +127,32 @@ new_node (file_t file, mach_port_t idport, int locked, int openmodes,
 void
 netfs_node_norefs (struct node *np)
 {
+  assert (np->nn->np == np);
+  mach_port_deallocate (mach_task_self (), np->nn->file);
+  mach_port_deallocate (mach_task_self (), np->nn->idport);
+  free (np->nn);
+  free (np);
+}
+
+/* This is the cleanup function we install in netfs_protid_class.  If
+   the associated nodes reference count would also drop to zero, and
+   the node has no faked attributes, we destroy it as well.  */
+static void
+fakeroot_netfs_release_protid (void *cookie)
+{
+  struct node *np = ((struct protid *) cookie)->po->np;
+  assert (np->nn->np == np);
+
+  pthread_mutex_lock (&idport_ihash_lock);
+  pthread_mutex_lock (&np->lock);
+
+  assert ((np->nn->faked & FAKE_REFERENCE) == 0);
+
+  /* Check if someone else reacquired a reference to the node besides
+     ours that is about to be dropped.  */
+  if (np->references > 1)
+    goto out;
+
   if (np->nn->faked != 0
       && netfs_validate_stat (np, 0) == 0 && np->nn_stat.st_nlink > 0)
     {
@@ -133,30 +164,45 @@ netfs_node_norefs (struct node *np)
 	 until this fakeroot filesystem dies.  One easy solution
 	 would be to scan nodes with references=1 for st_nlink=0
 	 at some convenient time, periodically or in syncfs.  */
-      if ((np->nn->faked & FAKE_REFERENCE) == 0)
-	{
-	  np->nn->faked |= FAKE_REFERENCE;
-	  ++np->references;
-	}
-      pthread_mutex_unlock (&np->lock);
-      return;
+
+      /* Keep a fake reference.  */
+      netfs_nref (np);
+
+      /* Set the FAKE_REFERENCE flag so that we can properly
+	 account for that fake reference.  */
+      np->nn->faked |= FAKE_REFERENCE;
+
+      /* Clear the lock box as if the file was closed.  */
+      fshelp_lock_init (&np->userlock);
+
+      /* We keep our node.  */
+      goto out;
     }
 
-  pthread_spin_unlock (&netfs_node_refcnt_lock); /* Avoid deadlock.  */
-  pthread_mutex_lock (&idport_ihash_lock);
-  pthread_spin_lock (&netfs_node_refcnt_lock);
-  /* Previous holder of this lock might have just got a reference.  */
-  if (np->references > 0)
-    {
-      pthread_mutex_unlock (&idport_ihash_lock);
-      return;
-    }
   hurd_ihash_locp_remove (&idport_ihash, np->nn->idport_locp);
+
+ out:
+  pthread_mutex_unlock (&np->lock);
+  netfs_release_protid (cookie);
+
+  int cports = ports_count_class (netfs_control_class);
+  int nports = ports_count_class (netfs_protid_class);
+  ports_enable_class (netfs_control_class);
+  ports_enable_class (netfs_protid_class);
+  if (cports == 0 && nports == 0)
+    {
+      /* The last client is gone.  Our job is done.  */
+      error_t err = netfs_shutdown (0);
+      if (! err)
+        exit (EXIT_SUCCESS);
+
+      /* If netfs_shutdown returns EBUSY, we lost a race against
+         fsys_goaway.  Hence we ignore this error.  */
+      if (err != EBUSY)
+        error (1, err, "netfs_shutdown");
+    }
+
   pthread_mutex_unlock (&idport_ihash_lock);
-  mach_port_deallocate (mach_task_self (), np->nn->file);
-  mach_port_deallocate (mach_task_self (), np->nn->idport);
-  free (np->nn);
-  free (np);
 }
 
 /* Given an existing node, make sure it has NEWMODES in its openmodes.
@@ -235,7 +281,10 @@ netfs_S_dir_lookup (struct protid *diruser,
     return EOPNOTSUPP;
 
   dnp = diruser->po->np;
-  err = dir_lookup (dnp->nn->file, filename,
+
+  mach_port_t dir = dnp->nn->file;
+ redo_lookup:
+  err = dir_lookup (dir, filename,
 		    flags & (O_NOLINK|O_RDWR|O_EXEC|O_CREAT|O_EXCL|O_NONBLOCK),
 		    mode, do_retry, retry_name, &file);
   if (err)
@@ -252,25 +301,40 @@ netfs_S_dir_lookup (struct protid *diruser,
 	    mach_port_deallocate (mach_task_self (), file);
 	    err = auth_user_authenticate (fakeroot_auth_port, ref,
 					  MACH_MSG_TYPE_MAKE_SEND,
-					  retry_port);
+					  &dir);
 	  }
 	mach_port_destroy (mach_task_self (), ref);
 	if (err)
 	  return err;
       }
-      *do_retry = FS_RETRY_NORMAL;
-      /*FALLTHROUGH*/
+      filename = retry_name;
+      goto redo_lookup;
 
     case FS_RETRY_NORMAL:
+      if (retry_name[0] != '\0')
+	{
+	  dir = file;
+	  filename = retry_name;
+	  goto redo_lookup;
+	}
+      break;
+
     case FS_RETRY_MAGICAL:
-    default:
       if (file == MACH_PORT_NULL)
 	{
 	  *retry_port = MACH_PORT_NULL;
 	  *retry_port_type = MACH_MSG_TYPE_COPY_SEND;
 	  return 0;
 	}
-      break;
+      /* Fallthrough.  */
+
+    default:
+      /* Invalid response to our dir_lookup request.  */
+      if (file != MACH_PORT_NULL)
+	mach_port_deallocate (mach_task_self (), file);
+      *retry_port = MACH_PORT_NULL;
+      *retry_port_type = MACH_MSG_TYPE_COPY_SEND;
+      return EOPNOTSUPP;
     }
 
   /* We have a new port to an underlying node.
@@ -279,51 +343,54 @@ netfs_S_dir_lookup (struct protid *diruser,
   np = 0;
   err = io_identity (file, &idport, &fsidport, &fileno);
   if (err)
-    mach_port_deallocate (mach_task_self (), file);
-  else
     {
-      mach_port_deallocate (mach_task_self (), fsidport);
-      if (fsidport == netfs_fsys_identity)
+      mach_port_deallocate (mach_task_self (), file);
+      return err;
+    }
+
+  mach_port_deallocate (mach_task_self (), fsidport);
+  pthread_mutex_lock (&idport_ihash_lock);
+  pthread_mutex_lock (&dnp->lock);
+  struct netnode *nn = hurd_ihash_find (&idport_ihash, idport);
+  if (nn != NULL)
+    {
+      assert (nn->np->nn == nn);
+      np = nn->np;
+      /* We already know about this node.  */
+      mach_port_deallocate (mach_task_self (), idport);
+
+      if (np == dnp)
 	{
-	  /* Talking to ourselves!  We just looked up one of our
-	     own nodes.  Find the node and return it.  */
-	  struct protid *cred
-	    = ports_lookup_port (netfs_port_bucket, file,
-				 netfs_protid_class);
-	  mach_port_deallocate (mach_task_self (), idport);
-	  mach_port_deallocate (mach_task_self (), file);
-	  if (cred == 0)
-	    return EGRATUITOUS;
-	  np = cred->po->np;
-	  netfs_nref (np);
-	  ports_port_deref (cred);
+	  /* dnp is already locked.  */
 	}
       else
 	{
-	  pthread_mutex_lock (&idport_ihash_lock);
-	  np = hurd_ihash_find (&idport_ihash, idport);
-	  if (np != 0)
-	    {
-	      /* We already know about this node.  */
-	      mach_port_deallocate (mach_task_self (), idport);
-	      pthread_mutex_lock (&np->lock);
-	      err = check_openmodes (np->nn, (flags & (O_RDWR|O_EXEC)), file);
-	      if (!err)
-		netfs_nref (np);
-	      pthread_mutex_unlock (&np->lock);
-	      pthread_mutex_unlock (&idport_ihash_lock);
-	    }
-	  else
-	    err = new_node (file, idport, 1, flags, &np);
+	  pthread_mutex_lock (&np->lock);
+	  pthread_mutex_unlock (&dnp->lock);
 	}
+
+      /* If the looked-up file carries a fake reference, we
+	 use that and clear the FAKE_REFERENCE flag.  */
+      if (np->nn->faked & FAKE_REFERENCE)
+	np->nn->faked &= ~FAKE_REFERENCE;
+      else
+	netfs_nref (np);
+
+      err = check_openmodes (np->nn, (flags & (O_RDWR|O_EXEC)), file);
+      pthread_mutex_unlock (&idport_ihash_lock);
+    }
+  else
+    {
+      err = new_node (file, idport, 1, flags, &np);
+      pthread_mutex_unlock (&dnp->lock);
+      if (!err)
+	err = netfs_validate_stat (np, diruser->user);
     }
   if (err)
-    return err;
+    goto lose;
 
-  if (retry_name[0] == '\0' && *do_retry == FS_RETRY_NORMAL)
-    flags &= ~(O_CREAT|O_EXCL|O_NOLINK|O_NOTRANS|O_NONBLOCK);
-  else
-    flags = 0;
+  assert (retry_name[0] == '\0' && *do_retry == FS_RETRY_NORMAL);
+  flags &= ~(O_CREAT|O_EXCL|O_NOLINK|O_NOTRANS|O_NONBLOCK);
 
   err = iohelp_dup_iouser (&user, diruser->user);
   if (!err)
@@ -337,13 +404,17 @@ netfs_S_dir_lookup (struct protid *diruser,
 	}
       else
 	{
+	  err = netfs_attempt_chown (user, np, 0, 0);
+	  assert_perror (err); /* Our netfs_attempt_chown cannot fail.  */
 	  *retry_port = ports_get_right (newpi);
 	  *retry_port_type = MACH_MSG_TYPE_MAKE_SEND;
 	  ports_port_deref (newpi);
 	}
     }
 
-  netfs_nrele (np);
+ lose:
+  if (np != NULL)
+    netfs_nput (np);
   return err;
 }
 
@@ -597,9 +668,11 @@ netfs_attempt_mkfile (struct iouser *user, struct node *dir,
   file_t newfile;
   error_t err = dir_mkfile (dir->nn->file, O_RDWR|O_EXEC,
 			    real_from_fake_mode (mode), &newfile);
-  pthread_mutex_unlock (&dir->lock);
   if (err == 0)
     err = new_node (newfile, MACH_PORT_NULL, 0, O_RDWR|O_EXEC, np);
+  if (err == 0)
+    pthread_mutex_unlock (&(*np)->lock);
+  pthread_mutex_unlock (&dir->lock);
   return err;
 }
 
@@ -777,6 +850,27 @@ netfs_S_io_map_cntl (struct protid *user,
   return err;
 }
 
+error_t
+netfs_S_io_identity (struct protid *user,
+		     mach_port_t *id,
+		     mach_msg_type_name_t *idtype,
+		     mach_port_t *fsys,
+		     mach_msg_type_name_t *fsystype,
+		     ino_t *fileno)
+{
+  error_t err;
+
+  if (!user)
+    return EOPNOTSUPP;
+
+  *idtype = *fsystype = MACH_MSG_TYPE_MOVE_SEND;
+
+  pthread_mutex_lock (&user->po->np->lock);
+  err = io_identity (user->po->np->nn->file, id, fsys, fileno);
+  pthread_mutex_unlock (&user->po->np->lock);
+  return err;
+}
+
 #define NETFS_S_SIMPLE(name)			\
 error_t						\
 netfs_S_##name (struct protid *user)		\
@@ -834,21 +928,26 @@ int
 netfs_demuxer (mach_msg_header_t *inp,
 	       mach_msg_header_t *outp)
 {
-  int netfs_fs_server (mach_msg_header_t *, mach_msg_header_t *);
-  int netfs_io_server (mach_msg_header_t *, mach_msg_header_t *);
-  int netfs_fsys_server (mach_msg_header_t *, mach_msg_header_t *);
-  int netfs_ifsock_server (mach_msg_header_t *, mach_msg_header_t *);
+  mig_routine_t netfs_io_server_routine (mach_msg_header_t *);
+  mig_routine_t netfs_fs_server_routine (mach_msg_header_t *);
+  mig_routine_t ports_notify_server_routine (mach_msg_header_t *);
+  mig_routine_t netfs_fsys_server_routine (mach_msg_header_t *);
+  mig_routine_t ports_interrupt_server_routine (mach_msg_header_t *);
 
-  if (netfs_io_server (inp, outp)
-      || netfs_fs_server (inp, outp)
-      || ports_notify_server (inp, outp)
-      || netfs_fsys_server (inp, outp)
+  mig_routine_t routine;
+  if ((routine = netfs_io_server_routine (inp)) ||
+      (routine = netfs_fs_server_routine (inp)) ||
+      (routine = ports_notify_server_routine (inp)) ||
+      (routine = netfs_fsys_server_routine (inp)) ||
       /* XXX we should intercept interrupt_operation and do
 	 the ports_S_interrupt_operation work as well as
 	 sending an interrupt_operation to the underlying file.
        */
-      || ports_interrupt_server (inp, outp))
-    return 1;
+      (routine = ports_interrupt_server_routine (inp)))
+    {
+      (*routine) (inp, outp);
+      return TRUE;
+    }
   else
     {
       /* We didn't recognize the message ID, so pass the message through
@@ -905,6 +1004,9 @@ any user to open nodes regardless of permissions as is done for root." };
   task_get_bootstrap_port (mach_task_self (), &bootstrap);
   netfs_init ();
 
+  /* Install our own clean routine.  */
+  netfs_protid_class->clean_routine = fakeroot_netfs_release_protid;
+
   /* Get our underlying node (we presume it's a directory) and use
      that to make the root node of the filesystem.  */
   err = new_node (netfs_startup (bootstrap, O_READ), MACH_PORT_NULL, 0, O_READ,
@@ -919,6 +1021,7 @@ any user to open nodes regardless of permissions as is done for root." };
   netfs_root_node->nn_stat.st_mode &= ~(S_IPTRANS | S_IATRANS);
   netfs_root_node->nn_stat.st_mode |= S_IROOT;
   netfs_root_node->nn->faked |= FAKE_MODE;
+  pthread_mutex_unlock (&netfs_root_node->lock);
 
   netfs_server_loop ();		/* Never returns.  */
 
