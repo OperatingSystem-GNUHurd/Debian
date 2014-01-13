@@ -133,16 +133,13 @@ struct exc
 };
 
 mach_port_t authserver;
-struct proc *self_proc;		/* process 0 (us) */
+struct proc *self_proc;		/* process HURD_PID_PROC (us) */
 struct proc *startup_proc;	/* process 1 (init) */
 
 struct port_bucket *proc_bucket;
 struct port_class *proc_class;
 struct port_class *generic_port_class;
 struct port_class *exc_class;
-
-mach_port_t master_host_port;
-mach_port_t master_device_port;
 
 mach_port_t generic_port;	/* messages not related to a specific proc */
 
@@ -161,12 +158,10 @@ int check_uid (struct proc *, uid_t);
 int check_owner (struct proc *, struct proc *);
 void addalltasks (void);
 void prociterate (void (*)(struct proc *, void *), void *);
-void count_up (void *);
-void store_pid (void *);
 void free_process (struct proc *);
 void panic (char *);
 int valid_task (task_t);
-int genpid ();
+int genpid (void);
 void abort_getmsgport (struct proc *);
 int zombie_check_pid (pid_t);
 void check_message_dying (struct proc *, struct proc *);

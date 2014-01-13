@@ -1,7 +1,7 @@
 /* Trace RPCs sent to selected ports
 
-   Copyright (C) 1998, 1999, 2001, 2002, 2003, 2005, 2006, 2009, 2011
-   Free Software Foundation, Inc.
+   Copyright (C) 1998, 1999, 2001, 2002, 2003, 2005, 2006, 2009, 2011,
+   2013 Free Software Foundation, Inc.
 
    This file is part of the GNU Hurd.
 
@@ -727,8 +727,6 @@ rewrite_right (mach_port_t *right, mach_msg_type_name_t *type,
        * has the receive right, we move the send right of the traced port to
        * the destination; otherwise, we move the one of the send wrapper.
        */
-      assert (req);
-
       /* See if this is already one of our own wrapper ports.  */
       send_wrapper = ports_lookup_port (traced_bucket, *right, 0);
       if (send_wrapper)
@@ -760,7 +758,7 @@ rewrite_right (mach_port_t *right, mach_msg_type_name_t *type,
 	  return TRACED_INFO (send_wrapper)->name;
 	}
 
-      if (req->req_id == 3216)	    /* mach_port_extract_right */
+      if (req && req->req_id == 3216)	    /* mach_port_extract_right */
 	receiver_info = discover_receive_right (*right, dest);
       else
 	receiver_info = discover_receive_right (*right, source);
@@ -1286,24 +1284,34 @@ trace_and_forward (mach_msg_header_t *inp, mach_msg_header_t *outp)
 	/* The reply port might be dead, e.g., the traced task has died. */
 	&& MACH_PORT_VALID (inp->msgh_local_port))
       {
-	struct send_once_info *info;
-	// TODO is the reply port always a send once right?
-	assert (reply_type == MACH_MSG_TYPE_PORT_SEND_ONCE);
-	info = new_send_once_wrapper (inp->msgh_local_port,
-				      &inp->msgh_local_port);
-	reply_type = MACH_MSG_TYPE_MAKE_SEND_ONCE;
-	assert (inp->msgh_local_port);
-
-	if (TRACED_INFO (info)->name == 0)
+	switch (reply_type)
 	  {
-	    if (msgid == 0)
-	      asprintf (&TRACED_INFO (info)->name, "reply(%u:%u)",
-			(unsigned int) TRACED_INFO (info)->pi.port_right,
-			(unsigned int) inp->msgh_id);
-	    else
-	      asprintf (&TRACED_INFO (info)->name, "reply(%u:%s)",
-			(unsigned int) TRACED_INFO (info)->pi.port_right,
-			msgid->name);
+	  case MACH_MSG_TYPE_PORT_SEND:
+	    rewrite_right (&inp->msgh_local_port, &reply_type, NULL);
+	    break;
+
+	  case MACH_MSG_TYPE_PORT_SEND_ONCE:;
+	    struct send_once_info *info;
+	    info = new_send_once_wrapper (inp->msgh_local_port,
+					  &inp->msgh_local_port);
+	    reply_type = MACH_MSG_TYPE_MAKE_SEND_ONCE;
+	    assert (inp->msgh_local_port);
+
+	    if (TRACED_INFO (info)->name == 0)
+	      {
+		if (msgid == 0)
+		  asprintf (&TRACED_INFO (info)->name, "reply(%u:%u)",
+			    (unsigned int) TRACED_INFO (info)->pi.port_right,
+			    (unsigned int) inp->msgh_id);
+		else
+		  asprintf (&TRACED_INFO (info)->name, "reply(%u:%s)",
+			    (unsigned int) TRACED_INFO (info)->pi.port_right,
+			    msgid->name);
+	      }
+	    break;
+
+	  default:
+	    error (1, 0, "Reply type %i not handled", reply_type);
 	  }
       }
 
@@ -1478,10 +1486,27 @@ static const char *const msg_types[] =
 };
 #endif
 
+/* We keep track of the last reply port used in a request we print to
+   ostream.  This way we can end incomplete requests with an ellipsis
+   and the name of the reply port.  When the reply finally arrives, we
+   start a new line with that port name and an ellipsis, making it
+   easy to match it to the associated request.  */
+static mach_port_t last_reply_port;
+
+/* Print an ellipsis if necessary.  */
+static void
+print_ellipsis (void)
+{
+  if (MACH_PORT_VALID (last_reply_port))
+    fprintf (ostream, " ...%u\n", (unsigned int) last_reply_port);
+}
+
 static void
 print_request_header (struct sender_info *receiver, mach_msg_header_t *msg)
 {
   const char *msgname = msgid_name (msg->msgh_id);
+  print_ellipsis ();
+  last_reply_port = msg->msgh_local_port;
 
   if (TRACED_INFO (receiver)->name != 0)
     fprintf (ostream, "%4s->", TRACED_INFO (receiver)->name);
@@ -1499,6 +1524,13 @@ static void
 print_reply_header (struct send_once_info *info, mig_reply_header_t *reply,
 		    struct req_info *req)
 {
+  if (last_reply_port != info->pi.pi.port_right)
+    {
+      print_ellipsis ();
+      fprintf (ostream, "%u...", (unsigned int) info->pi.pi.port_right);
+    }
+  last_reply_port = MACH_PORT_NULL;
+
   /* We have printed a partial line for the request message,
      and now we have the corresponding reply.  */
   if (reply->Head.msgh_id == req->req_id + 100)
@@ -1520,6 +1552,20 @@ print_reply_header (struct send_once_info *info, mig_reply_header_t *reply,
     }
 }
 
+static char escape_sequences[0x100] =
+  {
+    ['\0'] = '0',
+    ['\a'] = 'a',
+    ['\b'] = 'b',
+    ['\f'] = 'f',
+    ['\n'] = 'n',
+    ['\r'] = 'r',
+    ['\t'] = 't',
+    ['\v'] = 'v',
+    ['\\'] = '\\',
+    ['\''] = '\'',
+    ['"'] = '"',
+  };
 
 static void
 print_data (mach_msg_type_name_t type,
@@ -1547,8 +1593,38 @@ print_data (mach_msg_type_name_t type,
     case MACH_MSG_TYPE_CHAR:
       if (nelt > strsize)
 	nelt = strsize;
-      fprintf (ostream, "\"%.*s\"",
-	       (int) (nelt * eltsize), (const char *) data);
+      fprintf (ostream, "\"");
+      /* Scan data for non-printable characters.  p always points to
+	 the first character that has not yet been printed.  */
+      const char *p, *q;
+      p = q = (const char *) data;
+      while (*q && q - (const char *) data < (int) (nelt * eltsize))
+	{
+	  if (isgraph (*q) || *q == ' ')
+	    {
+	      q += 1;
+	      continue;
+	    }
+
+	  /* We encountered a non-printable character.  Print anything
+	     that has not been printed so far.  */
+	  if (p < q)
+	    fprintf (ostream, "%.*s", q - p, p);
+
+	  char c = escape_sequences[*((const unsigned char *) q)];
+	  if (c)
+	    fprintf (ostream, "\\%c", c);
+	  else
+	    fprintf (ostream, "\\x%02x", *((const unsigned char *) q));
+
+	  q += 1;
+	  p = q;
+	}
+
+      /* Print anything that has not been printed so far.  */
+      if (p < q)
+	fprintf (ostream, "%.*s", q - p, p);
+      fprintf (ostream, "\"");
       return;
 
 #if 0
