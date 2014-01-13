@@ -32,6 +32,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include <sys/resource.h>
 #include <hurd/auth.h>
 #include <assert.h>
+#include <pids.h>
 
 #include "proc.h"
 #include "process_S.h"
@@ -209,6 +210,15 @@ S_proc_child (struct proc *parentp,
 			    childp->p_parent->p_pid, childp->p_pgrp->pg_pgid,
 			    !childp->p_pgrp->pg_orphcnt);
   childp->p_parentset = 1;
+
+  /* If these are not set in the child, it was probably fork(2)ed.  If
+     so, it inherits the values of its parent.  */
+  if (! childp->start_code && ! childp->end_code)
+    {
+      childp->start_code = parentp->start_code;
+      childp->end_code = parentp->end_code;
+    }
+
   return 0;
 }
 
@@ -582,7 +592,7 @@ create_startup_proc (void)
   p = allocate_proc (MACH_PORT_NULL);
   assert (p);
 
-  p->p_pid = 1;
+  p->p_pid = HURD_PID_STARTUP;
 
   p->p_parent = p;
   p->p_sib = 0;
@@ -591,6 +601,8 @@ create_startup_proc (void)
   p->p_parentset = 1;
 
   p->p_deadmsg = 1;		/* Force initial "re-"fetch of msgport.  */
+
+  p->p_important = 1;
 
   p->p_noowner = 0;
   p->p_id = make_ids (&zero, 1);
@@ -866,4 +878,67 @@ genpid ()
     }
 
   return nextpid++;
+}
+
+/* Implement proc_mark_important as described in <hurd/process.defs>. */
+kern_return_t
+S_proc_mark_important (struct proc *p)
+{
+  if (!p)
+    return EOPNOTSUPP;
+
+  /* Only root may use this interface.  Any children of startup_proc
+     exempt from this restriction, as startup_proc calls this on their
+     behalf.  The kernel process is a notable example of an process
+     that needs this exemption.  That is not an problem however, since
+     all children of /hurd/init are important and we mark them as such
+     anyway.  */
+  if (! check_uid (p, 0) && ! check_owner (startup_proc, p))
+    return EPERM;
+
+  p->p_important = 1;
+  return 0;
+}
+
+/* Implement proc_is_important as described in <hurd/process.defs>.  */
+error_t
+S_proc_is_important (struct proc *callerp,
+		     boolean_t *essential)
+{
+  if (!callerp)
+    return EOPNOTSUPP;
+
+  *essential = callerp->p_important;
+
+  return 0;
+}
+
+/* Implement proc_set_code as described in <hurd/process.defs>.  */
+error_t
+S_proc_set_code (struct proc *callerp,
+		 vm_address_t start_code,
+		 vm_address_t end_code)
+{
+  if (!callerp)
+    return EOPNOTSUPP;
+
+  callerp->start_code = start_code;
+  callerp->end_code = end_code;
+
+  return 0;
+}
+
+/* Implement proc_get_code as described in <hurd/process.defs>.  */
+error_t
+S_proc_get_code (struct proc *callerp,
+		 vm_address_t *start_code,
+		 vm_address_t *end_code)
+{
+  if (!callerp)
+    return EOPNOTSUPP;
+
+  *start_code = callerp->start_code;
+  *end_code = callerp->end_code;
+
+  return 0;
 }

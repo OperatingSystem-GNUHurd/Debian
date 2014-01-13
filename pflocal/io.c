@@ -63,7 +63,7 @@ S_io_read (struct sock_user *user,
   else if (!err)
     {
       err =
-	pipe_read (pipe, user->sock->flags & SOCK_NONBLOCK, NULL,
+	pipe_read (pipe, user->sock->flags & PFLOCAL_SOCK_NONBLOCK, NULL,
 		   data, data_len, amount);
       pipe_release_reader (pipe);
     }
@@ -104,7 +104,7 @@ S_io_write (struct sock_user *user,
 
       if (!err)
 	{
-	  err = pipe_write (pipe, user->sock->flags & SOCK_NONBLOCK,
+	  err = pipe_write (pipe, user->sock->flags & PFLOCAL_SOCK_NONBLOCK,
 			    source_addr, data, data_len, amount);
 	  if (err && source_addr)
 	    ports_port_deref (source_addr);
@@ -308,7 +308,7 @@ S_io_stat (struct sock_user *user, struct stat *st)
   struct sock *sock;
   struct pipe *rpipe, *wpipe;
 
-  void copy_time (time_value_t *from, time_t *to_sec, unsigned long *to_nsec)
+  void copy_time (time_value_t *from, time_t *to_sec, long *to_nsec)
     {
       *to_sec = from->seconds;
       *to_nsec = from->microseconds * 1000;
@@ -365,9 +365,9 @@ S_io_get_openmodes (struct sock_user *user, int *bits)
   flags = user->sock->flags;
   *bits =
       O_APPEND			/* pipes always append */
-    | (flags & SOCK_NONBLOCK ? O_NONBLOCK : 0)
-    | (flags & SOCK_SHUTDOWN_READ ? 0 : O_READ)
-    | (flags & SOCK_SHUTDOWN_WRITE ? 0 : O_WRITE);
+    | (flags & PFLOCAL_SOCK_NONBLOCK ? O_NONBLOCK : 0)
+    | (flags & PFLOCAL_SOCK_SHUTDOWN_READ ? 0 : O_READ)
+    | (flags & PFLOCAL_SOCK_SHUTDOWN_WRITE ? 0 : O_WRITE);
   return 0;
 }
 
@@ -379,9 +379,9 @@ S_io_set_all_openmodes (struct sock_user *user, int bits)
 
   pthread_mutex_lock (&user->sock->lock);
   if (bits & O_NONBLOCK)
-    user->sock->flags |= SOCK_NONBLOCK;
+    user->sock->flags |= PFLOCAL_SOCK_NONBLOCK;
   else
-    user->sock->flags &= ~SOCK_NONBLOCK;
+    user->sock->flags &= ~PFLOCAL_SOCK_NONBLOCK;
   pthread_mutex_unlock (&user->sock->lock);
 
   return 0;
@@ -395,7 +395,7 @@ S_io_set_some_openmodes (struct sock_user *user, int bits)
 
   pthread_mutex_lock (&user->sock->lock);
   if (bits & O_NONBLOCK)
-    user->sock->flags |= SOCK_NONBLOCK;
+    user->sock->flags |= PFLOCAL_SOCK_NONBLOCK;
   pthread_mutex_unlock (&user->sock->lock);
 
   return 0;
@@ -409,7 +409,7 @@ S_io_clear_some_openmodes (struct sock_user *user, int bits)
 
   pthread_mutex_lock (&user->sock->lock);
   if (bits & O_NONBLOCK)
-    user->sock->flags &= ~SOCK_NONBLOCK;
+    user->sock->flags &= ~PFLOCAL_SOCK_NONBLOCK;
   pthread_mutex_unlock (&user->sock->lock);
 
   return 0;

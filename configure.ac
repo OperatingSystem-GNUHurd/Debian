@@ -59,7 +59,7 @@ AC_ARG_ENABLE(profile,
 [  --disable-profile	  do not build profiled libraries and programs])
 AC_SUBST(enable_profile)
 
-define([default_static],['ext2fs,ufs'])dnl
+define([default_static],['ext2fs'])dnl
 AC_ARG_ENABLE(static-progs,
 [  --enable-static-progs=PROGRAMS...
                           build statically-linked PROGRAM.static versions
@@ -267,8 +267,9 @@ PKG_CHECK_MODULES([X11], [x11 xproto],
     AS_IF([test $pkg_failed = no],
       [XKB_BASE="$pkg_cv_XKB_BASE"
        AC_MSG_RESULT([$XKB_BASE])],
-      [XKB_BASE="$datadir/share/X11/xkb"
+      [XKB_BASE="$datadir/X11/xkb"
        AC_MSG_RESULT([(default) $XKB_BASE])])
+    pkg_failed=no
     AC_MSG_CHECKING([for X11 prefix])
     _PKG_CONFIG([X11_PREFIX], [variable=prefix], [x11])
     AS_IF([test $pkg_failed = no],
@@ -316,6 +317,18 @@ else
 	     `cd $srcdir; for file in Makefile */Makefile; do \
 			    echo ${file}:build.mk.in; done`"
 fi
+
+PKG_CHECK_MODULES([libdaemon], [libdaemon],
+  [AC_DEFINE([HAVE_DAEMON], [1], [Use libdaemon])],
+  [true])
+AC_SUBST([libdaemon_LIBS])
+AC_SUBST([libdaemon_CFLAGS])
+
+PKG_CHECK_MODULES([libblkid], [blkid],
+  [AC_DEFINE([HAVE_BLKID], [1], [Use libblkid])],
+  [true])
+AC_SUBST([libblkid_LIBS])
+AC_SUBST([libblkid_CFLAGS])
 
 AC_CONFIG_FILES([config.make ${makefiles}])
 AC_OUTPUT

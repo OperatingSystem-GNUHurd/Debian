@@ -25,15 +25,28 @@ struct peropen *
 netfs_make_peropen (struct node *np, int flags, struct peropen *context)
 {
   struct peropen *po = malloc (sizeof (struct peropen));
-  
+
+  if (!po)
+    return NULL;
+
   po->filepointer = 0;
   po->lock_status = LOCK_UN;
   po->refcnt = 0;
   po->openstat = flags;
   po->np = np;
+  po->path = NULL;
 
   if (context)
     {
+      if (context->path)
+	{
+	  po->path = strdup (context->path);
+	  if (! po->path) {
+	    free(po);
+	    return NULL;
+	  }
+	}
+
       po->root_parent = context->root_parent;
       if (po->root_parent != MACH_PORT_NULL)
 	mach_port_mod_refs (mach_task_self (), po->root_parent,

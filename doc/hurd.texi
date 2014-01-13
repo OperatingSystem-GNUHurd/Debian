@@ -1921,7 +1921,7 @@ existing translators:
 
 @itemize @bullet
 @item
-Disk-based filesystem formats, such as @code{ext2fs}, @code{ufs}, and
+Disk-based filesystem formats, such as @code{ext2fs} and
 @code{iso9660fs} (@pxref{Stored Filesystems}).
 
 @item
@@ -2628,7 +2628,7 @@ an RPC.  If @var{len} is greater than zero, @var{buf} is freed,
 regardless of whether an error is returned or not.
 @end deftypefun
 
-@deftypefun error_t fshelp_set_options (@w{struct argp *@var{argp}}, @w{int @var{flags}}, @w{char *@var{argz}}, @w{size_t @var{argz_len}}, @w{void *@var{input}})
+@deftypefun error_t fshelp_set_options (@w{const struct argp *@var{argp}}, @w{int @var{flags}}, @w{char *@var{argz}}, @w{size_t @var{argz_len}}, @w{void *@var{input}})
 Invoke @code{argp_parse} in the standard way, with data from @var{argz}
 and @var{argz_len}.
 @end deftypefun
@@ -3621,13 +3621,6 @@ FIXME: finish
 @node Linux Extended 2 FS
 @section Linux Extended 2 FS
 @pindex ext2fs
-
-FIXME: finish
-
-
-@node BSD Unix FS
-@section BSD Unix FS
-@scindex ufs
 
 FIXME: finish
 
