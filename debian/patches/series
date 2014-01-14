@@ -42,8 +42,5 @@ exec_filename_fix.patch
 mount-loop.patch
 proc_set_init_task.patch
 newRPC.patch
-<<<<<<< HEAD
 libports_revert_stacksize.patch
-=======
 xkb-compat.patch
->>>>>>> 5473b7b628a8b0764d1c33d4a28d6d01e4b6cc0c
