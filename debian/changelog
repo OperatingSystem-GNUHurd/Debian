@@ -5,12 +5,13 @@ hurd (1:0.5.git20140113-1) unstable; urgency=low
     - refresh patches.
   * patches/libports_revert_stacksize.patch: New patch to revert upstream
     cleanup.
+  * patches/xkb-compat.patch: Replace default compat with explicit content.
 
   [ Justus Winter ]
   * patches/exec_filename_fix.patch: Fix passing path in hurdish
     fakeroot/chroot.
 
- -- Samuel Thibault <sthibault@debian.org>  Tue, 14 Jan 2014 00:40:23 +0000
+ -- Samuel Thibault <sthibault@debian.org>  Tue, 19 Nov 2013 00:21:47 +0100
 
 hurd (1:0.5.git20131101-1) unstable; urgency=low
 
