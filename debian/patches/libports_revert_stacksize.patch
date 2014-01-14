@@ -1,4 +1,5 @@
-Revert this for now, will have to wait for thread destruction patch, available in glibc 2.18
+Revert this for now, will have to wait for dropping the use of
+__pthread_stack_default_size from eglibc's libpthread_hurd_cond_wait.diff
 
 commit 3a3fcc811e6b50b21124a5c5a128652e788a3b67
 Author: Richard Braun <rbraun@sceen.net>
