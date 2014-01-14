@@ -160,8 +160,8 @@ else
 fi
 AC_SUBST(VERSIONING)
 
-# Check if libc contains getgrouplist and/or uselocale.
-AC_CHECK_FUNCS(getgrouplist uselocale)
+# Check if libc contains these functions.
+AC_CHECK_FUNCS(getgrouplist uselocale file_exec_file_name exec_exec_file_name _hurd_exec_file_name)
 
 
 # From glibc HEAD, 2007-11-07.
@@ -226,6 +226,12 @@ fi
 AC_SUBST(boot_store_types)dnl
 AC_MSG_CHECKING(boot store types)
 AC_MSG_RESULT($boot_store_types)
+
+AC_CHECK_LIB(pciaccess, pci_system_init, LIBPCIACCESS=-lpciaccess, LIBPCIACCESS=no)
+AC_SUBST(LIBPCIACCESS)
+if test "$LIBPCIACCESS" = "no"; then
+  AC_MSG_ERROR([libpciaccess must be install in order to use libddekit])
+fi
 
 # Check for ncursesw, which is needed for the console-curses client.
 hurd_LIB_NCURSESW

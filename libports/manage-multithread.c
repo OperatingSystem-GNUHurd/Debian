@@ -28,6 +28,10 @@
 
 #define STACK_SIZE (64 * 1024)
 
+/* FIXME Until threadvars are completely replaced with correct TLS, use this
+   hack to set the stack size.  */
+size_t __pthread_stack_default_size = STACK_SIZE;
+
 #define THREAD_PRI 2
 
 /* XXX To reduce starvation, the priority of new threads is initially
@@ -106,6 +110,7 @@ ports_manage_port_operations_multithread (struct port_bucket *bucket,
 
   auto void * thread_function (void *);
 
+  /* FIXME This is currently a no-op.  */
   pthread_attr_init (&attr);
   pthread_attr_setstacksize (&attr, STACK_SIZE);
 
@@ -235,6 +240,8 @@ ports_manage_port_operations_multithread (struct port_bucket *bucket,
 	}
       return NULL;
     }
+
+  thread_timeout = global_timeout = 0; /* XXX */
 
   thread_function ((void *) 1);
 }

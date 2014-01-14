@@ -1,5 +1,6 @@
 /*
-   Copyright (C) 1995,96,99,2000,02, 04 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996, 1999, 2000, 2002, 2004, 2010
+   Free Software Foundation, Inc.
    Written by Miles Bader and Michael I. Bushnell.
 
    This file is part of the GNU Hurd.
@@ -27,6 +28,9 @@
 #include <string.h>
 #include <assert.h>
 #include "fshelp.h"
+#ifdef HAVE_FILE_EXEC_FILE_NAME
+#include <hurd/fs_experimental.h>
+#endif
 
 
 /* The data passed in the various messages we're interested in.  */
@@ -272,12 +276,22 @@ fshelp_start_translator_long (fshelp_open_fn_t underlying_open_fn,
   saveport = ports[INIT_PORT_BOOTSTRAP];
   ports[INIT_PORT_BOOTSTRAP] = bootstrap;
 
+#ifdef HAVE_FILE_EXEC_FILE_NAME
   /* Try and exec the translator in TASK...  */
-  err = file_exec (executable, task, EXEC_DEFAULTS,
-		   argz, argz_len, 0, 0,
-		   fds, fds_type, fds_len,
-		   ports, ports_type, ports_len,
-		   ints, ints_len, 0, 0, 0, 0);
+  err = file_exec_file_name (executable, task, EXEC_DEFAULTS, name,
+			     argz, argz_len, 0, 0,
+			     fds, fds_type, fds_len,
+			     ports, ports_type, ports_len,
+			     ints, ints_len, 0, 0, 0, 0);
+  /* For backwards compatibility.  Just drop it when we kill file_exec.  */
+  if (err == MIG_BAD_ID)
+#endif
+    err = file_exec (executable, task, EXEC_DEFAULTS,
+		     argz, argz_len, 0, 0,
+		     fds, fds_type, fds_len,
+		     ports, ports_type, ports_len,
+		     ints, ints_len, 0, 0, 0, 0);
+
   ports_moved = 1;
 
   if (ports_type == MACH_MSG_TYPE_COPY_SEND)

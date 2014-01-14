@@ -50,7 +50,7 @@ pthread_cond_t select_alert;	/* For read and select.  */
    numbers.
    2: Strong random numbers with a somewhat guaranteed entropy.
 */
-#define DEFAULT_LEVEL 2
+#define DEFAULT_LEVEL 1
 static int level = DEFAULT_LEVEL;
 
 /* Name of file to use as seed.  */

@@ -53,21 +53,21 @@ diskfs_set_node_times (struct node *np)
   if (np->dn_set_mtime)
     {
       np->dn_stat.st_mtim.tv_sec = t.tv_sec;
-      np->dn_stat.st_mtim.tv_nsec = t.tv_usec * 1000;
+      np->dn_stat.st_mtim.tv_nsec = 0;
       np->dn_stat_dirty = 1;
       np->dn_set_mtime = 0;
     }
   if (np->dn_set_atime)
     {
       np->dn_stat.st_atim.tv_sec = t.tv_sec;
-      np->dn_stat.st_atim.tv_nsec = t.tv_usec * 1000;
+      np->dn_stat.st_atim.tv_nsec = 0;
       np->dn_stat_dirty = 1;
       np->dn_set_atime = 0;
     }
   if (np->dn_set_ctime)
     {
       np->dn_stat.st_ctim.tv_sec = t.tv_sec;
-      np->dn_stat.st_ctim.tv_nsec = t.tv_usec * 1000;
+      np->dn_stat.st_ctim.tv_nsec = 0;
       np->dn_stat_dirty = 1;
       np->dn_set_ctime = 0;
     }

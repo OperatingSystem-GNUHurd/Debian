@@ -29,7 +29,7 @@ MIGSFLAGS="-DPROCESS_INTRAN=pstruct_t reqport_find (process_t)" \
 	"-DPROCESS_IMPORTS=import \"proc.h\";"
 
 MIGSTUBS = processServer.o notifyServer.o \
-	ourmsgUser.o proc_excUser.o proc_excServer.o
+	ourmsgUser.o proc_excUser.o proc_excServer.o processUser.o
 OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
 HURDLIBS = ihash ports shouldbeinlibc
 OTHERLIBS = -lpthread

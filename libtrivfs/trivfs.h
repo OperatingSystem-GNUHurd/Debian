@@ -299,6 +299,7 @@ extern size_t trivfs_num_dynamic_port_buckets;
 /* These are the MiG-generated headers that declare prototypes
    for the server functions.  */
 #include <hurd/trivfs_fs_S.h>
+#include <hurd/trivfs_fs_experimental_S.h>
 #include <hurd/trivfs_io_S.h>
 #include <hurd/trivfs_fsys_S.h>
 

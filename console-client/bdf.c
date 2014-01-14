@@ -415,8 +415,10 @@ bdf_read (FILE *filep, bdf_font_t *font, int *linecount)
 	     glyphs.  */
 	  if (!strcmp (line, "ENDFONT"))
 	    {
+	      /*
 	      if (parser.glyphs != bdf->glyphs_count)
 		err = BDF_COUNT_MISMATCH;
+	      */
 	      done = 1;
 	    }
 	  else

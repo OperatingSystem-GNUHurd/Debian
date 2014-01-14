@@ -1,7 +1,7 @@
 /* Start and maintain hurd core servers and system run state
 
    Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-     2005, 2008, 2013 Free Software Foundation, Inc.
+     2005, 2008, 2010, 2013 Free Software Foundation, Inc.
    This file is part of the GNU Hurd.
 
    The GNU Hurd is free software; you can redistribute it and/or modify
@@ -24,6 +24,9 @@
    one file. */
 #include <hurd.h>
 #include <hurd/fs.h>
+#ifdef HAVE_FILE_EXEC_FILE_NAME
+#include <hurd/fs_experimental.h>
+#endif
 #include <hurd/fsys.h>
 #include <device/device.h>
 #include <stdio.h>
@@ -376,13 +379,28 @@ run (const char *server, mach_port_t *ports, task_t *task)
 	      printf ("Pausing for %s\n", prog);
 	      getchar ();
 	    }
-	  err = file_exec (file, *task, 0,
-			   (char *)prog, strlen (prog) + 1, /* Args.  */
-			   startup_envz, startup_envz_len,
-			   default_dtable, MACH_MSG_TYPE_COPY_SEND, 3,
-			   ports, MACH_MSG_TYPE_COPY_SEND, INIT_PORT_MAX,
-			   default_ints, INIT_INT_MAX,
-			   NULL, 0, NULL, 0);
+#ifdef HAVE_FILE_EXEC_FILE_NAME
+	  err = file_exec_file_name (file, *task, 0, (char *)prog,
+				     (char *)prog,
+				     strlen (prog) + 1, /* Args.  */
+				     startup_envz, startup_envz_len,
+				     default_dtable,
+				     MACH_MSG_TYPE_COPY_SEND, 3,
+				     ports, MACH_MSG_TYPE_COPY_SEND,
+				     INIT_PORT_MAX,
+				     default_ints, INIT_INT_MAX,
+				     NULL, 0, NULL, 0);
+	  /* For backwards compatibility.  Just drop it when we kill
+	     file_exec.  */
+	  if (err == MIG_BAD_ID)
+#endif
+	    err = file_exec (file, *task, 0,
+			     (char *)prog, strlen (prog) + 1, /* Args.  */
+			     startup_envz, startup_envz_len,
+			     default_dtable, MACH_MSG_TYPE_COPY_SEND, 3,
+			     ports, MACH_MSG_TYPE_COPY_SEND, INIT_PORT_MAX,
+			     default_ints, INIT_INT_MAX,
+			     NULL, 0, NULL, 0);
 	  if (!err)
 	    break;
 
@@ -469,14 +487,27 @@ run_for_real (char *filename, char *args, int arglen, mach_port_t ctty,
     ++progname;
   else
     progname = filename;
-  err = file_exec (file, task, 0,
-		   args, arglen,
-		   startup_envz, startup_envz_len,
-		   default_dtable, MACH_MSG_TYPE_COPY_SEND, 3,
-		   default_ports, MACH_MSG_TYPE_COPY_SEND,
-		   INIT_PORT_MAX,
-		   default_ints, INIT_INT_MAX,
-		   NULL, 0, NULL, 0);
+#ifdef HAVE_FILE_EXEC_FILE_NAME
+  err = file_exec_file_name (file, task, 0, filename,
+			     args, arglen,
+			     startup_envz, startup_envz_len,
+			     default_dtable, MACH_MSG_TYPE_COPY_SEND, 3,
+			     default_ports, MACH_MSG_TYPE_COPY_SEND,
+			     INIT_PORT_MAX,
+			     default_ints, INIT_INT_MAX,
+			     NULL, 0, NULL, 0);
+  /* For backwards compatibility.  Just drop it when we kill file_exec.  */
+  if (err == MIG_BAD_ID)
+#endif
+    err = file_exec (file, task, 0,
+		     args, arglen,
+		     startup_envz, startup_envz_len,
+		     default_dtable, MACH_MSG_TYPE_COPY_SEND, 3,
+		     default_ports, MACH_MSG_TYPE_COPY_SEND,
+		     INIT_PORT_MAX,
+		     default_ints, INIT_INT_MAX,
+		     NULL, 0, NULL, 0);
+
   mach_port_deallocate (mach_task_self (), default_ports[INIT_PORT_PROC]);
   mach_port_deallocate (mach_task_self (), task);
   if (ctty != MACH_PORT_NULL)
@@ -896,7 +927,7 @@ frob_kernel_process (void)
 /** Running userland.  **/
 
 /* In the "split-init" setup, we just run a single program (usually
-   /libexec/runsystem) that is not expected to ever exit (or stop).
+   /etc/hurd/runsystem) that is not expected to ever exit (or stop).
    If it does exit (or can't be started), we go to an emergency single-user
    shell as a fallback.  */
 
@@ -1013,7 +1044,7 @@ process_signal (int signo)
     }
 }
 
-/* Start the child program PROG.  It is run via /libexec/console-run
+/* Start the child program PROG.  It is run via /sbin/console-run
    with the given additional arguments.  */
 static int
 start_child (const char *prog, char **progargs)
@@ -1025,7 +1056,7 @@ start_child (const char *prog, char **progargs)
 
   if (progargs == 0)
     {
-      const char *argv[] = { "/libexec/console-run", prog, 0 };
+      const char *argv[] = { "/sbin/console-run", prog, 0 };
       err = argz_create ((char **) argv, &args, &arglen);
     }
   else
@@ -1035,7 +1066,7 @@ start_child (const char *prog, char **progargs)
 	++argc;
       {
 	const char *argv[2 + argc + 1];
-	argv[0] = "/libexec/console-run";
+	argv[0] = "/sbin/console-run";
 	argv[1] = prog;
 	argv[2 + argc] = 0;
 	while (argc-- > 0)
@@ -1058,7 +1089,7 @@ start_child (const char *prog, char **progargs)
 	       NULL, 0,	/* OSF Mach */
 #endif
 	       0, &child_task);
-  proc_child (procserver, child_task);
+  proc_set_init_task (procserver, child_task);
   proc_task2pid (procserver, child_task, &child_pid);
   proc_task2proc (procserver, child_task, &default_ports[INIT_PORT_PROC]);
 
@@ -1068,13 +1099,26 @@ start_child (const char *prog, char **progargs)
       getchar ();
     }
 
-  err = file_exec (file, child_task, 0,
-		   args, arglen,
-		   startup_envz, startup_envz_len,
-		   NULL, MACH_MSG_TYPE_COPY_SEND, 0, /* No fds.  */
-		   default_ports, MACH_MSG_TYPE_COPY_SEND, INIT_PORT_MAX,
-		   default_ints, INIT_INT_MAX,
-		   NULL, 0, NULL, 0);
+#ifdef HAVE_FILE_EXEC_FILE_NAME
+  err = file_exec_file_name (file, child_task, 0, args,
+			     args, arglen,
+			     startup_envz, startup_envz_len,
+			     NULL, MACH_MSG_TYPE_COPY_SEND, 0, /* No fds.  */
+			     default_ports, MACH_MSG_TYPE_COPY_SEND,
+			     INIT_PORT_MAX,
+			     default_ints, INIT_INT_MAX,
+			     NULL, 0, NULL, 0);
+  /* For backwards compatibility.  Just drop it when we kill file_exec.  */
+  if (err == MIG_BAD_ID)
+#endif
+    err = file_exec (file, child_task, 0,
+		     args, arglen,
+		     startup_envz, startup_envz_len,
+		     NULL, MACH_MSG_TYPE_COPY_SEND, 0, /* No fds.  */
+		     default_ports, MACH_MSG_TYPE_COPY_SEND, INIT_PORT_MAX,
+		     default_ints, INIT_INT_MAX,
+		     NULL, 0, NULL, 0);
+
   proc_mark_important (default_ports[INIT_PORT_PROC]);
   mach_port_deallocate (mach_task_self (), default_ports[INIT_PORT_PROC]);
   mach_port_deallocate (mach_task_self (), file);
@@ -1095,7 +1139,8 @@ launch_something (const char *why)
   static unsigned int try;
   static const char *const tries[] =
   {
-    "/libexec/runsystem",
+    "/etc/hurd/runsystem",
+    "/etc/hurd/runsystem.gnu",
     _PATH_BSHELL,
     "/bin/shd",			/* XXX */
   };

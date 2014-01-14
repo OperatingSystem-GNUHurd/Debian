@@ -363,6 +363,8 @@ static inline char *pack_hex_byte(char *buf, u8 byte)
         printk(KERN_NOTICE pr_fmt(fmt), ##__VA_ARGS__)
 #define pr_info(fmt, ...) \
         printk(KERN_INFO pr_fmt(fmt), ##__VA_ARGS__)
+#define pr_cont(fmt, ...) \
+        printk(KERN_CONT fmt, ##__VA_ARGS__)
 
 #if defined(DEBUG)
 #ifndef DDE_LINUX

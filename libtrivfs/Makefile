@@ -44,7 +44,7 @@ OTHERSRCS=demuxer.c protid-clean.c protid-dup.c cntl-create.c \
 
 SRCS=$(FSSRCS) $(IOSRCS) $(FSYSSRCS) $(OTHERSRCS)
 
-MIGSTUBS=fsServer.o ioServer.o fsysServer.o fsys_replyUser.o
+MIGSTUBS=fsServer.o fs_experimentalServer.o ioServer.o fsysServer.o fsys_replyUser.o
 
 libname = libtrivfs
 HURDLIBS = fshelp iohelp ports shouldbeinlibc
@@ -54,7 +54,7 @@ MIGCOMSFLAGS = -prefix trivfs_
 installhdrs := trivfs.h
 mig-sheader-prefix = trivfs_
 ifndef no_deps
-installhdrs += $(patsubst %,trivfs_%_S.h,fs io fsys)
+installhdrs += $(patsubst %,trivfs_%_S.h,fs fs_experimental io fsys)
 endif
 
 include ../Makeconf

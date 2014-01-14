@@ -59,12 +59,13 @@ SRCS= $(OTHERSRCS) $(FSSRCS) $(IOSRCS) $(FSYSSRCS) $(IFSOCKSRCS)
 
 installhdrs=netfs.h
 
-MIGSTUBS= ioServer.o fsServer.o fsysServer.o fsys_replyUser.o ifsockServer.o
+MIGSTUBS= ioServer.o fsServer.o fs_experimentalServer.o fsysServer.o fsys_replyUser.o ifsockServer.o
 
 OBJS=$(sort $(SRCS:.c=.o) $(MIGSTUBS))
 
 fsys-MIGSFLAGS = -imacros $(srcdir)/mutations.h -DREPLY_PORTS
 fs-MIGSFLAGS = -imacros $(srcdir)/mutations.h
+fs_experimental-MIGSFLAGS = -imacros $(srcdir)/mutations.h
 io-MIGSFLAGS = -imacros $(srcdir)/mutations.h
 ifsock-MIGSFLAGS = -imacros $(srcdir)/mutations.h
 MIGCOMSFLAGS = -prefix netfs_

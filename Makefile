@@ -28,7 +28,8 @@ include ./Makeconf
 # Hurd libraries
 lib-subdirs = libshouldbeinlibc libihash libiohelp libports libthreads \
 	      libpager libfshelp libdiskfs libtrivfs libps \
-	      libnetfs libpipe libstore libhurdbugaddr libftpconn libcons
+	      libnetfs libpipe libstore libhurdbugaddr libftpconn libcons \
+	      libmachdev libbpf libddekit libhurd-slab eth-filter eth-multiplexer
 
 # Hurd programs
 prog-subdirs = auth proc exec init term \
@@ -37,7 +38,7 @@ prog-subdirs = auth proc exec init term \
 	       login daemons boot console \
 	       hostmux usermux ftpfs trans \
 	       console-client utils sutils \
-	       benchmarks fstests
+	       benchmarks fstests procfs random devnode
 
 ifeq ($(HAVE_SUN_RPC),yes)
 prog-subdirs += nfs nfsd

@@ -1,5 +1,6 @@
 /* Interface definitions for the exec servers.
-   Copyright (C) 1991,92,93,94,95,2001 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1992, 1993, 1994, 1995, 2001, 2010
+   Free Software Foundation, Inc.
 
 This file is part of the GNU Hurd.
 
@@ -29,6 +30,7 @@ EXEC_IMPORTS
 
 INTR_INTERFACE
 
+/* Deprecated: use exec_exec_file_name instead.  */
 routine exec_exec (
 	execserver: file_t;
 	file: mach_port_send_t;

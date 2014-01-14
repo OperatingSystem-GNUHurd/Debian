@@ -52,7 +52,7 @@ const struct argp_option diskfs_common_options[] =
   {"nogrpid",    0,   0, OPTION_ALIAS | OPTION_HIDDEN},
   {"sysvgroups", 0,   0, OPTION_ALIAS | OPTION_HIDDEN},
   {"inherit-dir-group", OPT_INHERIT_DIR_GROUP, 0, 0,
-   "Create new nodes with gid of parent dir (default)"},
+   "Create new nodes with gid of parent dir"},
   {"grpid",    0,   0, OPTION_ALIAS | OPTION_HIDDEN},
   {"bsdgroups", 0,   0, OPTION_ALIAS | OPTION_HIDDEN},
   {0, 0}

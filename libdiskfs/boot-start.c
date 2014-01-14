@@ -128,8 +128,13 @@ diskfs_start_bootstrap ()
       assert (_hurd_ports);
       assert (_hurd_ports[INIT_PORT_CRDIR].port != MACH_PORT_NULL);
       diskfs_exec = file_name_lookup (_SERVERS_EXEC, 0, 0);
-      if (diskfs_exec == MACH_PORT_NULL)
-	error (1, errno, "%s", _SERVERS_EXEC);
+      if (diskfs_exec == MACH_PORT_NULL) 
+	{
+	  /* Debian specifc work-around for install bootstrapping.  */
+	  diskfs_exec = file_name_lookup ("/tmp/exec", 0, 0);
+	  if (diskfs_exec == MACH_PORT_NULL)
+	    error (1, errno, "%s", _SERVERS_EXEC);
+	}
       else
 	{
 #ifndef NDEBUG
@@ -179,8 +184,15 @@ diskfs_start_bootstrap ()
 			&retry, pathbuf, &execnode);
       if (err)
 	{
-	  error (0, err, "cannot set translator on %s", _SERVERS_EXEC);
-	  mach_port_deallocate (mach_task_self (), diskfs_exec_ctl);
+          /* If /servers/exec is not available (which is the case during
+             installation, try /tmp/exec as well.  */
+          err = dir_lookup (root_pt, "/tmp/exec", O_NOTRANS, 0,
+	            	    &retry, pathbuf, &execnode);
+	  if (err) 
+	    {
+	      error (0, err, "cannot set translator on %s", _SERVERS_EXEC);
+	      mach_port_deallocate (mach_task_self (), diskfs_exec_ctl);
+	    }
 	}
       else
 	{
@@ -196,7 +208,7 @@ diskfs_start_bootstrap ()
       diskfs_exec_ctl = MACH_PORT_NULL;	/* Not used after this.  */
     }
 
-  /* Cache the exec server port for file_exec to use.  */
+  /* Cache the exec server port for file_exec_file_name to use.  */
   _hurd_port_set (&_diskfs_exec_portcell, diskfs_exec);
 
   if (_diskfs_boot_command)
@@ -407,6 +419,10 @@ diskfs_execboot_fsys_startup (mach_port_t port, int flags,
 
   err = dir_lookup (rootport, _SERVERS_EXEC, flags|O_NOTRANS, 0,
 		    &retry, pathbuf, real);
+  if (err) 
+    /* Try /tmp/exec as well, in case we're installing.  */
+    err = dir_lookup (rootport, "/tmp/exec", flags|O_NOTRANS|O_CREAT, 0,
+	  	      &retry, pathbuf, real);
   assert_perror (err);
   assert (retry == FS_RETRY_NORMAL);
   assert (pathbuf[0] == '\0');

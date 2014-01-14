@@ -205,7 +205,7 @@ ds_device_close (device_t dev)
   ret = (device->emul_ops->close
 	 ? (*device->emul_ops->close) (device->emul_data)
 	 : D_SUCCESS);
-  mach_device_deallocate (device_to_pi (device));
+  //mach_device_deallocate (device_to_pi (device));
 
   ports_port_deref (device_to_pi (device));
   return ret;
