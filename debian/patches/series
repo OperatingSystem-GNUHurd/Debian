@@ -42,3 +42,4 @@ exec_filename_fix.patch
 mount-loop.patch
 proc_set_init_task.patch
 newRPC.patch
+libports_revert_stacksize.patch

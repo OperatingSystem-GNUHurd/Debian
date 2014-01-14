@@ -1,0 +1,36 @@
+Revert this for now, will have to wait for thread destruction patch, available in glibc 2.18
+
+commit 3a3fcc811e6b50b21124a5c5a128652e788a3b67
+Author: Richard Braun <rbraun@sceen.net>
+Date:   Sat Dec 28 09:15:03 2013 +0100
+
+    libports: remove the threadvars stack size hack
+    
+    Setting the stack size should now correctly be supported by libpthread.
+    
+    * libports/manage-multithread.c (__pthread_stack_default_size): Remove
+    global variable.
+
+diff --git a/libports/manage-multithread.c b/libports/manage-multithread.c
+index dcebd09..64e442f 100644
+--- a/libports/manage-multithread.c
++++ b/libports/manage-multithread.c
+@@ -28,6 +28,10 @@
+ 
+ #define STACK_SIZE (64 * 1024)
+ 
++/* FIXME Until threadvars are completely replaced with correct TLS, use this
++   hack to set the stack size.  */
++size_t __pthread_stack_default_size = STACK_SIZE;
++
+ #define THREAD_PRI 2
+ 
+ /* XXX To reduce starvation, the priority of new threads is initially
+@@ -110,6 +106,7 @@ ports_manage_port_operations_multithread (struct port_bucket *bucket,
+ 
+   auto void * thread_function (void *);
+ 
++  /* FIXME This is currently a no-op.  */
+   pthread_attr_init (&attr);
+   pthread_attr_setstacksize (&attr, STACK_SIZE);
+ 

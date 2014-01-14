@@ -3,12 +3,14 @@ hurd (1:0.5.git20140113-1) unstable; urgency=low
   [ Samuel Thibault ]
   * New upstream snapshot.
     - refresh patches.
+  * patches/libports_revert_stacksize.patch: New patch to revert upstream
+    cleanup.
 
   [ Justus Winter ]
   * patches/exec_filename_fix.patch: Fix passing path in hurdish
-  fakeroot/chroot.
+    fakeroot/chroot.
 
- -- Samuel Thibault <sthibault@debian.org>  Mon, 13 Jan 2014 22:52:51 +0000
+ -- Samuel Thibault <sthibault@debian.org>  Tue, 14 Jan 2014 00:40:23 +0000
 
 hurd (1:0.5.git20131101-1) unstable; urgency=low
 
