@@ -180,7 +180,6 @@ void __init rcu_init(void)
 {
 	__rcu_init();
 }
-core_initcall(rcu_init);
 
 void rcu_scheduler_starting(void)
 {

@@ -23,10 +23,9 @@
 #include <error.h>
 #include <version.h>
 #include <hurd/paths.h>
-#include <string.h>
 
-#include "ourdefault_pager_S.h"
-#include "ourdefault_pager_U.h"
+#include "default_pager_S.h"
+#include "default_pager_U.h"
 
 static mach_port_t real_defpager, dev_master;
 

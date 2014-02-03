@@ -1731,13 +1731,6 @@ static u16 simple_tx_hash(struct net_device *dev, struct sk_buff *skb)
 		simple_tx_hashrnd_initialized = 1;
 	}
 
-	if (skb_rx_queue_recorded(skb)) {
-		u32 val = skb_get_rx_queue(skb);
-
-		hash = jhash_1word(val, simple_tx_hashrnd);
-		goto out;
-	}
-
 	switch (skb->protocol) {
 	case htons(ETH_P_IP):
 		if (!(ip_hdr(skb)->frag_off & htons(IP_MF | IP_OFFSET)))
@@ -1775,7 +1768,6 @@ static u16 simple_tx_hash(struct net_device *dev, struct sk_buff *skb)
 
 	hash = jhash_3words(addr1, addr2, ports, simple_tx_hashrnd);
 
-out:
 	return (u16) (((u64) hash * dev->real_num_tx_queues) >> 32);
 }
 
@@ -3385,10 +3377,10 @@ void __dev_set_rx_mode(struct net_device *dev)
 		/* Unicast addresses changes may only happen under the rtnl,
 		 * therefore calling __dev_set_promiscuity here is safe.
 		 */
-		if (dev->uc.count > 0 && !dev->uc_promisc) {
+		if (dev->uc_count > 0 && !dev->uc_promisc) {
 			__dev_set_promiscuity(dev, 1);
 			dev->uc_promisc = 1;
-		} else if (dev->uc.count == 0 && dev->uc_promisc) {
+		} else if (dev->uc_count == 0 && dev->uc_promisc) {
 			__dev_set_promiscuity(dev, -1);
 			dev->uc_promisc = 0;
 		}
@@ -3404,316 +3396,6 @@ void dev_set_rx_mode(struct net_device *dev)
 	__dev_set_rx_mode(dev);
 	netif_addr_unlock_bh(dev);
 }
-
-/* hw addresses list handling functions */
-
-static int __hw_addr_add(struct netdev_hw_addr_list *list, unsigned char *addr,
-			 int addr_len, unsigned char addr_type)
-{
-	struct netdev_hw_addr *ha;
-	int alloc_size;
-
-	if (addr_len > MAX_ADDR_LEN)
-		return -EINVAL;
-
-	list_for_each_entry(ha, &list->list, list) {
-		if (!memcmp(ha->addr, addr, addr_len) &&
-		    ha->type == addr_type) {
-			ha->refcount++;
-			return 0;
-		}
-	}
-
-
-	alloc_size = sizeof(*ha);
-	if (alloc_size < L1_CACHE_BYTES)
-		alloc_size = L1_CACHE_BYTES;
-	ha = kmalloc(alloc_size, GFP_ATOMIC);
-	if (!ha)
-		return -ENOMEM;
-	memcpy(ha->addr, addr, addr_len);
-	ha->type = addr_type;
-	ha->refcount = 1;
-	ha->synced = false;
-	list_add_tail_rcu(&ha->list, &list->list);
-	list->count++;
-	return 0;
-}
-
-static void ha_rcu_free(struct rcu_head *head)
-{
-	struct netdev_hw_addr *ha;
-
-	ha = container_of(head, struct netdev_hw_addr, rcu_head);
-	kfree(ha);
-}
-
-static int __hw_addr_del(struct netdev_hw_addr_list *list, unsigned char *addr,
-			 int addr_len, unsigned char addr_type)
-{
-	struct netdev_hw_addr *ha;
-
-	list_for_each_entry(ha, &list->list, list) {
-		if (!memcmp(ha->addr, addr, addr_len) &&
-		    (ha->type == addr_type || !addr_type)) {
-			if (--ha->refcount)
-				return 0;
-			list_del_rcu(&ha->list);
-			call_rcu(&ha->rcu_head, ha_rcu_free);
-			list->count--;
-			return 0;
-		}
-	}
-	return -ENOENT;
-}
-
-static int __hw_addr_add_multiple(struct netdev_hw_addr_list *to_list,
-				  struct netdev_hw_addr_list *from_list,
-				  int addr_len,
-				  unsigned char addr_type)
-{
-	int err;
-	struct netdev_hw_addr *ha, *ha2;
-	unsigned char type;
-
-	list_for_each_entry(ha, &from_list->list, list) {
-		type = addr_type ? addr_type : ha->type;
-		err = __hw_addr_add(to_list, ha->addr, addr_len, type);
-		if (err)
-			goto unroll;
-	}
-	return 0;
-
-unroll:
-	list_for_each_entry(ha2, &from_list->list, list) {
-		if (ha2 == ha)
-			break;
-		type = addr_type ? addr_type : ha2->type;
-		__hw_addr_del(to_list, ha2->addr, addr_len, type);
-	}
-	return err;
-}
-
-static void __hw_addr_del_multiple(struct netdev_hw_addr_list *to_list,
-				   struct netdev_hw_addr_list *from_list,
-				   int addr_len,
-				   unsigned char addr_type)
-{
-	struct netdev_hw_addr *ha;
-	unsigned char type;
-
-	list_for_each_entry(ha, &from_list->list, list) {
-		type = addr_type ? addr_type : ha->type;
-		__hw_addr_del(to_list, ha->addr, addr_len, addr_type);
-	}
-}
-
-static int __hw_addr_sync(struct netdev_hw_addr_list *to_list,
-			  struct netdev_hw_addr_list *from_list,
-			  int addr_len)
-{
-	int err = 0;
-	struct netdev_hw_addr *ha, *tmp;
-
-	list_for_each_entry_safe(ha, tmp, &from_list->list, list) {
-		if (!ha->synced) {
-			err = __hw_addr_add(to_list, ha->addr,
-					    addr_len, ha->type);
-			if (err)
-				break;
-			ha->synced = true;
-			ha->refcount++;
-		} else if (ha->refcount == 1) {
-			__hw_addr_del(to_list, ha->addr, addr_len, ha->type);
-			__hw_addr_del(from_list, ha->addr, addr_len, ha->type);
-		}
-	}
-	return err;
-}
-
-static void __hw_addr_unsync(struct netdev_hw_addr_list *to_list,
-			     struct netdev_hw_addr_list *from_list,
-			     int addr_len)
-{
-	struct netdev_hw_addr *ha, *tmp;
-
-	list_for_each_entry_safe(ha, tmp, &from_list->list, list) {
-		if (ha->synced) {
-			__hw_addr_del(to_list, ha->addr,
-				      addr_len, ha->type);
-			ha->synced = false;
-			__hw_addr_del(from_list, ha->addr,
-				      addr_len, ha->type);
-		}
-	}
-}
-
-static void __hw_addr_flush(struct netdev_hw_addr_list *list)
-{
-	struct netdev_hw_addr *ha, *tmp;
-
-	list_for_each_entry_safe(ha, tmp, &list->list, list) {
-		list_del_rcu(&ha->list);
-		call_rcu(&ha->rcu_head, ha_rcu_free);
-	}
-	list->count = 0;
-}
-
-static void __hw_addr_init(struct netdev_hw_addr_list *list)
-{
-	INIT_LIST_HEAD(&list->list);
-	list->count = 0;
-}
-
-/* Device addresses handling functions */
-
-static void dev_addr_flush(struct net_device *dev)
-{
-	/* rtnl_mutex must be held here */
-
-	__hw_addr_flush(&dev->dev_addrs);
-	dev->dev_addr = NULL;
-}
-
-static int dev_addr_init(struct net_device *dev)
-{
-	unsigned char addr[MAX_ADDR_LEN];
-	struct netdev_hw_addr *ha;
-	int err;
-
-	/* rtnl_mutex must be held here */
-
-	__hw_addr_init(&dev->dev_addrs);
-	memset(addr, 0, sizeof(addr));
-	err = __hw_addr_add(&dev->dev_addrs, addr, sizeof(addr),
-			    NETDEV_HW_ADDR_T_LAN);
-	if (!err) {
-		/*
-		 * Get the first (previously created) address from the list
-		 * and set dev_addr pointer to this location.
-		 */
-		ha = list_first_entry(&dev->dev_addrs.list,
-				      struct netdev_hw_addr, list);
-		dev->dev_addr = ha->addr;
-	}
-	return err;
-}
-
-/**
- *	dev_addr_add	- Add a device address
- *	@dev: device
- *	@addr: address to add
- *	@addr_type: address type
- *
- *	Add a device address to the device or increase the reference count if
- *	it already exists.
- *
- *	The caller must hold the rtnl_mutex.
- */
-int dev_addr_add(struct net_device *dev, unsigned char *addr,
-		 unsigned char addr_type)
-{
-	int err;
-
-	ASSERT_RTNL();
-
-	err = __hw_addr_add(&dev->dev_addrs, addr, dev->addr_len, addr_type);
-	if (!err)
-		call_netdevice_notifiers(NETDEV_CHANGEADDR, dev);
-	return err;
-}
-EXPORT_SYMBOL(dev_addr_add);
-
-/**
- *	dev_addr_del	- Release a device address.
- *	@dev: device
- *	@addr: address to delete
- *	@addr_type: address type
- *
- *	Release reference to a device address and remove it from the device
- *	if the reference count drops to zero.
- *
- *	The caller must hold the rtnl_mutex.
- */
-int dev_addr_del(struct net_device *dev, unsigned char *addr,
-		 unsigned char addr_type)
-{
-	int err;
-	struct netdev_hw_addr *ha;
-
-	ASSERT_RTNL();
-
-	/*
-	 * We can not remove the first address from the list because
-	 * dev->dev_addr points to that.
-	 */
-	ha = list_first_entry(&dev->dev_addrs.list,
-			      struct netdev_hw_addr, list);
-	if (ha->addr == dev->dev_addr && ha->refcount == 1)
-		return -ENOENT;
-
-	err = __hw_addr_del(&dev->dev_addrs, addr, dev->addr_len,
-			    addr_type);
-	if (!err)
-		call_netdevice_notifiers(NETDEV_CHANGEADDR, dev);
-	return err;
-}
-EXPORT_SYMBOL(dev_addr_del);
-
-/**
- *	dev_addr_add_multiple	- Add device addresses from another device
- *	@to_dev: device to which addresses will be added
- *	@from_dev: device from which addresses will be added
- *	@addr_type: address type - 0 means type will be used from from_dev
- *
- *	Add device addresses of the one device to another.
- **
- *	The caller must hold the rtnl_mutex.
- */
-int dev_addr_add_multiple(struct net_device *to_dev,
-			  struct net_device *from_dev,
-			  unsigned char addr_type)
-{
-	int err;
-
-	ASSERT_RTNL();
-
-	if (from_dev->addr_len != to_dev->addr_len)
-		return -EINVAL;
-	err = __hw_addr_add_multiple(&to_dev->dev_addrs, &from_dev->dev_addrs,
-				     to_dev->addr_len, addr_type);
-	if (!err)
-		call_netdevice_notifiers(NETDEV_CHANGEADDR, to_dev);
-	return err;
-}
-EXPORT_SYMBOL(dev_addr_add_multiple);
-
-/**
- *	dev_addr_del_multiple	- Delete device addresses by another device
- *	@to_dev: device where the addresses will be deleted
- *	@from_dev: device by which addresses the addresses will be deleted
- *	@addr_type: address type - 0 means type will used from from_dev
- *
- *	Deletes addresses in to device by the list of addresses in from device.
- *
- *	The caller must hold the rtnl_mutex.
- */
-int dev_addr_del_multiple(struct net_device *to_dev,
-			  struct net_device *from_dev,
-			  unsigned char addr_type)
-{
-	ASSERT_RTNL();
-
-	if (from_dev->addr_len != to_dev->addr_len)
-		return -EINVAL;
-	__hw_addr_del_multiple(&to_dev->dev_addrs, &from_dev->dev_addrs,
-			       to_dev->addr_len, addr_type);
-	call_netdevice_notifiers(NETDEV_CHANGEADDR, to_dev);
-	return 0;
-}
-EXPORT_SYMBOL(dev_addr_del_multiple);
-
-/* multicast addresses handling functions */
 
 int __dev_addr_delete(struct dev_addr_list **list, int *count,
 		      void *addr, int alen, int glbl)
@@ -3777,22 +3459,24 @@ int __dev_addr_add(struct dev_addr_list **list, int *count,
  *	dev_unicast_delete	- Release secondary unicast address.
  *	@dev: device
  *	@addr: address to delete
+ *	@alen: length of @addr
  *
  *	Release reference to a secondary unicast address and remove it
  *	from the device if the reference count drops to zero.
  *
  * 	The caller must hold the rtnl_mutex.
  */
-int dev_unicast_delete(struct net_device *dev, void *addr)
+int dev_unicast_delete(struct net_device *dev, void *addr, int alen)
 {
 	int err;
 
 	ASSERT_RTNL();
 
-	err = __hw_addr_del(&dev->uc, addr, dev->addr_len,
-			    NETDEV_HW_ADDR_T_UNICAST);
+	netif_addr_lock_bh(dev);
+	err = __dev_addr_delete(&dev->uc_list, &dev->uc_count, addr, alen, 0);
 	if (!err)
 		__dev_set_rx_mode(dev);
+	netif_addr_unlock_bh(dev);
 	return err;
 }
 EXPORT_SYMBOL(dev_unicast_delete);
@@ -3801,22 +3485,24 @@ EXPORT_SYMBOL(dev_unicast_delete);
  *	dev_unicast_add		- add a secondary unicast address
  *	@dev: device
  *	@addr: address to add
+ *	@alen: length of @addr
  *
  *	Add a secondary unicast address to the device or increase
  *	the reference count if it already exists.
  *
  *	The caller must hold the rtnl_mutex.
  */
-int dev_unicast_add(struct net_device *dev, void *addr)
+int dev_unicast_add(struct net_device *dev, void *addr, int alen)
 {
 	int err;
 
 	ASSERT_RTNL();
 
-	err = __hw_addr_add(&dev->uc, addr, dev->addr_len,
-			    NETDEV_HW_ADDR_T_UNICAST);
+	netif_addr_lock_bh(dev);
+	err = __dev_addr_add(&dev->uc_list, &dev->uc_count, addr, alen, 0);
 	if (!err)
 		__dev_set_rx_mode(dev);
+	netif_addr_unlock_bh(dev);
 	return err;
 }
 EXPORT_SYMBOL(dev_unicast_add);
@@ -3873,7 +3559,8 @@ void __dev_addr_unsync(struct dev_addr_list **to, int *to_count,
  *	@from: source device
  *
  *	Add newly added addresses to the destination device and release
- *	addresses that have no users left.
+ *	addresses that have no users left. The source device must be
+ *	locked by netif_addr_lock_bh.
  *
  *	This function is intended to be called from the dev->set_rx_mode
  *	function of layered software devices.
@@ -3882,14 +3569,12 @@ int dev_unicast_sync(struct net_device *to, struct net_device *from)
 {
 	int err = 0;
 
-	ASSERT_RTNL();
-
-	if (to->addr_len != from->addr_len)
-		return -EINVAL;
-
-	err = __hw_addr_sync(&to->uc, &from->uc, to->addr_len);
+	netif_addr_lock_bh(to);
+	err = __dev_addr_sync(&to->uc_list, &to->uc_count,
+			      &from->uc_list, &from->uc_count);
 	if (!err)
 		__dev_set_rx_mode(to);
+	netif_addr_unlock_bh(to);
 	return err;
 }
 EXPORT_SYMBOL(dev_unicast_sync);
@@ -3905,30 +3590,17 @@ EXPORT_SYMBOL(dev_unicast_sync);
  */
 void dev_unicast_unsync(struct net_device *to, struct net_device *from)
 {
-	ASSERT_RTNL();
+	netif_addr_lock_bh(from);
+	netif_addr_lock(to);
 
-	if (to->addr_len != from->addr_len)
-		return;
-
-	__hw_addr_unsync(&to->uc, &from->uc, to->addr_len);
+	__dev_addr_unsync(&to->uc_list, &to->uc_count,
+			  &from->uc_list, &from->uc_count);
 	__dev_set_rx_mode(to);
+
+	netif_addr_unlock(to);
+	netif_addr_unlock_bh(from);
 }
 EXPORT_SYMBOL(dev_unicast_unsync);
-
-static void dev_unicast_flush(struct net_device *dev)
-{
-	/* rtnl_mutex must be held here */
-
-	__hw_addr_flush(&dev->uc);
-}
-
-static void dev_unicast_init(struct net_device *dev)
-{
-	/* rtnl_mutex must be held here */
-
-	__hw_addr_init(&dev->uc);
-}
-
 
 static void __dev_addr_discard(struct dev_addr_list **list)
 {
@@ -3947,6 +3619,9 @@ static void __dev_addr_discard(struct dev_addr_list **list)
 static void dev_addr_discard(struct net_device *dev)
 {
 	netif_addr_lock_bh(dev);
+
+	__dev_addr_discard(&dev->uc_list);
+	dev->uc_count = 0;
 
 	__dev_addr_discard(&dev->mc_list);
 	dev->mc_count = 0;
@@ -4538,7 +4213,6 @@ static void rollback_registered(struct net_device *dev)
 	/*
 	 *	Flush the unicast and multicast chains
 	 */
-	dev_unicast_flush(dev);
 	dev_addr_discard(dev);
 
 	if (dev->netdev_ops->ndo_uninit)
@@ -5055,8 +4729,6 @@ struct net_device *alloc_netdev_mq(int sizeof_priv, const char *name,
 	dev = (struct net_device *)
 		(((long)p + NETDEV_ALIGN_CONST) & ~NETDEV_ALIGN_CONST);
 	dev->padded = (char *)dev - (char *)p;
-	dev_unicast_init(dev);
-
 	dev_net_set(dev, &init_net);
 
 	dev->_tx = tx;
@@ -5065,7 +4737,6 @@ struct net_device *alloc_netdev_mq(int sizeof_priv, const char *name,
 
 	dev->gso_max_size = GSO_MAX_SIZE;
 
-	dev_addr_init(dev);
 	netdev_init_queues(dev);
 
 	INIT_LIST_HEAD(&dev->napi_list);
@@ -5090,9 +4761,6 @@ void free_netdev(struct net_device *dev)
 	release_net(dev_net(dev));
 
 	kfree(dev->_tx);
-
-	/* Flush device addresses */
-	dev_addr_flush(dev);
 
 	list_for_each_entry_safe(p, n, &dev->napi_list, dev_list)
 		netif_napi_del(p);
@@ -5255,7 +4923,6 @@ int dev_change_net_namespace(struct net_device *dev, struct net *net, const char
 	/*
 	 *	Flush the unicast and multicast chains
 	 */
-	dev_unicast_flush(dev);
 	dev_addr_discard(dev);
 
 	netdev_unregister_kobject(dev);

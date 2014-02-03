@@ -27,16 +27,13 @@ SRCS = ifsock.c symlink.c magic.c null.c fifo.c new-fifo.c fwd.c \
 	fakeroot.c proxy-defpager.c remap.c mtab.c
 OBJS = $(SRCS:.c=.o) fsysServer.o ifsockServer.o passwordServer.o \
 	crashServer.o crash_replyUser.o msgServer.o \
-	ourdefault_pagerServer.o ourdefault_pagerUser.o \
+	default_pagerServer.o default_pagerUser.o \
 	device_replyServer.o elfcore.o
 HURDLIBS = ports netfs trivfs iohelp fshelp pipe ihash shouldbeinlibc
 LDLIBS += -lpthread
 password-LDLIBS = $(LIBCRYPT)
 
 include ../Makeconf
-
-ourdefault_pager.defs: default_pager.defs
-	$(CPP) $(CPPFLAGS) -x c $< | sed -e '/MACH_MSG_TYPE_MAKE_SEND;/s/MAKE/COPY/' | sed -e '/subsystem/iserverprefix S_;' > $@
 
 vpath elfcore.c $(top_srcdir)/exec
 
@@ -45,7 +42,7 @@ ifsock: ifsockServer.o
 crash: crashServer.o crash_replyUser.o msgServer.o elfcore.o
 password: passwordServer.o
 streamio: device_replyServer.o
-proxy-defpager: ourdefault_pagerServer.o ourdefault_pagerUser.o
+proxy-defpager: default_pagerServer.o default_pagerUser.o
 
 proxy-defpager crash password streamio: ../libports/libports.a ../libtrivfs/libtrivfs.a ../libfshelp/libfshelp.a
 fifo new-fifo: ../libpipe/libpipe.a

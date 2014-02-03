@@ -11,7 +11,7 @@
 ### Where to find programs, etc.
 ###
 
-PATH=/bin:/sbin:/usr/bin:/usr/sbin
+PATH=/bin:/sbin
 export PATH
 
 umask 022
@@ -23,8 +23,8 @@ fallback_shells='/bin/sh /bin/bash /bin/csh /bin/ash /bin/shd'
 SHELL=/bin/sh
 
 # Programs that do multi-user startup.
-RUNCOM=/etc/hurd/rc
-RUNTTYS=/sbin/runttys
+RUNCOM=/libexec/rc
+RUNTTYS=/libexec/runttys
 # Signals that we should pass down to runttys.
 runttys_sigs='TERM INT HUP TSTP'
 

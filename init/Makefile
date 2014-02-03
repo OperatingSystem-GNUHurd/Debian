@@ -21,7 +21,7 @@ makemode := server
 SRCS = init.c stubs.c
 OBJS = $(SRCS:.c=.o) \
        startupServer.o notifyServer.o startup_replyUser.o msgServer.o \
-       startup_notifyUser.o processUser.o
+       startup_notifyUser.o
 target = init
 HURDLIBS = shouldbeinlibc
 

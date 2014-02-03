@@ -27,7 +27,6 @@ trivfs_demuxer (mach_msg_header_t *inp,
 {
   mig_routine_t trivfs_io_server_routine (mach_msg_header_t *);
   mig_routine_t trivfs_fs_server_routine (mach_msg_header_t *);
-  mig_routine_t trivfs_fs_experimental_server_routine (mach_msg_header_t *);
   mig_routine_t ports_notify_server_routine (mach_msg_header_t *);
   mig_routine_t trivfs_fsys_server_routine (mach_msg_header_t *);
   mig_routine_t ports_interrupt_server_routine (mach_msg_header_t *);
@@ -36,7 +35,6 @@ trivfs_demuxer (mach_msg_header_t *inp,
   mig_routine_t routine;
   if ((routine = trivfs_io_server_routine (inp)) ||
       (routine = trivfs_fs_server_routine (inp)) ||
-      (routine = trivfs_fs_experimental_server_routine (inp)) ||
       (routine = ports_notify_server_routine (inp)) ||
       (routine = trivfs_fsys_server_routine (inp)) ||
       (routine = ports_interrupt_server_routine (inp)))

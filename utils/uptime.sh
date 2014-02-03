@@ -25,7 +25,7 @@
 USAGE="Usage: $0 [OPTION...]"
 DOC="Show system uptime, number of users, and load"
 
-W=${W-/usr/bin/w-hurd}
+W=${W-/bin/w}
 
 while :; do
   case "$1" in

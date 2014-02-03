@@ -77,7 +77,6 @@ blocking_message_send (void *arg)
 void
 send_signal (mach_port_t msgport,
 	     int signal,
-	     int sigcode,
 	     mach_port_t refport)
 {
   error_t err;
@@ -120,7 +119,7 @@ send_signal (mach_port_t msgport,
       0,			/* msgt_unused */
     },
     /* Sigcode */
-    sigcode,
+    0,
     {
       /* Type descriptor for refport */
       MACH_MSG_TYPE_COPY_SEND, /* msgt_name */

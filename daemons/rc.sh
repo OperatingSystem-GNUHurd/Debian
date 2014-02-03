@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PATH=/bin:/sbin:/usr/bin:/usr/sbin
+PATH=/bin:/sbin
 
 # Start the default pager.  It will bail if there is already one running.
 /hurd/mach-defpager
@@ -19,17 +19,14 @@ then
 	echo Automatic boot in progress...
 	date
 
-	fsysopts / --update --readonly
-	/sbin/fsck -p -A
+	/sbin/fsck --preen --writable
 
 	case $? in
 	# Successful completion
 	0)
-		fsysopts / --update --writable
 		;;
 	# Filesystem modified (but ok now)
 	1)
-		fsysopts / --update --writable
 		;;
 	# Filesystem modified, filesystem should be restarted
 	# Ideally we would only restart the filesystem
@@ -93,32 +90,12 @@ if test -d /tmp; then
 
 fi
 if test -d /var/run; then
-  (cd /var/run && {
-    find . ! -type d ! -name utmp ! -name innd.pid \
-      -exec rm -f -- {} \;
-    cp /dev/null utmp
-    if grep -q ^utmp: /etc/group
-    then
-	chmod 664 utmp
-	chgrp utmp utmp
-    fi; })
+  (cd /var/run && { rm -rf -- *; cp /dev/null utmp; chmod 644 utmp; })
 fi
-
-# until we properly start /etc/rcS.d
-rm -fr /run/*
-mkdir -p /run/lock /run/shm
-chmod 1777 /run/lock /run/shm
-: > /run/utmp
-
 echo done
 
-# See whether procfs is set up
-if ! test -e /proc/cmdline ; then
-  settrans -c /proc /hurd/procfs --compatible
-fi
-
-# This file must exist for e2fsck to work.
-ln -s /proc/mounts /var/run/mtab
+# This file must exist for e2fsck to work. XXX
+touch /var/run/mtab
 
 #echo -n restoring pty permissions...
 #chmod 666 /dev/tty[pqrs]*
@@ -132,25 +109,15 @@ ln -s /proc/mounts /var/run/mtab
 
 chmod 664 /etc/motd
 
-(
-	trap ":" INT QUIT TSTP
+echo -n starting daemons:
 
-	if [ -d /etc/rc.boot ]
-	then
-		for i in /etc/rc.boot/S*
-		do
-			[ ! -f $i ] && continue
-			$i start
-		done
-	fi
-	if [ -d /etc/rc2.d ]
-	then
-		for i in /etc/rc2.d/S*
-		do
-			[ ! -f $i ] && continue
-			$i start
-		done
-	fi
-)
+/sbin/syslogd	&& echo -n ' syslogd'
+/sbin/inetd	&& echo -n ' inetd'
+
+if test -x /sbin/sendmail -a -r /etc/sendmail.cf; then
+  /sbin/sendmail -bd -q30m	&& echo -n ' sendmail'
+fi
+
+echo .
 
 date

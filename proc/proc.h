@@ -1,6 +1,5 @@
 /* Process server definitions
-   Copyright (C) 1992,93,94,95,96,99,2000,01,13
-     Free Software Foundation, Inc.
+   Copyright (C) 1992,93,94,95,96,99,2000,01 Free Software Foundation, Inc.
 
 This file is part of the GNU Hurd.
 
@@ -135,8 +134,7 @@ struct exc
 
 mach_port_t authserver;
 struct proc *self_proc;		/* process HURD_PID_PROC (us) */
-struct proc *init_proc;		/* process 1 (sysvinit) */
-struct proc *startup_proc;	/* process 2 (hurd/init) */
+struct proc *startup_proc;	/* process 1 (init) */
 
 struct port_bucket *proc_bucket;
 struct port_class *proc_class;
@@ -192,7 +190,7 @@ void exc_clean (void *);
 struct proc *add_tasks (task_t);
 int pidfree (pid_t);
 
-struct proc *create_init_proc (void);
+struct proc *create_startup_proc (void);
 struct proc *allocate_proc (task_t);
 void proc_death_notify (struct proc *);
 void complete_proc (struct proc *, pid_t);
@@ -208,7 +206,7 @@ void complete_exit (struct proc *);
 
 void initialize_version_info (void);
 
-void send_signal (mach_port_t, int, int, mach_port_t);
+void send_signal (mach_port_t, int, mach_port_t);
 
 
 #endif

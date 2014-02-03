@@ -26,7 +26,6 @@ netfs_demuxer (mach_msg_header_t *inp,
 {
   mig_routine_t netfs_io_server_routine (mach_msg_header_t *);
   mig_routine_t netfs_fs_server_routine (mach_msg_header_t *);
-  mig_routine_t netfs_fs_experimental_server_routine (mach_msg_header_t *);
   mig_routine_t ports_notify_server_routine (mach_msg_header_t *);
   mig_routine_t netfs_fsys_server_routine (mach_msg_header_t *);
   mig_routine_t ports_interrupt_server_routine (mach_msg_header_t *);
@@ -35,7 +34,6 @@ netfs_demuxer (mach_msg_header_t *inp,
   mig_routine_t routine;
   if ((routine = netfs_io_server_routine (inp)) ||
       (routine = netfs_fs_server_routine (inp)) ||
-      (routine = netfs_fs_experimental_server_routine (inp)) ||
       (routine = ports_notify_server_routine (inp)) ||
       (routine = netfs_fsys_server_routine (inp)) ||
       (routine = ports_interrupt_server_routine (inp)) ||

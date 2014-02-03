@@ -22,7 +22,7 @@ makemode := server
 
 SRCS = exec.c main.c hashexec.c hostarch.c
 OBJS = main.o hostarch.o exec.o hashexec.o \
-       execServer.o exec_startupServer.o exec_experimentalServer.o
+       execServer.o exec_startupServer.o
 
 target = exec
 #targets = exec exec.static
@@ -30,7 +30,6 @@ HURDLIBS = trivfs fshelp iohelp ports ihash shouldbeinlibc
 OTHERLIBS = -lpthread
 
 exec-MIGSFLAGS = -imacros $(srcdir)/execmutations.h
-exec_experimental-MIGSFLAGS = -imacros $(srcdir)/execmutations.h
 
 include ../Makeconf
 

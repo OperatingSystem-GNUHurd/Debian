@@ -56,7 +56,7 @@ OTHERSRCS = conch-fetch.c conch-set.c dir-clear.c dir-init.c dir-renamed.c \
 SRCS = $(OTHERSRCS) $(FSSRCS) $(IOSRCS) $(FSYSSRCS) $(IFSOCKSRCS)
 installhdrs = diskfs.h diskfs-pager.h
 
-MIGSTUBS = fsServer.o fs_experimentalServer.o ioServer.o fsysServer.o exec_startupServer.o \
+MIGSTUBS = fsServer.o ioServer.o fsysServer.o exec_startupServer.o \
 	fsys_replyUser.o fs_notifyUser.o ifsockServer.o \
 	startup_notifyServer.o
 OBJS = $(sort $(SRCS:.c=.o) $(MIGSTUBS))
@@ -66,7 +66,6 @@ LDLIBS += -lpthread
 
 fsys-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h -DREPLY_PORTS
 fs-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h
-fs_experimental-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h
 io-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h
 ifsock-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h
 MIGCOMSFLAGS = -prefix diskfs_

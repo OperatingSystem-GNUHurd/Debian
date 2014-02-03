@@ -212,7 +212,7 @@ deliver_msg(struct net_rcv_msg *msg, if_filter_list_t *ifp)
 			  MACH_SEND_MSG|MACH_SEND_TIMEOUT,
 			  msg->msg_hdr.msgh_size, 0, MACH_PORT_NULL,
 			  0, MACH_PORT_NULL);
-	  if (0 && err != MACH_MSG_SUCCESS)
+	  if (err != MACH_MSG_SUCCESS)
 	    {
 	      /* TODO: remove from filter */
 	    }
@@ -375,7 +375,7 @@ device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
     }
 
   *devp = ports_get_right (nd);
-  *devicePoly = MACH_MSG_TYPE_MAKE_SEND;
+  *devicePoly = MACH_MSG_TYPE_COPY_SEND;
   return D_SUCCESS;
 }
 

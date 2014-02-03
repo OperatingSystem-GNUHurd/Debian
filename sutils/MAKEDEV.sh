@@ -100,7 +100,7 @@ mkdev() {
 	;;
 
       std)
-	mkdev console tty null zero full fd time mem klog
+	mkdev console tty null zero full fd time mem klog shm
 	;;
       console|com[0-9])
 	st $I root 600 /hurd/term ${DEVDIR}/$I device $I;;

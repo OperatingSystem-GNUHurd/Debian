@@ -57,9 +57,6 @@ diskfs_init_diskfs (void)
 {
   error_t err;
 
-  /* See `node-create.c'.  */
-  _diskfs_no_inherit_dir_group = 1;
-
   if (diskfs_boot_filesystem ())
     /* This is a boot filesystem, we have to do some things specially.  */
     {

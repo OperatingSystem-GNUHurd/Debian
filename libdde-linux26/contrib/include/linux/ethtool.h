@@ -25,14 +25,11 @@ struct ethtool_cmd {
 	__u8	phy_address;
 	__u8	transceiver;	/* Which transceiver to use */
 	__u8	autoneg;	/* Enable or disable autonegotiation */
-	__u8	mdio_support;
 	__u32	maxtxpkt;	/* Tx pkts before generating tx int */
 	__u32	maxrxpkt;	/* Rx pkts before generating rx int */
 	__u16	speed_hi;
-	__u8	eth_tp_mdix;
-	__u8	reserved2;
-	__u32	lp_advertising;	/* Features the link partner advertises */
-	__u32	reserved[2];
+	__u16	reserved2;
+	__u32	reserved[3];
 };
 
 static inline void ethtool_cmd_speed_set(struct ethtool_cmd *ep,
@@ -472,13 +469,6 @@ struct ethtool_ops {
 #define	ETHTOOL_SRXFH		0x0000002a /* Set RX flow hash configuration */
 #define ETHTOOL_GGRO		0x0000002b /* Get GRO enable (ethtool_value) */
 #define ETHTOOL_SGRO		0x0000002c /* Set GRO enable (ethtool_value) */
-#define	ETHTOOL_GRXRINGS	0x0000002d /* Get RX rings available for LB */
-#define	ETHTOOL_GRXCLSRLCNT	0x0000002e /* Get RX class rule count */
-#define	ETHTOOL_GRXCLSRULE	0x0000002f /* Get RX classification rule */
-#define	ETHTOOL_GRXCLSRLALL	0x00000030 /* Get all RX classification rule */
-#define	ETHTOOL_SRXCLSRLDEL	0x00000031 /* Delete RX classification rule */
-#define	ETHTOOL_SRXCLSRLINS	0x00000032 /* Insert RX classification rule */
-#define	ETHTOOL_FLASHDEV	0x00000033 /* Flash firmware to device */
 
 /* compatibility with older code */
 #define SPARC_ETH_GSET		ETHTOOL_GSET
@@ -501,11 +491,6 @@ struct ethtool_ops {
 #define SUPPORTED_Pause			(1 << 13)
 #define SUPPORTED_Asym_Pause		(1 << 14)
 #define SUPPORTED_2500baseX_Full	(1 << 15)
-#define SUPPORTED_Backplane		(1 << 16)
-#define SUPPORTED_1000baseKX_Full	(1 << 17)
-#define SUPPORTED_10000baseKX4_Full	(1 << 18)
-#define SUPPORTED_10000baseKR_Full	(1 << 19)
-#define SUPPORTED_10000baseR_FEC	(1 << 20)
 
 /* Indicates what features are advertised by the interface. */
 #define ADVERTISED_10baseT_Half		(1 << 0)
@@ -524,11 +509,6 @@ struct ethtool_ops {
 #define ADVERTISED_Pause		(1 << 13)
 #define ADVERTISED_Asym_Pause		(1 << 14)
 #define ADVERTISED_2500baseX_Full	(1 << 15)
-#define ADVERTISED_Backplane		(1 << 16)
-#define ADVERTISED_1000baseKX_Full	(1 << 17)
-#define ADVERTISED_10000baseKX4_Full	(1 << 18)
-#define ADVERTISED_10000baseKR_Full	(1 << 19)
-#define ADVERTISED_10000baseR_FEC	(1 << 20)
 
 /* The following are all involved in forcing a particular link
  * mode for the device for setting things.  When getting the
@@ -553,7 +533,6 @@ struct ethtool_ops {
 #define PORT_MII		0x02
 #define PORT_FIBRE		0x03
 #define PORT_BNC		0x04
-#define PORT_OTHER		0xff
 
 /* Which transceiver to use. */
 #define XCVR_INTERNAL		0x00
@@ -567,11 +546,6 @@ struct ethtool_ops {
  */
 #define AUTONEG_DISABLE		0x00
 #define AUTONEG_ENABLE		0x01
-
-/* Mode MDI or MDI-X */
-#define ETH_TP_MDI_INVALID	0x00
-#define ETH_TP_MDI		0x01
-#define ETH_TP_MDI_X		0x02
 
 /* Wake-On-Lan options. */
 #define WAKE_PHY		(1 << 0)
@@ -591,11 +565,6 @@ struct ethtool_ops {
 #define	UDP_V6_FLOW	0x06
 #define	SCTP_V6_FLOW	0x07
 #define	AH_ESP_V6_FLOW	0x08
-#define	AH_V4_FLOW	0x09
-#define	ESP_V4_FLOW	0x0a
-#define	AH_V6_FLOW	0x0b
-#define	ESP_V6_FLOW	0x0c
-#define	IP_USER_FLOW	0x0d
 
 /* L3-L4 network traffic flow hash options */
 #define	RXH_DEV_PORT	(1 << 0)
@@ -608,6 +577,5 @@ struct ethtool_ops {
 #define	RXH_L4_B_2_3	(1 << 7) /* dst port in case of TCP/UDP/SCTP */
 #define	RXH_DISCARD	(1 << 31)
 
-#define	RX_CLS_FLOW_DISC	0xffffffffffffffffULL
 
 #endif /* _LINUX_ETHTOOL_H */
