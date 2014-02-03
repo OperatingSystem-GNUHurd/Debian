@@ -25,8 +25,6 @@ Fix this by skipping the identity test if file_name_exec is provided.
  exec/hashexec.c |   91 ++++++++++++++++++++++++++++++-------------------------
  1 file changed, 50 insertions(+), 41 deletions(-)
 
-diff --git a/exec/hashexec.c b/exec/hashexec.c
-index 9f0b071..3f6f916 100644
 --- a/exec/hashexec.c
 +++ b/exec/hashexec.c
 @@ -231,11 +231,12 @@ check_hashbang (struct execdata *e,
@@ -47,7 +45,7 @@ index 9f0b071..3f6f916 100644
  
  	      error_t error;
  	      char *name;
-@@ -271,50 +272,58 @@ check_hashbang (struct execdata *e,
+@@ -271,51 +272,59 @@ check_hashbang (struct execdata *e,
  		  return err;
  		}
  
@@ -129,8 +127,11 @@ index 9f0b071..3f6f916 100644
  		    }
 -		  else if (free_name)
 -		    free (name);
++
++		  mach_port_deallocate (mach_task_self (), fileid);
  		}
  
+-	      mach_port_deallocate (mach_task_self (), fileid);
 +	      if (!error)
 +		{
 +		  file_name = name;
@@ -138,10 +139,6 @@ index 9f0b071..3f6f916 100644
 +		}
 +	      else if (free_name)
 +		free (name);
-+
- 	      mach_port_deallocate (mach_task_self (), fileid);
  	    }
  
--- 
-1.7.10.4
-
+ 	  if (file_name == NULL)
