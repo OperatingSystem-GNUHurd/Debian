@@ -1,6 +1,7 @@
-hurd (1:0.5.git20140113-2) UNRELEASED; urgency=low
+hurd (1:0.5.git20140203-1) UNRELEASED; urgency=low
 
   [ Samuel Thibault ]
+  * New upstream snapshot.
   * hurd.hurd-console.init: Actually make ENABLE=false in default work.
 
   [ Justus Winter ]

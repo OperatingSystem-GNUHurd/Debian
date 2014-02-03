@@ -22,8 +22,8 @@ Don't guess the file name if file_name_exec is set.
 
 Index: hurd-debian/doc/hurd.texi
 ===================================================================
---- hurd-debian.orig/doc/hurd.texi	2014-01-13 22:54:30.000000000 +0000
-+++ hurd-debian/doc/hurd.texi	2014-01-13 22:54:30.000000000 +0000
+--- hurd-debian.orig/doc/hurd.texi	2014-02-03 22:48:45.000000000 +0000
++++ hurd-debian/doc/hurd.texi	2014-02-03 23:45:08.000000000 +0000
 @@ -102,7 +102,7 @@
  documentation was last updated for version @value{VERSION} of the Hurd.
  
@@ -53,8 +53,8 @@ Index: hurd-debian/doc/hurd.texi
  @subsection File Locking
 Index: hurd-debian/exec/exec.c
 ===================================================================
---- hurd-debian.orig/exec/exec.c	2014-01-13 22:54:30.000000000 +0000
-+++ hurd-debian/exec/exec.c	2014-01-13 22:54:30.000000000 +0000
+--- hurd-debian.orig/exec/exec.c	2014-02-03 22:48:45.000000000 +0000
++++ hurd-debian/exec/exec.c	2014-02-03 22:48:44.000000000 +0000
 @@ -1,6 +1,6 @@
  /* GNU Hurd standard exec server.
 -   Copyright (C) 1992,93,94,95,96,98,99,2000,01,02,04
@@ -144,8 +144,8 @@ Index: hurd-debian/exec/exec.c
  		  dtable, dtablesize, dtable_copy,
 Index: hurd-debian/exec/hashexec.c
 ===================================================================
---- hurd-debian.orig/exec/hashexec.c	2014-01-13 22:54:30.000000000 +0000
-+++ hurd-debian/exec/hashexec.c	2014-01-13 22:54:30.000000000 +0000
+--- hurd-debian.orig/exec/hashexec.c	2014-02-03 22:48:45.000000000 +0000
++++ hurd-debian/exec/hashexec.c	2014-02-03 23:45:08.000000000 +0000
 @@ -1,5 +1,6 @@
  /* GNU Hurd standard exec server, #! script execution support.
 -   Copyright (C) 1995,96,97,98,99,2000,02 Free Software Foundation, Inc.
@@ -192,8 +192,8 @@ Index: hurd-debian/exec/hashexec.c
  			(sigmask (SIGBUS) | sigmask (SIGSEGV),
 Index: hurd-debian/exec/priv.h
 ===================================================================
---- hurd-debian.orig/exec/priv.h	2014-01-13 22:54:30.000000000 +0000
-+++ hurd-debian/exec/priv.h	2014-01-13 22:54:30.000000000 +0000
+--- hurd-debian.orig/exec/priv.h	2014-02-03 22:48:45.000000000 +0000
++++ hurd-debian/exec/priv.h	2014-02-03 22:48:44.000000000 +0000
 @@ -1,5 +1,6 @@
  /* GNU Hurd standard exec server, private declarations.
 -   Copyright (C) 1992,93,94,95,96,99,2000,02, 04 Free Software Foundation, Inc.
@@ -220,8 +220,8 @@ Index: hurd-debian/exec/priv.h
  		     mach_port_t *dtable, u_int dtablesize,
 Index: hurd-debian/hurd/exec.defs
 ===================================================================
---- hurd-debian.orig/hurd/exec.defs	2014-01-13 22:54:30.000000000 +0000
-+++ hurd-debian/hurd/exec.defs	2014-01-13 22:54:30.000000000 +0000
+--- hurd-debian.orig/hurd/exec.defs	2014-02-03 22:48:45.000000000 +0000
++++ hurd-debian/hurd/exec.defs	2014-02-03 22:48:44.000000000 +0000
 @@ -1,5 +1,6 @@
  /* Interface definitions for the exec servers.
 -   Copyright (C) 1991,92,93,94,95,2001 Free Software Foundation, Inc.
@@ -241,7 +241,7 @@ Index: hurd-debian/hurd/exec.defs
 Index: hurd-debian/hurd/exec_experimental.defs
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ hurd-debian/hurd/exec_experimental.defs	2014-01-13 22:54:30.000000000 +0000
++++ hurd-debian/hurd/exec_experimental.defs	2014-02-03 22:48:44.000000000 +0000
 @@ -0,0 +1,46 @@
 +/* Interface definitions for the exec servers.
 +   Copyright (C) 1991, 1992, 1993, 1994, 1995, 2001, 2010, 2012
@@ -291,8 +291,8 @@ Index: hurd-debian/hurd/exec_experimental.defs
 +
 Index: hurd-debian/exec/Makefile
 ===================================================================
---- hurd-debian.orig/exec/Makefile	2014-01-13 22:54:30.000000000 +0000
-+++ hurd-debian/exec/Makefile	2014-01-13 22:54:30.000000000 +0000
+--- hurd-debian.orig/exec/Makefile	2014-02-03 22:48:45.000000000 +0000
++++ hurd-debian/exec/Makefile	2014-02-03 22:48:44.000000000 +0000
 @@ -22,7 +22,7 @@
  
  SRCS = exec.c main.c hashexec.c hostarch.c
@@ -312,15 +312,18 @@ Index: hurd-debian/exec/Makefile
  
 Index: hurd-debian/exec/main.c
 ===================================================================
---- hurd-debian.orig/exec/main.c	2014-01-13 22:54:30.000000000 +0000
-+++ hurd-debian/exec/main.c	2014-01-13 22:55:45.000000000 +0000
-@@ -50,10 +50,12 @@
- exec_demuxer (mach_msg_header_t *inp, mach_msg_header_t *outp)
- {
-   mig_routine_t exec_server_routine (mach_msg_header_t *);
-+  mig_routine_t exec_experimental_server_routine (mach_msg_header_t *);
-   mig_routine_t exec_startup_server_routine (mach_msg_header_t *);
+--- hurd-debian.orig/exec/main.c	2014-02-03 22:48:45.000000000 +0000
++++ hurd-debian/exec/main.c	2014-02-03 23:45:19.000000000 +0000
+@@ -47,6 +47,7 @@
+ 
  
+ #include "exec_S.h"
++#include "exec_experimental_S.h"
+ #include "exec_startup_S.h"
+ 
+ static int
+@@ -54,6 +55,7 @@
+ {
    mig_routine_t routine;
    if ((routine = exec_server_routine (inp)) ||
 +      (routine = exec_experimental_server_routine (inp)) ||
