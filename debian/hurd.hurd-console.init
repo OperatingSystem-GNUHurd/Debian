@@ -25,6 +25,8 @@ SCRIPTNAME=/etc/init.d/hurd-$NAME
 # Read configuration variable file if it is present
 [ -r /etc/default/hurd-$NAME ] && . /etc/default/hurd-$NAME
 
+[ "$ENABLE" = true ] || exit 0
+
 # Augment the arguments.
 DAEMON_ARGS="${DAEMON_ARGS} ${DISPLAY} ${KBD} ${KBD_REPEAT} \
              ${SPEAKER} ${MOUSE} ${MOUSE_REPEAT}"
