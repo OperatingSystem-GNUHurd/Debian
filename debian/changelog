@@ -1,13 +1,14 @@
-hurd (1:0.5.git20140203-1) UNRELEASED; urgency=low
+hurd (1:0.5.git20140203-1) unstable; urgency=low
 
   [ Samuel Thibault ]
   * New upstream snapshot.
+    - Bump mig dependencies to get server RPC inlines.
   * hurd.hurd-console.init: Actually make ENABLE=false in default work.
 
   [ Justus Winter ]
   * patches/exec_filename_fix.patch: Fix spurious port deallocation.
 
- -- Samuel Thibault <sthibault@debian.org>  Tue, 19 Nov 2013 00:21:47 +0100
+ -- Samuel Thibault <sthibault@debian.org>  Mon, 03 Feb 2014 22:42:53 +0000
 
 hurd (1:0.5.git20140113-1) unstable; urgency=low
 
