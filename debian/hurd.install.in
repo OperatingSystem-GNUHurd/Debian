@@ -1,7 +1,6 @@
 ../../console/motd.UTF8 etc
 ../../release/servers.boot boot
 ../local/random-hurd.sh hurd
-../local/securetty etc
 ../local/setup-translators usr/lib/hurd
 ../local/urandom-hurd.sh hurd
 bin/addauth

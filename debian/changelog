@@ -2,6 +2,7 @@ hurd (1:0.5.git20140206-1) unstable; urgency=medium
 
   * control: Only Replace/Conflict old login package which was potentially
     shipping /bin/login.
+  * local/securetty: Remove file, let it be installed by the login package.
 
  -- Samuel Thibault <sthibault@debian.org>  Thu, 06 Feb 2014 00:22:53 +0000
 
