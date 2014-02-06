@@ -12,6 +12,7 @@ git pull incubator dde:dde-upstream
 
 git checkout dde
 git pull . dde-upstream
+
 # Remove files added outside DDE
 git push incubator dde:dde-debian
 git tag -m "New upstream snapshot" -a upstream/dde/$version.git$date
@@ -22,6 +23,7 @@ done
 
 git checkout eth
 git pull . dde-upstream
+
 # Remove files added outside eth-*
 git tag -m "New upstream snapshot" -a upstream/eth/$version.git$date
 for dir in eth-filter eth-multiplexer
@@ -31,16 +33,19 @@ done
 
 git checkout random
 git pull incubator random
+
 git tag -m "New upstream snapshot" -a upstream/random/$version.git$date
 git archive --prefix=random/ HEAD | bzip2 > ../hurd_$version.git$date.orig-random.tar.bz2
 
 git checkout procfs-jkoenig
 git pull procfs master:procfs-jkoenig
+
 git tag -m "New upstream snapshot" -a upstream/procfs/$version.git$date
 git archive --prefix=procfs/ HEAD | bzip2 > ../hurd_$version.git$date.orig-procfs.tar.bz2
 
 git checkout upstream
 git pull upstream master:upstream
+
 git tag -m "New upstream snapshot" -a upstream/hurd/$version.git$date
 git archive --prefix=hurd-$version.git$date/ HEAD | bzip2 > ../hurd_$version.git$date.orig.tar.bz2
 
