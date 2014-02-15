@@ -1,6 +1,7 @@
 hurd (1:0.5.git20140206-2) UNRELEASED; urgency=medium
 
   * debian/patches/rc.patch: Also make /etc/mtab point to /proc/mounts.
+  * patches/mount.patch: Also ignore exec option.
 
  -- Samuel Thibault <sthibault@debian.org>  Thu, 13 Feb 2014 23:04:13 +0000
 
