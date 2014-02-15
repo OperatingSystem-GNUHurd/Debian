@@ -50,7 +50,7 @@ More debianish rc scripts
 +
 +# This file must exist for e2fsck to work.
 +ln -s /proc/mounts /var/run/mtab
-+ln -s /proc/mounts /etc/mtab
++ln -sf /proc/mounts /etc/mtab
  
  #echo -n restoring pty permissions...
  #chmod 666 /dev/tty[pqrs]*
