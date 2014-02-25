@@ -1,16 +1,14 @@
-hurd (1:0.5.git20140206-2) UNRELEASED; urgency=medium
-
-  * debian/patches/rc.patch: Also make /etc/mtab point to /proc/mounts.
-  * patches/mount.patch: Also ignore exec option.
-
- -- Samuel Thibault <sthibault@debian.org>  Thu, 13 Feb 2014 23:04:13 +0000
-
-hurd (1:0.5.git20140206-1) unstable; urgency=medium
+hurd (1:0.5.git20140206-1) UNRELEASED; urgency=medium
 
   * New upstream snapshot.
   * control: Only Replace/Conflict old login package which was potentially
     shipping /bin/login.
   * local/securetty: Remove file, let it be installed by the login package.
+
+  * debian/patches/rc.patch: Also make /etc/mtab point to /proc/mounts.
+  * patches/mount.patch: Also ignore exec option.
+
+TODO: force 8/9 width in d-i, and copy to installed system
 
  -- Samuel Thibault <sthibault@debian.org>  Thu, 06 Feb 2014 10:35:15 +0000
 
