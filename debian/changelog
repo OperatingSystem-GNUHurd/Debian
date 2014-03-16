@@ -9,7 +9,7 @@ hurd (1:0.5.git20140206-1) UNRELEASED; urgency=medium
   * patches/mount.patch: Also ignore exec option.
 
   * debian/hurd.hurd-console.init: Do not make hurd-console depend on $all,
-    and make it provide console-screen for DMs to wait for it.
+    and make it start before DMs.
 
 TODO: force 8/9 width in d-i, and copy to installed system
 
