@@ -1,4 +1,4 @@
-/* bunzip2 decompression
+/* gzip decompression
 
    Copyright (C) 2014 Free Software Foundation, Inc.
    Written by Ignazio Sgalmuzzo <ignaker@gmail.com>
@@ -19,7 +19,7 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111, USA. */
 
-#include <bzlib.h>
+#include <zlib.h>
 
 /* I/O interface */
 extern int (*unzip_read) (char *buf, size_t maxread);
@@ -27,61 +27,54 @@ extern void (*unzip_write) (const char *buf, size_t nwrite);
 extern void (*unzip_read_error) (void);
 extern void (*unzip_error) (const char *msg);
 
-/* bzip2 doesn't require window sliding. Just for buffering. */
 #define INBUFSIZ	0x1000
 #define OUTBUFSIZ	0x1000
 
-static char inbuf[INBUFSIZ];
-static char outbuf[OUTBUFSIZ];
-
-#ifdef SMALL_BZIP2
-#define SMALL_MODE 1
-#else
-#define SMALL_MODE 0
-#endif
+static unsigned char inbuf[INBUFSIZ];
+static unsigned char outbuf[OUTBUFSIZ];
 
 void
-do_bunzip2 (void)
+do_gunzip (void)
 {
   int result;
-  bz_stream strm;
+  z_stream strm;
 
-  strm.bzalloc = NULL;
-  strm.bzfree = NULL;
+  strm.zalloc = NULL;
+  strm.zfree = NULL;
   strm.opaque = NULL;
 
   strm.avail_in  = 0;
   strm.next_out = outbuf;
   strm.avail_out = OUTBUFSIZ;
 
-  result = BZ2_bzDecompressInit (&strm, 0, SMALL_MODE);
+  result = inflateInit2 (&strm, 32 + MAX_WBITS);
 
-  while (result == BZ_OK)
+  while (result == Z_OK)
   {
     if (strm.avail_in == 0)
     {
       strm.next_in = inbuf;
-      strm.avail_in  = (*unzip_read)(strm.next_in, INBUFSIZ);
+      strm.avail_in  = (*unzip_read)((char*) strm.next_in, INBUFSIZ);
 
       if (strm.avail_in == 0)
         break;
     }
 
-    result = BZ2_bzDecompress (&strm);
+    result = inflate (&strm, Z_NO_FLUSH);
 
-    if ((result != BZ_OK) && (result != BZ_STREAM_END))
+    if ((result != Z_OK) && (result != Z_STREAM_END))
       break;
 
-    if ((strm.avail_out == 0) || (result == BZ_STREAM_END))
+    if ((strm.avail_out == 0) || (result == Z_STREAM_END))
     {
-      (*unzip_write) (outbuf, OUTBUFSIZ - strm.avail_out);
+      (*unzip_write) ((char*) outbuf, OUTBUFSIZ - strm.avail_out);
       strm.next_out = outbuf;
       strm.avail_out = OUTBUFSIZ;
     }
   }
 
-  BZ2_bzDecompressEnd (&strm);
+  inflateEnd (&strm);
 
-  if (result != BZ_STREAM_END)
+  if (result != Z_STREAM_END)
     (*unzip_error) (NULL);
 }
