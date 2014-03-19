@@ -1,8 +1,6 @@
-/* Default version of trivfs_get_source
-
-   Copyright (C) 2013 Free Software Foundation, Inc.
-
-   Written by Justus Winter <4winter@informatik.uni-hamburg.de>
+/*
+   Copyright (C) 1991,93,94,2014 Free Software Foundation, Inc.
+   Written by Michael I. Bushnell.
 
    This file is part of the GNU Hurd.
 
@@ -19,10 +17,8 @@
    You should have received a copy of the GNU General Public License
    along with the GNU Hurd.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "priv.h"
+/* CPP definitions for MiG processing of auth.defs for auth server.  */
 
-error_t
-trivfs_get_source (struct trivfs_protid *cred, char *source, size_t source_len)
-{
-  return EOPNOTSUPP;
-}
+#define AUTH_INTRAN authhandle_t auth_port_to_handle (auth_t)
+#define AUTH_DESTRUCTOR end_using_authhandle (authhandle_t)
+#define AUTH_IMPORTS import "mig-decls.h";

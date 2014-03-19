@@ -1,8 +1,6 @@
-/* Default version of trivfs_get_source
-
-   Copyright (C) 2013 Free Software Foundation, Inc.
-
-   Written by Justus Winter <4winter@informatik.uni-hamburg.de>
+/*
+   Copyright (C) 2014 Free Software Foundation, Inc.
+   Written by Justus Winter.
 
    This file is part of the GNU Hurd.
 
@@ -19,10 +17,9 @@
    You should have received a copy of the GNU General Public License
    along with the GNU Hurd.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "priv.h"
+/* Only CPP macro definitions should go in this file. */
 
-error_t
-trivfs_get_source (struct trivfs_protid *cred, char *source, size_t source_len)
-{
-  return EOPNOTSUPP;
-}
+#define IO_INTRAN trivfs_protid_t trivfs_begin_using_protid (io_t)
+#define IO_DESTRUCTOR trivfs_end_using_protid (trivfs_protid_t)
+#define TIOCTL_IMPORTS import "../libtrivfs/mig-decls.h";
+#define TERM_IMPORTS import "../libtrivfs/mig-decls.h";
