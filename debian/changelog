@@ -1,6 +1,8 @@
-hurd (1:0.5.git20140206-1) UNRELEASED; urgency=medium
+hurd (1:0.5.git20140319-1) UNRELEASED; urgency=medium
 
   * New upstream snapshot.
+    - patches/libports_stability.patch: Remove, merged upstream.
+    - patches/exec_filename_fs.patch: Refresh.
   * control: Only Replace/Conflict old login package which was potentially
     shipping /bin/login.
   * local/securetty: Remove file, let it be installed by the login package.

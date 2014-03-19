@@ -121,6 +121,11 @@ struct node
   int author_tracks_uid;
 };
 
+struct diskfs_control
+{
+  struct port_info pi;
+};
+
 /* Possibly lookup types for diskfs_lookup call */
 enum lookup_type
 {
@@ -569,10 +574,11 @@ error_t (*diskfs_create_symlink_hook)(struct node *np, const char *target);
 error_t (*diskfs_read_symlink_hook)(struct node *np, char *target);
 
 /* The user may define this function.  The function must set source to
-   the source device of the filesystem. The function may return an
-   EOPNOTSUPP to indicate that the concept of a source device is not
-   applicable. The default function always returns EOPNOTSUPP. */
-error_t diskfs_get_source (char *source);
+   the source of CRED. The function may return an EOPNOTSUPP to
+   indicate that the concept of a source device is not applicable. The
+   default function always returns EOPNOTSUPP. */
+error_t diskfs_get_source (struct protid *cred,
+                           char *source, size_t source_len);
 
 /* The library exports the following functions for general use */
 
@@ -794,8 +800,10 @@ error_t diskfs_start_protid (struct peropen *po, struct protid **cred);
 void diskfs_finish_protid (struct protid *cred, struct iouser *user);
 
 extern struct protid * diskfs_begin_using_protid_port (file_t port);
+extern struct diskfs_control * diskfs_begin_using_control_port (fsys_t port);
 
 extern void diskfs_end_using_protid_port (struct protid *cred);
+extern void diskfs_end_using_control_port (struct diskfs_control *cred);
 
 #if defined(__USE_EXTERN_INLINES) || defined(DISKFS_DEFINE_EXTERN_INLINE)
 
@@ -808,11 +816,26 @@ diskfs_begin_using_protid_port (file_t port)
   return ports_lookup_port (diskfs_port_bucket, port, diskfs_protid_class);
 }
 
+/* And for the fsys interface. */
+DISKFS_EXTERN_INLINE struct diskfs_control *
+diskfs_begin_using_control_port (fsys_t port)
+{
+  return ports_lookup_port (diskfs_port_bucket, port, NULL);
+}
+
 /* Called by MiG after server routines have been run; this
    balances begin_using_protid_port, and is arranged for the io
    and fs interfaces by fsmutations.h. */
 DISKFS_EXTERN_INLINE void
 diskfs_end_using_protid_port (struct protid *cred)
+{
+  if (cred)
+    ports_port_deref (cred);
+}
+
+/* And for the fsys interface. */
+DISKFS_EXTERN_INLINE void
+diskfs_end_using_control_port (struct diskfs_control *cred)
 {
   if (cred)
     ports_port_deref (cred);

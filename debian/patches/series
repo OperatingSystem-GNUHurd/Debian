@@ -7,7 +7,6 @@ startup-usr-support.patch
 tmp_exec_startup.patch
 uptime_w_path_fix.patch
 stat_round.patch
-libports_stability.patch
 proxy-defpager.diff
 external.patch
 console_ignore_bdf_err.patch

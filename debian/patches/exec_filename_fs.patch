@@ -1018,15 +1018,3 @@ Index: hurd-debian/configure.ac
  
  
  # From glibc HEAD, 2007-11-07.
-Index: hurd-debian/libtrivfs/trivfs.h
-===================================================================
---- hurd-debian.orig/libtrivfs/trivfs.h	2014-02-03 23:46:00.000000000 +0000
-+++ hurd-debian/libtrivfs/trivfs.h	2014-02-03 23:46:00.000000000 +0000
-@@ -299,6 +299,7 @@
- /* These are the MiG-generated headers that declare prototypes
-    for the server functions.  */
- #include <hurd/trivfs_fs_S.h>
-+#include <hurd/trivfs_fs_experimental_S.h>
- #include <hurd/trivfs_io_S.h>
- #include <hurd/trivfs_fsys_S.h>
- 

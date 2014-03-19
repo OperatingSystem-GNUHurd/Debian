@@ -1,8 +1,6 @@
-/* Default version of trivfs_get_source
-
-   Copyright (C) 2013 Free Software Foundation, Inc.
-
-   Written by Justus Winter <4winter@informatik.uni-hamburg.de>
+/*
+   Copyright (C) 2014 Free Software Foundation, Inc.
+   Written by Justus Winter.
 
    This file is part of the GNU Hurd.
 
@@ -19,10 +17,12 @@
    You should have received a copy of the GNU General Public License
    along with the GNU Hurd.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "priv.h"
+#ifndef __AUTH_H__
+#define __AUTH_H__
 
-error_t
-trivfs_get_source (struct trivfs_protid *cred, char *source, size_t source_len)
-{
-  return EOPNOTSUPP;
-}
+#include <hurd/ports.h>
+
+extern struct port_bucket *auth_bucket;
+extern struct port_class *authhandle_portclass;
+
+#endif /* __AUTH_H__ */

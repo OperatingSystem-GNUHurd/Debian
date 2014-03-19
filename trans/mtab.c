@@ -36,7 +36,7 @@
 #include <unistd.h>
 #include <version.h>
 
-#include "fsys_U.h"
+#include "fs_U.h"
 
 static char *target_path = NULL;
 static int insecure = 0;
@@ -421,21 +421,14 @@ mtab_populate (struct mtab *mtab, const char *path, int insecure)
   argz_stringify (options, options_len, ',');
 
   string_t source;
-  err = fsys_get_source (node, source);
+  err = file_get_source (node, source);
   if (err)
-    {
-      if (err == EOPNOTSUPP)
-	{
-	  /* Guess based on the last argument.	*/
-	  err = map_device_to_path (argv[count - 1], &src);
-	  if (err)
-	    goto errout;
-	}
-      else
-	goto errout;
-    }
-  else
-    src = source;
+    goto errout;
+
+  /* Guess based on the last argument.	*/
+  err = map_device_to_path (source, &src);
+  if (err)
+    goto errout;
 
   entry_len = asprintf (&entry, "%s %s %s %s 0 0\n", src, path, type,
 			options? options: MNTOPT_DEFAULTS);
@@ -450,7 +443,7 @@ mtab_populate (struct mtab *mtab, const char *path, int insecure)
     goto errout;
 
   /* path has an active translator, query its children.	 */
-  err = fsys_get_children (node, &children, &children_len);
+  err = file_get_children (node, &children, &children_len);
   if (err == EOPNOTSUPP)
     {
       err = 0;
@@ -571,7 +564,7 @@ map_device_to_path (const char *device, char **path)
   else if (looks_like_block_device (device))
     asprintf (path, "/dev/%s", device);
   else
-    *path = strdup ("none");
+    *path = strdup (device);
 
   if (! *path)
     return ENOMEM;

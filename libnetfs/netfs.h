@@ -100,6 +100,11 @@ struct node
   struct dirmod *dirmod_reqs;
 };
 
+struct netfs_control
+{
+  struct port_info pi;
+};
+
 /* The user must define this variable.  Set this to the name of the
    filesystem server. */
 extern char *netfs_server_name;
@@ -315,10 +320,11 @@ error_t netfs_file_get_storage_info (struct iouser *cred,
 				     mach_msg_type_number_t *data_len);
 
 /* The user may define this function.  The function must set source to
-   the source device of the filesystem. The function may return an
-   EOPNOTSUPP to indicate that the concept of a source device is not
-   applicable. The default function always returns EOPNOTSUPP. */
-error_t netfs_get_source (char *source);
+   the source of CRED. The function may return an EOPNOTSUPP to
+   indicate that the concept of a source device is not applicable. The
+   default function always returns EOPNOTSUPP. */
+error_t netfs_get_source (struct protid *cred,
+                          char *source, size_t source_len);
 
 /* Option parsing */
 
@@ -436,6 +442,7 @@ extern auth_t netfs_auth_server_port;
 
 /* Mig gook. */
 typedef struct protid *protid_t;
+typedef struct netfs_control *control_t;
 
 
 #endif /* _HURD_NETFS_H_ */
