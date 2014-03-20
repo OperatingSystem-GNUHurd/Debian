@@ -3,7 +3,7 @@ hurd (1:0.5.git20140320-1) unstable; urgency=medium
   * New upstream snapshot.
     - patches/libports_stability.patch: Remove, merged upstream.
     - patches/exec_filename_fs.patch: Refresh.
-    - rules: Disable bz2 support in udeb.
+    - rules: Disable bz2 support in udeb (Closes: #741420)
   * control: Only Replace/Conflict old login package which was potentially
     shipping /bin/login.
   * local/securetty: Remove file, let it be installed by the login package.
