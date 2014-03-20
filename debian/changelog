@@ -17,6 +17,8 @@ hurd (1:0.5.git20140320-1) unstable; urgency=medium
   * hurd.postinst: Decrease our runsystem priority to 5, thus switching to
     sysvinit boot up, and enabling the hard work of a lot of people, thanks a
     lot to everybody involved!
+  * hurd.lintian-overrides, hurd-udeb.lintian-overrides: Ignore lintian warning
+    about static translators embedding bzip2 and zlib.
 
  -- Samuel Thibault <sthibault@debian.org>  Thu, 20 Mar 2014 02:24:20 +0000
 

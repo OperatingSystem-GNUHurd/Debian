@@ -1,3 +1,4 @@
 non-standard-toplevel-dir hurd/
 non-standard-toplevel-dir servers/
 package-contains-empty-directory servers/
+embedded-library boot/ext2fs.static: zlib
