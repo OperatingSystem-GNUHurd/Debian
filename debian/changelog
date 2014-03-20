@@ -12,8 +12,11 @@ hurd (1:0.5.git20140320-1) unstable; urgency=medium
   * local/runsystem: Allow to pass VGA options from d-i boot menu.
   * local/finish-install.d/51hurd_config-console: Propagate VGA options to
     installed system.
-  * debian/hurd.hurd-console.init: Do not make hurd-console depend on $all,
+  * hurd.hurd-console.init: Do not make hurd-console depend on $all,
     and make it start before DMs.
+  * hurd.postinst: Decrease our runsystem priority to 5, thus switching to
+    sysvinit boot up, and enabling the hard work of a lot of people, thanks a
+    lot to everybody involved!
 
  -- Samuel Thibault <sthibault@debian.org>  Thu, 20 Mar 2014 02:24:20 +0000
 
