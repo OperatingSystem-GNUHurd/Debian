@@ -24,3 +24,29 @@ index 2eed13c..dc768d3 100644
  OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
  HURDLIBS = ihash ports shouldbeinlibc
  OTHERLIBS = -lpthread
+diff --git a/Makeconf b/Makeconf
+index 5cf995d..5dba70c 100644
+--- a/Makeconf
++++ b/Makeconf
+@@ -575,7 +575,7 @@ vpath %.defs $(top_srcdir)/hurd
+ # These we want to find in the libc include directory...
+ mach_defs_names = bootstrap exc mach mach4 \
+ 	mach_host mach_port mach_timer_reply memory_object \
+-	memory_object_default notify experimental
++	memory_object_default notify experimental gnumach
+ device_defs_names = dev_forward device device_reply device_request
+ 
+ mach_defs = $(addsuffix .defs,$(mach_defs_names))
+diff --git a/exec/Makefile b/exec/Makefile
+index 3ef742d..7507b0a 100644
+--- a/exec/Makefile
++++ b/exec/Makefile
+@@ -22,7 +22,7 @@ makemode := server
+ 
+ SRCS = exec.c main.c hashexec.c hostarch.c
+ OBJS = main.o hostarch.o exec.o hashexec.o \
+-       execServer.o exec_startupServer.o exec_experimentalServer.o
++       execServer.o exec_startupServer.o exec_experimentalServer.o gnumachUser.o
+ 
+ target = exec
+ #targets = exec exec.static

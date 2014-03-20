@@ -14,7 +14,7 @@ mem=`vmstat-hurd --size -k`
 if [ "$mem" -lt 240000 ]
 then
 	echo "You only have ${mem}KiB memory."
-	echo "Debian GNU/Hurd installation has not been optimized for memory usage yet, and thus currently needs at least 256MiB memory, sorry."
+	echo "Debian GNU/Hurd installation has not been optimized for memory usage yet, and thus currently needs at least 512MiB memory, sorry."
 	while true
 	do
 		sleep 60
@@ -42,6 +42,9 @@ for i in $envvars ; do
         TERM=*)
             term=yes
             ;;
+        VGA_OPTIONS=*)
+            VGA_OPTIONS=${i#VGA_OPTIONS=}
+            ;;
     esac
 done
 
@@ -63,7 +66,7 @@ then
 			. /etc/default/keyboard
 			[ -z "$XKBLAYOUT" ] || LAYOUT="--keymap $XKBLAYOUT"
 		fi
-        	console -d vga -g -d pc_kbd --repeat=kbd $LAYOUT -d pc_mouse --repeat=mouse -c /dev/vcs &
+		console -d vga -g $VGA_OPTIONS -d pc_kbd --repeat=kbd $LAYOUT -d pc_mouse --repeat=mouse -c /dev/vcs &
 		echo $! > /var/run/hurd-console.pid
 		wait
 		echo

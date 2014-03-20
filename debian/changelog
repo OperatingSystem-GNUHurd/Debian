@@ -1,4 +1,4 @@
-hurd (1:0.5.git20140319-1) UNRELEASED; urgency=medium
+hurd (1:0.5.git20140319-1) unstable; urgency=medium
 
   * New upstream snapshot.
     - patches/libports_stability.patch: Remove, merged upstream.
@@ -6,13 +6,13 @@ hurd (1:0.5.git20140319-1) UNRELEASED; urgency=medium
   * control: Only Replace/Conflict old login package which was potentially
     shipping /bin/login.
   * local/securetty: Remove file, let it be installed by the login package.
-
-  * debian/patches/rc.patch: Also make /etc/mtab point to /proc/mounts.
+  * patches/rc.patch: Also make /etc/mtab point to /proc/mounts.
   * patches/mount.patch: Also ignore exec option.
+  * local/runsystem: Allow to pass VGA options from d-i boot menu.
+  * local/finish-install.d/51hurd_config-console: Propagate VGA options to
+    installed system.
 
-TODO: force 8/9 width in d-i, and copy to installed system
-
- -- Samuel Thibault <sthibault@debian.org>  Thu, 06 Feb 2014 10:35:15 +0000
+ -- Samuel Thibault <sthibault@debian.org>  Thu, 20 Mar 2014 00:57:15 +0000
 
 hurd (1:0.5.git20140203-1) unstable; urgency=low
 

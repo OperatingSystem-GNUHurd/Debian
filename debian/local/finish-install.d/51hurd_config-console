@@ -1,3 +1,19 @@
 #!/bin/sh
 
-[ -f /var/run/hurd-console.pid ] || sed -i -e "s/ENABLE='true'/ENABLE='false'/" /target/etc/default/hurd-console
+if [ -f /var/run/hurd-console.pid ]
+then
+	VGA_OPTIONS=""
+	for i in $(cat /proc/cmdline) ; do
+		case "$i" in
+			VGA_OPTIONS=*)
+				VGA_OPTIONS=${i#VGA_OPTIONS=}
+				;;
+		esac
+	done
+	if [ -n "$VGA_OPTIONS" ]
+	then
+		sed -i -e "s/DISPLAY='-d vga'/DISPLAY='-d vga $VGA_OPTIONS'/" /target/etc/default/hurd-console
+	fi
+else
+	sed -i -e "s/ENABLE='true'/ENABLE='false'/" /target/etc/default/hurd-console
+fi
