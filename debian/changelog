@@ -1,4 +1,4 @@
-hurd (1:0.5.git20140319-1) unstable; urgency=medium
+hurd (1:0.5.git20140320-1) unstable; urgency=medium
 
   * New upstream snapshot.
     - patches/libports_stability.patch: Remove, merged upstream.
