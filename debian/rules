@@ -22,7 +22,7 @@ DEB_DESTDIR_UDEB = $(CURDIR)/debian/tmp-udeb
 
 CONFIGURE_ARGS = --disable-profile --enable-static-progs='ext2fs,iso9660fs'
 CONFIGURE_ARGS_deb =
-CONFIGURE_ARGS_udeb = --without-libdaemon
+CONFIGURE_ARGS_udeb = --without-libdaemon --without-libbz2
 SUID_PROGRAMS = /bin/ids /bin/login /bin/ps-hurd /usr/bin/w-hurd
 
 DEB_HOST_MULTIARCH := $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
