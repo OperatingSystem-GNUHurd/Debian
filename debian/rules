@@ -86,6 +86,8 @@ override_dh_auto_install:
 override_dh_install: $(INSTALL_generated)
 	dh_install $(addprefix -p,$(filter %-udeb,$(shell dh_listpackages))) --sourcedir=debian/tmp-udeb
 	dh_install --remaining-packages --list-missing --sourcedir=debian/tmp
+	mkdir -p debian/hurd-udeb/usr/share/lintian/overrides
+	install -p -m644 debian/hurd-udeb.lintian-overrides debian/hurd-udeb/usr/share/lintian/overrides/hurd-udeb
 
 override_dh_installinit:
 	dh_installinit -phurd --name=hurd-console

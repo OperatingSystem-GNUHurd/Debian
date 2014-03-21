@@ -19,6 +19,8 @@ hurd (1:0.5.git20140320-1) unstable; urgency=medium
     lot to everybody involved!
   * hurd.lintian-overrides, hurd-udeb.lintian-overrides: Ignore lintian warning
     about static translators embedding bzip2 and zlib.
+  * rules: force installing hurd-udeb lintian overrides to actually fix above
+    override.
 
  -- Samuel Thibault <sthibault@debian.org>  Thu, 20 Mar 2014 02:24:20 +0000
 
