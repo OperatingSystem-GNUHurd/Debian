@@ -55,8 +55,11 @@ struct vga_state
 
   unsigned char attr_mode;
 
-  char videomem[2 * 80 * 25];
-  unsigned char fontmem[2 * VGA_FONT_SIZE * VGA_FONT_HEIGHT];
+  /* Alignment is required by some "hardware", and optimizes transfers.  */
+  char videomem[2 * 80 * 25]
+    __attribute__ ((aligned (__BIGGEST_ALIGNMENT__)));
+  unsigned char fontmem[2 * VGA_FONT_SIZE * VGA_FONT_HEIGHT]
+    __attribute__ ((aligned (__BIGGEST_ALIGNMENT__)));
 };
 
 static struct vga_state *vga_state;
@@ -336,9 +339,9 @@ vga_set_font_width (int width)
   outb (VGA_ATTR_MODE_ADDR, VGA_ATTR_ADDR_DATA_REG);
   saved = inb (VGA_ATTR_DATA_READ_REG);
   if (width == 8)
-    saved |= ~VGA_ATTR_MODE_LGE;
+    saved &= ~VGA_ATTR_MODE_LGE;
   else
-    saved &= VGA_ATTR_MODE_LGE;
+    saved |= VGA_ATTR_MODE_LGE;
   outb (saved, VGA_ATTR_ADDR_DATA_REG);
 
   /* Re-enable the screen.  */
