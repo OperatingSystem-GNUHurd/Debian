@@ -1,3 +1,5 @@
+TODO: review & submit upstream
+
 2007-10-14  Christian Dietrich  <stettberger@dokucode.de>
 
 	* options.c (options): Marked -a, -g -m, -p, -A, -G

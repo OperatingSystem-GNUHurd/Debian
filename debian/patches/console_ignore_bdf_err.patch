@@ -1,4 +1,5 @@
-reduce-font overestimates the number of characters in the font.
+reduce-font overestimates the number of characters in the font. This should be
+fixed there, not here.
 
 diff --git a/console-client/bdf.c b/console-client/bdf.c
 index 30501f4..ee8aa30 100644

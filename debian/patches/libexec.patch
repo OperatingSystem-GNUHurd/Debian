@@ -1,3 +1,5 @@
+libexec is not FHS
+
 diff --git a/config/ttys b/config/ttys
 index 6a548d5..d10bfcc 100644
 --- a/config/ttys

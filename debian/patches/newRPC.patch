@@ -1,3 +1,5 @@
+Just a build fix.
+
 diff --git a/init/Makefile b/init/Makefile
 index ffb82ff..5ae3b50 100644
 --- a/init/Makefile

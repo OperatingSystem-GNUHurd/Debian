@@ -1,3 +1,5 @@
+FIXME: I'm not even sure how these are supposed to be.
+
 diff --git a/libmachdev/net.c b/libmachdev/net.c
 index 606765f..766d9b4 100644
 --- a/libmachdev/net.c
