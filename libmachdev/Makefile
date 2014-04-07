@@ -28,6 +28,7 @@ installhdrs = machdev.h
 HURDLIBS = ports trivfs ddekit bpf
 OTHERLIBS = -lpthread
 OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
+MIGSFLAGS = -imacros $(srcdir)/mig-mutate.h
 
 include ../Makeconf
 

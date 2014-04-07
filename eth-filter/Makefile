@@ -24,6 +24,7 @@ DIST_FILES = ourdevice.defs notify.defs
 HURDLIBS = ports trivfs fshelp ihash shouldbeinlibc
 target = eth-filter
 MIGSTUBS = ourdeviceServer.o notifyServer.o
+MIGSFLAGS = -imacros $(srcdir)/mig-mutate.h
 OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
 
 include ../Makeconf

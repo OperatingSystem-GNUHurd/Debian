@@ -22,6 +22,7 @@ target = eth-multiplexer
 #CFLAGS += -DDEBUG
 SRCS = ethernet.c vdev.c multiplexer.c dev_stat.c netfs_impl.c notify_impl.c device_impl.c demuxer.c
 MIGSTUBS = ourdeviceServer.o notifyServer.o
+MIGSFLAGS = -imacros $(srcdir)/mig-mutate.h
 OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
 LCLHDRS = ethernet.h util.h vdev.h netfs_impl.h
 DIST_FILES = ourdevice.defs notify.defs
