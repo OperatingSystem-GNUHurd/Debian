@@ -42,7 +42,7 @@
 
 #include "ethernet.h"
 #include "vdev.h"
-#include "ourdevice_S.h"
+#include "device_S.h"
 #include "notify_S.h"
 #include "bpf_impl.h"
 #include "netfs_impl.h"
