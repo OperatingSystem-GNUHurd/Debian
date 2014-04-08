@@ -17,16 +17,29 @@
    You should have received a copy of the GNU General Public License
    along with the GNU Hurd.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#define NOTIFY_INTRAN						\
-  port_info_t begin_using_port_info_port (mach_port_t)
-#define NOTIFY_DESTRUCTOR					\
-  end_using_port_info (port_info_t)
-#define NOTIFY_IMPORTS						\
-  import "libports/mig-decls.h";
+#ifndef __ETH_FILTER_MIG_DECLS_H__
+#define __ETH_FILTER_MIG_DECLS_H__
 
-#define DEVICE_INTRAN						\
-  proxy_user_t begin_using_device_port (mach_port_t)
-#define DEVICE_DESTRUCTOR					\
-  end_using_device (proxy_user_t)
-#define DEVICE_IMPORTS						\
-  import "eth-filter/mig-decls.h";
+#include <hurd/ports.h>
+
+typedef struct proxy_user *proxy_user_t;
+
+extern struct port_bucket *port_bucket;
+extern struct port_class *user_portclass;
+
+/* Called by server stub functions.  */
+
+static inline struct proxy_user * __attribute__ ((unused))
+begin_using_device_port (mach_port_t port)
+{
+  return ports_lookup_port (port_bucket, port, user_portclass);
+}
+
+static inline void __attribute__ ((unused))
+end_using_device (struct proxy_user *p)
+{
+  if (p)
+    ports_port_deref (p);
+}
+
+#endif /* __ETH_FILTER_MIG_DECLS_H__ */
