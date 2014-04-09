@@ -348,7 +348,6 @@ ds_device_open (mach_port_t master_port, mach_port_t reply_port,
   err = create_proxy_user (proxy, &user_port);
   if (err)
     {
-      mach_port_deallocate (mach_task_self (), master_device);
       free (proxy);
       return err;
     }
