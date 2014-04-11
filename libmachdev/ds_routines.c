@@ -88,12 +88,6 @@ mach_device_deallocate (void *device)
   ports_port_deref (device);
 }
 
-static inline void
-mach_device_reference (mach_device_t device)
-{
-  ports_port_ref (device);
-}
-
 static inline struct mach_device *
 mach_convert_port_to_device (device_t device)
 {
