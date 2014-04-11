@@ -194,17 +194,6 @@ clean_proxy_device (void *p)
     device->proxy->device = NULL;
 }
 
-static int
-filter_demuxer (mach_msg_header_t *inp,
-		mach_msg_header_t *outp)
-{
-  extern int device_server (mach_msg_header_t *, mach_msg_header_t *);
-  extern int notify_server (mach_msg_header_t *, mach_msg_header_t *);
-  extern int ethernet_demuxer (mach_msg_header_t *, mach_msg_header_t *);
-  return device_server (inp, outp) || notify_server (inp, outp)
-    || ethernet_demuxer (inp, outp) || trivfs_demuxer (inp, outp);
-}
-
 int
 ethernet_demuxer (mach_msg_header_t *inp,
 		  mach_msg_header_t *outp)
@@ -231,6 +220,24 @@ ethernet_demuxer (mach_msg_header_t *inp,
     }
 
   return 1;
+}
+
+static int
+filter_demuxer (mach_msg_header_t *inp,
+		mach_msg_header_t *outp)
+{
+  mig_routine_t routine;
+  if ((routine = NULL, ethernet_demuxer (inp, outp)) ||
+      (routine = device_server_routine (inp)) ||
+      (routine = notify_server_routine (inp)) ||
+      (routine = NULL, trivfs_demuxer (inp, outp)))
+    {
+      if (routine)
+        (*routine) (inp, outp);
+      return TRUE;
+    }
+  else
+    return FALSE;
 }
 
 /* Implementation of notify interface */
