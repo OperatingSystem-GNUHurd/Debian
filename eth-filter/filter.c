@@ -39,6 +39,7 @@
 #include <hurd/ports.h>
 #include <hurd/ihash.h>
 #include <hurd/fshelp.h>
+#include <version.h>
 
 #include "device_S.h"
 #include "notify_S.h"
@@ -73,8 +74,8 @@ static struct hurd_ihash proxy_deliverport_ht
 
 /* The name of the network interface that the filter translator sits on. */
 static char *device_file;
-const char *argp_program_version = "eth-filter 0.1";
-const char *argp_program_bug_address = "<bug-hurd@gnu.org>";
+const char *argp_program_version = STANDARD_HURD_VERSION (eth-filter);
+
 static const char doc[] = "Hurd filter translator.";
 static const struct argp_option options[] =
 {
