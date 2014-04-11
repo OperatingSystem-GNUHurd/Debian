@@ -94,20 +94,10 @@ mach_device_reference (mach_device_t device)
   ports_port_ref (device);
 }
 
-static inline emul_device_t
+static inline struct mach_device *
 mach_convert_port_to_device (device_t device)
 {
-  mach_device_t dev = ports_lookup_port (port_bucket, device, dev_class);
-  if (dev == NULL)
-    return NULL;
-
-  return &dev->dev;
-}
-
-static inline void *
-device_to_pi (emul_device_t device)
-{
-  return ((void *) device) - (int) &((mach_device_t) 0)->dev;
+  return ports_lookup_port (port_bucket, device, dev_class);
 }
 
 /*
@@ -194,7 +184,7 @@ ds_device_open (mach_port_t open_port, mach_port_t reply_port,
 io_return_t
 ds_device_close (device_t dev)
 {
-  emul_device_t device;
+  struct mach_device *device;
   io_return_t ret;
 
   /* Refuse if device is dead or not completely open.  */
@@ -202,12 +192,12 @@ ds_device_close (device_t dev)
     return D_NO_SUCH_DEVICE;
 
   device = mach_convert_port_to_device (dev);
-  ret = (device->emul_ops->close
-	 ? (*device->emul_ops->close) (device->emul_data)
+  ret = (device->dev.emul_ops->close
+	 ? (*device->dev.emul_ops->close) (device->dev.emul_data)
 	 : D_SUCCESS);
-  mach_device_deallocate (device_to_pi (device));
+  mach_device_deallocate (device);
 
-  ports_port_deref (device_to_pi (device));
+  ports_port_deref (device);
   return ret;
 }
 
@@ -217,7 +207,7 @@ ds_device_write (device_t dev, mach_port_t reply_port,
 		 recnum_t recnum, io_buf_ptr_t data, unsigned int count,
 		 int *bytes_written)
 {
-  emul_device_t device;
+  struct mach_device *device;
   io_return_t ret;
 
   /* Refuse if device is dead or not completely open.  */
@@ -231,16 +221,16 @@ ds_device_write (device_t dev, mach_port_t reply_port,
   if (device == NULL)
     return D_INVALID_OPERATION;
 
-  if (! device->emul_ops->write)
+  if (! device->dev.emul_ops->write)
     {
-      ports_port_deref (device_to_pi (device));
+      ports_port_deref (device);
       return D_INVALID_OPERATION;
     }
 
-  ret = (*device->emul_ops->write) (device->emul_data, reply_port,
-				    reply_port_type, mode, recnum,
-				    data, count, bytes_written);
-  ports_port_deref (device_to_pi (device));
+  ret = (*device->dev.emul_ops->write) (device->dev.emul_data, reply_port,
+					reply_port_type, mode, recnum,
+					data, count, bytes_written);
+  ports_port_deref (device);
 
   return ret;
 }
@@ -252,7 +242,7 @@ ds_device_write_inband (device_t dev, mach_port_t reply_port,
 			io_buf_ptr_inband_t data, unsigned count,
 			int *bytes_written)
 {
-  emul_device_t device;
+  struct mach_device *device;
   io_return_t ret;
 
   /* Refuse if device is dead or not completely open.  */
@@ -266,16 +256,17 @@ ds_device_write_inband (device_t dev, mach_port_t reply_port,
   if (device == NULL)
     return D_INVALID_OPERATION;
 
-  if (! device->emul_ops->write_inband)
+  if (! device->dev.emul_ops->write_inband)
     {
-      ports_port_deref (device_to_pi (device));
+      ports_port_deref (device);
       return D_INVALID_OPERATION;
     }
 
-  ret = (*device->emul_ops->write_inband) (device->emul_data, reply_port,
-					   reply_port_type, mode, recnum,
-					   data, count, bytes_written);
-  ports_port_deref (device_to_pi (device));
+  ret = (*device->dev.emul_ops->write_inband) (device->dev.emul_data,
+					       reply_port, reply_port_type,
+					       mode, recnum,
+					       data, count, bytes_written);
+  ports_port_deref (device);
 
   return ret;
 }
@@ -286,7 +277,7 @@ ds_device_read (device_t dev, mach_port_t reply_port,
 		recnum_t recnum, int count, io_buf_ptr_t *data,
 		unsigned *bytes_read)
 {
-  emul_device_t device;
+  struct mach_device *device;
   io_return_t ret;
 
   /* Refuse if device is dead or not completely open.  */
@@ -297,16 +288,16 @@ ds_device_read (device_t dev, mach_port_t reply_port,
   if (device == NULL)
     return D_INVALID_OPERATION;
 
-  if (! device->emul_ops->read)
+  if (! device->dev.emul_ops->read)
     {
-      ports_port_deref (device_to_pi (device));
+      ports_port_deref (device);
       return D_INVALID_OPERATION;
     }
 
-  ret = (*device->emul_ops->read) (device->emul_data, reply_port,
-				   reply_port_type, mode, recnum,
-				   count, data, bytes_read);
-  ports_port_deref (device_to_pi (device));
+  ret = (*device->dev.emul_ops->read) (device->dev.emul_data, reply_port,
+				       reply_port_type, mode, recnum,
+				       count, data, bytes_read);
+  ports_port_deref (device);
   return ret;
 }
 
@@ -316,7 +307,7 @@ ds_device_read_inband (device_t dev, mach_port_t reply_port,
 		       recnum_t recnum, int count, char *data,
 		       unsigned *bytes_read)
 {
-  emul_device_t device;
+  struct mach_device *device;
   io_return_t ret;
 
   /* Refuse if device is dead or not completely open.  */
@@ -327,16 +318,17 @@ ds_device_read_inband (device_t dev, mach_port_t reply_port,
   if (device == NULL)
     return D_INVALID_OPERATION;
 
-  if (! device->emul_ops->read_inband)
+  if (! device->dev.emul_ops->read_inband)
     {
-      ports_port_deref (device_to_pi (device));
+      ports_port_deref (device);
       return D_INVALID_OPERATION;
     }
 
-  ret = (*device->emul_ops->read_inband) (device->emul_data, reply_port,
-					  reply_port_type, mode, recnum,
-					  count, data, bytes_read);
-  ports_port_deref (device_to_pi (device));
+  ret = (*device->dev.emul_ops->read_inband) (device->dev.emul_data,
+					      reply_port,
+					      reply_port_type, mode, recnum,
+					      count, data, bytes_read);
+  ports_port_deref (device);
   return ret;
 }
 
@@ -344,7 +336,7 @@ io_return_t
 ds_device_set_status (device_t dev, dev_flavor_t flavor,
 		      dev_status_t status, mach_msg_type_number_t status_count)
 {
-  emul_device_t device;
+  struct mach_device *device;
   io_return_t ret;
 
   /* Refuse if device is dead or not completely open.  */
@@ -355,15 +347,15 @@ ds_device_set_status (device_t dev, dev_flavor_t flavor,
   if (device == NULL)
     return D_INVALID_OPERATION;
 
-  if (! device->emul_ops->set_status)
+  if (! device->dev.emul_ops->set_status)
     {
-      ports_port_deref (device_to_pi (device));
+      ports_port_deref (device);
       return D_INVALID_OPERATION;
     }
 
-  ret = (*device->emul_ops->set_status) (device->emul_data, flavor,
-					 status, status_count);
-  ports_port_deref (device_to_pi (device));
+  ret = (*device->dev.emul_ops->set_status) (device->dev.emul_data, flavor,
+					     status, status_count);
+  ports_port_deref (device);
   return ret;
 }
 
@@ -371,7 +363,7 @@ io_return_t
 ds_device_get_status (device_t dev, dev_flavor_t flavor, dev_status_t status,
 		      mach_msg_type_number_t *status_count)
 {
-  emul_device_t device;
+  struct mach_device *device;
   io_return_t ret;
 
   /* Refuse if device is dead or not completely open.  */
@@ -382,15 +374,15 @@ ds_device_get_status (device_t dev, dev_flavor_t flavor, dev_status_t status,
   if (device == NULL)
     return D_INVALID_OPERATION;
 
-  if (! device->emul_ops->get_status)
+  if (! device->dev.emul_ops->get_status)
     {
-      ports_port_deref (device_to_pi (device));
+      ports_port_deref (device);
       return D_INVALID_OPERATION;
     }
 
-  ret = (*device->emul_ops->get_status) (device->emul_data, flavor,
-					 status, status_count);
-  ports_port_deref (device_to_pi (device));
+  ret = (*device->dev.emul_ops->get_status) (device->dev.emul_data, flavor,
+					     status, status_count);
+  ports_port_deref (device);
   return ret;
 }
 
@@ -398,7 +390,7 @@ io_return_t
 ds_device_set_filter (device_t dev, mach_port_t receive_port, int priority,
 		      filter_t *filter, unsigned filter_count)
 {
-  emul_device_t device;
+  struct mach_device *device;
   io_return_t ret;
 
   /* Refuse if device is dead or not completely open.  */
@@ -409,15 +401,16 @@ ds_device_set_filter (device_t dev, mach_port_t receive_port, int priority,
   if (device == NULL)
     return D_INVALID_OPERATION;
 
-  if (! device->emul_ops->set_filter)
+  if (! device->dev.emul_ops->set_filter)
     {
-      ports_port_deref (device_to_pi (device));
+      ports_port_deref (device);
       return D_INVALID_OPERATION;
     }
 
-  ret = (*device->emul_ops->set_filter) (device->emul_data, receive_port,
-					 priority, filter, filter_count);
-  ports_port_deref (device_to_pi (device));
+  ret = (*device->dev.emul_ops->set_filter) (device->dev.emul_data,
+					     receive_port,
+					     priority, filter, filter_count);
+  ports_port_deref (device);
   return ret;
 }
 
