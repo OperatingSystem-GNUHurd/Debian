@@ -79,12 +79,17 @@ static int
 multiplexer_demuxer (mach_msg_header_t *inp,
 		  mach_msg_header_t *outp)
 {
-  int device_server (mach_msg_header_t *, mach_msg_header_t *);
-  int notify_server (mach_msg_header_t *, mach_msg_header_t *);
-
-  return (device_server (inp, outp)
-	   || notify_server (inp, outp)
-	   || ethernet_demuxer (inp, outp));
+  mig_routine_t routine;
+  if ((routine = NULL, ethernet_demuxer (inp, outp)) ||
+      (routine = device_server_routine (inp)) ||
+      (routine = notify_server_routine (inp)))
+    {
+      if (routine)
+        (*routine) (inp, outp);
+      return TRUE;
+    }
+  else
+    return FALSE;
 }
 
 static void *
