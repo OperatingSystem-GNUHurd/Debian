@@ -39,6 +39,7 @@
 #include <device/device.h>
 #include <hurd/ports.h>
 #include <hurd/netfs.h>
+#include <version.h>
 
 #include "ethernet.h"
 #include "vdev.h"
@@ -51,8 +52,8 @@
 /* The device which the multiplexer connects to */
 static char *device_file;
 
-const char *argp_program_version = "eth-multiplexer 0.1";
-const char *argp_program_bug_address = "<bug-hurd@gnu.org>";
+const char *argp_program_version = STANDARD_HURD_VERSION (eth-multiplexer);
+
 static const char doc[] = "Hurd multiplexer server.";
 static const struct argp_option options[] =
 {
