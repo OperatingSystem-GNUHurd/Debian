@@ -35,6 +35,7 @@
 #include <device/device.h>
 #include <hurd/trivfs.h>
 #include <hurd/ports.h>
+#include <version.h>
 
 #include "device_S.h"
 #include "notify_S.h"
@@ -48,8 +49,8 @@ static char *master_file;
 /* The master device port for opening the interface. */
 static mach_port_t master_device;
 
-const char *argp_program_version = "devnode 0.1";
-const char *argp_program_bug_address = "<bug-hurd@gnu.org>";
+const char *argp_program_version = STANDARD_HURD_VERSION (devnode);
+
 static const char args_doc[] = "device";
 static const char doc[] = "Hurd devnode translator.";
 static const struct argp_option options[] =
