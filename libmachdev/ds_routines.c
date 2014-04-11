@@ -63,6 +63,7 @@
 #include <ddekit/thread.h>
 
 #include "vm_param.h"
+#include "device_S.h"
 #include "device_reply_U.h"
 #include "io_req.h"
 #include "dev_hdr.h"
@@ -126,7 +127,7 @@ ds_xxx_device_set_filter (struct mach_device *device, mach_port_t rec,
 
 io_return_t
 ds_device_intr_register (mach_port_t master_port, int irq,
-		       int id, mach_port_t receive_port)
+			 int flags, int id, mach_port_t receive_port)
 {
   return D_INVALID_OPERATION;
 }
