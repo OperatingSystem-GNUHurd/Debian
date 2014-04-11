@@ -82,10 +82,17 @@ static int
 devnode_demuxer (mach_msg_header_t *inp,
 		    mach_msg_header_t *outp)
 {
-  extern int device_server (mach_msg_header_t *, mach_msg_header_t *);
-  extern int notify_server (mach_msg_header_t *, mach_msg_header_t *);
-  return device_server (inp, outp) || notify_server (inp, outp)
-    || trivfs_demuxer (inp, outp);
+  mig_routine_t routine;
+  if ((routine = device_server_routine (inp)) ||
+      (routine = notify_server_routine (inp)) ||
+      (routine = NULL, trivfs_demuxer (inp, outp)))
+    {
+      if (routine)
+        (*routine) (inp, outp);
+      return TRUE;
+    }
+  else
+    return FALSE;
 }
 
 /* Implementation of notify interface */
