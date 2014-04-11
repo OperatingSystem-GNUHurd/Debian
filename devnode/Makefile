@@ -22,11 +22,8 @@ SRCS = devnode.c
 LCLHDRS = util.h
 HURDLIBS = ports trivfs fshelp shouldbeinlibc
 target = devnode
-MIGSTUBS = ourdeviceServer.o notifyServer.o
+MIGSTUBS = deviceServer.o notifyServer.o
 MIGSFLAGS = -imacros $(srcdir)/mig-mutate.h
 OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
 
 include ../Makeconf
-
-ourdevice.defs: device.defs
-	$(CPP) $(CPPFLAGS) -x c $< | sed -e '/out[ 	]*device[ 	]*:[ 	]*device_t/s/device_t/mach_port_send_t/' > $@

@@ -36,7 +36,7 @@
 #include <hurd/trivfs.h>
 #include <hurd/ports.h>
 
-#include "ourdevice_S.h"
+#include "device_S.h"
 #include "notify_S.h"
 #include "util.h"
 
