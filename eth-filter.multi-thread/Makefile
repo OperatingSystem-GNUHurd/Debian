@@ -20,7 +20,6 @@ makemode := server
 
 SRCS = bpf_impl.c filter.c queue.c pcap_filter.c msg_queue.c
 LCLHDRS = bpf_impl.h queue.h util.h filter.h msg_queue.h
-DIST_FILES = ourdevice.defs notify.defs device_reply.defs
 HURDLIBS = ports trivfs fshelp ihash shouldbeinlibc
 OTHERLIBS = -lpthread
 target = eth-filter

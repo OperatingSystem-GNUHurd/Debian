@@ -25,7 +25,6 @@ MIGSTUBS = ourdeviceServer.o notifyServer.o
 MIGSFLAGS = -imacros $(srcdir)/mig-mutate.h
 OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
 LCLHDRS = ethernet.h util.h vdev.h netfs_impl.h
-DIST_FILES = ourdevice.defs notify.defs
 HURDLIBS=ports fshelp shouldbeinlibc netfs bpf
 OTHERLIBS = -lpthread
 

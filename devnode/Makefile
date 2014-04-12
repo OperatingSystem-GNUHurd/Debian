@@ -20,7 +20,6 @@ makemode := server
 
 SRCS = devnode.c
 LCLHDRS = util.h
-DIST_FILES = ourdevice.defs notify.defs
 HURDLIBS = ports trivfs fshelp shouldbeinlibc
 target = devnode
 MIGSTUBS = ourdeviceServer.o notifyServer.o
