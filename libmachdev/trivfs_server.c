@@ -6,6 +6,9 @@
 #include <hurd/trivfs.h>
 #include <hurd.h>
 
+#include "device_S.h"
+#include "notify_S.h"
+
 static struct port_bucket *port_bucket;
 
 /* Trivfs hooks.  */
