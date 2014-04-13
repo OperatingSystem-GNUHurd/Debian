@@ -64,7 +64,6 @@
 
 #include "vm_param.h"
 #include "device_S.h"
-#include "device_reply_U.h"
 #include "io_req.h"
 #include "dev_hdr.h"
 #include "util.h"
