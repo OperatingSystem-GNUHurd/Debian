@@ -331,7 +331,8 @@ ds_device_map (struct mach_device *device, vm_prot_t prot, vm_offset_t offset,
   return D_INVALID_OPERATION;
 }
 
-int create_device_port (int size, void *result)
+error_t
+create_device_port (size_t size, void *result)
 {
   return ports_create_port (dev_class, device_bucket,
 			    size, result);
