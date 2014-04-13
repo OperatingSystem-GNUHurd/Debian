@@ -82,12 +82,6 @@ static int num_emul;
 
 boolean_t is_master_device (mach_port_t port);
 
-static inline void
-mach_device_deallocate (void *device)
-{
-  ports_port_deref (device);
-}
-
 /*
  * What follows is the interface for the native Mach devices.
  */
@@ -180,7 +174,6 @@ ds_device_close (struct mach_device *device)
   ret = (device->dev.emul_ops->close
 	 ? (*device->dev.emul_ops->close) (device->dev.emul_data)
 	 : D_SUCCESS);
-  mach_device_deallocate (device);
   return ret;
 }
 
