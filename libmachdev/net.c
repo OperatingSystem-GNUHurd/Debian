@@ -80,10 +80,6 @@
 
 #define ether_header ethhdr
 
-extern int linux_intr_pri;
-extern struct port_bucket *port_bucket;
-extern struct port_class *dev_class;
-
 /* One of these is associated with each instance of a device.  */
 struct net_data
 {
