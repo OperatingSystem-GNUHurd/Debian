@@ -23,7 +23,7 @@
 #include <hurd/ports.h>
 #include "dev_hdr.h"
 
-extern struct port_bucket *port_bucket;
+extern struct port_bucket *device_bucket;
 extern struct port_class *dev_class;
 
 /* Called by server stub functions.  */
@@ -31,7 +31,7 @@ extern struct port_class *dev_class;
 static inline struct mach_device * __attribute__ ((unused))
 begin_using_device_port (mach_port_t port)
 {
-  return ports_lookup_port (port_bucket, port, dev_class);
+  return ports_lookup_port (device_bucket, port, dev_class);
 }
 
 static inline void __attribute__ ((unused))

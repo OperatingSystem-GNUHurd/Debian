@@ -70,7 +70,7 @@
 #include "queue.h"
 #include "mach_glue.h"
 
-struct port_bucket *port_bucket;
+struct port_bucket *device_bucket;
 struct port_class *dev_class;
 
 #define NUM_EMULATION num_emul
@@ -332,7 +332,7 @@ ds_device_map (struct mach_device *device, vm_prot_t prot, vm_offset_t offset,
 
 int create_device_port (int size, void *result)
 {
-  return ports_create_port (dev_class, port_bucket,
+  return ports_create_port (dev_class, device_bucket,
 			    size, result);
 }
 
@@ -340,7 +340,7 @@ void mach_device_init()
 {
 	int i;
 
-	port_bucket = ports_create_bucket ();
+	device_bucket = ports_create_bucket ();
 	dev_class = ports_create_class (0, 0);
 
 	for (i = 0; i < NUM_EMULATION; i++) {
@@ -377,7 +377,7 @@ void * ds_server(void *arg)
   /* Launch.  */
   do
     {
-      ports_manage_port_operations_one_thread (port_bucket, demuxer, 0);
+      ports_manage_port_operations_one_thread (device_bucket, demuxer, 0);
     } while (1);
 
   return NULL;
