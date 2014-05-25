@@ -11,6 +11,9 @@ hurd (1:0.5.git20140326-2) UNRELEASED; urgency=medium
   [ Pino Toscano ]
   * control: remove unused gcc-4.7 build dependency. (Closes: #748000)
 
+  [ Gabriele Giacone ]
+  * patches/mount-bind.patch: Add bind option to our mount tool.
+
  -- Samuel Thibault <sthibault@debian.org>  Wed, 26 Mar 2014 13:12:42 +0100
 
 hurd (1:0.5.git20140326-1) unstable; urgency=medium
