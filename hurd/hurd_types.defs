@@ -156,6 +156,30 @@ destructor: FS_NOTIFY_DESTRUCTOR
 #endif
 ;
 
+type exec_startup_t = mach_port_copy_send_t
+#ifdef EXEC_STARTUP_INTRAN
+intran: EXEC_STARTUP_INTRAN
+#endif
+#ifdef EXEC_STARTUP_OUTTRAN
+outtran: EXEC_STARTUP_OUTTRAN
+#endif
+#ifdef EXEC_STARTUP_DESTRUCTOR
+destructor: EXEC_STARTUP_DESTRUCTOR
+#endif
+;
+
+type interrupt_t = mach_port_copy_send_t
+#ifdef INTERRUPT_INTRAN
+intran: INTERRUPT_INTRAN
+#endif
+#ifdef INTERRUPT_OUTTRAN
+outtran: INTERRUPT_OUTTRAN
+#endif
+#ifdef INTERRUPT_DESTRUCTOR
+destructor: INTERRUPT_DESTRUCTOR
+#endif
+;
+
 
 type proccoll_t = mach_port_copy_send_t;
 

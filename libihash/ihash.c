@@ -31,55 +31,19 @@
 #include <assert.h>
 
 #include "ihash.h"
-
 
-/* The prime numbers of the form 4 * i + 3 for some i, all greater
-   than twice the previous one and smaller than 2^40 (for now).  */
-static const uint64_t ihash_sizes[] =
+/* This is the integer finalizer from MurmurHash3.  */
+static inline uint32_t
+murmur3_mix32 (uint32_t h, unsigned int bits)
 {
-  3,
-  7,
-  19,
-  43,
-  103,
-  211,
-  431,
-  863,
-  1747,
-  3499,
-  7019,
-  14051,
-  28111,
-  56239,
-  112507,
-  225023,
-  450067,
-  900139,
-  1800311,
-  3600659,
-  7201351,
-  14402743,
-  28805519,
-  57611039,
-  115222091,
-  230444239,
-  460888499,
-  921777067,
-  1843554151,
-  UINT64_C (3687108307),
-  UINT64_C (7374216631),
-  UINT64_C (14748433279),
-  UINT64_C (29496866579),
-  UINT64_C (58993733159),
-  UINT64_C (117987466379),
-  UINT64_C (235974932759),
-  UINT64_C (471949865531),
-  UINT64_C (943899731087)
-};
+  h ^= h >> 16;
+  h *= 0x85ebca6b;
+  h ^= h >> 13;
+  h *= 0xc2b2ae35;
+  h ^= h >> 16;
 
-static const unsigned int ihash_nsizes = (sizeof ihash_sizes
-					  / sizeof ihash_sizes[0]);
-
+  return h >> (32 - bits);
+}
 
 /* Return 1 if the slot with the index IDX in the hash table HT is
    empty, and 0 otherwise.  */
@@ -107,40 +71,24 @@ static inline int
 find_index (hurd_ihash_t ht, hurd_ihash_key_t key)
 {
   unsigned int idx;
-  unsigned int i;
   unsigned int up_idx;
-  unsigned int down_idx;
+  unsigned int mask = ht->size - 1;
 
-  idx = key % ht->size;
+  idx = murmur3_mix32 (key, __builtin_ctzl (ht->size));
 
   if (ht->items[idx].value == _HURD_IHASH_EMPTY || ht->items[idx].key == key)
     return idx;
 
-  /* Instead of calculating idx + 1, idx + 4, idx + 9, ..., idx + i^2,
-     we add 1, 3, 5, 7, etc to the previous index.  We do this in both
-     directions separately.  */
-  i = 1;
   up_idx = idx;
-  down_idx = idx;
 
   do
     {
-      up_idx = (up_idx + i) % ht->size;
+      up_idx = (up_idx + 1) & mask;
       if (ht->items[up_idx].value == _HURD_IHASH_EMPTY
 	  || ht->items[up_idx].key == key)
 	return up_idx;
-
-      if (down_idx < i)
-	down_idx += ht->size;
-      down_idx = (down_idx - i) % ht->size;
-      if (ht->items[down_idx].value == _HURD_IHASH_EMPTY
-	  || ht->items[down_idx].key == key)
-	return down_idx;
-
-      /* After (ht->size - 1) / 2 iterations, this will be 0.  */
-      i = (i + 2) % ht->size;
     }
-  while (i);
+  while (up_idx != idx);
 
   /* If we end up here, the item could not be found.  Return any
      invalid index.  */
@@ -232,14 +180,15 @@ hurd_ihash_set_cleanup (hurd_ihash_t ht, hurd_ihash_cleanup_t cleanup,
 }
 
 
-/* Set the maximum load factor in percent to MAX_LOAD, which should be
-   between 1 and 100.  The default is HURD_IHASH_MAX_LOAD_DEFAULT.
-   New elements are only added to the hash table while the number of
-   hashed elements is that much percent of the total size of the hash
-   table.  If more elements are added, the hash table is first
-   expanded and reorganized.  A MAX_LOAD of 100 will always fill the
-   whole table before enlarging it, but note that this will increase
-   the cost of operations significantly when the table is almost full.
+/* Set the maximum load factor in binary percent to MAX_LOAD, which
+   should be between 64 and 128.  The default is
+   HURD_IHASH_MAX_LOAD_DEFAULT.  New elements are only added to the
+   hash table while the number of hashed elements is that much binary
+   percent of the total size of the hash table.  If more elements are
+   added, the hash table is first expanded and reorganized.  A
+   MAX_LOAD of 128 will always fill the whole table before enlarging
+   it, but note that this will increase the cost of operations
+   significantly when the table is almost full.
 
    If the value is set to a smaller value than the current load
    factor, the next reorganization will happen when a new item is
@@ -264,52 +213,25 @@ add_one (hurd_ihash_t ht, hurd_ihash_key_t key, hurd_ihash_value_t value)
   unsigned int idx;
   unsigned int first_free;
 
-  idx = key % ht->size;
+  idx = murmur3_mix32 (key, __builtin_ctzl (ht->size));
   first_free = idx;
 
   if (ht->items[idx].value != _HURD_IHASH_EMPTY && ht->items[idx].key != key)
     {
-      /* Instead of calculating idx + 1, idx + 4, idx + 9, ..., idx +
-         i^2, we add 1, 3, 5, 7, ... 2 * i - 1 to the previous index.
-         We do this in both directions separately.  */
-      unsigned int i = 1;
+      unsigned int mask = ht->size - 1;
       unsigned int up_idx = idx;
-      unsigned int down_idx = idx;
- 
+
       do
 	{
-	  up_idx = (up_idx + i) % ht->size;
+        up_idx = (up_idx + 1) & mask;
 	  if (ht->items[up_idx].value == _HURD_IHASH_EMPTY
 	      || ht->items[up_idx].key == key)
 	    {
 	      idx = up_idx;
 	      break;
 	    }
-	  if (first_free == idx
-	      && ht->items[up_idx].value == _HURD_IHASH_DELETED)
-	    first_free = up_idx;
-
-	  if (down_idx < i)
-	    down_idx += ht->size;
-	  down_idx = (down_idx - i) % ht->size;
-	  if (down_idx < 0)
-	    down_idx += ht->size;
-	  else
-	    down_idx %= ht->size;
-	  if (ht->items[down_idx].value == _HURD_IHASH_EMPTY
-	      || ht->items[down_idx].key == key)
-	    {
-	      idx = down_idx;
-	      break;
-	    }
-	  if (first_free == idx
-	      && ht->items[down_idx].value == _HURD_IHASH_DELETED)
-	    first_free = down_idx;
-
-	  /* After (ht->size - 1) / 2 iterations, this will be 0.  */
-	  i = (i + 2) % ht->size;
 	}
-      while (i);
+      while (up_idx != idx);
     }
 
   /* Remove the old entry for this key if necessary.  */
@@ -352,22 +274,19 @@ hurd_ihash_add (hurd_ihash_t ht, hurd_ihash_key_t key, hurd_ihash_value_t item)
   if (ht->size)
     {
       /* Only fill the hash table up to its maximum load factor.  */
-      if (ht->nr_items * 100 / ht->size <= ht->max_load)
+      if (hurd_ihash_get_load (ht) <= ht->max_load)
 	if (add_one (ht, key, item))
 	  return 0;
     }
 
   /* The hash table is too small, and we have to increase it.  */
-  for (i = 0; i < ihash_nsizes; i++)
-    if (ihash_sizes[i] > old_ht.size)
-      break;
-  if (i == ihash_nsizes
-      || ihash_sizes[i] > SIZE_MAX / sizeof (struct _hurd_ihash_item))
-    return ENOMEM;		/* Surely will be true momentarily.  */
-
   ht->nr_items = 0;
-  ht->size = ihash_sizes[i];
-  /* calloc() will initialize all values to _HURD_IHASH_EMPTY implicitely.  */
+  if (ht->size == 0)
+      ht->size = HURD_IHASH_MIN_SIZE;
+  else
+      ht->size <<= 1;
+
+  /* calloc() will initialize all values to _HURD_IHASH_EMPTY implicitly.  */
   ht->items = calloc (ht->size, sizeof (struct _hurd_ihash_item));
 
   if (ht->items == NULL)

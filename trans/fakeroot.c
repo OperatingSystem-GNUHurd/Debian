@@ -31,6 +31,12 @@
 
 #include <version.h>
 
+#include "libnetfs/fs_S.h"
+#include "libnetfs/io_S.h"
+#include "libnetfs/fsys_S.h"
+#include "libports/notify_S.h"
+#include "libports/interrupt_S.h"
+
 const char *argp_program_version = STANDARD_HURD_VERSION (fakeroot);
 
 char *netfs_server_name = "fakeroot";
@@ -216,7 +222,7 @@ check_openmodes (struct netnode *nn, int newmodes, file_t file)
 	  mach_port_deallocate (mach_task_self (), file);
 	  file = MACH_PORT_NULL;
 	}
-      if (file == MACH_PORT_NULL);
+      if (file == MACH_PORT_NULL)
 	{
 	  enum retry_type bad_retry;
 	  char bad_retryname[1024];	/* XXX */
@@ -473,16 +479,26 @@ netfs_validate_stat (struct node *np, struct iouser *cred)
   return 0;
 }
 
+/* Various netfs functions will call fshelp_isowner to check whether
+   USER is allowed to do some operation.  As fakeroot is not running
+   within the fakeauth'ed environment, USER contains the real
+   user.  Hence, we override this check.  */
+error_t
+fshelp_isowner (struct stat *st, struct iouser *user)
+{
+  return 0;
+}
+
 error_t
 netfs_attempt_chown (struct iouser *cred, struct node *np,
 		     uid_t uid, uid_t gid)
 {
-  if (uid != -1)
+  if (uid != ~0U)
     {
       set_faked_attribute (np, FAKE_UID);
       np->nn_stat.st_uid = uid;
     }
-  if (gid != -1)
+  if (gid != ~0U)
     {
       set_faked_attribute (np, FAKE_GID);
       np->nn_stat.st_gid = gid;
@@ -934,12 +950,6 @@ int
 netfs_demuxer (mach_msg_header_t *inp,
 	       mach_msg_header_t *outp)
 {
-  mig_routine_t netfs_io_server_routine (mach_msg_header_t *);
-  mig_routine_t netfs_fs_server_routine (mach_msg_header_t *);
-  mig_routine_t ports_notify_server_routine (mach_msg_header_t *);
-  mig_routine_t netfs_fsys_server_routine (mach_msg_header_t *);
-  mig_routine_t ports_interrupt_server_routine (mach_msg_header_t *);
-
   mig_routine_t routine;
   if ((routine = netfs_io_server_routine (inp)) ||
       (routine = netfs_fs_server_routine (inp)) ||
@@ -993,7 +1003,7 @@ main (int argc, char **argv)
   error_t err;
   mach_port_t bootstrap;
 
-  struct argp argp = { NULL, NULL, NULL, "\
+  struct argp argp = { .doc = "\
 A translator for faking privileged access to an underlying filesystem.\v\
 This translator appears to give transparent access to the underlying \
 directory node.  However, all accesses are made using the credentials \

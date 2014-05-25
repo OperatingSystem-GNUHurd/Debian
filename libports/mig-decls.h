@@ -1,6 +1,6 @@
 /*
-   Copyright (C) 1994,96,2002 Free Software Foundation, Inc.
-   Written by Michael I. Bushnell.
+   Copyright (C) 2014 Free Software Foundation, Inc.
+   Written by Justus Winter.
 
    This file is part of the GNU Hurd.
 
@@ -15,18 +15,26 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
+   along with the GNU Hurd.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "priv.h"
-#include "trivfs_fsys_S.h"
+#ifndef __LIBPORTS_MIG_DECLS_H__
+#define __LIBPORTS_MIG_DECLS_H__
 
-kern_return_t
-trivfs_S_fsys_syncfs (struct trivfs_control *cntl,
-		      mach_port_t reply,
-		      mach_msg_type_name_t replytype,
-		      int wait,
-		      int dochildren)
+#include "ports.h"
+
+/* Called by server stub functions.  */
+
+static inline struct port_info * __attribute__ ((unused))
+begin_using_port_info_port (mach_port_t port)
 {
-  return cntl ? file_sync (cntl->underlying, wait, 0) : EOPNOTSUPP;
+  return ports_lookup_port (0, port, 0);
 }
+
+static inline void __attribute__ ((unused))
+end_using_port_info (struct port_info *p)
+{
+  if (p)
+    ports_port_deref (p);
+}
+
+#endif /* __LIBPORTS_MIG_DECLS_H__ */

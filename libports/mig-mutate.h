@@ -1,6 +1,6 @@
-/* mutations.h - Automagic type transformation for MiG interfaces.
-   Copyright (C) 2002 Free Software Foundation, Inc.
-   Written by Marcus Brinkmann.
+/*
+   Copyright (C) 2014 Free Software Foundation, Inc.
+   Written by Justus Winter.
 
    This file is part of the GNU Hurd.
 
@@ -15,19 +15,18 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA. */
-
-/* Only CPP macro definitions should go in this file. */
-
-#define IO_INTRAN protid_t begin_using_protid_port (io_t)
-#define IO_DESTRUCTOR end_using_protid_port (protid_t)
-
-#define TIOCTL_IMPORTS import "libnetfs/priv.h";
+   along with the GNU Hurd.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #define NOTIFY_INTRAN						\
   port_info_t begin_using_port_info_port (mach_port_t)
 #define NOTIFY_DESTRUCTOR					\
   end_using_port_info (port_info_t)
 #define NOTIFY_IMPORTS						\
+  import "libports/mig-decls.h";
+
+#define INTERRUPT_INTRAN					\
+  port_info_t begin_using_port_info_port (mach_port_t)
+#define INTERRUPT_DESTRUCTOR					\
+  end_using_port_info (port_info_t)
+#define INTERRUPT_IMPORTS					\
   import "libports/mig-decls.h";

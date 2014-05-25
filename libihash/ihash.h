@@ -79,8 +79,8 @@ struct hurd_ihash
   /* The offset of the location pointer from the hash value.  */
   intptr_t locp_offset;
 
-  /* The maximum load factor in percent.  */
-  int max_load;
+  /* The maximum load factor in binary percent.  */
+  unsigned int max_load;
 
   /* When freeing or overwriting an element, this function is called
      with the value as the first argument, and CLEANUP_DATA as the
@@ -93,8 +93,13 @@ typedef struct hurd_ihash *hurd_ihash_t;
 
 /* Construction and destruction of hash tables.  */
 
-/* The default value for the maximum load factor in percent.  */
-#define HURD_IHASH_MAX_LOAD_DEFAULT 80
+/* The size of the initial allocation in number of items.  This must
+   be a power of two.  */
+#define HURD_IHASH_MIN_SIZE	32
+
+/* The default value for the maximum load factor in binary percent.
+   96b% is equivalent to 75%, 128b% to 100%.  */
+#define HURD_IHASH_MAX_LOAD_DEFAULT 96
 
 /* The LOCP_OFFS to use if no location pointer is available.  */
 #define HURD_IHASH_NO_LOCP	INTPTR_MIN
@@ -139,14 +144,15 @@ void hurd_ihash_free (hurd_ihash_t ht);
 void hurd_ihash_set_cleanup (hurd_ihash_t ht, hurd_ihash_cleanup_t cleanup,
 			     void *cleanup_data);
 
-/* Set the maximum load factor in percent to MAX_LOAD, which should be
-   between 50 and 100.  The default is HURD_IHASH_MAX_LOAD_DEFAULT.
-   New elements are only added to the hash table while the number of
-   hashed elements is that much percent of the total size of the hash
-   table.  If more elements are added, the hash table is first
-   expanded and reorganized.  A MAX_LOAD of 100 will always fill the
-   whole table before enlarging it, but note that this will increase
-   the cost of operations significantly when the table is almost full.
+/* Set the maximum load factor in binary percent to MAX_LOAD, which
+   should be between 64 and 128.  The default is
+   HURD_IHASH_MAX_LOAD_DEFAULT.  New elements are only added to the
+   hash table while the number of hashed elements is that much binary
+   percent of the total size of the hash table.  If more elements are
+   added, the hash table is first expanded and reorganized.  A
+   MAX_LOAD of 128 will always fill the whole table before enlarging
+   it, but note that this will increase the cost of operations
+   significantly when the table is almost full.
 
    If the value is set to a smaller value than the current load
    factor, the next reorganization will happen when a new item is
@@ -154,6 +160,30 @@ void hurd_ihash_set_cleanup (hurd_ihash_t ht, hurd_ihash_cleanup_t cleanup,
 void hurd_ihash_set_max_load (hurd_ihash_t ht, unsigned int max_load);
 
 
+/* Get the current load factor of HT in binary percent, where 128b%
+   corresponds to 100%.  The reason we do this is that it is so
+   efficient to compute:
+
+   As the size is always a power of two, and 128 is also, the quotient
+   of both is also a power of two.  Therefore, we can use bit shifts
+   to scale the number of items.
+
+   load = nr_items * 128 / size
+        = nr_items * 2^{log2 (128) - log2 (size)}
+        = nr_items >> (log2 (size) - log2 (128))
+                                -- if size >= 128
+        = nr_items << (log2 (128) - log2 (size))
+                                -- otherwise
+
+   If you want to convert this to percent, just divide by 1.28.  */
+static inline unsigned int
+hurd_ihash_get_load (hurd_ihash_t ht)
+{
+  int d = __builtin_ctzl (ht->size) - 7;
+  return d >= 0 ? ht->nr_items >> d : ht->nr_items << -d;
+}
+
+
 /* Add ITEM to the hash table HT under the key KEY.  If there already
    is an item under this key, call the cleanup function (if any) for
    it before overriding the value.  If a memory allocation error

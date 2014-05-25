@@ -1,6 +1,6 @@
 /*
-   Copyright (C) 1994,96,2002 Free Software Foundation, Inc.
-   Written by Michael I. Bushnell.
+   Copyright (C) 2014 Free Software Foundation, Inc.
+   Written by Justus Winter.
 
    This file is part of the GNU Hurd.
 
@@ -15,18 +15,15 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
+   along with the GNU Hurd.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "priv.h"
-#include "trivfs_fsys_S.h"
+#define MEMORY_OBJECT_INTRAN pager_t begin_using_pager (memory_object_t)
+#define MEMORY_OBJECT_DESTRUCTOR end_using_pager (pager_t)
+#define MEMORY_OBJECT_IMPORTS import "mig-decls.h";
 
-kern_return_t
-trivfs_S_fsys_syncfs (struct trivfs_control *cntl,
-		      mach_port_t reply,
-		      mach_msg_type_name_t replytype,
-		      int wait,
-		      int dochildren)
-{
-  return cntl ? file_sync (cntl->underlying, wait, 0) : EOPNOTSUPP;
-}
+#define NOTIFY_INTRAN						\
+  port_info_t begin_using_port_info_port (mach_port_t)
+#define NOTIFY_DESTRUCTOR					\
+  end_using_port_info (port_info_t)
+#define NOTIFY_IMPORTS						\
+  import "libports/mig-decls.h";
