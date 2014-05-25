@@ -63,7 +63,7 @@ extern const struct argp_option diskfs_common_options[];
 #define OPT_INHERIT_DIR_GROUP		604	/* --inherit-dir-group */
 
 /* Common value for diskfs_common_options and diskfs_default_sync_interval. */
-#define DEFAULT_SYNC_INTERVAL 5
+#define DEFAULT_SYNC_INTERVAL 30
 #define DEFAULT_SYNC_INTERVAL_STRING STRINGIFY(DEFAULT_SYNC_INTERVAL)
 #define STRINGIFY(x) STRINGIFY_1(x)
 #define STRINGIFY_1(x) #x
@@ -74,6 +74,7 @@ extern int _diskfs_diskdirty;
 /* Needed for MiG. */
 typedef struct protid *protid_t;
 typedef struct diskfs_control *control_t;
+typedef struct bootinfo *bootinfo_t;
 
 /* Actually read or write a file.  The file size must already permit
    the requested access.  NP is the file to read/write.  DATA is a buffer

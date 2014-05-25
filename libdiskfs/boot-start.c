@@ -34,6 +34,8 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include <argz.h>
 #include <error.h>
 #include <pids.h>
+#include "exec_S.h"
+#include "exec_startup_S.h"
 #include "fsys_S.h"
 #include "fsys_reply_U.h"
 
@@ -299,7 +301,7 @@ diskfs_start_bootstrap ()
    call (as does any task) to get its state.  We can't give it all of
    its ports (we'll provide those with a later call to exec_init).  */
 kern_return_t
-diskfs_S_exec_startup_get_info (mach_port_t port,
+diskfs_S_exec_startup_get_info (struct bootinfo *upt,
 				vm_address_t *user_entry,
 				vm_address_t *phdr_data,
 				vm_size_t *phdr_size,
@@ -322,12 +324,10 @@ diskfs_S_exec_startup_get_info (mach_port_t port,
   error_t err;
   mach_port_t *portarray, *dtable;
   mach_port_t rootport;
-  struct ufsport *upt;
   struct protid *rootpi;
   struct peropen *rootpo;
 
-  if (!(upt = ports_lookup_port (diskfs_port_bucket, port,
-				 diskfs_execboot_class)))
+  if (! upt)
     return EOPNOTSUPP;
 
   *user_entry = 0;
@@ -368,13 +368,12 @@ diskfs_S_exec_startup_get_info (mach_port_t port,
   portarray[INIT_PORT_AUTH] = MACH_PORT_NULL;
   portarray[INIT_PORT_PROC] = MACH_PORT_NULL;
   portarray[INIT_PORT_CTTYID] = MACH_PORT_NULL;
-  portarray[INIT_PORT_BOOTSTRAP] = port; /* use the same port */
+  portarray[INIT_PORT_BOOTSTRAP] = upt->pi.port_right; /* use the same port */
 
   *portarraypoly = MACH_MSG_TYPE_MAKE_SEND;
 
   *dtablepoly = MACH_MSG_TYPE_COPY_SEND;
 
-  ports_port_deref (upt);
   return 0;
 }
 
