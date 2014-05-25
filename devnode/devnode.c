@@ -35,8 +35,9 @@
 #include <device/device.h>
 #include <hurd/trivfs.h>
 #include <hurd/ports.h>
+#include <version.h>
 
-#include "ourdevice_S.h"
+#include "device_S.h"
 #include "notify_S.h"
 #include "util.h"
 
@@ -48,8 +49,8 @@ static char *master_file;
 /* The master device port for opening the interface. */
 static mach_port_t master_device;
 
-const char *argp_program_version = "devnode 0.1";
-const char *argp_program_bug_address = "<bug-hurd@gnu.org>";
+const char *argp_program_version = STANDARD_HURD_VERSION (devnode);
+
 static const char args_doc[] = "device";
 static const char doc[] = "Hurd devnode translator.";
 static const struct argp_option options[] =
@@ -81,49 +82,56 @@ static int
 devnode_demuxer (mach_msg_header_t *inp,
 		    mach_msg_header_t *outp)
 {
-  extern int device_server (mach_msg_header_t *, mach_msg_header_t *);
-  extern int notify_server (mach_msg_header_t *, mach_msg_header_t *);
-  return device_server (inp, outp) || notify_server (inp, outp)
-    || trivfs_demuxer (inp, outp);
+  mig_routine_t routine;
+  if ((routine = device_server_routine (inp)) ||
+      (routine = notify_server_routine (inp)) ||
+      (routine = NULL, trivfs_demuxer (inp, outp)))
+    {
+      if (routine)
+        (*routine) (inp, outp);
+      return TRUE;
+    }
+  else
+    return FALSE;
 }
 
 /* Implementation of notify interface */
 kern_return_t
-do_mach_notify_port_deleted (mach_port_t notify,
+do_mach_notify_port_deleted (struct port_info *pi,
 			     mach_port_t name)
 {
   return EOPNOTSUPP;
 }
 
 kern_return_t
-do_mach_notify_msg_accepted (mach_port_t notify,
+do_mach_notify_msg_accepted (struct port_info *pi,
 			     mach_port_t name)
 {
   return EOPNOTSUPP;
 }
 
 kern_return_t
-do_mach_notify_port_destroyed (mach_port_t notify,
+do_mach_notify_port_destroyed (struct port_info *pi,
 			       mach_port_t port)
 {
   return EOPNOTSUPP;
 }
 
 kern_return_t
-do_mach_notify_no_senders (mach_port_t notify,
+do_mach_notify_no_senders (struct port_info *pi,
 			   mach_port_mscount_t mscount)
 {
-  return ports_do_mach_notify_no_senders (notify, mscount);
+  return ports_do_mach_notify_no_senders (pi, mscount);
 }
 
 kern_return_t
-do_mach_notify_send_once (mach_port_t notify)
+do_mach_notify_send_once (struct port_info *pi)
 {
   return EOPNOTSUPP;
 }
 
 kern_return_t
-do_mach_notify_dead_name (mach_port_t notify,
+do_mach_notify_dead_name (struct port_info *pi,
 			  mach_port_t name)
 {
   return EOPNOTSUPP;
