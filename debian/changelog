@@ -2,16 +2,14 @@ hurd (1:0.5.git20140525-1) unstable; urgency=medium
 
   [ Samuel Thibault ]
   * New upstream snapshot.
-    - Breaks old netdde, which needs to be rebuilt.
+    - Breaks old netdde, which needs to be rebuilt due to libports ABI change.
     - patches/libmachdev.patch: Drop patch, fixed upstream.
+  * control: bump gnumach-dev dependency to get mutable memory object, device
+    and notify types translation functions.  Make hurd-libs0.3 "Breaks" old
+    glibcs which needed libports_revert_stacksize.patch.
 
   [ Justus Winter ]
   * patches/libports_revert_stacksize.patch: Drop patch, not needed any more.
-
-  [ Samuel Thibault ]
-  * control: bump gnumach-dev dependency to get mutable memory object types
-    translation functions.  Make hurd-libs0.3 "Breaks" old glibcs which needed
-    libports_revert_stacksize.patch.
 
   [ Pino Toscano ]
   * control: remove unused gcc-4.7 build dependency. (Closes: #748000)
