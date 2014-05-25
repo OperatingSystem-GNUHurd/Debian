@@ -31,7 +31,6 @@ target = boot
 io-MIGSFLAGS=-DREPLY_PORTS
 HURDLIBS=store shouldbeinlibc ports
 OTHERLIBS = -lpthread
-DIST_FILES=frank1.ld frankemul.ld
 
 include ../Makeconf
 

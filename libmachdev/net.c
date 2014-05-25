@@ -70,6 +70,7 @@
 
 #define MACH_INCLUDE
 
+#include "ds_routines.h"
 #include "vm_param.h"
 #include "device_reply_U.h"
 #include "dev_hdr.h"
@@ -79,10 +80,6 @@
 #include "if_hdr.h"
 
 #define ether_header ethhdr
-
-extern int linux_intr_pri;
-extern struct port_bucket *port_bucket;
-extern struct port_class *dev_class;
 
 /* One of these is associated with each instance of a device.  */
 struct net_data
@@ -368,15 +365,14 @@ device_open (mach_port_t reply_port, mach_msg_type_name_t reply_port_type,
 	    dev->set_multicast_list (dev);
 #endif
 	}
-      if (MACH_PORT_VALID (reply_port))
-	ds_device_open_reply (reply_port, reply_port_type,
-			      err, dev_to_port (nd));
-      return MIG_NO_REPLY;
     }
 
-  *devp = ports_get_right (nd);
-  *devicePoly = MACH_MSG_TYPE_COPY_SEND;
-  return D_SUCCESS;
+  if (nd)
+    {
+      *devp = ports_get_right (nd);
+      *devicePoly = MACH_MSG_TYPE_MAKE_SEND;
+    }
+  return err;
 }
 
 static io_return_t

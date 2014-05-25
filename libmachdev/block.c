@@ -35,6 +35,7 @@
 
 #include <ddekit/printf.h>
 
+#include "ds_routines.h"
 #include "vm_param.h"
 #include "device_reply_U.h"
 #include "dev_hdr.h"

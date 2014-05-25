@@ -6,6 +6,9 @@
 #include <hurd/trivfs.h>
 #include <hurd.h>
 
+#include "device_S.h"
+#include "notify_S.h"
+
 static struct port_bucket *port_bucket;
 
 /* Trivfs hooks.  */
@@ -23,41 +26,41 @@ int trivfs_cntl_nportclasses = 1;
 
 /* Implementation of notify interface */
 kern_return_t
-do_mach_notify_port_deleted (mach_port_t notify,
+do_mach_notify_port_deleted (struct port_info *pi,
 			     mach_port_t name)
 {
   return EOPNOTSUPP;
 }
 
 kern_return_t
-do_mach_notify_msg_accepted (mach_port_t notify,
+do_mach_notify_msg_accepted (struct port_info *pi,
 			     mach_port_t name)
 {
   return EOPNOTSUPP;
 }
 
 kern_return_t
-do_mach_notify_port_destroyed (mach_port_t notify,
+do_mach_notify_port_destroyed (struct port_info *pi,
 			       mach_port_t port)
 {
   return EOPNOTSUPP;
 }
 
 kern_return_t
-do_mach_notify_no_senders (mach_port_t notify,
+do_mach_notify_no_senders (struct port_info *pi,
 			   mach_port_mscount_t mscount)
 {
-  return ports_do_mach_notify_no_senders (notify, mscount);
+  return ports_do_mach_notify_no_senders (pi, mscount);
 }
 
 kern_return_t
-do_mach_notify_send_once (mach_port_t notify)
+do_mach_notify_send_once (struct port_info *pi)
 {
   return EOPNOTSUPP;
 }
 
 kern_return_t
-do_mach_notify_dead_name (mach_port_t notify,
+do_mach_notify_dead_name (struct port_info *pi,
 			  mach_port_t name)
 {
   return EOPNOTSUPP;
@@ -125,12 +128,17 @@ trivfs_goaway (struct trivfs_control *fsys, int flags)
 static int
 demuxer (mach_msg_header_t *inp, mach_msg_header_t *outp)
 {
-  int ret;
-  extern int device_server (mach_msg_header_t *, mach_msg_header_t *);
-  extern int notify_server (mach_msg_header_t *, mach_msg_header_t *);
-  ret = device_server (inp, outp) || notify_server (inp, outp)
-    || trivfs_demuxer (inp, outp);
-  return ret;
+  mig_routine_t routine;
+  if ((routine = device_server_routine (inp)) ||
+      (routine = notify_server_routine (inp)) ||
+      (routine = NULL, trivfs_demuxer (inp, outp)))
+    {
+      if (routine)
+        (*routine) (inp, outp);
+      return TRUE;
+    }
+  else
+    return FALSE;
 }
 
 void
