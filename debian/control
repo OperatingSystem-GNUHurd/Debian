@@ -18,6 +18,7 @@ Package: hurd-libs0.3
 Section: libs
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
+Breaks: netdde (<< 0.0.20121127-3+)
 Architecture: hurd-any
 Multi-Arch: same
 Description: GNU Hurd (libraries)
