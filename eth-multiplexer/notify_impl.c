@@ -25,41 +25,41 @@
 
 /* Implementation of notify interface */
 kern_return_t
-do_mach_notify_port_deleted (mach_port_t notify,
+do_mach_notify_port_deleted (struct port_info *pi,
 			     mach_port_t name)
 {
   return EOPNOTSUPP;
 }
 
 kern_return_t
-do_mach_notify_msg_accepted (mach_port_t notify,
+do_mach_notify_msg_accepted (struct port_info *pi,
 			     mach_port_t name)
 {
   return EOPNOTSUPP;
 }
 
 kern_return_t
-do_mach_notify_port_destroyed (mach_port_t notify,
+do_mach_notify_port_destroyed (struct port_info *pi,
 			       mach_port_t port)
 {
   return EOPNOTSUPP;
 }
 
 kern_return_t
-do_mach_notify_no_senders (mach_port_t notify,
+do_mach_notify_no_senders (struct port_info *pi,
 			   mach_port_mscount_t mscount)
 {
-  return ports_do_mach_notify_no_senders (notify, mscount);
+  return ports_do_mach_notify_no_senders (pi, mscount);
 }
 
 kern_return_t
-do_mach_notify_send_once (mach_port_t notify)
+do_mach_notify_send_once (struct port_info *pi)
 {
   return EOPNOTSUPP;
 }
 
 kern_return_t
-do_mach_notify_dead_name (mach_port_t notify,
+do_mach_notify_dead_name (struct port_info *pi,
 			  mach_port_t name)
 {
   debug ("do_mach_notify_dead_name is called\n");
