@@ -759,14 +759,6 @@ Index: hurd-debian/trans/fakeroot.c
        mach_port_deallocate (mach_task_self (), file);
      }
  
-@@ -930,6 +982,7 @@
- {
-   mig_routine_t netfs_io_server_routine (mach_msg_header_t *);
-   mig_routine_t netfs_fs_server_routine (mach_msg_header_t *);
-+  mig_routine_t netfs_fs_experimental_server_routine (mach_msg_header_t *);
-   mig_routine_t ports_notify_server_routine (mach_msg_header_t *);
-   mig_routine_t netfs_fsys_server_routine (mach_msg_header_t *);
-   mig_routine_t ports_interrupt_server_routine (mach_msg_header_t *);
 @@ -937,6 +990,7 @@
    mig_routine_t routine;
    if ((routine = netfs_io_server_routine (inp)) ||

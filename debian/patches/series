@@ -33,7 +33,6 @@ libdde_devres.patch
 libdde_pr_cont.patch
 libdde_rx_queue.patch
 libdde_rcu.patch
-libmachdev.patch
 exec_filename_exec.patch
 exec_filename_fs.patch
 exec_filename_use.patch

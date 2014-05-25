@@ -3,6 +3,7 @@ hurd (1:0.5.git20140525-1) UNRELEASED; urgency=medium
   [ Samuel Thibault ]
   * New upstream snapshot.
     - Breaks old netdde, which needs to be rebuilt.
+    - patches/libmachdev.patch: Drop patch, fixed upstream.
 
   [ Justus Winter ]
   * patches/libports_revert_stacksize.patch: Drop patch, not needed any more.

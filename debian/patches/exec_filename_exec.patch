@@ -303,9 +303,9 @@ Index: hurd-debian/exec/Makefile
  target = exec
  #targets = exec exec.static
 @@ -30,6 +30,7 @@
- OTHERLIBS = -lpthread
  
  exec-MIGSFLAGS = -imacros $(srcdir)/execmutations.h
+ exec_startup-MIGSFLAGS = -imacros $(srcdir)/execmutations.h
 +exec_experimental-MIGSFLAGS = -imacros $(srcdir)/execmutations.h
  
  include ../Makeconf
