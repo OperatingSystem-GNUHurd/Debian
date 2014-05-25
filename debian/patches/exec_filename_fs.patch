@@ -895,7 +895,7 @@ Index: hurd-debian/libdiskfs/Makefile
 +fs_experimental-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h
  io-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h
  ifsock-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h
- MIGCOMSFLAGS = -prefix diskfs_
+ exec_startup-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h
 Index: hurd-debian/libdiskfs/demuxer.c
 ===================================================================
 --- hurd-debian.orig/libdiskfs/demuxer.c	2014-02-03 23:46:00.000000000 +0000

@@ -18,7 +18,7 @@ index 2eed13c..dc768d3 100644
 --- a/proc/Makefile
 +++ b/proc/Makefile
 @@ -29,7 +29,7 @@ MIGSFLAGS="-DPROCESS_INTRAN=pstruct_t reqport_find (process_t)" \
- 	"-DPROCESS_IMPORTS=import \"proc.h\";"
+ MIGSFLAGS = -imacros $(srcdir)/mig-mutate.h
  
  MIGSTUBS = processServer.o notifyServer.o \
 -	ourmsgUser.o proc_excUser.o proc_excServer.o
