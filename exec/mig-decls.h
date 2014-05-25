@@ -1,7 +1,6 @@
 /*
-   Copyright (C) 1995, 1996, 2001, 2007 Free Software Foundation, Inc.
-
-   Written by Michael I. Bushnell, p/BSG.
+   Copyright (C) 2014 Free Software Foundation, Inc.
+   Written by Justus Winter.
 
    This file is part of the GNU Hurd.
 
@@ -16,26 +15,26 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA. */
+   along with the GNU Hurd.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#ifndef _CONSOLE_PRIV_H
-#define _CONSOLE_PRIV_H
+#ifndef __EXEC_MIG_DECLS_H__
+#define __EXEC_MIG_DECLS_H__
 
-#include <hurd/hurd_types.h>
+#include "priv.h"
 
-#include <hurd/netfs.h>
+/* Called by server stub functions.  */
 
-static inline struct protid * __attribute__ ((unused))
-begin_using_protid_port (file_t port)
+static inline struct bootinfo * __attribute__ ((unused))
+begin_using_bootinfo_port (mach_port_t port)
 {
-  return ports_lookup_port (netfs_port_bucket, port, netfs_protid_class);
+    return ports_lookup_port (port_bucket, port, execboot_portclass);
 }
 
 static inline void __attribute__ ((unused))
-end_using_protid_port (struct protid *cred)
+end_using_bootinfo (struct bootinfo *b)
 {
-  if (cred)
-    ports_port_deref (cred);
+  if (b)
+    ports_port_deref (b);
 }
-#endif
+
+#endif /* __EXEC_MIG_DECLS_H__ */

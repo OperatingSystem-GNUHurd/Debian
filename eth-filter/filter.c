@@ -39,8 +39,9 @@
 #include <hurd/ports.h>
 #include <hurd/ihash.h>
 #include <hurd/fshelp.h>
+#include <version.h>
 
-#include "ourdevice_S.h"
+#include "device_S.h"
 #include "notify_S.h"
 #include "bpf_impl.h"
 #include "util.h"
@@ -73,8 +74,8 @@ static struct hurd_ihash proxy_deliverport_ht
 
 /* The name of the network interface that the filter translator sits on. */
 static char *device_file;
-const char *argp_program_version = "eth-filter 0.1";
-const char *argp_program_bug_address = "<bug-hurd@gnu.org>";
+const char *argp_program_version = STANDARD_HURD_VERSION (eth-filter);
+
 static const char doc[] = "Hurd filter translator.";
 static const struct argp_option options[] =
 {
@@ -193,17 +194,6 @@ clean_proxy_device (void *p)
     device->proxy->device = NULL;
 }
 
-static int
-filter_demuxer (mach_msg_header_t *inp,
-		mach_msg_header_t *outp)
-{
-  extern int device_server (mach_msg_header_t *, mach_msg_header_t *);
-  extern int notify_server (mach_msg_header_t *, mach_msg_header_t *);
-  extern int ethernet_demuxer (mach_msg_header_t *, mach_msg_header_t *);
-  return device_server (inp, outp) || notify_server (inp, outp)
-    || ethernet_demuxer (inp, outp) || trivfs_demuxer (inp, outp);
-}
-
 int
 ethernet_demuxer (mach_msg_header_t *inp,
 		  mach_msg_header_t *outp)
@@ -232,44 +222,62 @@ ethernet_demuxer (mach_msg_header_t *inp,
   return 1;
 }
 
+static int
+filter_demuxer (mach_msg_header_t *inp,
+		mach_msg_header_t *outp)
+{
+  mig_routine_t routine;
+  if ((routine = NULL, ethernet_demuxer (inp, outp)) ||
+      (routine = device_server_routine (inp)) ||
+      (routine = notify_server_routine (inp)) ||
+      (routine = NULL, trivfs_demuxer (inp, outp)))
+    {
+      if (routine)
+        (*routine) (inp, outp);
+      return TRUE;
+    }
+  else
+    return FALSE;
+}
+
 /* Implementation of notify interface */
 kern_return_t
-do_mach_notify_port_deleted (mach_port_t notify,
+do_mach_notify_port_deleted (struct port_info *pi,
 			     mach_port_t name)
 {
   return EOPNOTSUPP;
 }
 
 kern_return_t
-do_mach_notify_msg_accepted (mach_port_t notify,
+do_mach_notify_msg_accepted (struct port_info *pi,
 			     mach_port_t name)
 {
   return EOPNOTSUPP;
 }
 
 kern_return_t
-do_mach_notify_port_destroyed (mach_port_t notify,
+do_mach_notify_port_destroyed (struct port_info *pi,
 			       mach_port_t port)
 {
   return EOPNOTSUPP;
 }
 
 kern_return_t
-do_mach_notify_no_senders (mach_port_t notify,
+do_mach_notify_no_senders (struct port_info *pi,
 			   mach_port_mscount_t mscount)
 {
   debug ("do_mach_notify_no_senders is called\n");
-  return ports_do_mach_notify_no_senders (notify, mscount);
+  return ports_do_mach_notify_no_senders (pi, mscount);
 }
 
 kern_return_t
-do_mach_notify_send_once (mach_port_t notify)
+do_mach_notify_send_once (struct port_info *pi)
 {
   return EOPNOTSUPP;
 }
 
 kern_return_t
-do_mach_notify_dead_name (mach_port_t notify,
+do_mach_notify_dead_name (struct port_info *pi,
 			  mach_port_t name)
 {
   struct proxy *proxy;
@@ -287,21 +295,21 @@ do_mach_notify_dead_name (mach_port_t notify,
 
 /* Implementation of device interface */
 kern_return_t 
-ds_xxx_device_set_status (device_t device, dev_flavor_t flavor,
+ds_xxx_device_set_status (struct proxy_user *device, dev_flavor_t flavor,
 			  dev_status_t status, size_t statu_cnt)
 {
   return D_INVALID_OPERATION;
 }
 
 kern_return_t
-ds_xxx_device_get_status (device_t device, dev_flavor_t flavor,
+ds_xxx_device_get_status (struct proxy_user *device, dev_flavor_t flavor,
 			  dev_status_t status, size_t *statuscnt)
 {
   return D_INVALID_OPERATION;
 }
 
 kern_return_t
-ds_xxx_device_set_filter (device_t device, mach_port_t rec,
+ds_xxx_device_set_filter (struct proxy_user *device, mach_port_t rec,
 			  int pri, filter_array_t filt, size_t len)
 {
   return D_INVALID_OPERATION;
@@ -348,7 +356,6 @@ ds_device_open (mach_port_t master_port, mach_port_t reply_port,
   err = create_proxy_user (proxy, &user_port);
   if (err)
     {
-      mach_port_deallocate (mach_task_self (), master_device);
       free (proxy);
       return err;
     }
@@ -360,13 +367,13 @@ ds_device_open (mach_port_t master_port, mach_port_t reply_port,
 }
 
 kern_return_t
-ds_device_close (device_t device)
+ds_device_close (struct proxy_user *device)
 {
   return 0;
 }
 
 kern_return_t
-ds_device_write (device_t device, mach_port_t reply_port,
+ds_device_write (struct proxy_user *user, mach_port_t reply_port,
 		 mach_msg_type_name_t reply_type, dev_mode_t mode,
 		 recnum_t recnum, io_buf_ptr_t data, size_t datalen,
 		 int *bytes_written)
@@ -375,17 +382,14 @@ ds_device_write (device_t device, mach_port_t reply_port,
   int has_filter = 0;
   net_hash_entry_t entp, *hash_headp;
   net_rcv_port_t infp, nextfp;
-  struct proxy_user *user;
   struct proxy *proxy;
 
-  user = ports_lookup_port (port_bucket, device, user_portclass);
   if (user == NULL)
     {
       vm_deallocate (mach_task_self (), (vm_address_t) data, datalen);
       return D_INVALID_OPERATION;
     }
   proxy = user->proxy;
-  ports_port_deref (user);
 
   /* The packet can be sent as long as it passes one filter,
    * even thought there is usually only one filter in the list. */
@@ -421,20 +425,17 @@ ds_device_write (device_t device, mach_port_t reply_port,
 }
 
 kern_return_t
-ds_device_write_inband (device_t device, mach_port_t reply_port,
+ds_device_write_inband (struct proxy_user *user, mach_port_t reply_port,
 			mach_msg_type_name_t reply_type, dev_mode_t mode,
 			recnum_t recnum, io_buf_ptr_inband_t data,
 			size_t datalen, int *bytes_written)
 {
   kern_return_t ret;
-  struct proxy_user *user;
   struct proxy *proxy;
 
-  user = ports_lookup_port (port_bucket, device, user_portclass);
   if (user == NULL)
     return D_INVALID_OPERATION;
   proxy = user->proxy;
-  ports_port_deref (user);
 
   ret = device_write_inband (proxy->device_port, mode, recnum, data,
 			     datalen, bytes_written);
@@ -442,20 +443,17 @@ ds_device_write_inband (device_t device, mach_port_t reply_port,
 }
 
 kern_return_t
-ds_device_read (device_t device, mach_port_t reply_port,
+ds_device_read (struct proxy_user *user, mach_port_t reply_port,
 		mach_msg_type_name_t reply_type, dev_mode_t mode,
 		recnum_t recnum, int bytes_wanted,
 		io_buf_ptr_t *data, size_t *datalen)
 {
   kern_return_t ret;
-  struct proxy_user *user;
   struct proxy *proxy;
 
-  user = ports_lookup_port (port_bucket, device, user_portclass);
   if (user == NULL)
     return D_INVALID_OPERATION;
   proxy = user->proxy;
-  ports_port_deref (user);
 
   ret = device_read (proxy->device_port, mode, recnum,
 		     bytes_wanted, data, datalen);
@@ -463,20 +461,17 @@ ds_device_read (device_t device, mach_port_t reply_port,
 }
 
 kern_return_t
-ds_device_read_inband (device_t device, mach_port_t reply_port,
+ds_device_read_inband (struct proxy_user *user, mach_port_t reply_port,
 		       mach_msg_type_name_t reply_type, dev_mode_t mode,
 		       recnum_t recnum, int bytes_wanted,
 		       io_buf_ptr_inband_t data, size_t *datalen)
 {
   kern_return_t ret;
-  struct proxy_user *user;
   struct proxy *proxy;
 
-  user = ports_lookup_port (port_bucket, device, user_portclass);
   if (user == NULL)
     return D_INVALID_OPERATION;
   proxy = user->proxy;
-  ports_port_deref (user);
 
   ret = device_read_inband (proxy->device_port, mode, recnum, 
 			    bytes_wanted, data, datalen);
@@ -484,18 +479,15 @@ ds_device_read_inband (device_t device, mach_port_t reply_port,
 }
 
 kern_return_t
-ds_device_map (device_t device, vm_prot_t prot, vm_offset_t offset,
+ds_device_map (struct proxy_user *user, vm_prot_t prot, vm_offset_t offset,
 	       vm_size_t size, memory_object_t *pager, int unmap)
 {
   kern_return_t ret;
-  struct proxy_user *user;
   struct proxy *proxy;
 
-  user = ports_lookup_port (port_bucket, device, user_portclass);
   if (user == NULL)
     return D_INVALID_OPERATION;
   proxy = user->proxy;
-  ports_port_deref (user);
 
   ret = device_map (proxy->device_port, prot, offset,
 		    size, pager, unmap);
@@ -503,18 +495,15 @@ ds_device_map (device_t device, vm_prot_t prot, vm_offset_t offset,
 }
 
 kern_return_t
-ds_device_set_status (device_t device, dev_flavor_t flavor,
+ds_device_set_status (struct proxy_user *user, dev_flavor_t flavor,
 		      dev_status_t status, size_t statuslen)
 {
   kern_return_t ret;
-  struct proxy_user *user;
   struct proxy *proxy;
 
-  user = ports_lookup_port (port_bucket, device, user_portclass);
   if (user == NULL)
     return D_INVALID_OPERATION;
   proxy = user->proxy;
-  ports_port_deref (user);
 
   ret = device_set_status (proxy->device_port, flavor,
 			   status, statuslen);
@@ -522,38 +511,32 @@ ds_device_set_status (device_t device, dev_flavor_t flavor,
 }
 
 kern_return_t
-ds_device_get_status (device_t device, dev_flavor_t flavor,
+ds_device_get_status (struct proxy_user *user, dev_flavor_t flavor,
 		      dev_status_t status, size_t *statuslen)
 {
   kern_return_t ret;
-  struct proxy_user *user;
   struct proxy *proxy;
 
-  user = ports_lookup_port (port_bucket, device, user_portclass);
   if (user == NULL)
     return D_INVALID_OPERATION;
   proxy = user->proxy;
-  ports_port_deref (user);
 
   ret = device_get_status (proxy->device_port, flavor, status, statuslen);
   return ret;
 }
 
 kern_return_t
-ds_device_set_filter (device_t device, mach_port_t receive_port,
+ds_device_set_filter (struct proxy_user *user, mach_port_t receive_port,
 		      int priority, filter_array_t filter, size_t filterlen)
 {
   mach_port_t tmp;
   kern_return_t err;
   mach_port_t device_receive_port;
-  struct proxy_user *user;
   struct proxy *proxy;
 
-  user = ports_lookup_port (port_bucket, device, user_portclass);
   if (user == NULL)
     return D_INVALID_OPERATION;
   proxy = user->proxy;
-  ports_port_deref (user);
 
   if (proxy->device == NULL)
     {

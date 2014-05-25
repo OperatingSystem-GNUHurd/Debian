@@ -39,10 +39,11 @@
 #include <device/device.h>
 #include <hurd/ports.h>
 #include <hurd/netfs.h>
+#include <version.h>
 
 #include "ethernet.h"
 #include "vdev.h"
-#include "ourdevice_S.h"
+#include "device_S.h"
 #include "notify_S.h"
 #include "bpf_impl.h"
 #include "netfs_impl.h"
@@ -51,8 +52,8 @@
 /* The device which the multiplexer connects to */
 static char *device_file;
 
-const char *argp_program_version = "eth-multiplexer 0.1";
-const char *argp_program_bug_address = "<bug-hurd@gnu.org>";
+const char *argp_program_version = STANDARD_HURD_VERSION (eth-multiplexer);
+
 static const char doc[] = "Hurd multiplexer server.";
 static const struct argp_option options[] =
 {
@@ -78,12 +79,17 @@ static int
 multiplexer_demuxer (mach_msg_header_t *inp,
 		  mach_msg_header_t *outp)
 {
-  int device_server (mach_msg_header_t *, mach_msg_header_t *);
-  int notify_server (mach_msg_header_t *, mach_msg_header_t *);
-
-  return (device_server (inp, outp)
-	   || notify_server (inp, outp)
-	   || ethernet_demuxer (inp, outp));
+  mig_routine_t routine;
+  if ((routine = NULL, ethernet_demuxer (inp, outp)) ||
+      (routine = device_server_routine (inp)) ||
+      (routine = notify_server_routine (inp)))
+    {
+      if (routine)
+        (*routine) (inp, outp);
+      return TRUE;
+    }
+  else
+    return FALSE;
 }
 
 static void *

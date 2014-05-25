@@ -52,4 +52,6 @@ boolean_t	ds_write_done(io_req_t);
 
 void		iowait (io_req_t ior);
 
+error_t		create_device_port (size_t size, void *result);
+
 #endif	/* DS_ROUTINES_H */

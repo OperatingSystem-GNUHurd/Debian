@@ -27,7 +27,7 @@
 
 #include "ethernet.h"
 #include "vdev.h"
-#include "ourdevice_S.h"
+#include "device_S.h"
 #include "notify_S.h"
 #include "bpf_impl.h"
 #include "netfs_impl.h"
@@ -40,38 +40,29 @@ extern struct port_info *notify_pi;
 
 /* Implementation of device interface */
 kern_return_t
-ds_xxx_device_set_status (device_t device, dev_flavor_t flavor,
+ds_xxx_device_set_status (struct vether_device *vdev, dev_flavor_t flavor,
 			  dev_status_t status, size_t statu_cnt)
 {
-  struct vether_device *vdev = ports_lookup_port (port_bucket, device,
-						  vdev_portclass);
   if (vdev == NULL)
     return D_NO_SUCH_DEVICE;
-  ports_port_deref (vdev);
   return D_INVALID_OPERATION;
 }
 
 kern_return_t
-ds_xxx_device_get_status (device_t device, dev_flavor_t flavor,
+ds_xxx_device_get_status (struct vether_device *vdev, dev_flavor_t flavor,
 			  dev_status_t status, size_t *statuscnt)
 {
-  struct vether_device *vdev = ports_lookup_port (port_bucket, device,
-						  vdev_portclass);
   if (vdev == NULL)
     return D_NO_SUCH_DEVICE;
-  ports_port_deref (vdev);
   return D_INVALID_OPERATION;
 }
 
 kern_return_t
-ds_xxx_device_set_filter (device_t device, mach_port_t rec,
+ds_xxx_device_set_filter (struct vether_device *vdev, mach_port_t rec,
 			  int pri, filter_array_t filt, size_t len)
 {
-  struct vether_device *vdev = ports_lookup_port (port_bucket, device,
-						  vdev_portclass);
   if (vdev == NULL)
     return D_NO_SUCH_DEVICE;
-  ports_port_deref (vdev);
   return D_INVALID_OPERATION;
 }
 
@@ -140,20 +131,18 @@ ds_device_open (mach_port_t master_port, mach_port_t reply_port,
 }
 
 kern_return_t
-ds_device_close (device_t device)
+ds_device_close (struct vether_device *device)
 {
   return 0;
 }
 
 kern_return_t
-ds_device_write (device_t device, mach_port_t reply_port,
+ds_device_write (struct vether_device *vdev, mach_port_t reply_port,
 		 mach_msg_type_name_t reply_type, dev_mode_t mode,
 		 recnum_t recnum, io_buf_ptr_t data, size_t datalen,
 		 int *bytes_written)
 {
   kern_return_t ret = 0;
-  struct vether_device *vdev = ports_lookup_port (port_bucket, device,
-						  vdev_portclass);
   if (vdev == NULL)
     {
       vm_deallocate (mach_task_self (), (vm_address_t) data, datalen);
@@ -169,103 +158,82 @@ ds_device_write (device_t device, mach_port_t reply_port,
   /* The data in device_write() is transmifered out of line,
    * so the server-side function has to deallocate it. */
   vm_deallocate (mach_task_self (), (vm_address_t) data, datalen);
-  ports_port_deref (vdev);
   return ret;
 }
 
 kern_return_t
-ds_device_write_inband (device_t device, mach_port_t reply_port,
+ds_device_write_inband (struct vether_device *vdev, mach_port_t reply_port,
 			mach_msg_type_name_t reply_type, dev_mode_t mode,
 			recnum_t recnum, io_buf_ptr_inband_t data,
 			size_t datalen, int *bytes_written)
 {
-  struct vether_device *vdev = ports_lookup_port (port_bucket, device,
-						  vdev_portclass);
   if (vdev == NULL)
     return D_NO_SUCH_DEVICE;
-  ports_port_deref (vdev);
   return D_INVALID_OPERATION;
 }
 
 kern_return_t
-ds_device_read (device_t device, mach_port_t reply_port,
+ds_device_read (struct vether_device *vdev, mach_port_t reply_port,
 		mach_msg_type_name_t reply_type, dev_mode_t mode,
 		recnum_t recnum, int bytes_wanted,
 		io_buf_ptr_t *data, size_t *datalen)
 {
-  struct vether_device *vdev = ports_lookup_port (port_bucket, device,
-						  vdev_portclass);
   if (vdev == NULL)
     return D_NO_SUCH_DEVICE;
-  ports_port_deref (vdev);
   return D_INVALID_OPERATION;
 }
 
 kern_return_t
-ds_device_read_inband (device_t device, mach_port_t reply_port,
+ds_device_read_inband (struct vether_device *vdev, mach_port_t reply_port,
 		       mach_msg_type_name_t reply_type, dev_mode_t mode,
 		       recnum_t recnum, int bytes_wanted,
 		       io_buf_ptr_inband_t data, size_t *datalen)
 {
-  struct vether_device *vdev = ports_lookup_port (port_bucket, device,
-						  vdev_portclass);
   if (vdev == NULL)
     return D_NO_SUCH_DEVICE;
-  ports_port_deref (vdev);
   return D_INVALID_OPERATION;
 }
 
 kern_return_t
-ds_device_map (device_t device, vm_prot_t prot, vm_offset_t offset,
+ds_device_map (struct vether_device *vdev, vm_prot_t prot, vm_offset_t offset,
 	       vm_size_t size, memory_object_t *pager, int unmap)
 {
-  struct vether_device *vdev = ports_lookup_port (port_bucket, device,
-						  vdev_portclass);
   if (vdev == NULL)
     return D_NO_SUCH_DEVICE;
-  ports_port_deref (vdev);
   return D_INVALID_OPERATION;
 }
 
 kern_return_t
-ds_device_set_status (device_t device, dev_flavor_t flavor,
+ds_device_set_status (struct vether_device *vdev, dev_flavor_t flavor,
 		      dev_status_t status, size_t statuslen)
 {
-  struct vether_device *vdev = ports_lookup_port (port_bucket, device,
-						  vdev_portclass);
   if (vdev == NULL)
     return D_NO_SUCH_DEVICE;
-  ports_port_deref (vdev);
   return D_INVALID_OPERATION;
 }
 
 kern_return_t
-ds_device_get_status (device_t device, dev_flavor_t flavor,
+ds_device_get_status (struct vether_device *vdev, dev_flavor_t flavor,
 		      dev_status_t status, size_t *statuslen)
 {
   extern io_return_t dev_getstat (struct vether_device *, dev_flavor_t,
 				  dev_status_t, natural_t *);
   kern_return_t ret = 0;
-  struct vether_device *vdev = ports_lookup_port (port_bucket, device,
-						  vdev_portclass);
   if (vdev == NULL)
     return D_NO_SUCH_DEVICE;
   if(ether_port != MACH_PORT_NULL)
     ret = device_get_status (ether_port, flavor, status, statuslen);
   else 
     ret = dev_getstat (vdev, flavor, status, statuslen);
-  ports_port_deref (vdev);
   return ret;
 }
 
 kern_return_t
-ds_device_set_filter (device_t device, mach_port_t receive_port,
+ds_device_set_filter (struct vether_device *vdev, mach_port_t receive_port,
 		      int priority, filter_array_t filter, size_t filterlen)
 {
   mach_port_t tmp;
   kern_return_t err;
-  struct vether_device *vdev = ports_lookup_port (port_bucket, device,
-						  vdev_portclass);
   if (vdev == NULL)
     return D_NO_SUCH_DEVICE;
   err = mach_port_request_notification (mach_task_self (), receive_port, 
@@ -279,6 +247,5 @@ ds_device_set_filter (device_t device, mach_port_t receive_port,
   err = net_set_filter (&vdev->port_list, receive_port,
 			priority, filter, filterlen);
 out:
-  ports_port_deref (vdev);
   return err;
 }
