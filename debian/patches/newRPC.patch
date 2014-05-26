@@ -36,9 +36,9 @@ index 5cf995d..5dba70c 100644
  	mach_host mach_port mach_timer_reply memory_object \
 -	memory_object_default notify experimental
 +	memory_object_default notify experimental gnumach
+ mach_debug_defs_names = mach_debug
  device_defs_names = dev_forward device device_reply device_request
  
- mach_defs = $(addsuffix .defs,$(mach_defs_names))
 diff --git a/exec/Makefile b/exec/Makefile
 index 3ef742d..7507b0a 100644
 --- a/exec/Makefile
