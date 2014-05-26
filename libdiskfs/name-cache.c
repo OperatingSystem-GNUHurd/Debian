@@ -37,7 +37,7 @@ struct lookup_cache
   /* Used to indentify nodes to the fs dependent code.  0 for NODE_CACHE_ID
      means a `negative' entry -- recording that there's definitely no node with
      this name.  */
-  int dir_cache_id, node_cache_id;
+  ino64_t dir_cache_id, node_cache_id;
 
   /* Name of the node NODE_CACHE_ID in the directory DIR_CACHE_ID.  Entries
      with names too long to fit in this buffer aren't cached at all.  */
@@ -249,6 +249,7 @@ diskfs_check_lookup_cache (struct node *dir, const char *name)
 		{
 		  /* Lose */
 		  pthread_mutex_unlock (&np->lock);
+		  diskfs_nrele (np);
 		  return 0;
 		}
 	    }
