@@ -70,7 +70,7 @@ index df77c66..e6893cb 100644
  main (int argc, char **argv)
  {
 -  unsigned int remount;
-+  unsigned int remount, firmlink;
++  unsigned int remount, firmlink = 0;
    struct fstab *fstab;
    struct fs *fs;
    error_t err;

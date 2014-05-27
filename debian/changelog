@@ -1,3 +1,10 @@
+hurd (1:0.5.git20140526-2) UNRELEASED; urgency=medium
+
+  [ Gabriele Giacone ]
+  * patches/mount-bind.patch: Fix uninitialized value.
+
+ -- Samuel Thibault <sthibault@debian.org>  Tue, 27 May 2014 22:06:43 +0200
+
 hurd (1:0.5.git20140526-1) unstable; urgency=medium
 
   [ Samuel Thibault ]
