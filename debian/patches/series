@@ -42,3 +42,4 @@ proc_set_init_task.patch
 newRPC.patch
 xkb-compat.patch
 mount-bind.patch
+git-random_buffer.patch

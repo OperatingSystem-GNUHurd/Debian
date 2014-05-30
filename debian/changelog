@@ -1,3 +1,11 @@
+hurd (1:0.5.git20140526-3) UNRELEASED; urgency=medium
+
+  [ Samuel Thibault ]
+  * patches/git-random_buffer.patch: Fix random translator crash during
+    heimdal testsuite.
+
+ -- Samuel Thibault <sthibault@debian.org>  Tue, 27 May 2014 22:06:43 +0200
+
 hurd (1:0.5.git20140526-2) unstable; urgency=medium
 
   [ Gabriele Giacone ]
