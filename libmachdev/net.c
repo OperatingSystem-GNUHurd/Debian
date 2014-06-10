@@ -243,8 +243,10 @@ netif_rx_handle (char *data, int len, struct net_device *dev)
 
   pack_size = len - sizeof (struct ethhdr);
   /* remember message sizes must be rounded up */
-  net_msg->msg_hdr.msgh_size = (((mach_msg_size_t) (sizeof(struct net_rcv_msg)
-					       - NET_RCV_MAX + pack_size)) + 3) & ~3;
+  net_msg->msg_hdr.msgh_size =
+    (((mach_msg_size_t) (sizeof (struct net_rcv_msg)
+			 - sizeof net_msg->sent
+			 - NET_RCV_MAX + pack_size)) + 3) & ~3;
 
   /* Copy packet into message buffer.  */
   eh = (struct ether_header *) (net_msg->header);
