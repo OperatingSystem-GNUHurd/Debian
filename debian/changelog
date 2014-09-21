@@ -4,6 +4,7 @@ hurd (1:0.5.git20140526-3) UNRELEASED; urgency=medium
   * patches/git-random_buffer.patch: Fix random translator crash during
     heimdal testsuite.
   * control: Add zlib1g-dev and libbz2-dev build dependencies.
+  * Bump Standards-Version to 3.9.6 (no changes).
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 27 May 2014 22:06:43 +0200
 
