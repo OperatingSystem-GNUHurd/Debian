@@ -1,9 +1,0 @@
-#!/bin/sh
-
-# Make sure the firmlink is gone
-settrans -ag /target/servers
-
-# Transfer the network configuration to /target
-settrans -pk /target/servers/socket/2 $(fsysopts /servers/socket/2) -6 /servers/socket/26
-settrans -cpk /target/servers/socket/26 $(fsysopts /servers/socket/2) -4 /servers/socket/2
-
