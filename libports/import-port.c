@@ -48,8 +48,7 @@ ports_import_port (struct port_class *class, struct port_bucket *bucket,
     return ENOMEM;
   
   pi->class = class;
-  pi->refcnt = 1 + !!stat.mps_srights;
-  pi->weakrefcnt = 0;
+  refcounts_init (&pi->refcounts, 1 + !!stat.mps_srights, 0);
   pi->cancel_threshold = 0;
   pi->mscount = stat.mps_mscount;
   pi->flags = stat.mps_srights ? PORT_HAS_SENDRIGHTS : 0;
@@ -75,15 +74,22 @@ ports_import_port (struct port_class *class, struct port_bucket *bucket,
       goto loop;
     }
 
+  pthread_rwlock_wrlock (&_ports_htable_lock);
+  err = hurd_ihash_add (&_ports_htable, port, pi);
+  if (err)
+    {
+      pthread_rwlock_unlock (&_ports_htable_lock);
+      goto lose;
+    }
   err = hurd_ihash_add (&bucket->htable, port, pi);
   if (err)
-    goto lose;
+    {
+      hurd_ihash_locp_remove (&_ports_htable, pi->ports_htable_entry);
+      pthread_rwlock_unlock (&_ports_htable_lock);
+      goto lose;
+    }
+  pthread_rwlock_unlock (&_ports_htable_lock);
 
-  pi->next = class->ports;
-  pi->prevp = &class->ports;
-  if (class->ports)
-    class->ports->prevp = &pi->next;
-  class->ports = pi;
   bucket->count++;
   class->count++;
   pthread_mutex_unlock (&_ports_lock);

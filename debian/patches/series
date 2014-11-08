@@ -39,7 +39,5 @@ exec_filename_use.patch
 exec_filename_fix.patch
 mount.patch
 proc_set_init_task.patch
-newRPC.patch
 xkb-compat.patch
-mount-bind.patch
-git-random_buffer.patch
+newRPC.patch

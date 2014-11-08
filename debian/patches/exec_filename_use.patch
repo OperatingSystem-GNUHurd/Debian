@@ -17,23 +17,21 @@ _hurd_exec if it's available.
 
 Index: hurd-debian/configure.ac
 ===================================================================
---- hurd-debian.orig/configure.ac	2012-06-05 00:38:18.000000000 +0000
-+++ hurd-debian/configure.ac	2012-06-05 00:38:18.000000000 +0000
-@@ -160,8 +160,8 @@
+--- hurd-debian.orig/configure.ac
++++ hurd-debian/configure.ac
+@@ -163,7 +163,7 @@ else
  fi
  AC_SUBST(VERSIONING)
- 
--# Check if libc contains getgrouplist and/or uselocale.
--AC_CHECK_FUNCS(getgrouplist uselocale file_exec_file_name exec_exec_file_name)
-+# Check if libc contains these functions.
-+AC_CHECK_FUNCS(getgrouplist uselocale file_exec_file_name exec_exec_file_name _hurd_exec_file_name)
+ # Check if libc contains these functions.
+-AC_CHECK_FUNCS(file_exec_file_name exec_exec_file_name)
++AC_CHECK_FUNCS(file_exec_file_name exec_exec_file_name _hurd_exec_file_name)
  
  
  # From glibc HEAD, 2007-11-07.
 Index: hurd-debian/utils/fakeauth.c
 ===================================================================
---- hurd-debian.orig/utils/fakeauth.c	2012-06-05 00:35:35.000000000 +0000
-+++ hurd-debian/utils/fakeauth.c	2012-06-05 01:48:00.000000000 +0000
+--- hurd-debian.orig/utils/fakeauth.c
++++ hurd-debian/utils/fakeauth.c
 @@ -1,5 +1,5 @@
  /* fakeauth -- proxy auth server to lie to users about what their IDs are
 -   Copyright (C) 2002 Free Software Foundation, Inc.
@@ -41,7 +39,7 @@ Index: hurd-debian/utils/fakeauth.c
  
     This program is free software; you can redistribute it and/or
     modify it under the terms of the GNU General Public License as
-@@ -388,7 +388,7 @@
+@@ -397,7 +397,7 @@ believe it has restricted them to differ
    /* We cannot use fork because it doesn't do the right thing with our send
       rights that point to our own receive rights, i.e. the new auth port.
       Since posix_spawn might be implemented with fork (prior to glibc 2.3),
@@ -50,7 +48,7 @@ Index: hurd-debian/utils/fakeauth.c
       directly to effect what posix_spawn does in the simple case.  */
    {
      task_t newtask;
-@@ -413,7 +413,12 @@
+@@ -422,7 +422,12 @@ believe it has restricted them to differ
      if (err)
        error (3, err, "proc_child");
  
@@ -65,9 +63,9 @@ Index: hurd-debian/utils/fakeauth.c
      if (err)
 Index: hurd-debian/utils/rpctrace.c
 ===================================================================
---- hurd-debian.orig/utils/rpctrace.c	2012-06-05 00:35:35.000000000 +0000
-+++ hurd-debian/utils/rpctrace.c	2012-06-05 01:48:00.000000000 +0000
-@@ -1069,7 +1069,11 @@
+--- hurd-debian.orig/utils/rpctrace.c
++++ hurd-debian/utils/rpctrace.c
+@@ -1742,7 +1742,11 @@ traced_spawn (char **argv, char **envp)
    /* Now actually run the command they told us to trace.  We do the exec on
       the actual task, so the RPCs to map in the program itself do not get
       traced.  Could have an option to use TASK_WRAPPER here instead.  */
@@ -81,8 +79,8 @@ Index: hurd-debian/utils/rpctrace.c
  
 Index: hurd-debian/utils/shd.c
 ===================================================================
---- hurd-debian.orig/utils/shd.c	2012-06-05 00:35:35.000000000 +0000
-+++ hurd-debian/utils/shd.c	2012-06-05 01:48:00.000000000 +0000
+--- hurd-debian.orig/utils/shd.c
++++ hurd-debian/utils/shd.c
 @@ -1,5 +1,5 @@
  /*
 -   Copyright (C) 1994,95,99,2002 Free Software Foundation
@@ -90,7 +88,7 @@ Index: hurd-debian/utils/shd.c
  
     This program is free software; you can redistribute it and/or
     modify it under the terms of the GNU General Public License as
-@@ -159,15 +159,18 @@
+@@ -159,15 +159,18 @@ run (char **argv, int fd0, int fd1)
  	      movefd (fd1, 1, &save1))
  	    return -1;
  

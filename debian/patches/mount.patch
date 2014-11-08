@@ -8,12 +8,12 @@ diff --git a/utils/mount.c b/utils/mount.c
 index 8b059c2..8af055e 100644
 --- a/utils/mount.c
 +++ b/utils/mount.c
-@@ -248,7 +248,9 @@ do_mount (struct fs *fs, int remount)
+@@ -284,7 +284,9 @@ do_mount (struct fs *fs, int remount)
        {
  	ARGZ (add (&fsopts, &fsopts_len, o));
        }
--    else if (strcmp (o, "defaults") != 0)
-+    else if (strcmp (o, "defaults") != 0 &&
+-    else if ((strcmp (o, "defaults") != 0) && (strlen (o) != 0))
++    else if ((strcmp (o, "defaults") != 0) && (strlen (o) != 0) &&
 +	     strcmp (o, "loop") != 0 &&
 +	     strcmp (o, "exec") != 0)
        {

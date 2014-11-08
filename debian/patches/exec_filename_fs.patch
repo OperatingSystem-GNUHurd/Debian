@@ -724,19 +724,21 @@ Index: hurd-debian/trans/fakeroot.c
    error_t err;
    file_t file;
  
-@@ -794,13 +830,29 @@
+@@ -794,14 +830,30 @@
  
    if (!err)
      {
 +#ifdef HAVE_FILE_EXEC_FILE_NAME
        /* We cannot use MACH_MSG_TYPE_MOVE_SEND because we might need to
  	 retry an interrupted call that would have consumed the rights.  */
--      err = file_exec (user->po->np->nn->file, task, flags, argv, argvlen,
+-      err = file_exec (netfs_node_netnode (user->po->np)->file,
+-		       task, flags, argv, argvlen,
 -		       envp, envplen, fds, MACH_MSG_TYPE_COPY_SEND, fdslen,
 -		       portarray, MACH_MSG_TYPE_COPY_SEND, portarraylen,
 -		       intarray, intarraylen, deallocnames, deallocnameslen,
 -		       destroynames, destroynameslen);
-+      err = file_exec_file_name (user->po->np->nn->file, task, flags,
++      err = file_exec_file_name (netfs_node_netnode (user->po->np)->file,
++				 task, flags,
 +				 filename,
 +				 argv, argvlen,
 +				 envp, envplen,
@@ -1001,12 +1003,12 @@ Index: hurd-debian/configure.ac
 ===================================================================
 --- hurd-debian.orig/configure.ac	2014-02-03 23:46:00.000000000 +0000
 +++ hurd-debian/configure.ac	2014-02-03 23:48:36.000000000 +0000
-@@ -161,7 +161,7 @@
+@@ -161,6 +161,8 @@
+   VERSIONING=no
+ fi
  AC_SUBST(VERSIONING)
- 
- # Check if libc contains getgrouplist and/or uselocale.
--AC_CHECK_FUNCS(getgrouplist uselocale)
-+AC_CHECK_FUNCS(getgrouplist uselocale file_exec_file_name exec_exec_file_name)
++# Check if libc contains these functions.
++AC_CHECK_FUNCS(file_exec_file_name exec_exec_file_name)
  
  
  # From glibc HEAD, 2007-11-07.

@@ -1,46 +1,31 @@
-TARGET = procfs
-OBJS = procfs.o netfs.o procfs_dir.o \
-       process.o proclist.o rootdir.o dircat.o main.o mach_debugUser.o
-LIBS = -lnetfs -lps -lfshelp -lpthread
+#   Makefile - for procfs
+# 
+#   Copyright (C) 2008 Free Software Foundation, Inc.
+#
+#   This program is free software; you can redistribute it and/or
+#   modify it under the terms of the GNU General Public License as
+#   published by the Free Software Foundation; either version 2, or (at
+#   your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful, but
+#   WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#   General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-CC = gcc
-CFLAGS = -Wall -g
-CPPFLAGS =
-LDFLAGS =
+dir := procfs
+makemode := server
 
-ifdef PROFILE
-CFLAGS= -g -pg
-CPPFLAGS= -DPROFILE
-LDFLAGS= -static
-LIBS= -lnetfs -lfshelp -liohelp -lps -lports -lpthread -lihash -lshouldbeinlibc
-endif
+target = procfs
 
-CPPFLAGS += -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64
+SRCS = procfs.c netfs.c procfs_dir.c process.c proclist.c rootdir.c dircat.c main.c mach_debugUser.c
+LCLHDRS = dircat.h main.h process.h procfs.h procfs_dir.h proclist.h rootdir.h
 
-all: $(TARGET)
+OBJS = $(SRCS:.c=.o)
+HURDLIBS = netfs fshelp iohelp ps ports ihash shouldbeinlibc
+OTHERLIBS = -lpthread
 
-rootdir.o: rootdir.c mach_debug_U.h
-
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
-
-clean:
-	$(RM) $(TARGET) $(OBJS)
-
-# This is the gist of the MIG user stub handling from Hurd's build
-# system:
-
-# Where to find .defs files.
-vpath %.defs /usr/include/mach_debug
-
-MIG = mig
-MIGCOM = $(MIG) -cc cat - /dev/null
-MIGCOMFLAGS := -subrprefix __
-
-%.udefsi: %.defs
-	$(CPP) -x c $(CPPFLAGS) $(MIGUFLAGS) $($*-MIGUFLAGS) \
-	  $< -o $*.udefsi
-
-%_U.h %User.c: %.udefsi
-	$(MIGCOM) $(MIGCOMFLAGS) $(MIGCOMUFLAGS) $($*-MIGCOMUFLAGS) < $< \
-		  -user $*User.c -server /dev/null -header $*_U.h
+include ../Makeconf

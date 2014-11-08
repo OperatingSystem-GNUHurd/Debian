@@ -14,12 +14,11 @@ Index: hurd-debian/Makefile
  
  # Hurd programs
  prog-subdirs = auth proc exec init term \
-@@ -37,7 +38,7 @@ prog-subdirs = auth proc exec init term
- 	       login daemons boot console \
- 	       hostmux usermux ftpfs trans \
- 	       console-client utils sutils \
--	       benchmarks fstests
-+	       benchmarks fstests procfs random devnode
+@@ -37,6 +38,7 @@ prog-subdirs = auth proc exec init term
+ 	       benchmarks fstests \
+ 	       random \
+ 	       procfs \
++	       devnode
  
  ifeq ($(HAVE_SUN_RPC),yes)
  prog-subdirs += nfs nfsd
@@ -27,25 +26,14 @@ Index: hurd-debian/Makeconf
 ===================================================================
 --- hurd-debian.orig/Makeconf
 +++ hurd-debian/Makeconf
-@@ -576,14 +576,18 @@ vpath %.defs $(top_srcdir)/hurd
+@@ -576,7 +576,7 @@ vpath %.defs $(top_srcdir)/hurd
  # These we want to find in the libc include directory...
  mach_defs_names = bootstrap exc mach mach4 \
  	mach_host mach_port mach_timer_reply memory_object \
 -	memory_object_default notify
 +	memory_object_default notify experimental
-+mach_debug_defs_names = mach_debug
+ mach_debug_defs_names = mach_debug
  device_defs_names = dev_forward device device_reply device_request
- 
- mach_defs = $(addsuffix .defs,$(mach_defs_names))
-+mach_debug_defs = $(addsuffix .defs,$(mach_debug_defs_names))
- device_defs = $(addsuffix .defs,$(device_defs_names))
- 
- $(mach_defs): %.defs:
- 	echo '#include <mach/$@>' > $@
-+$(mach_debug_defs): %.defs:
-+	echo '#include <mach_debug/$@>' > $@
- $(device_defs): %.defs:
- 	echo '#include <device/$@>' > $@
  
 Index: hurd-debian/configure.ac
 ===================================================================
@@ -64,84 +52,3 @@ Index: hurd-debian/configure.ac
  # Check for ncursesw, which is needed for the console-curses client.
  hurd_LIB_NCURSESW
  
-Index: hurd-debian/procfs/Makefile
-===================================================================
---- hurd-debian.orig/procfs/Makefile
-+++ hurd-debian/procfs/Makefile
-@@ -1,46 +1,33 @@
--TARGET = procfs
--OBJS = procfs.o netfs.o procfs_dir.o \
--       process.o proclist.o rootdir.o dircat.o main.o mach_debugUser.o
--LIBS = -lnetfs -lps -lfshelp -lpthread
--
--CC = gcc
--CFLAGS = -Wall -g
--CPPFLAGS =
--LDFLAGS =
--
--ifdef PROFILE
--CFLAGS= -g -pg
--CPPFLAGS= -DPROFILE
--LDFLAGS= -static
--LIBS= -lnetfs -lfshelp -liohelp -lps -lports -lpthread -lihash -lshouldbeinlibc
--endif
--
--CPPFLAGS += -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64
--
--all: $(TARGET)
-+#   Makefile - for procfs
-+# 
-+#   Copyright (C) 2008 Free Software Foundation, Inc.
-+#
-+#   This program is free software; you can redistribute it and/or
-+#   modify it under the terms of the GNU General Public License as
-+#   published by the Free Software Foundation; either version 2, or (at
-+#   your option) any later version.
-+#
-+#   This program is distributed in the hope that it will be useful, but
-+#   WITHOUT ANY WARRANTY; without even the implied warranty of
-+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+#   General Public License for more details.
-+#
-+#   You should have received a copy of the GNU General Public License
-+#   along with this program; if not, write to the Free Software
-+#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-+
-+dir := procfs
-+makemode := server
-+
-+target = procfs
-+
-+SRCS = procfs.c netfs.c procfs_dir.c process.c proclist.c rootdir.c dircat.c main.c mach_debugUser.c
-+LCLHDRS = dircat.h main.h process.h procfs.h procfs_dir.h proclist.h rootdir.h
-+
-+OBJS = $(SRCS:.c=.o)
-+HURDLIBS = netfs fshelp iohelp ps ports ihash shouldbeinlibc
-+OTHERLIBS = -lpthread
- 
- rootdir.o: rootdir.c mach_debug_U.h
- 
--$(TARGET): $(OBJS)
--	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
--
--clean:
--	$(RM) $(TARGET) $(OBJS)
--
--# This is the gist of the MIG user stub handling from Hurd's build
--# system:
--
--# Where to find .defs files.
--vpath %.defs /usr/include/mach_debug
--
--MIG = mig
--MIGCOM = $(MIG) -cc cat - /dev/null
--MIGCOMFLAGS := -subrprefix __
--
--%.udefsi: %.defs
--	$(CPP) -x c $(CPPFLAGS) $(MIGUFLAGS) $($*-MIGUFLAGS) \
--	  $< -o $*.udefsi
--
--%_U.h %User.c: %.udefsi
--	$(MIGCOM) $(MIGCOMFLAGS) $(MIGCOMUFLAGS) $($*-MIGCOMUFLAGS) < $< \
--		  -user $*User.c -server /dev/null -header $*_U.h
-+include ../Makeconf

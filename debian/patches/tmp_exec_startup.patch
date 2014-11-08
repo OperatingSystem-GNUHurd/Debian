@@ -5,9 +5,11 @@ TODO: not used by d-i. Is it used by crosshurd?
  libdiskfs/boot-start.c |   24 ++++++++++++++++++++----
  1 file changed, 20 insertions(+), 4 deletions(-)
 
---- a/libdiskfs/boot-start.c
-+++ b/libdiskfs/boot-start.c
-@@ -126,8 +126,13 @@ diskfs_start_bootstrap ()
+Index: hurd-debian/libdiskfs/boot-start.c
+===================================================================
+--- hurd-debian.orig/libdiskfs/boot-start.c
++++ hurd-debian/libdiskfs/boot-start.c
+@@ -130,8 +130,13 @@ diskfs_start_bootstrap ()
        assert (_hurd_ports);
        assert (_hurd_ports[INIT_PORT_CRDIR].port != MACH_PORT_NULL);
        diskfs_exec = file_name_lookup (_SERVERS_EXEC, 0, 0);
@@ -23,8 +25,8 @@ TODO: not used by d-i. Is it used by crosshurd?
        else
  	{
  #ifndef NDEBUG
-@@ -177,8 +182,15 @@ diskfs_start_bootstrap ()
- 			&retry, pathbuf, &execnode);
+@@ -181,8 +186,15 @@ diskfs_start_bootstrap ()
+ 			&retry, retry_name, &execnode);
        if (err)
  	{
 -	  error (0, err, "cannot set translator on %s", _SERVERS_EXEC);
@@ -41,7 +43,7 @@ TODO: not used by d-i. Is it used by crosshurd?
  	}
        else
  	{
-@@ -393,6 +405,10 @@ diskfs_execboot_fsys_startup (mach_port_
+@@ -407,6 +419,10 @@ diskfs_execboot_fsys_startup (mach_port_
  
    err = dir_lookup (rootport, _SERVERS_EXEC, flags|O_NOTRANS, 0,
  		    &retry, pathbuf, real);

@@ -1,54 +1,17 @@
 Just a build fix.
 
-diff --git a/init/Makefile b/init/Makefile
-index ffb82ff..5ae3b50 100644
---- a/init/Makefile
-+++ b/init/Makefile
-@@ -21,7 +21,7 @@ makemode := server
- SRCS = init.c stubs.c
- OBJS = $(SRCS:.c=.o) \
-        startupServer.o notifyServer.o startup_replyUser.o msgServer.o \
--       startup_notifyUser.o
-+       startup_notifyUser.o processUser.o
- target = init
- HURDLIBS = shouldbeinlibc
+# missing mach_port_set_protected_payload and mach_port_clear_protected_payload RPCs
+
+Index: hurd-debian/mach-defpager/Makefile
+===================================================================
+--- hurd-debian.orig/mach-defpager/Makefile
++++ hurd-debian/mach-defpager/Makefile
+@@ -27,7 +27,7 @@ SRCS	:= default_pager.c kalloc.c wiring.
+ OBJS 	:= $(SRCS:.c=.o) \
+ 	   $(addsuffix Server.o,\
+ 		       memory_object default_pager memory_object_default exc) \
+-	   default_pager_replyUser.o
++	   default_pager_replyUser.o mach_portUser.o
  
-diff --git a/proc/Makefile b/proc/Makefile
-index 2eed13c..dc768d3 100644
---- a/proc/Makefile
-+++ b/proc/Makefile
-@@ -29,7 +29,7 @@ MIGSFLAGS="-DPROCESS_INTRAN=pstruct_t reqport_find (process_t)" \
- MIGSFLAGS = -imacros $(srcdir)/mig-mutate.h
- 
- MIGSTUBS = processServer.o notifyServer.o \
--	ourmsgUser.o proc_excUser.o proc_excServer.o
-+	ourmsgUser.o proc_excUser.o proc_excServer.o processUser.o
- OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
- HURDLIBS = ihash ports shouldbeinlibc
- OTHERLIBS = -lpthread
-diff --git a/Makeconf b/Makeconf
-index 5cf995d..5dba70c 100644
---- a/Makeconf
-+++ b/Makeconf
-@@ -575,7 +575,7 @@ vpath %.defs $(top_srcdir)/hurd
- # These we want to find in the libc include directory...
- mach_defs_names = bootstrap exc mach mach4 \
- 	mach_host mach_port mach_timer_reply memory_object \
--	memory_object_default notify experimental
-+	memory_object_default notify experimental gnumach
- mach_debug_defs_names = mach_debug
- device_defs_names = dev_forward device device_reply device_request
- 
-diff --git a/exec/Makefile b/exec/Makefile
-index 3ef742d..7507b0a 100644
---- a/exec/Makefile
-+++ b/exec/Makefile
-@@ -22,7 +22,7 @@ makemode := server
- 
- SRCS = exec.c main.c hashexec.c hostarch.c
- OBJS = main.o hostarch.o exec.o hashexec.o \
--       execServer.o exec_startupServer.o exec_experimentalServer.o
-+       execServer.o exec_startupServer.o exec_experimentalServer.o gnumachUser.o
- 
- target = exec
- #targets = exec exec.static
+ HURDLIBS:= ihash
+ OTHERLIBS:= -lpthread
