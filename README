@@ -31,18 +31,6 @@ do
   git archive HEAD $dir | bzip2 > ../hurd_$version.git$date.orig-$dir.tar.bz2
 done
 
-git checkout random
-git pull incubator random
-
-git tag -m "New upstream snapshot" -a upstream/random/$version.git$date
-git archive --prefix=random/ HEAD | bzip2 > ../hurd_$version.git$date.orig-random.tar.bz2
-
-git checkout procfs-jkoenig
-git pull procfs master:procfs-jkoenig
-
-git tag -m "New upstream snapshot" -a upstream/procfs/$version.git$date
-git archive --prefix=procfs/ HEAD | bzip2 > ../hurd_$version.git$date.orig-procfs.tar.bz2
-
 git checkout upstream
 git pull upstream master:upstream
 
@@ -51,7 +39,7 @@ git archive --prefix=hurd-$version.git$date/ HEAD | bzip2 > ../hurd_$version.git
 
 git checkout upstream-merged
 rm * -fr
-for dir in devnode libbpf libdde-linux26 libddekit libhurd-slab libmachdev eth-filter eth-multiplexer random procfs
+for dir in devnode libbpf libdde-linux26 libddekit libhurd-slab libmachdev eth-filter eth-multiplexer
 do
   tar -xf ../hurd_$version.git$date.orig-$dir.tar.bz2
 done
