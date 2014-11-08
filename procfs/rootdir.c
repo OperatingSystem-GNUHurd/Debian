@@ -1,5 +1,5 @@
 /* Hurd /proc filesystem, permanent files of the root directory.
-   Copyright (C) 2010,13 Free Software Foundation, Inc.
+   Copyright (C) 2010,13,14 Free Software Foundation, Inc.
 
    This file is part of the GNU Hurd.
 
@@ -32,6 +32,7 @@
 #include <sys/stat.h>
 #include <argz.h>
 #include <ps.h>
+#include <glob.h>
 #include "procfs.h"
 #include "procfs_dir.h"
 #include "main.h"
@@ -407,72 +408,7 @@ rootdir_gc_fakeself (void *hook, char **contents, ssize_t *contents_len)
   return 0;
 }
 
-/* The mtab translator to use by default for the "mounts" node.  */
-#define MTAB_TRANSLATOR	"/hurd/mtab"
-
 static struct node *rootdir_mounts_node;
-static pthread_spinlock_t rootdir_mounts_node_lock =
-  PTHREAD_SPINLOCK_INITIALIZER;
-
-static struct node *
-rootdir_mounts_make_node (void *dir_hook, const void *entry_hook)
-{
-  struct node *np, *prev;
-
-  pthread_spin_lock (&rootdir_mounts_node_lock);
-  np = rootdir_mounts_node;
-  pthread_spin_unlock (&rootdir_mounts_node_lock);
-
-  if (np != NULL)
-    {
-      netfs_nref (np);
-      return np;
-    }
-
-  np = procfs_make_node (entry_hook, dir_hook);
-  if (np == NULL)
-    return NULL;
-
-  procfs_node_chtype (np, S_IFREG | S_IPTRANS);
-  procfs_node_chmod (np, 0444);
-
-  pthread_spin_lock (&rootdir_mounts_node_lock);
-  prev = rootdir_mounts_node;
-  if (rootdir_mounts_node == NULL)
-    rootdir_mounts_node = np;
-  pthread_spin_unlock (&rootdir_mounts_node_lock);
-
-  if (prev != NULL)
-    {
-      procfs_cleanup (np);
-      np = prev;
-    }
-
-  return np;
-}
-
-static error_t
-rootdir_mounts_get_translator (void *hook, char **argz, size_t *argz_len)
-{
-  static const char const mtab_argz[] = MTAB_TRANSLATOR "\0/";
-
-  *argz = malloc (sizeof mtab_argz);
-  if (! *argz)
-    return ENOMEM;
-
-  memcpy (*argz, mtab_argz, sizeof mtab_argz);
-  *argz_len = sizeof mtab_argz;
-  return 0;
-}
-
-static int
-rootdir_mounts_exists (void *dir_hook, const void *entry_hook)
-{
-  static int translator_exists = -1;
-  if (translator_exists == -1)
-    translator_exists = access (MTAB_TRANSLATOR, F_OK|X_OK) == 0;
-  return translator_exists;
-}
 
 static error_t
 rootdir_gc_slabinfo (void *hook, char **contents, ssize_t *contents_len)
@@ -529,11 +465,61 @@ rootdir_gc_slabinfo (void *hook, char **contents, ssize_t *contents_len)
            mem_total, mem_total_reclaimable);
 
   fclose (m);
-  *contents_len += 1;	/* For the terminating 0.  */
 
  out:
   vm_deallocate (mach_task_self (),
                  cache_info, cache_info_count * sizeof *cache_info);
+  return err;
+}
+
+static error_t
+rootdir_gc_filesystems (void *hook, char **contents, ssize_t *contents_len)
+{
+  error_t err = 0;
+  size_t i;
+  int glob_ret;
+  glob_t matches;
+  FILE *m;
+
+  m = open_memstream (contents, contents_len);
+  if (m == NULL)
+    return errno;
+
+  glob_ret = glob (_HURD "*fs", 0, NULL, &matches);
+  switch (glob_ret)
+    {
+    case 0:
+      for (i = 0; i < matches.gl_pathc; i++)
+	{
+	  /* Get ith entry, shave off the prefix.  */
+	  char *name = &matches.gl_pathv[i][sizeof _HURD - 1];
+
+	  /* Linux naming convention is a bit inconsistent.  */
+	  if (strncmp (name, "ext", 3) == 0
+	      || strcmp (name, "procfs") == 0)
+	    /* Drop the fs suffix.  */
+	    name[strlen (name) - 2] = 0;
+
+	  fprintf (m, "\t%s\n", name);
+	}
+
+      globfree (&matches);
+      break;
+
+    case GLOB_NOMATCH:
+      /* Poor fellow.  */
+      break;
+
+    case GLOB_NOSPACE:
+      err = ENOMEM;
+      break;
+
+    default:
+      /* This should not happen.  */
+      err = EGRATUITOUS;
+    }
+
+  fclose (m);
   return err;
 }
 
@@ -557,7 +543,84 @@ rootdir_symlink_make_node (void *dir_hook, const void *entry_hook)
     procfs_node_chtype (np, S_IFLNK);
   return np;
 }
+
+/* Translator linkage.  */
 
+static pthread_spinlock_t rootdir_translated_node_lock =
+  PTHREAD_SPINLOCK_INITIALIZER;
+
+struct procfs_translated_node_ops
+{
+  struct procfs_node_ops node_ops;
+
+  struct node **npp;
+  char *argz;
+  size_t argz_len;
+};
+
+static struct node *
+rootdir_make_translated_node (void *dir_hook, const void *entry_hook)
+{
+  const struct procfs_translated_node_ops *ops = entry_hook;
+  struct node *np, *prev;
+
+  pthread_spin_lock (&rootdir_translated_node_lock);
+  np = *ops->npp;
+  pthread_spin_unlock (&rootdir_translated_node_lock);
+
+  if (np != NULL)
+    {
+      netfs_nref (np);
+      return np;
+    }
+
+  np = procfs_make_node (entry_hook, entry_hook);
+  if (np == NULL)
+    return NULL;
+
+  procfs_node_chtype (np, S_IFREG | S_IPTRANS);
+  procfs_node_chmod (np, 0444);
+
+  pthread_spin_lock (&rootdir_translated_node_lock);
+  prev = *ops->npp;
+  if (*ops->npp == NULL)
+    *ops->npp = np;
+  pthread_spin_unlock (&rootdir_translated_node_lock);
+
+  if (prev != NULL)
+    {
+      procfs_cleanup (np);
+      np = prev;
+    }
+
+  return np;
+}
+
+static error_t
+rootdir_translated_node_get_translator (void *hook, char **argz,
+					size_t *argz_len)
+{
+  const struct procfs_translated_node_ops *ops = hook;
+
+  *argz = malloc (ops->argz_len);
+  if (! *argz)
+    return ENOMEM;
+
+  memcpy (*argz, ops->argz, ops->argz_len);
+  *argz_len = ops->argz_len;
+  return 0;
+}
+
+#define ROOTDIR_DEFINE_TRANSLATED_NODE(NPP, ARGZ)		  \
+  &(struct procfs_translated_node_ops) {			  \
+    .node_ops = {						  \
+      .get_translator = rootdir_translated_node_get_translator,	  \
+    },								  \
+    .npp = NPP,							  \
+    .argz = (ARGZ),						  \
+    .argz_len = sizeof (ARGZ),					  \
+  }
+
 static const struct procfs_dir_entry rootdir_entries[] = {
   {
     .name = "self",
@@ -621,18 +684,23 @@ static const struct procfs_dir_entry rootdir_entries[] = {
   },
   {
     .name = "mounts",
-    .hook = & (struct procfs_node_ops) {
-      .get_translator = rootdir_mounts_get_translator,
-    },
+    .hook = ROOTDIR_DEFINE_TRANSLATED_NODE (&rootdir_mounts_node,
+					    _HURD_MTAB "\0/"),
     .ops = {
-      .make_node = rootdir_mounts_make_node,
-      .exists = rootdir_mounts_exists,
+      .make_node = rootdir_make_translated_node,
     }
   },
   {
     .name = "slabinfo",
     .hook = & (struct procfs_node_ops) {
       .get_contents = rootdir_gc_slabinfo,
+      .cleanup_contents = procfs_cleanup_contents_with_free,
+    },
+  },
+  {
+    .name = "filesystems",
+    .hook = & (struct procfs_node_ops) {
+      .get_contents = rootdir_gc_filesystems,
       .cleanup_contents = procfs_cleanup_contents_with_free,
     },
   },

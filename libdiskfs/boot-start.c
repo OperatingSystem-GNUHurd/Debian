@@ -178,7 +178,7 @@ diskfs_start_bootstrap ()
       /* Attempt to set the active translator for the exec server so that
 	 filesystems other than the bootstrap can find it.  */
       err = dir_lookup (root_pt, _SERVERS_EXEC, O_NOTRANS, 0,
-			&retry, pathbuf, &execnode);
+			&retry, retry_name, &execnode);
       if (err)
 	{
 	  error (0, err, "cannot set translator on %s", _SERVERS_EXEC);
@@ -217,8 +217,9 @@ diskfs_start_bootstrap ()
       while (*initname == '/')
 	initname++;
 
-      exec_argvlen = asprintf (&exec_argv, "/%s%c", initname, '\0');
-      assert (exec_argvlen != -1);
+      int len = asprintf (&exec_argv, "/%s%c", initname, '\0');
+      assert (len != -1);
+      exec_argvlen = (size_t) len;
       err = argz_add_sep (&exec_argv, &exec_argvlen,
 			  diskfs_boot_command_line, ' ');
       assert_perror (err);

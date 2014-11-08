@@ -31,11 +31,28 @@
 /* An opaque type.  You must not access these values directly.  */
 typedef unsigned int refcount_t;
 
-/* Initialize REF with REFERENCES.  */
+/* Initialize REF with REFERENCES.  REFERENCES must not be zero.  */
 static inline void
 refcount_init (refcount_t *ref, unsigned int references)
 {
+  assert (references > 0 || !"references must not be zero!");
   *ref = references;
+}
+
+/* Increment REF.  Return the result of the operation.  This function
+   uses atomic operations.  It is not required to serialize calls to
+   this function.
+
+   This is the unsafe version of refcount_ref.  refcount_ref also
+   checks for use-after-free errors.  When in doubt, use that one
+   instead.  */
+static inline unsigned int
+refcount_unsafe_ref (refcount_t *ref)
+{
+  unsigned int r;
+  r = __atomic_add_fetch (ref, 1, __ATOMIC_RELAXED);
+  assert (r != UINT_MAX || !"refcount overflowed!");
+  return r;
 }
 
 /* Increment REF.  Return the result of the operation.  This function
@@ -45,8 +62,8 @@ static inline unsigned int
 refcount_ref (refcount_t *ref)
 {
   unsigned int r;
-  r = __atomic_add_fetch (ref, 1, __ATOMIC_RELAXED);
-  assert (r != UINT_MAX || !"refcount overflowed!");
+  r = refcount_unsafe_ref (ref);
+  assert (r != 1 || !"refcount detected use-after-free!");
   return r;
 }
 
@@ -101,11 +118,32 @@ union _references {
   uint64_t value;
 };
 
-/* Initialize REF with HARD and WEAK references.  */
+/* Initialize REF with HARD and WEAK references.  HARD and WEAK must
+   not both be zero.  */
 static inline void
 refcounts_init (refcounts_t *ref, uint32_t hard, uint32_t weak)
 {
+  assert ((hard != 0 || weak != 0) || !"references must not both be zero!");
   ref->references = (struct references) { .hard = hard, .weak = weak };
+}
+
+/* Increment the hard reference count of REF.  If RESULT is not NULL,
+   the result of the operation is written there.  This function uses
+   atomic operations.  It is not required to serialize calls to this
+   function.
+
+   This is the unsafe version of refcounts_ref.  refcounts_ref also
+   checks for use-after-free errors.  When in doubt, use that one
+   instead.  */
+static inline void
+refcounts_unsafe_ref (refcounts_t *ref, struct references *result)
+{
+  const union _references op = { .references = { .hard = 1 } };
+  union _references r;
+  r.value = __atomic_add_fetch (&ref->value, op.value, __ATOMIC_RELAXED);
+  assert (r.references.hard != UINT32_MAX || !"refcount overflowed!");
+  if (result)
+    *result = r.references;
 }
 
 /* Increment the hard reference count of REF.  If RESULT is not NULL,
@@ -115,12 +153,12 @@ refcounts_init (refcounts_t *ref, uint32_t hard, uint32_t weak)
 static inline void
 refcounts_ref (refcounts_t *ref, struct references *result)
 {
-  const union _references op = { .references = { .hard = 1 } };
-  union _references r;
-  r.value = __atomic_add_fetch (&ref->value, op.value, __ATOMIC_RELAXED);
-  assert (r.references.hard != UINT32_MAX || !"refcount overflowed!");
+  struct references r;
+  refcounts_unsafe_ref (ref, &r);
+  assert (! (r.hard == 1 && r.weak == 0)
+          || !"refcount detected use-after-free!");
   if (result)
-    *result = r.references;
+    *result = r;
 }
 
 /* Decrement the hard reference count of REF.  If RESULT is not NULL,
@@ -160,7 +198,7 @@ refcounts_promote (refcounts_t *ref, struct references *result)
      So we just add a hard reference.  In combination, this is the
      desired operation.  */
   const union _references op =
-    { .references = { .weak = ~0, .hard = 1} };
+    { .references = { .weak = ~0U, .hard = 1} };
   union _references r;
   r.value = __atomic_add_fetch (&ref->value, op.value, __ATOMIC_RELAXED);
   assert (r.references.hard != UINT32_MAX || !"refcount overflowed!");
@@ -188,10 +226,29 @@ refcounts_demote (refcounts_t *ref, struct references *result)
      significant bits.  When we add ~0 to the hard references, it will
      overflow into the weak references.  This is the desired
      operation.  */
-  const union _references op = { .references = { .hard = ~0 } };
+  const union _references op = { .references = { .hard = ~0U } };
   union _references r;
   r.value = __atomic_add_fetch (&ref->value, op.value, __ATOMIC_RELAXED);
   assert (r.references.hard != UINT32_MAX || !"refcount underflowed!");
+  assert (r.references.weak != UINT32_MAX || !"refcount overflowed!");
+  if (result)
+    *result = r.references;
+}
+
+/* Increment the weak reference count of REF.  If RESULT is not NULL,
+   the result of the operation is written there.  This function uses
+   atomic operations.  It is not required to serialize calls to this
+   function.
+
+   This is the unsafe version of refcounts_ref_weak.
+   refcounts_ref_weak also checks for use-after-free errors.  When in
+   doubt, use that one instead.  */
+static inline void
+refcounts_unsafe_ref_weak (refcounts_t *ref, struct references *result)
+{
+  const union _references op = { .references = { .weak = 1 } };
+  union _references r;
+  r.value = __atomic_add_fetch (&ref->value, op.value, __ATOMIC_RELAXED);
   assert (r.references.weak != UINT32_MAX || !"refcount overflowed!");
   if (result)
     *result = r.references;
@@ -204,12 +261,12 @@ refcounts_demote (refcounts_t *ref, struct references *result)
 static inline void
 refcounts_ref_weak (refcounts_t *ref, struct references *result)
 {
-  const union _references op = { .references = { .weak = 1 } };
-  union _references r;
-  r.value = __atomic_add_fetch (&ref->value, op.value, __ATOMIC_RELAXED);
-  assert (r.references.weak != UINT32_MAX || !"refcount overflowed!");
+  struct references r;
+  refcounts_unsafe_ref_weak (ref, &r);
+  assert (! (r.hard == 0 && r.weak == 1)
+          || !"refcount detected use-after-free!");
   if (result)
-    *result = r.references;
+    *result = r;
 }
 
 /* Decrement the weak reference count of REF.  If RESULT is not NULL,
