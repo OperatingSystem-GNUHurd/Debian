@@ -1,3 +1,17 @@
+hurd (1:0.5.git20141108-3) unstable; urgency=medium
+
+  * control:
+    - Bump gnumach and mig build-depends to get protected payload support.
+    - Add Built-Using fields.
+    - Add uuid-dev and libblkid-dev Build-Depends.
+  * rules: fill built-using field.
+  * patches/git-R-protected-payloads.patch: Reapply upstream commit, protected
+    payload support is fixed.
+  * patches/git-vm_map.patch: Fix vm_map call with odd vm_map kernel behavior.
+  * local/setup-translators: Fix inet6 socket creation.
+
+ -- Samuel Thibault <sthibault@debian.org>  Sun, 09 Nov 2014 18:25:00 +0000
+
 hurd (1:0.5.git20141108-2) unstable; urgency=medium
 
   * control: Add zlib1g-dev and libbz2-dev build dependencies.

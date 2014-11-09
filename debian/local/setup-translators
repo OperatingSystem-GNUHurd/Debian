@@ -103,9 +103,9 @@ st exec /hurd/exec
 st default-pager /hurd/proxy-defpager
 st socket/1 /hurd/pflocal
 st socket/local '/hurd/symlink 1' '(+link)'
-st socket/2 /hurd/pfinet -6 /servers/socket/26
+st socket/2 '/hurd/pfinet -6 /servers/socket/26' inet
 st socket/inet  '/hurd/symlink 2'  '(+link)'
-st socket/26 /hurd/pfinet -4 /servers/socket/2
+st socket/26 '/hurd/pfinet -4 /servers/socket/2' inet6
 st socket/inet6 '/hurd/symlink 26' '(+link)'
 st /proc '/hurd/procfs -c'
 

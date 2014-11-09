@@ -30,6 +30,8 @@ DEB_HOST_MULTIARCH := $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 INSTALL_in := $(wildcard debian/*.install.in)
 INSTALL_generated := $(patsubst %.in,%,$(INSTALL_in))
 
+BUILT_USING := $(shell dpkg-query -f '$${source:Package} (= $${source:Version}), ' -W libc0.3-dev libparted-dev zlib1g-dev libbz2-dev uuid-dev libblkid-dev)
+
 %:
 	dh $@ -Bbuild-deb --with autotools_dev,autoreconf
 
@@ -107,6 +109,9 @@ override_dh_fixperms:
 override_dh_makeshlibs:
 	dh_makeshlibs -phurd-libs0.3 --add-udeb=hurd-libs0.3-udeb
 	dh_makeshlibs --remaining-packages -Xusr/lib/hurd/
+
+override_dh_gencontrol:
+	dh_gencontrol -- -V"built-using=$(BUILT_USING)"
 
 override_dh_clean:
 	dh_clean
