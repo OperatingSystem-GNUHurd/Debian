@@ -2,12 +2,13 @@ Source: hurd
 Section: admin
 Priority: required
 Maintainer: GNU Hurd Maintainers <debian-hurd@lists.debian.org>
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 Build-Depends: mig (>= 1.4-2), gnumach-dev (>= 1.4-10),
  libc0.3-dev (>= 2.17-94~), texinfo, libncursesw5-dev,
  debhelper (>= 7.0.50~), autoconf, dh-autoreconf,
  libparted-dev, libpciaccess-dev, libx11-dev, x11proto-core-dev, pkg-config,
- xkb-data, gawk, flex, bison, autotools-dev, libdaemon-dev, libpcap0.8-dev
+ xkb-data, gawk, flex, bison, autotools-dev, libdaemon-dev, libpcap0.8-dev,
+ zlib1g-dev, libbz2-dev,
 Uploaders: Michael Banck <mbanck@debian.org>, 
  Samuel Thibault <sthibault@debian.org>
 Homepage: http://www.gnu.org/software/hurd/hurd.html
