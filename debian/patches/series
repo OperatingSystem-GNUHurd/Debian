@@ -40,4 +40,5 @@ exec_filename_fix.patch
 mount.patch
 proc_set_init_task.patch
 xkb-compat.patch
+git-R-protected-payloads.patch
 newRPC.patch
