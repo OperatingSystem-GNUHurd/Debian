@@ -10,7 +10,7 @@ hurd (1:0.5.git20141108-3) unstable; urgency=medium
   * patches/git-vm_map.patch: Fix vm_map call with odd vm_map kernel behavior.
   * local/setup-translators: Fix inet6 socket creation.
 
- -- Samuel Thibault <sthibault@debian.org>  Sun, 09 Nov 2014 18:25:00 +0000
+ -- Samuel Thibault <sthibault@debian.org>  Sun, 09 Nov 2014 23:49:01 +0000
 
 hurd (1:0.5.git20141108-2) unstable; urgency=medium
 
