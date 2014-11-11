@@ -1,0 +1,33 @@
+commit 324c9cdbcd3644a0f8eb467b1ea61b9ff889ae7a
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Tue Nov 11 22:43:22 2014 +0100
+
+    Make procfs appear in /proc/mounts
+    
+    d-i needs to be able to check whether /proc is mounted or not.
+    
+    * procfs/main.c (netfs_get_source): New function.
+
+diff --git a/procfs/main.c b/procfs/main.c
+index 54e9682..a620ba1 100644
+--- a/procfs/main.c
++++ b/procfs/main.c
+@@ -259,6 +259,18 @@ netfs_append_args (char **argz, size_t *argz_len)
+ 
+   return err;
+ }
++
++/* The user may define this function.  The function must set source to
++   the source of CRED. The function may return an EOPNOTSUPP to
++   indicate that the concept of a source device is not applicable. The
++   default function always returns EOPNOTSUPP. */
++error_t netfs_get_source (struct protid *cred, char *source, size_t source_len)
++{
++  if (! cred)
++    return EOPNOTSUPP;
++  snprintf(source, source_len, "proc");
++  return 0;
++}
+ 
+ error_t
+ root_make_node (struct ps_context *pc, struct node **np)

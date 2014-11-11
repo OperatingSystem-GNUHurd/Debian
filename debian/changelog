@@ -1,3 +1,10 @@
+hurd (1:0.5.git20141108-4) UNRELEASED; urgency=medium
+
+  * patches/git-proc-mounts.patch: Make procfs appear in /proc/mounts, for
+    d-i.
+
+ -- Samuel Thibault <sthibault@debian.org>  Tue, 11 Nov 2014 21:45:10 +0000
+
 hurd (1:0.5.git20141108-3) unstable; urgency=medium
 
   * control:
