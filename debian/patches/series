@@ -40,6 +40,7 @@ exec_filename_fix.patch
 mount.patch
 proc_set_init_task.patch
 xkb-compat.patch
+MAKEDEV-apm.patch
 git-vm_map.patch
 git-proc-mounts.patch
 newRPC.patch

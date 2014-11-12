@@ -1,0 +1,16 @@
+Workaround invocations from installation of power-management packages.
+
+Index: hurd-debian/sutils/MAKEDEV.sh
+===================================================================
+--- hurd-debian.orig/sutils/MAKEDEV.sh
++++ hurd-debian/sutils/MAKEDEV.sh
+@@ -223,6 +223,9 @@ mkdev() {
+         st $I root 640 /hurd/null
+ 	;;
+ 
++      apm)
++        ;;
++
+       *)
+ 	lose "$I: Unknown device name"
+ 	;;
