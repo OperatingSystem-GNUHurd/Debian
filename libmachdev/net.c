@@ -513,10 +513,10 @@ device_get_status (void *d, dev_flavor_t flavor, dev_status_t status,
 
   if (flavor == NET_FLAGS)
     {
-      if (*count != sizeof(short))
+      if (*count != 1)
 	return D_INVALID_SIZE;
 
-      *(short *) status = netdev_flags (net->dev);
+      *(int *) status = netdev_flags (net->dev);
       return D_SUCCESS;
     }
 
