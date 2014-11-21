@@ -39,32 +39,6 @@ extern struct port_class *other_portclass;
 extern struct port_info *notify_pi;
 
 /* Implementation of device interface */
-kern_return_t
-ds_xxx_device_set_status (struct vether_device *vdev, dev_flavor_t flavor,
-			  dev_status_t status, size_t statu_cnt)
-{
-  if (vdev == NULL)
-    return D_NO_SUCH_DEVICE;
-  return D_INVALID_OPERATION;
-}
-
-kern_return_t
-ds_xxx_device_get_status (struct vether_device *vdev, dev_flavor_t flavor,
-			  dev_status_t status, size_t *statuscnt)
-{
-  if (vdev == NULL)
-    return D_NO_SUCH_DEVICE;
-  return D_INVALID_OPERATION;
-}
-
-kern_return_t
-ds_xxx_device_set_filter (struct vether_device *vdev, mach_port_t rec,
-			  int pri, filter_array_t filt, size_t len)
-{
-  if (vdev == NULL)
-    return D_NO_SUCH_DEVICE;
-  return D_INVALID_OPERATION;
-}
 
 /*
  * This function is currently running in the multithread environment,

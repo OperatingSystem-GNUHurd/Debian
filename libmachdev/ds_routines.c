@@ -98,41 +98,6 @@ mach_convert_device_to_port (mach_device_t device)
 }
 
 /* Implementation of device interface */
-kern_return_t 
-ds_xxx_device_set_status (struct mach_device *device, dev_flavor_t flavor,
-			  dev_status_t status, size_t statu_cnt)
-{
-  return D_INVALID_OPERATION;
-}
-
-kern_return_t
-ds_xxx_device_get_status (struct mach_device *device, dev_flavor_t flavor,
-			  dev_status_t status, size_t *statuscnt)
-{
-  return D_INVALID_OPERATION;
-}
-
-kern_return_t
-ds_xxx_device_set_filter (struct mach_device *device, mach_port_t rec,
-			  int pri, filter_array_t filt, size_t len)
-{
-  return D_INVALID_OPERATION;
-}
-
-io_return_t
-ds_device_intr_register (mach_port_t master_port, int irq,
-			 int flags, int id, mach_port_t receive_port)
-{
-  return D_INVALID_OPERATION;
-}
-
-kern_return_t
-ds_device_intr_enable (mach_port_t master_port,
-		       int line, char status)
-{
-  return D_INVALID_OPERATION;
-}
-
 io_return_t
 ds_device_open (mach_port_t open_port, mach_port_t reply_port,
 		mach_msg_type_name_t reply_port_type, dev_mode_t mode,
