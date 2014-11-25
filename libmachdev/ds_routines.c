@@ -87,16 +87,6 @@ boolean_t is_master_device (mach_port_t port);
  * What follows is the interface for the native Mach devices.
  */
 
-static inline mach_port_t
-mach_convert_device_to_port (mach_device_t device)
-{
-  if (device == NULL)
-    return MACH_PORT_NULL;
-
-  // TODO I have to somehow dereference it when it is called at the first time.
-  return ports_get_right (device);
-}
-
 /* Implementation of device interface */
 io_return_t
 ds_device_open (mach_port_t open_port, mach_port_t reply_port,
