@@ -104,8 +104,6 @@ static struct net_data *nd_head;
 
 extern struct device_emulation_ops linux_net_emulation_ops;
 
-static int print_packet_size = 1;
-
 static mach_msg_type_t header_type = 
 {
   MACH_MSG_TYPE_BYTE,
@@ -229,9 +227,6 @@ netif_rx_handle (char *data, int len, struct net_device *dev)
   struct ether_header *eh;
   struct packet_header *ph;
   struct net_data *nd;
-
-  if (print_packet_size)
-    printf ("netif_rx: length %d\n", len);
 
   nd = search_nd(dev);
   assert (nd);
