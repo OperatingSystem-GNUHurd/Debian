@@ -223,7 +223,7 @@ static void
 netif_rx_handle (char *data, int len, struct net_device *dev)
 {
   int pack_size;
-  net_rcv_msg_t net_msg;
+  struct net_rcv_msg net_msg;
   struct ether_header *eh;
   struct packet_header *ph;
   struct net_data *nd;
@@ -231,22 +231,17 @@ netif_rx_handle (char *data, int len, struct net_device *dev)
   nd = search_nd(dev);
   assert (nd);
 
-  /* Allocate a kernel message buffer.  */
-  net_msg = malloc (sizeof (*net_msg));
-  if (!net_msg)
-    return;
-
   pack_size = len - sizeof (struct ethhdr);
   /* remember message sizes must be rounded up */
-  net_msg->msg_hdr.msgh_size =
+  net_msg.msg_hdr.msgh_size =
     (((mach_msg_size_t) (sizeof (struct net_rcv_msg)
-			 - sizeof net_msg->sent
+			 - sizeof net_msg.sent
 			 + sizeof (struct packet_header)
 			 - NET_RCV_MAX + pack_size)) + 3) & ~3;
 
   /* Copy packet into message buffer.  */
-  eh = (struct ether_header *) (net_msg->header);
-  ph = (struct packet_header *) (net_msg->packet);
+  eh = (struct ether_header *) (net_msg.header);
+  ph = (struct packet_header *) (net_msg.packet);
   memcpy (eh, data, sizeof (struct ether_header));
   /* packet is prefixed with a struct packet_header,
      see include/device/net_status.h.  */
@@ -254,13 +249,12 @@ netif_rx_handle (char *data, int len, struct net_device *dev)
   ph->type = eh->h_proto;
   ph->length = pack_size + sizeof (struct packet_header);
 
-  net_msg->sent = FALSE; /* Mark packet as received.  */
+  net_msg.sent = FALSE; /* Mark packet as received.  */
 
-  net_msg->header_type = header_type;
-  net_msg->packet_type = packet_type;
-  net_msg->net_rcv_msg_packet_count = ph->length;
-  deliver_msg (net_msg, &nd->ifnet.port_list);
-  free (net_msg);
+  net_msg.header_type = header_type;
+  net_msg.packet_type = packet_type;
+  net_msg.net_rcv_msg_packet_count = ph->length;
+  deliver_msg (&net_msg, &nd->ifnet.port_list);
 }
 
 /* Mach device interface routines.  */
