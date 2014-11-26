@@ -241,6 +241,7 @@ netif_rx_handle (char *data, int len, struct net_device *dev)
   net_msg->msg_hdr.msgh_size =
     (((mach_msg_size_t) (sizeof (struct net_rcv_msg)
 			 - sizeof net_msg->sent
+			 + sizeof (struct packet_header)
 			 - NET_RCV_MAX + pack_size)) + 3) & ~3;
 
   /* Copy packet into message buffer.  */
