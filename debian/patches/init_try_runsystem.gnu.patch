@@ -2,13 +2,13 @@ Also try runsystem.gnu
 
 ---
  daemons/console-run.c |    7 +++++++
- init/init.c           |   24 ++++++++++++++++++++----
+ startup/startup.c           |   24 ++++++++++++++++++++----
  2 files changed, 27 insertions(+), 4 deletions(-)
 
-Index: hurd-debian/init/init.c
+Index: hurd-debian/startup/startup.c
 ===================================================================
---- hurd-debian.orig/init/init.c	2012-11-26 00:23:25.000000000 +0000
-+++ hurd-debian/init/init.c	2012-11-26 00:25:06.000000000 +0000
+--- hurd-debian.orig/startup/startup.c	2012-11-26 00:23:25.000000000 +0000
++++ hurd-debian/startup/startup.c	2012-11-26 00:25:06.000000000 +0000
 @@ -1087,6 +1087,7 @@
    static const char *const tries[] =
    {

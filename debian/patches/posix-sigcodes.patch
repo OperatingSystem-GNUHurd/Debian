@@ -63,24 +63,7 @@ diff --git a/proc/proc.h b/proc/proc.h
 index 7943e0b..b52ca1d 100644
 --- a/proc/proc.h
 +++ b/proc/proc.h
-@@ -192,24 +192,24 @@ void exc_clean (void *);
- 
- struct proc *add_tasks (task_t);
- int pidfree (pid_t);
- 
- struct proc *create_startup_proc (void);
- struct proc *allocate_proc (task_t);
- void proc_death_notify (struct proc *);
- void complete_proc (struct proc *, pid_t);
- 
- void leave_pgrp (struct proc *);
- void join_pgrp (struct proc *);
- void boot_setsid (struct proc *);
- 
- void process_has_exited (struct proc *);
- void alert_parent (struct proc *);
- void reparent_zombies (struct proc *);
- void complete_exit (struct proc *);
+@@ -192,7 +192,7 @@ void exc_clean (void *);
  
  void initialize_version_info (void);
  

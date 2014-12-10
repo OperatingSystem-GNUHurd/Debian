@@ -1,3 +1,12 @@
+hurd (1:0.5.git20141210-1) unstable; urgency=medium
+
+  * New upstream snapshot.
+    - patches/proc_set_init_task.patch,git-vm_map.patch,git-proc-mounts.patch:
+      Remove, merged upstream.
+    - local/setup-translators: Create /servers/startup
+
+ -- Samuel Thibault <sthibault@debian.org>  Wed, 10 Dec 2014 01:15:48 +0000
+
 hurd (1:0.5.git20141108-5) unstable; urgency=medium
 
   * patches/MAKEDEV-apm.patch: Workaround invocations from installation of

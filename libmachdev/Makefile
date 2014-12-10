@@ -31,6 +31,3 @@ OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
 MIGSFLAGS = -imacros $(srcdir)/mig-mutate.h
 
 include ../Makeconf
-
-$(libname).so.$(hurd-version):
-	echo "INPUT ( $(libname).a )" > $@

@@ -14,7 +14,7 @@ Change comments and documentation.
  exec/hashexec.c                   |   32 ++++++++++----
  hurd/fs.defs                      |   28 +++++++++++--
  hurd/hurd_types.h                 |    9 ++--
- init/init.c                       |   81 ++++++++++++++++++++++++++----------
+ startup/startup.c                       |   81 ++++++++++++++++++++++++++----------
  libdiskfs/boot-start.c            |    2 +-
  libdiskfs/file-exec.c             |   75 ++++++++++++++++++++++++++++------
  libfshelp/start-translator-long.c |   21 +++++++---
@@ -210,10 +210,10 @@ Index: hurd-debian/hurd/hurd_types.h
  enum
    {
      INIT_UMASK,
-Index: hurd-debian/init/init.c
+Index: hurd-debian/startup/startup.c
 ===================================================================
---- hurd-debian.orig/init/init.c	2014-02-03 23:46:00.000000000 +0000
-+++ hurd-debian/init/init.c	2014-02-03 23:48:35.000000000 +0000
+--- hurd-debian.orig/startup/startup.c	2014-02-03 23:46:00.000000000 +0000
++++ hurd-debian/startup/startup.c	2014-02-03 23:48:35.000000000 +0000
 @@ -1,7 +1,7 @@
  /* Start and maintain hurd core servers and system run state
  
