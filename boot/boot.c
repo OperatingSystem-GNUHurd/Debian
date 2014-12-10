@@ -109,10 +109,10 @@ typedef struct stat host_stat_t;
 
 #endif /* UX */
 
-mach_port_t privileged_host_port, master_device_port, defpager;
+mach_port_t privileged_host_port, master_device_port;
 mach_port_t pseudo_master_device_port;
 mach_port_t receive_set;
-mach_port_t pseudo_console, pseudo_root;
+mach_port_t pseudo_console, pseudo_root, pseudo_time;
 auth_t authserver;
 
 struct store *root_store;
@@ -169,36 +169,55 @@ useropen (const char *name, int flags, int mode)
   return open (name, flags, mode);
 }
 
-int
-request_server (mach_msg_header_t *inp,
-		mach_msg_header_t *outp)
+/* XXX: glibc should provide mig_reply_setup but does not.  */
+/* Fill in default response.  */
+void
+mig_reply_setup (
+	const mach_msg_header_t	*in,
+	mach_msg_header_t	*out)
 {
-  extern int io_server (mach_msg_header_t *, mach_msg_header_t *);
-  extern int device_server (mach_msg_header_t *, mach_msg_header_t *);
-  extern int notify_server (mach_msg_header_t *, mach_msg_header_t *);
-  extern int term_server (mach_msg_header_t *, mach_msg_header_t *);
-/*  extern int tioctl_server (mach_msg_header_t *, mach_msg_header_t *); */
-  extern int bootstrap_server (mach_msg_header_t *, mach_msg_header_t *);
-  extern void bootstrap_compat ();
+      static const mach_msg_type_t RetCodeType = {
+		/* msgt_name = */		MACH_MSG_TYPE_INTEGER_32,
+		/* msgt_size = */		32,
+		/* msgt_number = */		1,
+		/* msgt_inline = */		TRUE,
+		/* msgt_longform = */		FALSE,
+		/* msgt_deallocate = */		FALSE,
+		/* msgt_unused = */		0
+	};
 
-#if 0
-  if (inp->msgh_local_port == bootport && boot_like_cmudef)
+#define	InP	(in)
+#define	OutP	((mig_reply_header_t *) out)
+      OutP->Head.msgh_bits =
+	MACH_MSGH_BITS(MACH_MSGH_BITS_REMOTE(InP->msgh_bits), 0);
+      OutP->Head.msgh_size = sizeof *OutP;
+      OutP->Head.msgh_remote_port = InP->msgh_remote_port;
+      OutP->Head.msgh_local_port = MACH_PORT_NULL;
+      OutP->Head.msgh_seqno = 0;
+      OutP->Head.msgh_id = InP->msgh_id + 100;
+      OutP->RetCodeType = RetCodeType;
+      OutP->RetCode = MIG_BAD_ID;
+#undef InP
+#undef OutP
+}
+
+int
+boot_demuxer (mach_msg_header_t *inp,
+	      mach_msg_header_t *outp)
+{
+  mig_routine_t routine;
+  mig_reply_setup (inp, outp);
+  if ((routine = io_server_routine (inp)) ||
+      (routine = device_server_routine (inp)) ||
+      (routine = notify_server_routine (inp)) ||
+      (routine = term_server_routine (inp))
+      /* (routine = tioctl_server_routine (inp)) */)
     {
-      if (inp->msgh_id == 999999)
-	{
-	  bootstrap_compat (inp, outp);
-	  return 1;
-	}
-      else
-	return bootstrap_server (inp, outp);
+      (*routine) (inp, outp);
+      return TRUE;
     }
   else
-#endif
-   return (io_server (inp, outp)
-	   || device_server (inp, outp)
-	   || notify_server (inp, outp)
-	   || term_server (inp, outp)
-	   /*	    || tioctl_server (inp, outp) */);
+    return FALSE;
 }
 
 vm_address_t
@@ -295,47 +314,6 @@ void read_reply ();
 void * msg_thread (void *);
 
 /* Callbacks for boot_script.c; see boot_script.h.  */
-
-mach_port_t
-boot_script_read_file (const char *filename)
-{
-  static const char msg[] = ": cannot open\n";
-  int fd = useropen (filename, O_RDONLY, 0);
-  host_stat_t st;
-  error_t err;
-  mach_port_t memobj;
-  vm_address_t region;
-
-  write (2, filename, strlen (filename));
-  if (fd < 0)
-    {
-      write (2, msg, sizeof msg - 1);
-      host_exit (1);
-    }
-  else
-    write (2, msg + sizeof msg - 2, 1);
-
-  host_fstat (fd, &st);
-
-  err = default_pager_object_create (defpager, &memobj,
-				     round_page (st.st_size));
-  if (err)
-    {
-      static const char msg[] = "cannot create default-pager object\n";
-      write (2, msg, sizeof msg - 1);
-      host_exit (1);
-    }
-
-  region = 0;
-  vm_map (mach_task_self (), &region, round_page (st.st_size),
-	  0, 1, memobj, 0, 0, VM_PROT_ALL, VM_PROT_ALL, VM_INHERIT_NONE);
-  read (fd, (char *) region, st.st_size);
-  munmap ((caddr_t) region, round_page (st.st_size));
-
-  close (fd);
-  return memobj;
-}
-
 int
 boot_script_exec_cmd (void *hook,
 		      mach_port_t task, char *path, int argc,
@@ -546,9 +524,6 @@ main (int argc, char **argv, char **envp)
 
   get_privileged_ports (&privileged_host_port, &master_device_port);
 
-  defpager = MACH_PORT_NULL;
-  vm_set_default_memory_manager (privileged_host_port, &defpager);
-
   strcat (bootstrap_args, "f");
 
   mach_port_allocate (mach_task_self (), MACH_PORT_RIGHT_PORT_SET,
@@ -588,6 +563,15 @@ main (int argc, char **argv, char **envp)
   mach_port_move_member (mach_task_self (), pseudo_console, receive_set);
   mach_port_request_notification (mach_task_self (), pseudo_console,
 				  MACH_NOTIFY_NO_SENDERS, 1, pseudo_console,
+				  MACH_MSG_TYPE_MAKE_SEND_ONCE, &foo);
+  if (foo != MACH_PORT_NULL)
+    mach_port_deallocate (mach_task_self (), foo);
+
+  mach_port_allocate (mach_task_self (), MACH_PORT_RIGHT_RECEIVE,
+		      &pseudo_time);
+  mach_port_move_member (mach_task_self (), pseudo_time, receive_set);
+  mach_port_request_notification (mach_task_self (), pseudo_time,
+				  MACH_NOTIFY_NO_SENDERS, 1, pseudo_time,
 				  MACH_MSG_TYPE_MAKE_SEND_ONCE, &foo);
   if (foo != MACH_PORT_NULL)
     mach_port_deallocate (mach_task_self (), foo);
@@ -759,15 +743,13 @@ main (int argc, char **argv, char **envp)
       else /* We hosed */
 	error (5, errno, "select");
     }
-
-/*  mach_msg_server (request_server, __vm_page_size * 2, receive_set); */
 }
 
 void *
 msg_thread (void *arg)
 {
   while (1)
-    mach_msg_server (request_server, 0, receive_set);
+    mach_msg_server (boot_demuxer, 0, receive_set);
 }
 
 
@@ -914,8 +896,6 @@ unlock_readlock ()
 /*
  *	Handle bootstrap requests.
  */
-/* These two functions from .../mk/bootstrap/default_pager.c. */
-
 kern_return_t
 do_bootstrap_privileged_ports(bootstrap, hostp, devicep)
 	mach_port_t bootstrap;
@@ -924,68 +904,6 @@ do_bootstrap_privileged_ports(bootstrap, hostp, devicep)
 	*hostp = privileged_host_port;
 	*devicep = pseudo_master_device_port;
 	return KERN_SUCCESS;
-}
-
-void
-bootstrap_compat(in, out)
-	mach_msg_header_t *in, *out;
-{
-	mig_reply_header_t *reply = (mig_reply_header_t *) out;
-	mach_msg_return_t mr;
-
-	struct imsg {
-		mach_msg_header_t	hdr;
-		mach_msg_type_t		port_desc_1;
-		mach_port_t		port_1;
-		mach_msg_type_t		port_desc_2;
-		mach_port_t		port_2;
-	} imsg;
-
-	/*
-	 * Send back the host and device ports.
-	 */
-
-	imsg.hdr.msgh_bits = MACH_MSGH_BITS_COMPLEX |
-		MACH_MSGH_BITS(MACH_MSGH_BITS_REMOTE(in->msgh_bits), 0);
-	/* msgh_size doesn't need to be initialized */
-	imsg.hdr.msgh_remote_port = in->msgh_remote_port;
-	imsg.hdr.msgh_local_port = MACH_PORT_NULL;
-	/* msgh_seqno doesn't need to be initialized */
-	imsg.hdr.msgh_id = in->msgh_id + 100;	/* this is a reply msg */
-
-	imsg.port_desc_1.msgt_name = MACH_MSG_TYPE_COPY_SEND;
-	imsg.port_desc_1.msgt_size = (sizeof(mach_port_t) * 8);
-	imsg.port_desc_1.msgt_number = 1;
-	imsg.port_desc_1.msgt_inline = TRUE;
-	imsg.port_desc_1.msgt_longform = FALSE;
-	imsg.port_desc_1.msgt_deallocate = FALSE;
-	imsg.port_desc_1.msgt_unused = 0;
-
-	imsg.port_1 = privileged_host_port;
-
-	imsg.port_desc_2 = imsg.port_desc_1;
-
-	imsg.port_desc_2.msgt_name = MACH_MSG_TYPE_MAKE_SEND;
-	imsg.port_2 = pseudo_master_device_port;
-
-	/*
-	 * Send the reply message.
-	 * (mach_msg_server can not do this, because the reply
-	 * is not in standard format.)
-	 */
-
-	mr = mach_msg(&imsg.hdr, MACH_SEND_MSG,
-		      sizeof imsg, 0, MACH_PORT_NULL,
-		      MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
-	if (mr != MACH_MSG_SUCCESS)
-		(void) mach_port_deallocate(mach_task_self (),
-					    imsg.hdr.msgh_remote_port);
-
-	/*
-	 * Tell mach_msg_server to do nothing.
-	 */
-
-	reply->RetCode = MIG_NO_REPLY;
 }
 
 /* Implementation of device interface */
@@ -1013,6 +931,12 @@ ds_device_open (mach_port_t master_port,
 #endif
       console_mscount++;
       *device = pseudo_console;
+      *devicetype = MACH_MSG_TYPE_MAKE_SEND;
+      return 0;
+    }
+  else if (!strcmp (name, "time"))
+    {
+      *device = pseudo_time;
       *devicetype = MACH_MSG_TYPE_MAKE_SEND;
       return 0;
     }
@@ -1240,40 +1164,6 @@ ds_device_read_inband (device_t device,
 }
 
 kern_return_t
-ds_xxx_device_set_status (device_t device,
-			  dev_flavor_t flavor,
-			  dev_status_t status,
-			  size_t statu_cnt)
-{
-  if (device != pseudo_console)
-    return D_NO_SUCH_DEVICE;
-  return D_INVALID_OPERATION;
-}
-
-kern_return_t
-ds_xxx_device_get_status (device_t device,
-			  dev_flavor_t flavor,
-			  dev_status_t status,
-			  size_t *statuscnt)
-{
-  if (device != pseudo_console && device != pseudo_root)
-    return D_NO_SUCH_DEVICE;
-  return D_INVALID_OPERATION;
-}
-
-kern_return_t
-ds_xxx_device_set_filter (device_t device,
-			  mach_port_t rec,
-			  int pri,
-			  filter_array_t filt,
-			  size_t len)
-{
-  if (device != pseudo_console && device != pseudo_root)
-    return D_NO_SUCH_DEVICE;
-  return D_INVALID_OPERATION;
-}
-
-kern_return_t
 ds_device_map (device_t device,
 	       vm_prot_t prot,
 	       vm_offset_t offset,
@@ -1281,9 +1171,26 @@ ds_device_map (device_t device,
 	       memory_object_t *pager,
 	       int unmap)
 {
-  if (device != pseudo_console && device != pseudo_root)
+  if (device == pseudo_console || device == pseudo_root)
+    return D_INVALID_OPERATION;
+  else if (device == pseudo_time)
+    {
+      error_t err;
+      mach_port_t wr_memobj;
+      file_t node = file_name_lookup ("/dev/time", O_RDONLY, 0);
+
+      if (node == MACH_PORT_NULL)
+	return D_IO_ERROR;
+
+      err = io_map (node, pager, &wr_memobj);
+      if (!err && MACH_PORT_VALID (wr_memobj))
+	mach_port_deallocate (mach_task_self (), wr_memobj);
+
+      mach_port_deallocate (mach_task_self (), node);
+      return D_SUCCESS;
+    }
+  else
     return D_NO_SUCH_DEVICE;
-  return D_INVALID_OPERATION;
 }
 
 kern_return_t
@@ -1306,18 +1213,27 @@ ds_device_get_status (device_t device,
   if (device == pseudo_console)
     return D_INVALID_OPERATION;
   else if (device == pseudo_root)
-    if (flavor == DEV_GET_SIZE)
-      if (*statuslen < DEV_GET_SIZE_COUNT)
-	return D_INVALID_SIZE;
-      else
-	{
-	  status[DEV_GET_SIZE_DEVICE_SIZE] = root_store->size;
-	  status[DEV_GET_SIZE_RECORD_SIZE] = root_store->block_size;
-	  *statuslen = DEV_GET_SIZE_COUNT;
-	  return D_SUCCESS;
-	}
-    else
-      return D_INVALID_OPERATION;
+    switch (flavor)
+      {
+      case DEV_GET_SIZE:
+        if (*statuslen < DEV_GET_SIZE_COUNT)
+          return D_INVALID_SIZE;
+        status[DEV_GET_SIZE_DEVICE_SIZE] = root_store->size;
+        status[DEV_GET_SIZE_RECORD_SIZE] = root_store->block_size;
+        *statuslen = DEV_GET_SIZE_COUNT;
+        return D_SUCCESS;
+
+      case DEV_GET_RECORDS:
+        if (*statuslen < DEV_GET_RECORDS_COUNT)
+          return D_INVALID_SIZE;
+        status[DEV_GET_RECORDS_DEVICE_RECORDS] = root_store->blocks;
+        status[DEV_GET_RECORDS_RECORD_SIZE] = root_store->block_size;
+        *statuslen = DEV_GET_RECORDS_COUNT;
+        return D_SUCCESS;
+
+      default:
+        return D_INVALID_OPERATION;
+      }
   else
     return D_NO_SUCH_DEVICE;
 }
