@@ -294,27 +294,6 @@ do_mach_notify_dead_name (struct port_info *pi,
 }
 
 /* Implementation of device interface */
-kern_return_t 
-ds_xxx_device_set_status (struct proxy_user *device, dev_flavor_t flavor,
-			  dev_status_t status, size_t statu_cnt)
-{
-  return D_INVALID_OPERATION;
-}
-
-kern_return_t
-ds_xxx_device_get_status (struct proxy_user *device, dev_flavor_t flavor,
-			  dev_status_t status, size_t *statuscnt)
-{
-  return D_INVALID_OPERATION;
-}
-
-kern_return_t
-ds_xxx_device_set_filter (struct proxy_user *device, mach_port_t rec,
-			  int pri, filter_array_t filt, size_t len)
-{
-  return D_INVALID_OPERATION;
-}
-
 kern_return_t
 ds_device_open (mach_port_t master_port, mach_port_t reply_port,
 		mach_msg_type_name_t reply_portPoly,

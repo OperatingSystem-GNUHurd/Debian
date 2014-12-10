@@ -34,13 +34,22 @@ LDLIBS += -lpthread
 password-LDLIBS = -lcrypt
 password-MIGSFLAGS=\
     "-DIO_INTRAN=trivfs_protid_t trivfs_begin_using_protid (io_t)" \
+    "-DIO_INTRAN_PAYLOAD=trivfs_protid_t trivfs_begin_using_protid_payload" \
     "-DIO_DESTRUCTOR=trivfs_end_using_protid (trivfs_protid_t)" \
     "-DPASSWORD_IMPORTS=import \"../libtrivfs/mig-decls.h\";"
 
 ifsock-MIGSFLAGS=\
     "-DFILE_INTRAN=trivfs_protid_t trivfs_begin_using_protid (io_t)" \
+    "-DFILE_INTRAN_PAYLOAD=trivfs_protid_t trivfs_begin_using_protid_payload" \
     "-DFILE_DESTRUCTOR=trivfs_end_using_protid (trivfs_protid_t)" \
     "-DIFSOCK_IMPORTS=import \"../libtrivfs/mig-decls.h\";"
+
+# device_replyServer is used by the streamio translator.
+device_reply-MIGSFLAGS="-DMACH_PAYLOAD_TO_PORT=ports_payload_get_name"
+
+# fsysServer is only used by the symlink translator which does not use
+# libports.  Disable the default payload to port conversion.
+fsys-MIGSFLAGS = "-DHURD_DEFAULT_PAYLOAD_TO_PORT=1"
 
 include ../Makeconf
 

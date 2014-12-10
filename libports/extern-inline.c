@@ -1,6 +1,7 @@
-/*
+/* Run time callable functions for extern inlines.
    Copyright (C) 2014 Free Software Foundation, Inc.
-   Written by Justus Winter.
+
+   Written by Justus Winter <4winter@informatik.uni-hamburg.de>
 
    This file is part of the GNU Hurd.
 
@@ -17,9 +18,5 @@
    You should have received a copy of the GNU General Public License
    along with the GNU Hurd.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#define STARTUP_INTRAN						\
-  port_info_t begin_using_startup_port (mach_port_t)
-#define STARTUP_DESTRUCTOR					\
-  end_using_startup (port_info_t)
-#define STARTUP_IMPORTS						\
-  import "mig-decls.h";
+#define PORTS_DEFINE_EI
+#include "ports.h"

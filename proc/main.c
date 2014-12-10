@@ -1,5 +1,5 @@
 /* Initialization of the proc server
-   Copyright (C) 1993,94,95,96,97,99,2000,01 Free Software Foundation, Inc.
+   Copyright (C) 1993,94,95,96,97,99,2000,01,13 Free Software Foundation, Inc.
 
 This file is part of the GNU Hurd.
 
@@ -60,12 +60,40 @@ message_demuxer (mach_msg_header_t *inp,
 
 pthread_mutex_t global_lock = PTHREAD_MUTEX_INITIALIZER;
 
+error_t
+increase_priority (void)
+{
+  mach_port_t pset = MACH_PORT_NULL, psetcntl = MACH_PORT_NULL;
+  error_t err;
+
+  err = thread_get_assignment (mach_thread_self (), &pset);
+  if (err)
+    goto out;
+
+  err = host_processor_set_priv (_hurd_host_priv, pset, &psetcntl);
+  if (err)
+    goto out;
+
+  err = thread_max_priority (mach_thread_self (), psetcntl, 0);
+  if (err)
+    goto out;
+
+  err = task_priority (mach_task_self (), 2, 1);
+
+ out:
+  if (MACH_PORT_VALID (pset))
+    mach_port_deallocate (mach_task_self (), pset);
+  if (MACH_PORT_VALID (psetcntl))
+    mach_port_deallocate (mach_task_self (), psetcntl);
+
+  return err;
+}
+
 int
 main (int argc, char **argv, char **envp)
 {
   mach_port_t boot;
   error_t err;
-  mach_port_t pset, psetcntl;
   void *genport;
   process_t startup_port;
   struct argp argp = { 0, 0, 0, "Hurd process server" };
@@ -88,7 +116,12 @@ main (int argc, char **argv, char **envp)
   generic_port = ports_get_right (genport);
 
   /* Create the initial proc object for init (PID 1).  */
-  startup_proc = create_startup_proc ();
+  init_proc = create_init_proc ();
+
+  /* Create the startup proc object for /hurd/init (PID 2).  */
+  startup_proc = allocate_proc (MACH_PORT_NULL);
+  startup_proc->p_deadmsg = 1;
+  complete_proc (startup_proc, HURD_PID_STARTUP);
 
   /* Create our own proc object.  */
   self_proc = allocate_proc (mach_task_self ());
@@ -115,17 +148,9 @@ main (int argc, char **argv, char **envp)
 
   /* Give ourselves good scheduling performance, because we are so
      important. */
-  err = thread_get_assignment (mach_thread_self (), &pset);
-  assert_perror (err);
-  err = host_processor_set_priv (_hurd_host_priv, pset, &psetcntl);
-  assert_perror (err);
-  thread_max_priority (mach_thread_self (), psetcntl, 0);
-  assert_perror (err);
-  err = task_priority (mach_task_self (), 2, 1);
-  assert_perror (err);
-
-  mach_port_deallocate (mach_task_self (), pset);
-  mach_port_deallocate (mach_task_self (), psetcntl);
+  err = increase_priority ();
+  if (err)
+    error (0, err, "Increasing priority failed");
 
   {
     /* Get our stderr set up to print on the console, in case we have
