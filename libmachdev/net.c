@@ -104,8 +104,6 @@ static struct net_data *nd_head;
 
 extern struct device_emulation_ops linux_net_emulation_ops;
 
-static int print_packet_size = 1;
-
 static mach_msg_type_t header_type = 
 {
   MACH_MSG_TYPE_BYTE,
@@ -225,32 +223,25 @@ static void
 netif_rx_handle (char *data, int len, struct net_device *dev)
 {
   int pack_size;
-  net_rcv_msg_t net_msg;
+  struct net_rcv_msg net_msg;
   struct ether_header *eh;
   struct packet_header *ph;
   struct net_data *nd;
 
-  if (print_packet_size)
-    printf ("netif_rx: length %d\n", len);
-
   nd = search_nd(dev);
   assert (nd);
 
-  /* Allocate a kernel message buffer.  */
-  net_msg = malloc (sizeof (*net_msg));
-  if (!net_msg)
-    return;
-
   pack_size = len - sizeof (struct ethhdr);
   /* remember message sizes must be rounded up */
-  net_msg->msg_hdr.msgh_size =
+  net_msg.msg_hdr.msgh_size =
     (((mach_msg_size_t) (sizeof (struct net_rcv_msg)
-			 - sizeof net_msg->sent
+			 - sizeof net_msg.sent
+			 + sizeof (struct packet_header)
 			 - NET_RCV_MAX + pack_size)) + 3) & ~3;
 
   /* Copy packet into message buffer.  */
-  eh = (struct ether_header *) (net_msg->header);
-  ph = (struct packet_header *) (net_msg->packet);
+  eh = (struct ether_header *) (net_msg.header);
+  ph = (struct packet_header *) (net_msg.packet);
   memcpy (eh, data, sizeof (struct ether_header));
   /* packet is prefixed with a struct packet_header,
      see include/device/net_status.h.  */
@@ -258,13 +249,12 @@ netif_rx_handle (char *data, int len, struct net_device *dev)
   ph->type = eh->h_proto;
   ph->length = pack_size + sizeof (struct packet_header);
 
-  net_msg->sent = FALSE; /* Mark packet as received.  */
+  net_msg.sent = FALSE; /* Mark packet as received.  */
 
-  net_msg->header_type = header_type;
-  net_msg->packet_type = packet_type;
-  net_msg->net_rcv_msg_packet_count = ph->length;
-  deliver_msg (net_msg, &nd->ifnet.port_list);
-  free (net_msg);
+  net_msg.header_type = header_type;
+  net_msg.packet_type = packet_type;
+  net_msg.net_rcv_msg_packet_count = ph->length;
+  deliver_msg (&net_msg, &nd->ifnet.port_list);
 }
 
 /* Mach device interface routines.  */
@@ -513,10 +503,10 @@ device_get_status (void *d, dev_flavor_t flavor, dev_status_t status,
 
   if (flavor == NET_FLAGS)
     {
-      if (*count != sizeof(short))
+      if (*count != 1)
 	return D_INVALID_SIZE;
 
-      *(short *) status = netdev_flags (net->dev);
+      *(int *) status = netdev_flags (net->dev);
       return D_SUCCESS;
     }
 
