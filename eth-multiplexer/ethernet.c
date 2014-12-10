@@ -76,12 +76,12 @@ int set_promisc (char *dev_name, mach_port_t ether_port, int is_promisc)
 #ifndef NET_FLAGS
 #define NET_FLAGS (('n'<<16) + 4)
 #endif
-  short flags;
+  int flags;
   int ret;
   size_t count;
 
   debug ("set_promisc is called, is_promisc: %d\n", is_promisc);
-  count = sizeof (flags);
+  count = 1;
   ret = device_get_status (ether_port, NET_FLAGS, (dev_status_t) &flags, 
                            &count);
   if (ret) 
@@ -93,8 +93,7 @@ int set_promisc (char *dev_name, mach_port_t ether_port, int is_promisc)
     flags |= IFF_PROMISC;
   else
     flags &= ~IFF_PROMISC;
-  ret = device_set_status(ether_port, NET_FLAGS, (dev_status_t) &flags,
-                          sizeof (flags));
+  ret = device_set_status(ether_port, NET_FLAGS, (dev_status_t) &flags, 1);
   if (ret) 
     {
       error (0, ret, "device_set_status");
