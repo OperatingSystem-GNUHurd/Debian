@@ -6,7 +6,7 @@ Index: hurd-debian/libmachdev/Makefile
 ===================================================================
 --- hurd-debian.orig/libmachdev/Makefile
 +++ hurd-debian/libmachdev/Makefile
-@@ -20,7 +20,7 @@ makemode := library
+@@ -20,12 +20,12 @@ makemode := library
  libname = libmachdev
  
  SRCS = deviceUser.c machUser.c net.c ds_routines.c queue.c trivfs_server.c \
@@ -15,3 +15,9 @@ Index: hurd-debian/libmachdev/Makefile
  LCLHDRS = dev_hdr.h device_emul.h ds_routines.h vm_param.h \
  	  util.h queue.h io_req.h if_ether.h machdev.h linux-errno.h \
  	  errno-base.h
+ installhdrs = machdev.h
+-HURDLIBS = ports trivfs ddekit bpf
++HURDLIBS = ports trivfs bpf
+ OTHERLIBS = -lpthread
+ OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
+ MIGSFLAGS = -imacros $(srcdir)/mig-mutate.h
