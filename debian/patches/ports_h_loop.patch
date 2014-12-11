@@ -1,0 +1,35 @@
+Index: hurd-debian/hurd/hurd_types.defs
+===================================================================
+--- hurd-debian.orig/hurd/hurd_types.defs
++++ hurd-debian/hurd/hurd_types.defs
+@@ -42,7 +42,6 @@ the Free Software Foundation, 675 Mass A
+ #undef HURD_DEFAULT_PAYLOAD_TO_PORT
+ #endif
+ #else
+-   import <hurd/ports.h>;
+ #define HURD_DEFAULT_PAYLOAD_TO_PORT ports_payload_get_name
+ #endif
+ 
+Index: hurd-debian/mach-defpager/Makefile
+===================================================================
+--- hurd-debian.orig/mach-defpager/Makefile
++++ hurd-debian/mach-defpager/Makefile
+@@ -35,4 +35,4 @@ LDFLAGS += -static
+ 
+ include ../Makeconf
+ 
+-MIGSFLAGS = -DSEQNOS -imacros $(srcdir)/mig-mutate.h
++MIGSFLAGS = -DSEQNOS -imacros $(srcdir)/mig-mutate.h -DHURD_DEFAULT_PAYLOAD_TO_PORT=1
+Index: hurd-debian/boot/Makefile
+===================================================================
+--- hurd-debian.orig/boot/Makefile
++++ hurd-debian/boot/Makefile
+@@ -37,6 +37,8 @@ include ../Makeconf
+ #/usr/local/bin/uxboot: uxboot
+ #	cp $< $@
+ 
++MIGSFLAGS = -DHURD_DEFAULT_PAYLOAD_TO_PORT=1
++
+ all: boot # uxboot
+ 
+ uxboot.o: boot.c

@@ -42,3 +42,4 @@ xkb-compat.patch
 MAKEDEV-apm.patch
 newRPC.patch
 libmachdev-link.patch
+ports_h_loop.patch
