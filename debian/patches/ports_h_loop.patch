@@ -1,15 +1,3 @@
-Index: hurd-debian/hurd/hurd_types.defs
-===================================================================
---- hurd-debian.orig/hurd/hurd_types.defs
-+++ hurd-debian/hurd/hurd_types.defs
-@@ -42,7 +42,6 @@ the Free Software Foundation, 675 Mass A
- #undef HURD_DEFAULT_PAYLOAD_TO_PORT
- #endif
- #else
--   import <hurd/ports.h>;
- #define HURD_DEFAULT_PAYLOAD_TO_PORT ports_payload_get_name
- #endif
- 
 Index: hurd-debian/mach-defpager/Makefile
 ===================================================================
 --- hurd-debian.orig/mach-defpager/Makefile
@@ -33,3 +21,50 @@ Index: hurd-debian/boot/Makefile
  all: boot # uxboot
  
  uxboot.o: boot.c
+
+commit 89c2cbb53b8ad14ae9d5d06ec230a696bea4a6ba
+Author: Justus Winter <4winter@informatik.uni-hamburg.de>
+Date:   Fri Dec 12 17:09:07 2014 +0100
+
+    hurd: make the protected payload changes less intrusive
+    
+    The changes to `hurd_types.defs' caused the glibc build to fail.
+    Guard the problematic parts with `HURD_SERVER' similar how it is done
+    in GNU Mach.
+    
+    * Makeconf: Define `HURD_SERVER' when preprocessing the RPC
+    definitions for the server side.
+    * hurd/hurd_types.defs: Guard problematic parts with `HURD_SERVER'.
+
+diff --git a/Makeconf b/Makeconf
+index 5439913..ed2f6d0 100644
+--- a/Makeconf
++++ b/Makeconf
+@@ -546,6 +546,7 @@ MIGCOMFLAGS := -subrprefix __
+ 
+ %.sdefsi %.sdefs.d: %.defs
+ 	$(CPP) $(CPPFLAGS) $(MIGSFLAGS) $($*-MIGSFLAGS) -DSERVERPREFIX=S_ \
++	  -DHURD_SERVER=1 \
+ 	  -MD -MF $*.sdefs.d.new \
+ 	  $< -o $*.sdefsi
+ 	sed -e 's/[^:]*:/$*Server.c $(mig-sheader-prefix)$*_S.h:/' \
+diff --git a/hurd/hurd_types.defs b/hurd/hurd_types.defs
+index 4c01e63..5fa59f3 100644
+--- a/hurd/hurd_types.defs
++++ b/hurd/hurd_types.defs
+@@ -18,6 +18,7 @@ along with the GNU Hurd; see the file COPYING.  If not, write to
+ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+ 
+ 
++#ifdef HURD_SERVER
+ /* The Hurd uses protected payloads to quickly look up the object
+    receiving a message.  Looking up objects is optimized at the cost
+    of having to translate payloads back to port names if the server
+@@ -55,6 +53,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+ #ifdef HURD_DEFAULT_PAYLOAD_TO_PORT
+ #define MACH_PAYLOAD_TO_PORT	HURD_DEFAULT_PAYLOAD_TO_PORT
+ #endif
++#endif	/* HURD_SERVER */
+ 
+ #include <mach/std_types.defs>
+ #include <mach/mach_types.defs>
