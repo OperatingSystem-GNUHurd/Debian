@@ -1,8 +1,8 @@
-hurd (1:0.5.git20141210-4) UNRELEASED; urgency=medium
+hurd (1:0.5.git20141210-4) unstable; urgency=medium
 
   * hurd-udeb.install.in: Add /hurd/startup.
 
- -- Samuel Thibault <sthibault@debian.org>  Mon, 15 Dec 2014 13:38:25 +0100
+ -- Samuel Thibault <sthibault@debian.org>  Mon, 15 Dec 2014 12:40:21 +0000
 
 hurd (1:0.5.git20141210-3) unstable; urgency=medium
 
