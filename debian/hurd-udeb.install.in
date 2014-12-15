@@ -42,6 +42,7 @@ hurd/firmlink
 hurd/fwd
 hurd/ifsock
 hurd/init
+hurd/startup
 hurd/iso9660fs
 hurd/mach-defpager
 hurd/magic
