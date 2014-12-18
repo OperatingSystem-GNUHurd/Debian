@@ -43,3 +43,4 @@ MAKEDEV-apm.patch
 newRPC.patch
 libmachdev-link.patch
 ports_h_loop.patch
+git-mtab-paths.patch

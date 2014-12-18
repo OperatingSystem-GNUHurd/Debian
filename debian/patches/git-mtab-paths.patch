@@ -1,0 +1,54 @@
+commit 8e3c26e98bcf30dd73a8c64bb9aab08e2f32c1f8
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Fri Dec 19 00:12:07 2014 +0100
+
+    Avoid ./ components in mtab output
+    
+    * libdiskfs/dir-lookup.c (diskfs_S_dir_lookup): Match "." path as being the
+    root directory.
+    * libnetfs/dir-lookup.c (netfs_S_dir_lookup): Likewise.
+
+diff --git a/libdiskfs/dir-lookup.c b/libdiskfs/dir-lookup.c
+index e228745..f3364cd 100644
+--- a/libdiskfs/dir-lookup.c
++++ b/libdiskfs/dir-lookup.c
+@@ -327,7 +327,7 @@ diskfs_S_dir_lookup (struct protid *dircred,
+ 		      translator_path[end - path_start] = '\0';
+ 		    }
+ 
+-		  if (dircred->po->path == NULL)
++		  if (dircred->po->path == NULL || !strcmp (dircred->po->path,"."))
+ 		      /* dircred is the root directory.  */
+ 		      complete_path = translator_path;
+ 		  else
+@@ -528,7 +528,7 @@ diskfs_S_dir_lookup (struct protid *dircred,
+   if (! error)
+     {
+       free (newpi->po->path);
+-      if (dircred->po->path == NULL)
++      if (dircred->po->path == NULL || !strcmp (dircred->po->path,"."))
+ 	{
+ 	  /* dircred is the root directory.  */
+ 	  newpi->po->path = relpath;
+diff --git a/libnetfs/dir-lookup.c b/libnetfs/dir-lookup.c
+index 77cbbbd..7ca526b 100644
+--- a/libnetfs/dir-lookup.c
++++ b/libnetfs/dir-lookup.c
+@@ -310,7 +310,7 @@ netfs_S_dir_lookup (struct protid *diruser,
+ 		      translator_path[end - filename_start] = '\0';
+ 		    }
+ 
+-		  if (diruser->po->path == NULL)
++		  if (diruser->po->path == NULL || !strcmp (diruser->po->path,"."))
+ 		      /* diruser is the root directory.  */
+ 		      complete_path = translator_path;
+ 		  else
+@@ -444,7 +444,7 @@ netfs_S_dir_lookup (struct protid *diruser,
+     }
+ 
+   free (newpi->po->path);
+-  if (diruser->po->path == NULL)
++  if (diruser->po->path == NULL || !strcmp (diruser->po->path,"."))
+     {
+       /* diruser is the root directory.  */
+       newpi->po->path = relpath;
