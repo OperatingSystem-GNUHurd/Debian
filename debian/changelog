@@ -1,9 +1,9 @@
-hurd (1:0.5.git20141210-5) UNRELEASED; urgency=medium
+hurd (1:0.5.git20141210-5) unstable; urgency=medium
 
   * patches/git-mtab-paths.patch: Cherry-pick patch to fix spurious ./ in mtab
     paths, to fix d-i's grub-installer. Closes: #774386.
 
- -- Samuel Thibault <sthibault@debian.org>  Thu, 18 Dec 2014 23:40:22 +0000
+ -- Samuel Thibault <sthibault@debian.org>  Fri, 02 Jan 2015 18:41:04 +0000
 
 hurd (1:0.5.git20141210-4) unstable; urgency=medium
 
