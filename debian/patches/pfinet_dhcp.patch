@@ -34,7 +34,7 @@ TODO: review & submit upstream
 
 --- a/pfinet/options.c
 +++ b/pfinet/options.c
-@@ -60,23 +60,26 @@ extern struct inet6_dev *ipv6_find_idev 
+@@ -60,23 +60,26 @@ extern struct inet6_dev *ipv6_find_idev
  extern int inet6_addr_add (int ifindex, struct in6_addr *pfx, int plen);
  extern int inet6_addr_del (int ifindex, struct in6_addr *pfx, int plen);
  
@@ -71,21 +71,21 @@ TODO: review & submit upstream
    {0}
  };
  
-@@ -112,6 +115,50 @@ struct parse_hook
+@@ -112,6 +115,51 @@ struct parse_hook
    struct parse_interface *curint;
  };
  
 +static void
 +parse_interface_copy_device(struct device *src,
-+                            struct parse_interface *dst)
++			    struct parse_interface *dst)
 +{
 +  uint32_t broad;
 +  struct rt_key key = { 0 };
 +  struct inet6_dev *idev = NULL;
 +  struct fib_result res;
 +
-+  inquire_device (src, &dst->address, &dst->netmask, 
-+                  &dst->peer, &broad);
++  inquire_device (src, &dst->address, &dst->netmask,
++		  &dst->peer, &broad);
 +  /* Get gateway */
 +  dst->gateway = INADDR_NONE;
 +  key.oif = src->ifindex;
@@ -97,32 +97,33 @@ TODO: review & submit upstream
 +    idev = ipv6_find_idev(src);
 +
 +  if (idev)
-+  {
-+    struct inet6_ifaddr *ifa = idev->addr_list;
-+    
-+    /* Look for IPv6 default router and add it to the interface,
-+     * if it belongs to it.
-+     */
-+    struct rt6_info *rt6i = ipv6_get_dflt_router();
-+    if (rt6i->rt6i_dev == src) 
-+      memcpy (&dst->gateway6, &rt6i->rt6i_gateway, sizeof (struct in6_addr));
-+    /* Search for global address and set it in dst */
-+    do 
 +    {
-+      if (!IN6_IS_ADDR_LINKLOCAL (&ifa->addr)) {
-+        memcpy (&dst->address6, ifa, sizeof (struct inet6_ifaddr));
-+        break;
-+      }
++      struct inet6_ifaddr *ifa = idev->addr_list;
++
++      /* Look for IPv6 default router and add it to the interface,
++       * if it belongs to it.
++       */
++      struct rt6_info *rt6i = ipv6_get_dflt_router();
++      if (rt6i->rt6i_dev == src)
++	memcpy (&dst->gateway6, &rt6i->rt6i_gateway, sizeof (struct in6_addr));
++      /* Search for global address and set it in dst */
++      do
++	{
++	  if (!IN6_IS_ADDR_LINKLOCAL (&ifa->addr))
++	    {
++	      memcpy (&dst->address6, ifa, sizeof (struct inet6_ifaddr));
++	      break;
++	    }
++	}
++      while ((ifa = ifa->if_next));
 +    }
-+    while ((ifa = ifa->if_next));
-+  }
 +#endif
 +}
 +
  /* Adds an empty interface slot to H, and sets H's current interface to it, or
     returns an error. */
  static error_t
-@@ -122,6 +169,7 @@ parse_hook_add_interface (struct parse_h
+@@ -122,6 +170,7 @@ parse_hook_add_interface (struct parse_h
  	     (h->num_interfaces + 1) * sizeof (struct parse_interface));
    if (! new)
      return ENOMEM;
@@ -130,7 +131,7 @@ TODO: review & submit upstream
    h->interfaces = new;
    h->num_interfaces++;
    h->curint = new + h->num_interfaces - 1;
-@@ -183,10 +231,16 @@ parse_opt (int opt, char *arg, struct ar
+@@ -183,10 +232,16 @@ parse_opt (int opt, char *arg, struct ar
       if (addr == INADDR_NONE) PERR (EINVAL, "Malformed %s", type);	      \
       addr; })
  
@@ -149,7 +150,7 @@ TODO: review & submit upstream
  #ifdef CONFIG_IPV6
        struct parse_interface *gw6_in;
        char *ptr;
-@@ -217,29 +271,59 @@ parse_opt (int opt, char *arg, struct ar
+@@ -217,29 +272,61 @@ parse_opt (int opt, char *arg, struct ar
        if (err)
  	FAIL (err, 10, err, "%s", arg);
  
@@ -170,62 +171,63 @@ TODO: review & submit upstream
 -	  else
 -	    FAIL (EINVAL, 1, 0,
 -		  "%s: Illegal or undefined network address", arg);
--	}
 +      if (arg)
-+      {
-+        h->curint->address = ADDR (arg, "address");
-+        if (!IN_CLASSA (ntohl (h->curint->address))
-+            && !IN_CLASSB (ntohl (h->curint->address))
-+            && !IN_CLASSC (ntohl (h->curint->address)))
-+          {
-+            if (IN_MULTICAST (ntohl (h->curint->address)))
-+              FAIL (EINVAL, 1, 0,
-+                    "%s: Cannot set interface address to multicast address",
-+                    arg);
-+            else
-+              FAIL (EINVAL, 1, 0,
-+                    "%s: Illegal or undefined network address", arg);
-+          }
-+      } else { 
-+        h->curint->address = ADDR ("0.0.0.0", "address");
-+        h->curint->netmask = ADDR ("255.0.0.0", "netmask");
-+        h->curint->gateway = INADDR_NONE;
-+      }
++	{
++	  h->curint->address = ADDR (arg, "address");
++	  if (!IN_CLASSA (ntohl (h->curint->address))
++	      && !IN_CLASSB (ntohl (h->curint->address))
++	      && !IN_CLASSC (ntohl (h->curint->address)))
++	    {
++	      if (IN_MULTICAST (ntohl (h->curint->address)))
++		FAIL (EINVAL, 1, 0,
++		      "%s: Cannot set interface address to multicast address",
++		      arg);
++	      else
++		FAIL (EINVAL, 1, 0,
++		      "%s: Illegal or undefined network address", arg);
++	    }
++	}
++      else
++	{
++	  h->curint->address = ADDR ("0.0.0.0", "address");
++	  h->curint->netmask = ADDR ("255.0.0.0", "netmask");
++	  h->curint->gateway = INADDR_NONE;
+ 	}
        break;
 +
      case 'm':
 -      h->curint->netmask = ADDR (arg, "netmask"); break;
 +      if (arg)
-+        h->curint->netmask = ADDR (arg, "netmask"); 
-+      else 
-+        h->curint->netmask = INADDR_NONE;
++	h->curint->netmask = ADDR (arg, "netmask");
++      else
++	h->curint->netmask = INADDR_NONE;
 +      break;
 +
      case 'p':
 -      h->curint->peer = ADDR (arg, "peer"); break;
 +      if (arg)
-+        h->curint->peer = ADDR (arg, "peer"); 
-+      else 
-+        h->curint->peer = INADDR_NONE;
++	h->curint->peer = ADDR (arg, "peer");
++      else
++	h->curint->peer = INADDR_NONE;
 +      break;
 +
      case 'g':
 -      h->curint->gateway = ADDR (arg, "gateway"); break;
 +      if (arg)
 +	{
-+	  /* Remove an possible other default gateway */ 
-+	  for (in = h->interfaces; in < h->interfaces + h->num_interfaces; 
++	  /* Remove an possible other default gateway */
++	  for (in = h->interfaces; in < h->interfaces + h->num_interfaces;
 +	       in++)
 +	    in->gateway = INADDR_NONE;
 +	  h->curint->gateway = ADDR (arg, "gateway");
 +	}
-+      else 
-+        h->curint->gateway = INADDR_NONE;
++      else
++	h->curint->gateway = INADDR_NONE;
 +      break;
  
      case '4':
        pfinet_bind (PORTCLASS_INET, arg);
-@@ -254,36 +338,46 @@ parse_opt (int opt, char *arg, struct ar
+@@ -254,36 +341,46 @@ parse_opt (int opt, char *arg, struct ar
        break;
  
      case 'A':
@@ -235,12 +237,20 @@ TODO: review & submit upstream
 -	  h->curint->address6.prefix_len = atoi (ptr + 1);
 -	  if (h->curint->address6.prefix_len > 128) 
 -	    FAIL (EINVAL, 1, 0, "%s: The prefix-length is invalid", arg);
-+	  if ((ptr = strchr (arg, '/'))) 
++	  if ((ptr = strchr (arg, '/')))
 +	    {
 +	      h->curint->address6.prefix_len = atoi (ptr + 1);
-+	      if (h->curint->address6.prefix_len > 128) 
++	      if (h->curint->address6.prefix_len > 128)
 +		FAIL (EINVAL, 1, 0, "%s: The prefix-length is invalid", arg);
-+	      
+ 
+-	  *ptr = 0;
+-	}
+-      else
+-	{
+-	  h->curint->address6.prefix_len = 64;
+-	  fprintf (stderr, "No prefix-length given, defaulting to %s/64.\n",
+-		   arg);
+-	}
 +	      *ptr = 0;
 +	    }
 +	  else
@@ -249,29 +259,21 @@ TODO: review & submit upstream
 +	      fprintf (stderr, "No prefix-length given, "
 +		       "defaulting to %s/64.\n", arg);
 +	    }
-+
+ 
+-      if (inet_pton (AF_INET6, arg, &h->curint->address6.addr) <= 0)
+-	PERR (EINVAL, "Malformed address");
 +	  if (inet_pton (AF_INET6, arg, &h->curint->address6.addr) <= 0)
 +	    PERR (EINVAL, "Malformed address");
  
--	  *ptr = 0;
-+	  if (IN6_IS_ADDR_MULTICAST (&h->curint->address6.addr))
-+	    FAIL (EINVAL, 1, 0, "%s: Cannot set interface address to "
-+		  "multicast address", arg);
- 	}
-       else
--	{
--	  h->curint->address6.prefix_len = 64;
--	  fprintf (stderr, "No prefix-length given, defaulting to %s/64.\n",
--		   arg);
--	}
--
--      if (inet_pton (AF_INET6, arg, &h->curint->address6.addr) <= 0)
--	PERR (EINVAL, "Malformed address");
--
 -      if (IN6_IS_ADDR_MULTICAST (&h->curint->address6.addr))
 -	FAIL (EINVAL, 1, 0, "%s: Cannot set interface address to "
 -	      "multicast address", arg);
-+        memset (&h->curint->address6, 0, sizeof (struct inet6_ifaddr));
++	  if (IN6_IS_ADDR_MULTICAST (&h->curint->address6.addr))
++	    FAIL (EINVAL, 1, 0, "%s: Cannot set interface address to "
++		  "multicast address", arg);
++	}
++      else
++	memset (&h->curint->address6, 0, sizeof (struct inet6_ifaddr));
        break;
  
      case 'G':
@@ -290,11 +292,11 @@ TODO: review & submit upstream
 +		  "multicast address", arg);
 +	}
 +      else
-+        memset (&h->curint->gateway6, 0, sizeof (struct in6_addr));
++	memset (&h->curint->gateway6, 0, sizeof (struct in6_addr));
        break;
  #endif /* CONFIG_IPV6 */
  
-@@ -323,20 +417,19 @@ parse_opt (int opt, char *arg, struct ar
+@@ -323,20 +420,19 @@ parse_opt (int opt, char *arg, struct ar
  	  /* Specifying a netmask for an address-less interface is a no-no.  */
  	  FAIL (EDESTADDRREQ, 14, 0, "Cannot set netmask");
  #endif
@@ -306,10 +308,10 @@ TODO: review & submit upstream
 +      gw4_in = NULL;
        for (in = h->interfaces; in < h->interfaces + h->num_interfaces; in++)
  	{
-+          /* delete interface if it doesn't match the actual netmask */
-+          if (! ( (h->curint->address & h->curint->netmask) 
-+                  == (h->curint->gateway & h->curint->netmask))) 
-+            h->curint->gateway = INADDR_NONE;
++	  /* delete interface if it doesn't match the actual netmask */
++	  if (! ( (h->curint->address & h->curint->netmask)
++		  == (h->curint->gateway & h->curint->netmask)))
++	    h->curint->gateway = INADDR_NONE;
 +
  	  if (in->gateway != INADDR_NONE)
 -	    {
@@ -318,24 +320,17 @@ TODO: review & submit upstream
 -	      gateway = in->gateway;
 -	      in->gateway = INADDR_NONE;
 -	    }
-+              gw4_in = in;
++	      gw4_in = in;
  
  #ifdef CONFIG_IPV6
  	  if (!IN6_IS_ADDR_UNSPECIFIED (&in->gateway6))
-@@ -361,15 +454,20 @@
+@@ -361,15 +457,20 @@ parse_opt (int opt, char *arg, struct ar
  	    idev = ipv6_find_idev(in->device);
  #endif
  
 -	  if (in->address != INADDR_NONE || in->netmask != INADDR_NONE)
 +	  if (in->address == INADDR_NONE && in->netmask == INADDR_NONE)
- 	    {
--	      err = configure_device (in->device, in->address, in->netmask,
--				      in->peer, INADDR_NONE);
--	      if (err)
--		{
--		  pthread_mutex_unlock (&global_lock);
--		  FAIL (err, 16, 0, "cannot configure interface");
--		}
++	    {
 +	      h->curint->address = ADDR ("0.0.0.0", "address");
 +	      h->curint->netmask = ADDR ("255.0.0.0", "netmask");
 +	    }
@@ -345,57 +340,30 @@ TODO: review & submit upstream
 +				    in->peer, INADDR_NONE);
 +
 +	  if (err)
-+	    {
+ 	    {
+-	      err = configure_device (in->device, in->address, in->netmask,
+-				      in->peer, INADDR_NONE);
+-	      if (err)
+-		{
+-		  pthread_mutex_unlock (&global_lock);
+-		  FAIL (err, 16, 0, "cannot configure interface");
+-		}
 +	      pthread_mutex_unlock (&global_lock);
 +	      FAIL (err, 16, 0, "cannot configure interface");
  	    }
  
  #ifdef CONFIG_IPV6
-@@ -377,24 +475,25 @@
- 	    continue;
+@@ -384,7 +485,8 @@ parse_opt (int opt, char *arg, struct ar
+ 	      struct inet6_ifaddr *c_ifa = ifa;
+ 	      ifa = ifa->if_next;
  
- 	  /* First let's remove all non-local addresses. */
--	  struct inet6_ifaddr *ifa = idev->addr_list;
--
--	  while (ifa)
--	    {
--	      struct inet6_ifaddr *c_ifa = ifa;
--	      ifa = ifa->if_next;
--
 -	      if (IN6_ARE_ADDR_EQUAL (&c_ifa->addr, &in->address6.addr))
--		memset (&in->address6, 0, sizeof (struct inet6_ifaddr));
--
--	      else if (!IN6_IS_ADDR_LINKLOCAL (&c_ifa->addr)
--		       && !IN6_IS_ADDR_SITELOCAL (&c_ifa->addr))
--		inet6_addr_del (in->device->ifindex, &c_ifa->addr,
--				c_ifa->prefix_len);
--	    }
--
--	  if (!IN6_IS_ADDR_UNSPECIFIED (&in->address6.addr))
--	    {
-+ 	  struct inet6_ifaddr *ifa = idev->addr_list;
-+ 
-+ 	  while (ifa)
-+  	    {
-+ 	      struct inet6_ifaddr *c_ifa = ifa;
-+ 	      ifa = ifa->if_next;
-+ 
-+ 	      if (!IN6_IS_ADDR_UNSPECIFIED (&in->address6.addr)
++	      if (!IN6_IS_ADDR_UNSPECIFIED (&in->address6.addr)
 +		  && IN6_ARE_ADDR_EQUAL (&c_ifa->addr, &in->address6.addr))
-+ 		memset (&in->address6, 0, sizeof (struct inet6_ifaddr));
-+  
-+ 	      else if (!IN6_IS_ADDR_LINKLOCAL (&c_ifa->addr)
-+ 		       && !IN6_IS_ADDR_SITELOCAL (&c_ifa->addr))
-+ 		inet6_addr_del (in->device->ifindex, &c_ifa->addr,
-+ 				c_ifa->prefix_len);
-+ 	    }
-+ 
-+ 	  if (!IN6_IS_ADDR_UNSPECIFIED (&in->address6.addr))
-+ 	    {
- 	      /* Now assign the new address */
- 	      inet6_addr_add (in->device->ifindex, &in->address6.addr,
- 			      in->address6.prefix_len);
-@@ -418,33 +517,40 @@
+ 		memset (&in->address6, 0, sizeof (struct inet6_ifaddr));
+ 
+ 	      else if (!IN6_IS_ADDR_LINKLOCAL (&c_ifa->addr)
+@@ -418,33 +520,41 @@ parse_opt (int opt, char *arg, struct ar
  	req.nlh.nlmsg_seq = 0;
  	req.nlh.nlmsg_len = NLMSG_LENGTH (sizeof req.rtm);
  
@@ -416,62 +384,60 @@ TODO: review & submit upstream
 -	    req.nlh.nlmsg_flags = 0;
 -	    tb = fib_get_table (req.rtm.rtm_table);
 -	    if (tb)
--	      {
++	    /* Delete any existing default route on configured devices  */
++	    for (in = h->interfaces; in < h->interfaces + h->num_interfaces;
++		 in++)
+ 	      {
 -		err = - (*tb->tb_delete) (tb, &req.rtm, &rta, &req.nlh, 0);
 -		if (err && err != ESRCH)
--		  {
++		req.nlh.nlmsg_type = RTM_DELROUTE;
++		req.nlh.nlmsg_flags = 0;
++		rta.rta_oif = &in->device->ifindex;
++		tb = fib_get_table (req.rtm.rtm_table);
++		if (tb)
+ 		  {
 -		    pthread_mutex_unlock (&global_lock);
 -		    FAIL (err, 17, 0, "cannot remove old default gateway");
--		  }
++		    err = - (*tb->tb_delete)
++		      (tb, &req.rtm, &rta, &req.nlh, 0);
++		    if (err && err != ESRCH)
++		      {
++			pthread_mutex_unlock (&global_lock);
++			FAIL (err, 17, 0,
++			      "cannot remove old default gateway");
++		      }
++		    err = 0;
+ 		  }
 -		err = 0;
--	      }
-+	    /* Delete any existing default route on configured devices  */
-+            for (in = h->interfaces; in < h->interfaces + h->num_interfaces;
-+                 in++) {
-+              req.nlh.nlmsg_type = RTM_DELROUTE;
-+              req.nlh.nlmsg_flags = 0;
-+              rta.rta_oif = &in->device->ifindex;
-+              tb = fib_get_table (req.rtm.rtm_table);
-+              if (tb)
-+                {
-+                  err = - (*tb->tb_delete) 
-+                    (tb, &req.rtm, &rta, &req.nlh, 0);
-+                  if (err && err != ESRCH)
-+                    {
-+                      pthread_mutex_unlock (&global_lock);
-+                      FAIL (err, 17, 0, 
-+                            "cannot remove old default gateway");
-+                    }
-+                  err = 0;
-+                }
-+            }
+ 	      }
  	  }
  	else
  	  {
  	    /* Add a default route, replacing any existing one.  */
-+            rta.rta_oif = &gw4_in->device->ifindex;
-+            rta.rta_gw = &gw4_in->gateway;
++	    rta.rta_oif = &gw4_in->device->ifindex;
++	    rta.rta_gw = &gw4_in->gateway;
  	    req.nlh.nlmsg_type = RTM_NEWROUTE;
  	    req.nlh.nlmsg_flags = NLM_F_REQUEST | NLM_F_CREATE | NLM_F_REPLACE;
  	    tb = fib_new_table (req.rtm.rtm_table);
-@@ -467,13 +573,77 @@
+@@ -467,12 +577,76 @@ parse_opt (int opt, char *arg, struct ar
  	  if (!gw6_in || rt6i->rt6i_dev != gw6_in->device
  	      || !IN6_ARE_ADDR_EQUAL (&rt6i->rt6i_gateway, &gw6_in->gateway6))
  	    {
 -	      rt6_purge_dflt_routers (0);
-+              /* Delete any existing default route on configured devices  */
-+              for (in = h->interfaces; in < h->interfaces 
-+                   + h->num_interfaces; in++) 
-+                if (rt6i->rt6i_dev == in->device || gw6_in )
-+                  rt6_purge_dflt_routers (0);
++	      /* Delete any existing default route on configured devices  */
++	      for (in = h->interfaces; in < h->interfaces
++		   + h->num_interfaces; in++)
++		if (rt6i->rt6i_dev == in->device || gw6_in )
++		  rt6_purge_dflt_routers (0);
 +
  	      if (gw6_in)
  		rt6_add_dflt_router (&gw6_in->gateway6, gw6_in->device);
  	    }
  	}
- #endif       
- 
-+      /*  Setup the routing required for DHCP. */
+-#endif       
++#endif
++
++      /* Setup the routing required for DHCP. */
 +      for (in = h->interfaces; in < h->interfaces + h->num_interfaces; in++)
 +	{
 +	  struct kern_rta rta;
@@ -489,7 +455,7 @@ TODO: review & submit upstream
 +	    continue;
 +
 +	  dst = (struct sockaddr_in *) &route.rt_dst;
-+	  if (!in->device->name) 
++	  if (!in->device->name)
 +	    {
 +	      pthread_mutex_unlock (&global_lock);
 +	      FAIL (ENODEV, 17, 0, "unknown device");
@@ -529,11 +495,10 @@ TODO: review & submit upstream
 +	      FAIL (err, 17, 0, "cannot add route");
 +	    }
 +	}
-+
+ 
        pthread_mutex_unlock (&global_lock);
  
-       /* Fall through to free hook.  */
-@@ -526,8 +696,9 @@
+@@ -526,8 +700,9 @@ trivfs_append_args (struct trivfs_contro
          ADD_ADDR_OPT ("netmask", mask);
        if (peer != addr)
  	ADD_ADDR_OPT ("peer", peer);
