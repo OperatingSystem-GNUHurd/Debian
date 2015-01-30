@@ -1,4 +1,4 @@
-Include procfs, random, and DDE in the build
+Include DDE in the build
 
 Index: hurd-debian/Makefile
 ===================================================================
