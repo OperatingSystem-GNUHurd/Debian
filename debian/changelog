@@ -1,3 +1,10 @@
+hurd (1:0.5.git20141210-7) UNRELEASED; urgency=medium
+
+  * patches/term-for-tcl.patch: Add workaround against TCL's missing buffering
+    support for PTYs used by expect, see Bug #755295.
+
+ -- Samuel Thibault <sthibault@debian.org>  Mon, 02 Feb 2015 11:39:38 +0100
+
 hurd (1:0.5.git20141210-6) unstable; urgency=medium
 
   * patches/git-socket-EOF.patch: Cherry-pick patch to fix EOF on sockets.

@@ -1,0 +1,21 @@
+See discussion in http://bugs.debian.org/755295
+
+--- a/term/ptyio.c
++++ b/term/ptyio.c
+@@ -350,6 +350,16 @@ pty_io_read (struct trivfs_protid *cred,
+ 	size++;
+     }
+ 
++  /*
++   * Linux never returns more than this, and at least TCL happens to depend on
++   * this behavior. This was discussed in http://bugs.debian.org/755295 and
++   * raised to TCL, with no answer so far.
++   */
++#define LINUXISH_READ_MAX 4095
++  if (cred->po->openmodes & O_NONBLOCK)
++    if (amount > LINUXISH_READ_MAX)
++      amount = LINUXISH_READ_MAX;
++
+   if (size > amount)
+     size = amount;
+   if (size > *datalen)
