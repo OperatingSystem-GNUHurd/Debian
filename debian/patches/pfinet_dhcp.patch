@@ -30,7 +30,7 @@ Commited upstream as 2be6756
 
 --- a/pfinet/options.c
 +++ b/pfinet/options.c
-@@ -60,22 +60,26 @@ extern struct inet6_dev *ipv6_find_idev
+@@ -60,23 +60,27 @@ extern struct inet6_dev *ipv6_find_idev
  extern int inet6_addr_add (int ifindex, struct in6_addr *pfx, int plen);
  extern int inet6_addr_del (int ifindex, struct in6_addr *pfx, int plen);
  
@@ -63,6 +63,7 @@ Commited upstream as 2be6756
 +  {"address6",  'A', "ADDR/LEN", OPTION_ARG_OPTIONAL, "Set the global IPv6 address"},
 +  {"gateway6",  'G', "ADDRESS",  OPTION_ARG_OPTIONAL, "Set the IPv6 default gateway"},
  #endif
+   {"shutdown",  's', 0,         0, "Shut it down"},
    {0}
  };
  
