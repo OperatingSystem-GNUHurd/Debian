@@ -3,7 +3,7 @@ TODO: review & submit upstream
 2007-10-14  Christian Dietrich  <stettberger@dokucode.de>
 
 	* options.c (options): Marked -a, -g -m, -p, -A, -G
-	OPTION_ARG_OPTIONAL. Adding -d option.
+	OPTION_ARG_OPTIONAL.
 	(parse_interface_copy_device): New function.
 	(parse_opt): When selecting another interface with -i 
 	set the options from e.g. a prior fsysopts call as default
@@ -17,12 +17,8 @@ TODO: review & submit upstream
 
 2007-10-14  Marco Gerards  <metgerards@student.han.nl>
 
-	* options.c (options): Add the option `dhcp'.
-	(parse_hook_add_interface): Initialize the `dhcp' member for the
-	parse hook.
-	(parse_opt): In case pfinet is started with the argument `--dhcp',
-	set the address to `0.0.0.0', the netmask to `255.0.0.0' and add
-	the route for `0.0.0.0' so broadcasting works.
+        * options.c (parse_opt): Add the route for `0.0.0.0' so broadcasting
+        works.
 
 	* linux-src/net/ipv4/devinet.c (inet_insert_ifa) [_HURD_]: Don't
 	fail when the address is `0.0.0.0'.
