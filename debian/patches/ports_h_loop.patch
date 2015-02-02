@@ -1,3 +1,5 @@
+Fixed upstream.
+
 Index: hurd-debian/mach-defpager/Makefile
 ===================================================================
 --- hurd-debian.orig/mach-defpager/Makefile
