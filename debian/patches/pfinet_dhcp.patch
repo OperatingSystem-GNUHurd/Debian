@@ -1,4 +1,4 @@
-TODO: review & submit upstream
+Commited upstream as 2be6756
 
 2007-10-14  Christian Dietrich  <stettberger@dokucode.de>
 
@@ -30,7 +30,7 @@ TODO: review & submit upstream
 
 --- a/pfinet/options.c
 +++ b/pfinet/options.c
-@@ -60,23 +60,26 @@ extern struct inet6_dev *ipv6_find_idev
+@@ -60,22 +60,26 @@ extern struct inet6_dev *ipv6_find_idev
  extern int inet6_addr_add (int ifindex, struct in6_addr *pfx, int plen);
  extern int inet6_addr_del (int ifindex, struct in6_addr *pfx, int plen);
  
@@ -63,7 +63,6 @@ TODO: review & submit upstream
 +  {"address6",  'A', "ADDR/LEN", OPTION_ARG_OPTIONAL, "Set the global IPv6 address"},
 +  {"gateway6",  'G', "ADDRESS",  OPTION_ARG_OPTIONAL, "Set the IPv6 default gateway"},
  #endif
--  {"shutdown",  's', 0,         0, "Shut it down"},
    {0}
  };
  
@@ -359,14 +358,7 @@ TODO: review & submit upstream
  		memset (&in->address6, 0, sizeof (struct inet6_ifaddr));
  
  	      else if (!IN6_IS_ADDR_LINKLOCAL (&c_ifa->addr)
-@@ -418,33 +520,41 @@ parse_opt (int opt, char *arg, struct ar
- 	req.nlh.nlmsg_seq = 0;
- 	req.nlh.nlmsg_len = NLMSG_LENGTH (sizeof req.rtm);
- 
--	bzero (&req.rtm, sizeof req.rtm);
--	bzero (&rta, sizeof rta);
-+	memset (&req.rtm, 0, sizeof req.rtm);
-+	memset (&rta, 0, sizeof rta);
+@@ -418,28 +520,36 @@ parse_opt (int opt, char *arg, struct ar
  	req.rtm.rtm_scope = RT_SCOPE_UNIVERSE;
  	req.rtm.rtm_type = RTN_UNICAST;
  	req.rtm.rtm_protocol = RTPROT_STATIC;
