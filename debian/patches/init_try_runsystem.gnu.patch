@@ -1,4 +1,4 @@
-Also try runsystem.gnu
+Also try runsystem.gnu, in case /etc/alternatives/runsystem is hosed.
 
 ---
  daemons/console-run.c |    7 +++++++
