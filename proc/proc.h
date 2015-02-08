@@ -58,6 +58,10 @@ struct proc
   /* Process group structure */
   struct pgrp *p_pgrp;
 
+  /* Processes may live in a task namespace identified by the
+     notification port registered by proc_make_task_namespace.  */
+  mach_port_t p_task_namespace;	/* send right */
+
   /* Communication */
   mach_port_t p_msgport;	/* send right */
 
@@ -146,6 +150,8 @@ struct port_class *exc_class;
 mach_port_t generic_port;	/* messages not related to a specific proc */
 
 pthread_mutex_t global_lock;
+
+extern int startup_fallback;	/* (ab)use /hurd/startup's message port */
 
 /* Forward declarations */
 void complete_wait (struct proc *, int);

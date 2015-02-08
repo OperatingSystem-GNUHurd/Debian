@@ -33,6 +33,7 @@
 #include <sys/file.h>
 #include <unistd.h>
 #include <string.h>
+#include <mach/gnumach.h>
 #include <mach/notify.h>
 #include <stdlib.h>
 #include <hurd/msg.h>
@@ -376,6 +377,7 @@ run (const char *server, mach_port_t *ports, task_t *task)
 	      printf ("Pausing for %s\n", prog);
 	      getchar ();
 	    }
+          task_set_name (*task, (char *) prog);
 	  err = file_exec (file, *task, 0,
 			   (char *)prog, strlen (prog) + 1, /* Args.  */
 			   startup_envz, startup_envz_len,
@@ -512,6 +514,32 @@ demuxer (mach_msg_header_t *inp,
 	  startup_server (inp, outp));
 }
 
+error_t
+install_as_translator (void)
+{
+  error_t err;
+  file_t node;
+
+  node = file_name_lookup (_SERVERS_STARTUP, O_NOTRANS, 0);
+  if (! MACH_PORT_VALID (node))
+    {
+      if (errno == ENOENT)
+	{
+	  /* Degrade gracefully if the node does not exist.  */
+	  error (0, errno, "%s", _SERVERS_STARTUP);
+	  return 0;
+	}
+      return errno;
+    }
+
+  err = file_set_translator (node,
+			     0, FS_TRANS_SET, 0,
+			     NULL, 0,
+			     startup, MACH_MSG_TYPE_COPY_SEND);
+  mach_port_deallocate (mach_task_self (), node);
+  return err;
+}
+
 static int
 parse_opt (int key, char *arg, struct argp_state *state)
 {
@@ -585,18 +613,6 @@ main (int argc, char **argv, char **envp)
   /* Crash if the boot filesystem task dies.  */
   request_dead_name (fstask);
 
-  file_t node = file_name_lookup (_SERVERS_STARTUP, O_NOTRANS, 0);
-  if (node == MACH_PORT_NULL)
-    error (0, errno, "%s", _SERVERS_STARTUP);
-  else
-    {
-      file_set_translator (node,
-			   0, FS_TRANS_SET, 0,
-			   NULL, 0,
-			   startup, MACH_MSG_TYPE_COPY_SEND);
-      mach_port_deallocate (mach_task_self (), node);
-    }
-
   /* Set up the set of ports we will pass to the programs we exec.  */
   for (i = 0; i < INIT_PORT_MAX; i++)
     switch (i)
@@ -649,10 +665,11 @@ launch_core_servers (void)
   error_t err;
 
   /* Reply to the proc and auth servers.   */
-  startup_procinit_reply (procreply, procreplytype, 0,
-			  mach_task_self (), authserver,
-			  host_priv, MACH_MSG_TYPE_COPY_SEND,
-			  device_master, MACH_MSG_TYPE_COPY_SEND);
+  err = startup_procinit_reply (procreply, procreplytype, 0,
+				mach_task_self (), authserver,
+				host_priv, MACH_MSG_TYPE_COPY_SEND,
+				device_master, MACH_MSG_TYPE_COPY_SEND);
+  assert_perror (err);
   if (!fakeboot)
     {
       mach_port_deallocate (mach_task_self (), device_master);
@@ -660,19 +677,34 @@ launch_core_servers (void)
     }
 
   /* Mark us as important.  */
-  proc_mark_important (procserver);
-  proc_mark_exec (procserver);
+  err = proc_mark_important (procserver);
+  assert_perror (err);
+  err = proc_mark_exec (procserver);
+  assert_perror (err);
 
   /* Declare that the filesystem and auth are our children. */
-  proc_child (procserver, fstask);
-  proc_child (procserver, authtask);
+  err = proc_child (procserver, fstask);
+  assert_perror (err);
+  err = proc_child (procserver, authtask);
+  assert_perror (err);
 
-  proc_task2proc (procserver, authtask, &authproc);
-  proc_mark_important (authproc);
-  proc_mark_exec (authproc);
-  startup_authinit_reply (authreply, authreplytype, 0, authproc,
-			  MACH_MSG_TYPE_COPY_SEND);
-  mach_port_deallocate (mach_task_self (), authproc);
+  err = proc_task2proc (procserver, authtask, &authproc);
+  assert_perror (err);
+  err = proc_mark_important (authproc);
+  assert_perror (err);
+  err = proc_mark_exec (authproc);
+  assert_perror (err);
+
+  err = install_as_translator ();
+  if (err)
+    /* Good luck.  Who knows, maybe it's an old installation.  */
+    error (0, err, "Failed to bind to " _SERVERS_STARTUP);
+
+  err = startup_authinit_reply (authreply, authreplytype, 0, authproc,
+				MACH_MSG_TYPE_COPY_SEND);
+  assert_perror (err);
+  err = mach_port_deallocate (mach_task_self (), authproc);
+  assert_perror (err);
 
   /* Give the library our auth and proc server ports.  */
   _hurd_port_set (&_hurd_ports[INIT_PORT_AUTH], authserver);
@@ -681,13 +713,16 @@ launch_core_servers (void)
   /* Do NOT run _hurd_proc_init!  That will start signals, which we do not
      want.  We listen to our own message port.  Tell the proc server where
      our args and environment are.  */
-  proc_set_arg_locations (procserver,
-			  (vm_address_t) global_argv, (vm_address_t) environ);
+  err = proc_set_arg_locations (procserver,
+				(vm_address_t) global_argv,
+				(vm_address_t) environ);
+  assert_perror (err);
 
   default_ports[INIT_PORT_AUTH] = authserver;
 
   /* Declare that the proc server is our child.  */
-  proc_child (procserver, proctask);
+  err = proc_child (procserver, proctask);
+  assert_perror (err);
   err = proc_task2proc (procserver, proctask, &procproc);
   if (!err)
     {
@@ -696,13 +731,18 @@ launch_core_servers (void)
       mach_port_deallocate (mach_task_self (), procproc);
     }
 
-  proc_register_version (procserver, host_priv, "init", "", HURD_VERSION);
+  err = proc_register_version (procserver, host_priv,
+			       "init", "", HURD_VERSION);
+  assert_perror (err);
 
   /* Get the bootstrap filesystem's proc server port.
      We must do this before calling proc_setmsgport below.  */
-  proc_task2proc (procserver, fstask, &fsproc);
-  proc_mark_important (fsproc);
-  proc_mark_exec (fsproc);
+  err = proc_task2proc (procserver, fstask, &fsproc);
+  assert_perror (err);
+  err = proc_mark_important (fsproc);
+  assert_perror (err);
+  err = proc_mark_exec (fsproc);
+  assert_perror (err);
 
 #if 0
   printf ("Init has completed.\n");
@@ -717,7 +757,8 @@ launch_core_servers (void)
      before accepting more RPC requests!  However, we must do this before
      calling fsys_init, because fsys_init blocks on exec_init, and
      exec_init will block waiting on our message port.  */
-  proc_setmsgport (procserver, startup, &old);
+  err = proc_setmsgport (procserver, startup, &old);
+  assert_perror (err);
   if (old != MACH_PORT_NULL)
     mach_port_deallocate (mach_task_self (), old);
 
@@ -742,8 +783,8 @@ init_stdarrays ()
   std_port_array = alloca (sizeof (mach_port_t) * INIT_PORT_MAX);
   std_int_array = alloca (sizeof (int) * INIT_INT_MAX);
 
-  bzero (std_port_array, sizeof (mach_port_t) * INIT_PORT_MAX);
-  bzero (std_int_array, sizeof (int) * INIT_INT_MAX);
+  memset (std_port_array, 0, sizeof(mach_port_t) * INIT_PORT_MAX);
+  memset (std_int_array, 0, sizeof(int) * INIT_INT_MAX);
 
   __USEPORT (AUTH, auth_makeauth (port, 0, MACH_MSG_TYPE_COPY_SEND, 0,
 				  0, 0, 0, 0, 0, 0, 0, 0, &nullauth));

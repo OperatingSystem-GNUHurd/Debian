@@ -22,6 +22,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include <mach.h>
 #include <hurd/hurd_types.h>
 #include <hurd.h>
+#include <hurd/paths.h>
 #include <hurd/startup.h>
 #include <device/device.h>
 #include <assert.h>
@@ -31,6 +32,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include <pids.h>
 
 #include "proc.h"
+#include "gnumach_U.h"
 
 const char *argp_program_version = STANDARD_HURD_VERSION (proc);
 
@@ -38,6 +40,7 @@ const char *argp_program_version = STANDARD_HURD_VERSION (proc);
 #include "notify_S.h"
 #include "../libports/interrupt_S.h"
 #include "proc_exc_S.h"
+#include "task_notify_S.h"
 
 int
 message_demuxer (mach_msg_header_t *inp,
@@ -47,7 +50,8 @@ message_demuxer (mach_msg_header_t *inp,
   if ((routine = process_server_routine (inp)) ||
       (routine = notify_server_routine (inp)) ||
       (routine = ports_interrupt_server_routine (inp)) ||
-      (routine = proc_exc_server_routine (inp)))
+      (routine = proc_exc_server_routine (inp)) ||
+      (routine = task_notify_server_routine (inp)))
     {
       pthread_mutex_lock (&global_lock);
       (*routine) (inp, outp);
@@ -59,6 +63,7 @@ message_demuxer (mach_msg_header_t *inp,
 }
 
 pthread_mutex_t global_lock = PTHREAD_MUTEX_INITIALIZER;
+int startup_fallback;
 
 error_t
 increase_priority (void)
@@ -96,6 +101,7 @@ main (int argc, char **argv, char **envp)
   error_t err;
   void *genport;
   process_t startup_port;
+  mach_port_t startup;
   struct argp argp = { 0, 0, 0, "Hurd process server" };
 
   argp_parse (&argp, argc, argv, 0, 0, 0);
@@ -152,6 +158,12 @@ main (int argc, char **argv, char **envp)
   if (err)
     error (0, err, "Increasing priority failed");
 
+  err = register_new_task_notification (_hurd_host_priv,
+					generic_port,
+					MACH_MSG_TYPE_MAKE_SEND);
+  if (err)
+    error (0, err, "Registering task notifications failed");
+
   {
     /* Get our stderr set up to print on the console, in case we have
        to panic or something.  */
@@ -163,6 +175,26 @@ main (int argc, char **argv, char **envp)
     stdout = stderr = mach_open_devstream (cons, "w");
     mach_port_deallocate (mach_task_self (), cons);
   }
+
+  startup = file_name_lookup (_SERVERS_STARTUP, 0, 0);
+  if (MACH_PORT_VALID (startup))
+    {
+      err = startup_essential_task (startup, mach_task_self (),
+				    MACH_PORT_NULL, "proc", _hurd_host_priv);
+      if (err)
+	/* Due to the single-threaded nature of /hurd/startup, it can
+	   only handle requests once the core server bootstrap has
+	   completed.  Therefore, it does not bind itself to
+	   /servers/startup until it is ready.	*/
+	/* Fall back to abusing the message port lookup.  */
+	startup_fallback = 1;
+
+      err = mach_port_deallocate (mach_task_self (), startup);
+      assert_perror (err);
+    }
+  else
+    /* Fall back to abusing the message port lookup.	*/
+    startup_fallback = 1;
 
   while (1)
     ports_manage_port_operations_multithread (proc_bucket,

@@ -1,13 +1,11 @@
 diskfs_no_inherit_dir_group.patch
 init_try_runsystem.gnu.patch
 makedev.diff
-pfinet_dhcp.patch
 rc.patch
 startup-usr-support.patch
 tmp_exec_startup.patch
 uptime_w_path_fix.patch
 stat_round.patch
-proxy-defpager.diff
 external.patch
 console_ignore_bdf_err.patch
 posix-sigcodes.patch
@@ -38,11 +36,6 @@ exec_filename_fs.patch
 exec_filename_use.patch
 exec_filename_fix.patch
 mount.patch
-xkb-compat.patch
 MAKEDEV-apm.patch
-newRPC.patch
-libmachdev-link.patch
-ports_h_loop.patch
-git-mtab-paths.patch
-git-socket-EOF.patch
 term-for-tcl.patch
+newRPC.patch
