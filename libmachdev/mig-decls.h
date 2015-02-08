@@ -34,6 +34,12 @@ begin_using_device_port (mach_port_t port)
   return ports_lookup_port (device_bucket, port, dev_class);
 }
 
+static inline struct mach_device * __attribute__ ((unused))
+begin_using_device_payload (unsigned long payload)
+{
+  return ports_lookup_payload (device_bucket, payload, dev_class);
+}
+
 static inline void __attribute__ ((unused))
 end_using_device (struct mach_device *p)
 {
