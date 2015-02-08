@@ -18,6 +18,7 @@ along with the GNU Hurd; see the file COPYING.  If not, write to
 the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 
+#ifdef HURD_SERVER
 /* The Hurd uses protected payloads to quickly look up the object
    receiving a message.  Looking up objects is optimized at the cost
    of having to translate payloads back to port names if the server
@@ -42,7 +43,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #undef HURD_DEFAULT_PAYLOAD_TO_PORT
 #endif
 #else
-   import <hurd/ports.h>;
+  import <hurd/ports.h>;
 #define HURD_DEFAULT_PAYLOAD_TO_PORT ports_payload_get_name
 #endif
 
@@ -52,6 +53,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #ifdef HURD_DEFAULT_PAYLOAD_TO_PORT
 #define MACH_PAYLOAD_TO_PORT	HURD_DEFAULT_PAYLOAD_TO_PORT
 #endif
+#endif	/* HURD_SERVER */
 
 #include <mach/std_types.defs>
 #include <mach/mach_types.defs>

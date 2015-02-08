@@ -192,7 +192,7 @@ new_partition (const char *name, struct file_direct *fdp,
 	part->going_away= FALSE;
 	part->file = fdp;
 
-	bzero((char *)part->bitmap, bmsize);
+	memset ((char *)part->bitmap, 0, bmsize);
 
 	if (check_linux_signature < 0)
 	  {
@@ -428,10 +428,10 @@ create_paging_partition(const char *name,
 			new_list = (partition_t *)
 				kalloc( n * sizeof(partition_t) );
 			if (new_list == 0) no_paging_space(TRUE);
-			bzero(new_list, n*sizeof(partition_t));
+			memset (new_list, 0, n * sizeof(partition_t));
 			if (i) {
 			    old_list = all_partitions.partition_list;
-			    bcopy(old_list, new_list, i*sizeof(partition_t));
+			    memcpy (new_list, old_list, i*sizeof(partition_t));
 			}
 			all_partitions.partition_list = new_list;
 			all_partitions.n_partitions = n;
@@ -1640,7 +1640,7 @@ default_read(ds, addr, size, offset, out_addr, deallocate, external)
 		 * An external object is requesting unswapped data,
 		 * zero fill the page and return.
 		 */ 
-		bzero((char *) addr, vm_page_size);
+		memset ((char *)addr, 0, vm_page_size);
 		*out_addr = addr;
 		return (PAGER_SUCCESS);
 	    }
@@ -1678,7 +1678,7 @@ ddprintf ("default_read(%x,%x,%x,%d)\n",addr,size,offset,block.block.p_index);
 	     * the next piece.
 	     */
 	    first_time = FALSE;
-	    bcopy((char *)raddr, (char *)addr, rsize);
+	    memcpy ((char *)addr, (char *)raddr, rsize);
 	    addr += rsize;
 	    offset += rsize;
 	    size -= rsize;
@@ -2118,7 +2118,7 @@ default_pager_t pager_port_alloc(size)
 	ds = (default_pager_t) kalloc(sizeof *ds);
 	if (ds == DEFAULT_PAGER_NULL)
 	    panic("%spager_port_alloc",my_name);
-	bzero((char *) ds, sizeof *ds);
+	memset ((char *)ds, 0, sizeof *ds);
 
 	dstruct_lock_init(ds);
 
