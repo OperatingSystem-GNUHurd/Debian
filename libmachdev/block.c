@@ -65,7 +65,7 @@ dev_to_port (void *nd)
 	  : MACH_PORT_NULL);
 }
 
-extern struct device_emulation_ops linux_block_emulation_ops;
+static struct device_emulation_ops linux_block_emulation_ops;
 
 #define DISK_NAME_LEN 32
 
@@ -286,7 +286,7 @@ device_get_status (void *d, dev_flavor_t flavor, dev_status_t status,
   return D_SUCCESS;
 }
 
-struct device_emulation_ops linux_block_emulation_ops =
+static struct device_emulation_ops linux_block_emulation_ops =
 {
   NULL,
   NULL,
