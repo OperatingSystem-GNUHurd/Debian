@@ -546,6 +546,7 @@ MIGCOMFLAGS := -subrprefix __
 
 %.sdefsi %.sdefs.d: %.defs
 	$(CPP) $(CPPFLAGS) $(MIGSFLAGS) $($*-MIGSFLAGS) -DSERVERPREFIX=S_ \
+	  -DHURD_SERVER=1 \
 	  -MD -MF $*.sdefs.d.new \
 	  $< -o $*.sdefsi
 	sed -e 's/[^:]*:/$*Server.c $(mig-sheader-prefix)$*_S.h:/' \
@@ -577,6 +578,7 @@ mach_defs_names = bootstrap exc mach mach4 \
 	mach_host mach_port mach_timer_reply memory_object \
 	memory_object_default notify \
 	gnumach \
+	task_notify \
 
 mach_debug_defs_names = mach_debug
 device_defs_names = dev_forward device device_reply device_request

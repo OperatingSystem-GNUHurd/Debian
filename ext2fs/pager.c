@@ -209,7 +209,7 @@ file_pager_read_page (struct node *node, vm_offset_t page,
 	      else
 		/* We've already got some buffer, so copy into it.  */
 		{
-		  bcopy (new_buf, *buf + offs, new_len);
+		  memcpy (*buf + offs, new_buf, new_len);
 		  free_page_buf (new_buf); /* Return NEW_BUF to our pool.  */
 		  STAT_INC (file_pagein_freed_bufs);
 		}
@@ -265,7 +265,7 @@ file_pager_read_page (struct node *node, vm_offset_t page,
 		break;
 	      STAT_INC (file_pagein_alloced_bufs);
 	    }
-	  bzero (*buf + offs, block_size);
+	  memset (*buf + offs, 0, block_size);
 	  offs += block_size;
 	}
       else
@@ -316,7 +316,7 @@ pending_blocks_write (struct pending_blocks *pb)
 	/* Put what we're going to write into a page-aligned buffer.  */
 	{
 	  void *page_buf = get_page_buf ();
-	  bcopy (pb->buf + pb->offs, (void *)page_buf, length);
+	  memcpy ((void *)page_buf, pb->buf + pb->offs, length);
 	  err = store_write (store, dev_block, page_buf, length, &amount);
 	  free_page_buf (page_buf);
 	}
@@ -446,7 +446,7 @@ disk_pager_read_page (vm_offset_t page, void **buf, int *writelock)
   if (read != length)
     return EIO;
   if (!err && length != vm_page_size)
-    bzero ((void *)(*buf + length), vm_page_size - length);
+    memset ((void *)(*buf + length), 0, vm_page_size - length);
 
   *writelock = 0;
 
