@@ -1,9 +1,9 @@
-hurd (1:0.5.git20150208-2) UNRELEASED; urgency=medium
+hurd (1:0.5.git20150208-2) unstable; urgency=medium
 
   * Bump libc0.3 Break, to make sure we get a libc with the _routines@
     functions.
 
- -- Samuel Thibault <sthibault@debian.org>  Mon, 09 Feb 2015 10:49:36 +0000
+ -- Samuel Thibault <sthibault@debian.org>  Mon, 09 Feb 2015 10:53:15 +0000
 
 hurd (1:0.5.git20150208-1) unstable; urgency=medium
 
