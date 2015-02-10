@@ -38,4 +38,5 @@ exec_filename_fix.patch
 mount.patch
 MAKEDEV-apm.patch
 term-for-tcl.patch
+disable_new_task_notification.diff
 newRPC.patch

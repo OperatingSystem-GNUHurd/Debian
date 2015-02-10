@@ -1,3 +1,10 @@
+hurd (1:0.5.git20150208-3) unstable; urgency=medium
+
+  * patches/disable_new_task_notification.diff: Disable new task notification
+    for now: it leaks a port.
+
+ -- Samuel Thibault <sthibault@debian.org>  Tue, 10 Feb 2015 21:18:26 +0000
+
 hurd (1:0.5.git20150208-2) unstable; urgency=medium
 
   * Bump libc0.3 Break, to make sure we get a libc with the _routines@
