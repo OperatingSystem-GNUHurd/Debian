@@ -159,7 +159,9 @@ fi
 st kbd '/hurd/symlink cons/kbd' kbd
 st mouse '/hurd/symlink cons/mouse' mouse
 [ -d shm ] && ! [ -L shm ] && rmdir shm
-st shm '/hurd/symlink /run/shm' shm
+
+# TODO put back to /run/shm when tmpfs open/mmap/close/unlink/dereference crash is fixed
+st shm '/hurd/symlink /tmp' shm
 
 echo .
 

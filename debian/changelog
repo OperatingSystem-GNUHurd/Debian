@@ -1,3 +1,10 @@
+hurd (1:0.5.git20150208-4) UNRELEASED; urgency=medium
+
+  * local/setup-translators: Link /dev/shm to /tmp instead of /run/shm, to
+    avoid a tmpfs bug which makes at least Xorg, mupdf, etc. crash.
+
+ -- Samuel Thibault <sthibault@debian.org>  Sun, 01 Mar 2015 00:41:25 +0100
+
 hurd (1:0.5.git20150208-3) unstable; urgency=medium
 
   * patches/disable_new_task_notification.diff: Disable new task notification
