@@ -29,6 +29,8 @@
 #include <pthread.h>
 #include <refcount.h>
 
+#include "port-deref-deferred.h"
+
 #ifdef PORTS_DEFINE_EI
 #define PORTS_EI
 #else
@@ -48,7 +50,7 @@ struct port_info
   struct port_class *class;
   refcounts_t refcounts;
   mach_port_mscount_t mscount;
-  mach_msg_seqno_t cancel_threshold;
+  mach_msg_seqno_t cancel_threshold;	/* needs atomic operations */
   int flags;
   mach_port_t port_right;
   struct rpc_info *current_rpcs;
@@ -73,6 +75,7 @@ struct port_bucket
   int rpcs;
   int flags;
   int count;
+  struct ports_threadpool threadpool;
 };
 /* FLAGS above are the following: */
 #define PORT_BUCKET_INHIBITED	PORTS_INHIBITED
@@ -261,6 +264,9 @@ ports_lookup_payload (struct port_bucket *bucket,
 		      struct port_class *class)
 {
   struct port_info *pi = (struct port_info *) payload;
+
+  if (pi && ! MACH_PORT_VALID (pi->port_right))
+    pi = NULL;
 
   if (pi && bucket && pi->bucket != bucket)
     pi = NULL;
