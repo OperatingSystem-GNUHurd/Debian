@@ -1,5 +1,6 @@
-hurd (1:0.5.git20150208-4) UNRELEASED; urgency=medium
+hurd (1:0.6-1) UNRELEASED; urgency=medium
 
+  * New upstream snapshot
   * local/setup-translators: Link /dev/shm to /tmp instead of /run/shm, to
     avoid a tmpfs bug which makes at least Xorg, mupdf, etc. crash.
 

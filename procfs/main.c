@@ -120,15 +120,15 @@ argp_parser (int key, char *arg, struct argp_state *state)
 
     case NODEV_KEY:
       /* Ignored for compatibility with Linux' procfs. */
-      ;;
+      break;
 
     case NOEXEC_KEY:
       /* Ignored for compatibility with Linux' procfs. */
-      ;;
+      break;
 
     case NOSUID_KEY:
       /* Ignored for compatibility with Linux' procfs. */
-      ;;
+      break;
 
     default:
       return ARGP_ERR_UNKNOWN;
@@ -222,7 +222,7 @@ struct argp netfs_runtime_argp_ = {
 };
 
 /* Used by netfs_set_options to handle runtime option parsing.  */
-struct argp *netfs_runtime_argp = &argp;
+struct argp *netfs_runtime_argp = &netfs_runtime_argp_;
 
 /* Return an argz string describing the current options.  Fill *ARGZ
    with a pointer to newly malloced storage holding the list and *LEN
