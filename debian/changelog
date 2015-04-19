@@ -1,4 +1,4 @@
-hurd (1:0.6-1) UNRELEASED; urgency=medium
+hurd (1:0.6-1) unstable; urgency=medium
 
   * New upstream snapshot
   * local/setup-translators: Link /dev/shm to /tmp instead of /run/shm, to
