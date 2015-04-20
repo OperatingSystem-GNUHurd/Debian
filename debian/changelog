@@ -1,3 +1,10 @@
+hurd (1:0.6-2) unstable; urgency=medium
+
+  * patches/git-R-libdiskfs-protected-payload.patch: Revert using protected
+    payload in libdiskfs, to fix a hang inside the Debian installer.
+
+ -- Samuel Thibault <sthibault@debian.org>  Mon, 20 Apr 2015 02:11:51 +0000
+
 hurd (1:0.6-1) unstable; urgency=medium
 
   * New upstream snapshot
