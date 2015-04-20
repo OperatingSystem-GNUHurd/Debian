@@ -1,9 +1,10 @@
 We gather pieces from various repositories, here is the snapshot process:
 
 date=<date>
+git=.git$date
 
 epoch=1
-version=0.5
+version=0.6
 
 git fetch --all
 
@@ -15,38 +16,38 @@ git pull . dde-upstream
 
 # Remove files added outside DDE
 git push incubator dde:dde-debian
-git tag -m "New upstream snapshot" -a upstream/dde/$version.git$date
+git tag -m "New upstream snapshot" -a upstream/dde/$version$git
 for dir in devnode libbpf libdde-linux26 libddekit libhurd-slab libmachdev
 do
-  git archive HEAD $dir | bzip2 > ../hurd_$version.git$date.orig-$dir.tar.bz2
+  git archive HEAD $dir | bzip2 > ../hurd_$version$git.orig-$dir.tar.bz2
 done
 
 git checkout eth
 git pull . dde-upstream
 
 # Remove files added outside eth-*
-git tag -m "New upstream snapshot" -a upstream/eth/$version.git$date
+git tag -m "New upstream snapshot" -a upstream/eth/$version$git
 for dir in eth-filter eth-multiplexer
 do
-  git archive HEAD $dir | bzip2 > ../hurd_$version.git$date.orig-$dir.tar.bz2
+  git archive HEAD $dir | bzip2 > ../hurd_$version$git.orig-$dir.tar.bz2
 done
 
 git checkout upstream
 git pull upstream master:upstream
 
-git tag -m "New upstream snapshot" -a upstream/hurd/$version.git$date
-git archive --prefix=hurd-$version.git$date/ HEAD | bzip2 > ../hurd_$version.git$date.orig.tar.bz2
+git tag -m "New upstream snapshot" -a upstream/hurd/$version$git
+git archive --prefix=hurd-$version$git/ HEAD | bzip2 > ../hurd_$version$git.orig.tar.bz2
 
 git checkout upstream-merged
 rm * -fr
 for dir in devnode libbpf libdde-linux26 libddekit libhurd-slab libmachdev eth-filter eth-multiplexer
 do
-  tar -xf ../hurd_$version.git$date.orig-$dir.tar.bz2
+  tar -xf ../hurd_$version$git.orig-$dir.tar.bz2
 done
-tar --strip-components=1 -xf ../hurd_$version.git$date.orig.tar.bz2
+tar --strip-components=1 -xf ../hurd_$version$git.orig.tar.bz2
 git add -A
 git commit -m "New upstream snapshot"
-git tag -m "New upstream snapshot" -a upstream/$version.git$date
+git tag -m "New upstream snapshot" -a upstream/$version$git
 
 git checkout master
 git pull . upstream-merged
