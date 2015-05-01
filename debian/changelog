@@ -1,4 +1,4 @@
-hurd (1:0.6-3) UNRELEASED; urgency=medium
+hurd (1:0.6-3) unstable; urgency=medium
 
   * patches/dl_origin.patch: New patch to enable $ORIGIN expansion support in
     rpath for absolute paths.
