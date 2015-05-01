@@ -1,3 +1,12 @@
+hurd (1:0.6-3) UNRELEASED; urgency=medium
+
+  * patches/dl_origin.patch: New patch to enable $ORIGIN expansion support in
+    rpath for absolute paths.
+  * patches/git-R-libdiskfs-protected-payload.patch: Remove to re-enable using
+    protected payload in libdiskfs, now that the support is fixed in gnumach.
+
+ -- Samuel Thibault <sthibault@debian.org>  Fri, 01 May 2015 10:08:14 +0000
+
 hurd (1:0.6-2) unstable; urgency=medium
 
   * patches/git-R-libdiskfs-protected-payload.patch: Revert using protected
