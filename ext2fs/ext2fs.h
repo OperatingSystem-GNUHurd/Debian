@@ -159,9 +159,6 @@ struct disknode
      each DIRBLKSIZE piece of the directory. */
   int *dirents;
 
-  /* Links on hash list. */
-  struct node *hnext, **hprevp;
-
   /* Lock to lock while fiddling with this inode's block allocation info.  */
   pthread_rwlock_t alloc_lock;
 
@@ -419,12 +416,6 @@ dino_deref (struct ext2_inode *inode)
 
 /* Write all active disknodes into the inode pager. */
 void write_all_disknodes ();
-
-/* Lookup node INUM (which must have a reference already) and return it
-   without allocating any new references. */
-struct node *ifind (ino_t inum);
-
-void inode_init (void);
 
 /* ---------------------------------------------------------------- */
 
@@ -503,7 +494,7 @@ record_indir_poke (struct node *node, void *ptr)
   ext2_debug ("(%llu, %p)", node->cache_id, ptr);
   assert (disk_cache_block_is_ref (block));
   global_block_modified (block);
-  pokel_add (&node->dn->indir_pokel, block_ptr, block_size);
+  pokel_add (&diskfs_node_disknode (node)->indir_pokel, block_ptr, block_size);
 }
 
 /* ---------------------------------------------------------------- */
@@ -524,7 +515,7 @@ alloc_sync (struct node *np)
       if (np)
 	{
 	  diskfs_node_update (np, 1);
-	  pokel_sync (&np->dn->indir_pokel, 1);
+	  pokel_sync (&diskfs_node_disknode (np)->indir_pokel, 1);
 	}
       diskfs_set_hypermetadata (1, 0);
     }
