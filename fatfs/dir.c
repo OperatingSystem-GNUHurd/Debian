@@ -342,7 +342,7 @@ diskfs_lookup_hard (struct node *dp, const char *name, enum lookup_type type,
 
       /* Here below are the spec dotdot cases.  */
       else if (type == RENAME || type == REMOVE)
-        np = ifind (inum);
+        np = diskfs_cached_ifind (inum);
 
       else if (type == LOOKUP)
         {
@@ -395,7 +395,7 @@ diskfs_lookup_hard (struct node *dp, const char *name, enum lookup_type type,
                 diskfs_nput (np);
             }
           else if (type == RENAME || type == REMOVE)
-            /* We just did ifind to get np; that allocates
+            /* We just did diskfs_cached_ifind to get np; that allocates
                no new references, so we don't have anything to do.  */
             ;
           else if (type == LOOKUP)
@@ -728,11 +728,12 @@ diskfs_dirrewrite_hard (struct node *dp, struct node *np, struct dirstat *ds)
   entry_key.dir_inode = dp->cache_id;
   entry_key.dir_offset = ((int) ds->entry) - ((int) ds->mapbuf);
   err = vi_rlookup (entry_key, &inode, &vinode, 0);
-  
   assert (err != EINVAL);
-  
+  if (err)
+    return err;
+
   /*  Lookup the node, we already have a reference.  */
-  oldnp = ifind (inode);
+  oldnp = diskfs_cached_ifind (inode);
 
   assert (ds->type == RENAME);
   assert (ds->stat == HERE_TIS);

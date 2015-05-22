@@ -75,6 +75,9 @@ new_node (file_t file, mach_port_t idport, int locked, int openmodes,
 {
   error_t err;
   struct netnode *nn;
+
+  assert ((openmodes & ~(O_RDWR|O_EXEC)) == 0);
+
   *np = netfs_make_node_alloc (sizeof *nn);
   if (*np == 0)
     {
@@ -203,14 +206,16 @@ check_openmodes (struct netnode *nn, int newmodes, file_t file)
 {
   error_t err = 0;
 
+  assert ((newmodes & ~(O_RDWR|O_EXEC)) == 0);
+
   if (newmodes &~ nn->openmodes)
     {
       /* The user wants openmodes we haven't tried before.  */
 
       if (file != MACH_PORT_NULL && (nn->openmodes & ~newmodes))
 	{
-	  /* Intersecting sets.
-	     We need yet another new peropen on this node.  */
+	  /* Intersecting sets with no inclusion. `file' doesn't fit either,
+	     we need yet another new peropen on this node.  */
 	  mach_port_deallocate (mach_task_self (), file);
 	  file = MACH_PORT_NULL;
 	}
@@ -390,7 +395,7 @@ netfs_S_dir_lookup (struct protid *diruser,
   else
     {
       pthread_spin_unlock (&netfs_node_refcnt_lock);
-      err = new_node (file, idport, 1, flags, &np);
+      err = new_node (file, idport, 1, flags & (O_RDWR|O_EXEC), &np);
       pthread_mutex_unlock (&dnp->lock);
       if (!err)
 	{
@@ -426,6 +431,20 @@ netfs_S_dir_lookup (struct protid *diruser,
   if (np != NULL)
     netfs_nput (np);
   return err;
+}
+
+/* The user may define this function.  Attempt to set the passive
+   translator record for FILE to ARGZ (of length ARGZLEN) for user
+   CRED. */
+error_t
+netfs_set_translator (struct iouser *cred, struct node *np,
+		      char *argz, size_t argzlen)
+{
+  return file_set_translator (netfs_node_netnode (np)->file,
+			      FS_TRANS_EXCL|FS_TRANS_SET,
+			      FS_TRANS_EXCL|FS_TRANS_SET, 0,
+			      argz, argzlen,
+			      MACH_PORT_NULL, MACH_MSG_TYPE_COPY_SEND);
 }
 
 /* These callbacks are used only by the standard netfs_S_dir_lookup,
@@ -525,14 +544,28 @@ real_from_fake_mode (mode_t mode)
 error_t
 netfs_attempt_chmod (struct iouser *cred, struct node *np, mode_t mode)
 {
+  struct netnode *nn;
+  mode_t real_mode;
+
   if ((mode & S_IFMT) == 0)
     mode |= np->nn_stat.st_mode & S_IFMT;
   if ((mode & S_IFMT) != (np->nn_stat.st_mode & S_IFMT))
     return EOPNOTSUPP;
 
+  /* Make sure that `check_openmodes' will still always be able to reopen
+     it.  */
+  real_mode = mode;
+  nn = netfs_node_netnode (np);
+  if (nn->openmodes & O_READ)
+    real_mode |= S_IRUSR;
+  if (nn->openmodes & O_WRITE)
+    real_mode |= S_IWUSR;
+  if (nn->openmodes & O_EXEC)
+    real_mode |= S_IXUSR;
+
   /* We don't bother with error checking since the fake mode change should
      always succeed--worst case a later open will get EACCES.  */
-  (void) file_chmod (netfs_node_netnode (np)->file, mode);
+  (void) file_chmod (nn->file, real_mode);
   set_faked_attribute (np, FAKE_MODE);
   np->nn_stat.st_mode = mode;
   return 0;
