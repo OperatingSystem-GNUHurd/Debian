@@ -553,7 +553,10 @@ extern const char *dev_driver_string(const struct device *dev);
 	printk(level "%s %s: " format , dev_driver_string(dev) , \
 	       dev_name(dev) , ## arg)
 #else
-#define dev_printk(level, dev, format, arg...)	
+#include <stdio.h>
+#define dev_printk(level, dev, format, arg...)			\
+	fprintf(stderr, level "%s %s: " format,			\
+	       dev_driver_string(dev), dev_name(dev), ## arg)
 #endif
 
 #define dev_emerg(dev, format, arg...)		\
