@@ -1,3 +1,9 @@
+hurd (1:0.6.git20150704-1) unstable; urgency=medium
+
+  * New upstream snapshot.
+
+ -- Samuel Thibault <sthibault@debian.org>  Sat, 04 Jul 2015 21:35:32 +0000
+
 hurd (1:0.6.git20150523-1) unstable; urgency=medium
 
   * New upstream release. Closes: #785134.
