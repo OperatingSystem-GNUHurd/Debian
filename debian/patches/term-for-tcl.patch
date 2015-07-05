@@ -1,4 +1,6 @@
 See discussion in http://bugs.debian.org/755295
+and bug report on comp.lang.tcl on July 1st 2015
+(“'expect' losing data due to tcl buffering”)
 
 --- a/term/ptyio.c
 +++ b/term/ptyio.c
