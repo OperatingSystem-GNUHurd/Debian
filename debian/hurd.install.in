@@ -23,6 +23,7 @@ bin/portinfo
 bin/ps-hurd
 bin/remap
 bin/rmauth
+bin/rpcscan
 bin/rpctrace
 bin/setauth
 bin/settrans
