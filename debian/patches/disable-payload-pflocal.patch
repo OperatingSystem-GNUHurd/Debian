@@ -1,0 +1,52 @@
+Index: hurd-debian/libports/manage-multithread.c
+===================================================================
+--- hurd-debian.orig/libports/manage-multithread.c
++++ hurd-debian/libports/manage-multithread.c
+@@ -173,6 +173,7 @@ ports_manage_port_operations_multithread
+       else
+ 	{
+ 	  pi = ports_lookup_port (bucket, inp->msgh_local_port, 0);
++#if 0
+ 	  if (pi)
+ 	    {
+ 	      inp->msgh_bits = MACH_MSGH_BITS (
+@@ -180,6 +181,7 @@ ports_manage_port_operations_multithread
+ 		MACH_MSG_TYPE_PROTECTED_PAYLOAD);
+ 	      inp->msgh_protected_payload = (unsigned long) pi;
+ 	    }
++#endif
+ 	}
+ 
+       if (pi)
+Index: hurd-debian/libports/manage-one-thread.c
+===================================================================
+--- hurd-debian.orig/libports/manage-one-thread.c
++++ hurd-debian/libports/manage-one-thread.c
+@@ -64,6 +64,7 @@ ports_manage_port_operations_one_thread
+       else
+ 	{
+ 	  pi = ports_lookup_port (bucket, inp->msgh_local_port, 0);
++#if 0
+ 	  if (pi)
+ 	    {
+ 	      inp->msgh_bits = MACH_MSGH_BITS (
+@@ -71,6 +72,7 @@ ports_manage_port_operations_one_thread
+ 		MACH_MSG_TYPE_PROTECTED_PAYLOAD);
+ 	      inp->msgh_protected_payload = (unsigned long) pi;
+ 	    }
++#endif
+ 	}
+ 
+       if (pi)
+Index: hurd-debian/pflocal/sock.c
+===================================================================
+--- hurd-debian.orig/pflocal/sock.c
++++ hurd-debian/pflocal/sock.c
+@@ -262,6 +262,7 @@ addr_create (struct addr **addr)
+ 
+   if (! err)
+     {
++      mach_port_clear_protected_payload (mach_task_self (), (*addr)->pi.port_right);
+       ensure_sock_server ();
+       (*addr)->sock = NULL;
+       pthread_mutex_init (&(*addr)->lock, NULL);
