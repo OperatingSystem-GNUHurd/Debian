@@ -1,3 +1,10 @@
+hurd (1:0.6.git20150704-3) UNRELEASED; urgency=medium
+
+  [ Justus Winter ]
+  * Fix payload for pflocal.
+
+ -- Samuel Thibault <sthibault@debian.org>  Fri, 14 Aug 2015 00:58:39 +0000
+
 hurd (1:0.6.git20150704-2) unstable; urgency=medium
 
   [ Samuel Thibault ]
