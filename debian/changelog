@@ -1,9 +1,12 @@
-hurd (1:0.6.git20150704-3) UNRELEASED; urgency=medium
+hurd (1:0.6.git20150704-3) unstable; urgency=medium
 
   [ Justus Winter ]
   * Fix payload for pflocal.
 
- -- Samuel Thibault <sthibault@debian.org>  Fri, 14 Aug 2015 00:58:39 +0000
+  [ Samuel Thibault ]
+  * Fix fakeroot-hurd for Xvfb.
+
+ -- Samuel Thibault <sthibault@debian.org>  Fri, 14 Aug 2015 12:16:19 +0000
 
 hurd (1:0.6.git20150704-2) unstable; urgency=medium
 
