@@ -43,7 +43,7 @@ override_dh_auto_build:
 	dh_auto_build -Bbuild-deb
 	dh_auto_build -Bbuild-udeb
 	cd build-deb/doc && make && makeinfo --html --split=chapter ../../doc/hurd.texi
-	$(MAKE) -C libdde-linux26 BUILDDIR=$(CURDIR)/build-deb
+	$(MAKE) -C libdde-linux26 BUILDDIR=$(CURDIR)/build-deb LDFLAGS=
 
 override_dh_auto_clean:
 	dh_auto_clean -Bbuild-deb
@@ -55,8 +55,8 @@ override_dh_auto_clean:
 	rm -f $(INSTALL_generated)
 
 override_dh_auto_install:
-	dh_auto_install -Bbuild-deb --destdir= -- prefix=$(DEB_DESTDIR) libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var XKB_BASE=$(DEB_DESTDIR)/usr/share/X11/xkb
-	dh_auto_install -Bbuild-udeb --destdir= -- prefix=$(DEB_DESTDIR_UDEB) libdir=$(DEB_DESTDIR_UDEB)/lib sysconfdir=$(DEB_DESTDIR_UDEB)/etc localstatedir=$(DEB_DESTDIR_UDEB)/var XKB_BASE=$(DEB_DESTDIR_UDEB)/usr/share/X11/xkb
+	dh_auto_install -Bbuild-deb -- prefix=$(DEB_DESTDIR) libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) libexecdir=$(DEB_DESTDIR)/lib/hurd sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var XKB_BASE=$(DEB_DESTDIR)/usr/share/X11/xkb
+	dh_auto_install -Bbuild-udeb -- prefix=$(DEB_DESTDIR_UDEB) libdir=$(DEB_DESTDIR_UDEB)/lib libexecdir=$(DEB_DESTDIR)/lib/hurd sysconfdir=$(DEB_DESTDIR_UDEB)/etc localstatedir=$(DEB_DESTDIR_UDEB)/var XKB_BASE=$(DEB_DESTDIR_UDEB)/usr/share/X11/xkb
 	$(MAKE) -C libdde-linux26 INSTALLDIR=$(CURDIR)/debian/tmp/usr/share/libdde_linux26/build/include install
 
 	# runsystem is managed by update-alternatives
