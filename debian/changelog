@@ -2,6 +2,7 @@ hurd (1:0.6.git20150704-4) UNRELEASED; urgency=medium
 
   * Upgrade to compat 9.
   * Add a noudeb build profile.
+  * Add stage1 build profile for cross-bootstrapping hurd.
 
  -- Samuel Thibault <sthibault@debian.org>  Tue, 18 Aug 2015 10:50:47 +0000
 

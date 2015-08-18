@@ -20,7 +20,19 @@
 DEB_DESTDIR = $(CURDIR)/debian/tmp
 DEB_DESTDIR_UDEB = $(CURDIR)/debian/tmp-udeb
 
+ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
 CONFIGURE_ARGS = --disable-profile --enable-static-progs='ext2fs,iso9660fs'
+else
+CONFIGURE_ARGS = \
+		 --disable-ncursesw \
+		 --without-libbz2 \
+		 --without-libz \
+		 --without-parted \
+		 --build=i586-gnu
+# Skip the clnt_create check because it expects
+# a working glibc causing a circular dependency.
+export ac_cv_search_clnt_create=no
+endif
 CONFIGURE_ARGS_deb =
 CONFIGURE_ARGS_udeb = --without-libdaemon --without-libbz2
 SUID_PROGRAMS = /bin/ids /bin/login /bin/ps-hurd /usr/bin/w-hurd
@@ -37,21 +49,25 @@ BUILT_USING := $(shell dpkg-query -f '$${source:Package} (= $${source:Version}),
 
 override_dh_auto_configure:
 	dh_auto_configure -Bbuild-deb -- $(CONFIGURE_ARGS) $(CONFIGURE_ARGS_deb) $(shell dpkg-buildflags --export=configure)
-ifeq (,$(filter noudeb,$(DEB_BUILD_PROFILES)))
+ifeq (,$(filter stage1 noudeb,$(DEB_BUILD_PROFILES)))
 	dh_auto_configure -Bbuild-udeb -- $(CONFIGURE_ARGS) $(CONFIGURE_ARGS_udeb) $(shell dpkg-buildflags --export=configure)
 endif
 
 override_dh_auto_build:
+ifeq (,$(filter stage1,$(DEB_BUILD_PROFILES)))
 	dh_auto_build -Bbuild-deb
 ifeq (,$(filter noudeb,$(DEB_BUILD_PROFILES)))
 	dh_auto_build -Bbuild-udeb
 endif
 	cd build-deb/doc && make && makeinfo --html --split=chapter ../../doc/hurd.texi
 	$(MAKE) -C libdde-linux26 BUILDDIR=$(CURDIR)/build-deb LDFLAGS=
+else
+	:
+endif
 
 override_dh_auto_clean:
 	dh_auto_clean -Bbuild-deb
-ifeq (,$(filter noudeb,$(DEB_BUILD_PROFILES)))
+ifeq (,$(filter stage1 noudeb,$(DEB_BUILD_PROFILES)))
 	dh_auto_clean -Bbuild-udeb
 endif
 	$(MAKE) -C libdde-linux26 cleanall
@@ -61,6 +77,9 @@ endif
 	rm -f $(INSTALL_generated)
 
 override_dh_auto_install:
+ifneq (,$(filter stage1,$(DEB_BUILD_PROFILES)))
+	$(MAKE) -Cbuild-deb prefix=$(DEB_DESTDIR) install-headers no_deps=t
+else
 	dh_auto_install -Bbuild-deb -- prefix=$(DEB_DESTDIR) libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) libexecdir=$(DEB_DESTDIR)/lib/hurd sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var XKB_BASE=$(DEB_DESTDIR)/usr/share/X11/xkb
 ifeq (,$(filter noudeb,$(DEB_BUILD_PROFILES)))
 	dh_auto_install -Bbuild-udeb -- prefix=$(DEB_DESTDIR_UDEB) libdir=$(DEB_DESTDIR_UDEB)/lib libexecdir=$(DEB_DESTDIR)/lib/hurd sysconfdir=$(DEB_DESTDIR_UDEB)/etc localstatedir=$(DEB_DESTDIR_UDEB)/var XKB_BASE=$(DEB_DESTDIR_UDEB)/usr/share/X11/xkb
@@ -78,7 +97,7 @@ endif
 	mv debian/tmp/bin/uptime debian/tmp/usr/bin/uptime-hurd
 	mv debian/tmp/bin/vmstat debian/tmp/usr/bin/vmstat-hurd
 	mv debian/tmp/bin/w debian/tmp/usr/bin/w-hurd
-ifeq (,$(filter noudeb,$(DEB_BUILD_PROFILES)))
+ifeq (,$(filter stage1 noudeb,$(DEB_BUILD_PROFILES)))
 	mkdir -p debian/tmp-udeb/usr/bin
 	mv debian/tmp-udeb/bin/ps debian/tmp-udeb/bin/ps-hurd
 	mv debian/tmp-udeb/bin/uptime debian/tmp-udeb/usr/bin/uptime-hurd
@@ -94,11 +113,12 @@ endif
 	# remove PIC static libraries
 	rm -f debian/tmp/lib/$(DEB_HOST_MULTIARCH)/*_pic.a
 	rm -f debian/tmp-udeb/lib/*_pic.a
+endif
 
 override_dh_install: $(INSTALL_generated)
 	dh_install $(addprefix -p,$(filter %-udeb,$(shell dh_listpackages))) --sourcedir=debian/tmp-udeb
 	dh_install --remaining-packages --list-missing --sourcedir=debian/tmp
-ifeq (,$(filter noudeb,$(DEB_BUILD_PROFILES)))
+ifeq (,$(filter stage1 noudeb,$(DEB_BUILD_PROFILES)))
 	mkdir -p debian/hurd-udeb/usr/share/lintian/overrides
 	install -p -m644 debian/hurd-udeb.lintian-overrides debian/hurd-udeb/usr/share/lintian/overrides/hurd-udeb
 endif
@@ -111,12 +131,16 @@ override_dh_installchangelogs:
 	dh_installchangelogs -XChangeLog
 
 override_dh_strip:
+ifeq (,$(filter stage1,$(DEB_BUILD_PROFILES)))
 	dh_strip -phurd-libs0.3 -phurd --dbg-package=hurd-dbg
+endif
 	dh_strip --remaining-packages
 
 override_dh_fixperms:
 	dh_fixperms
+ifeq (,$(filter stage1,$(DEB_BUILD_PROFILES)))
 	chmod u+s $(patsubst %,$(CURDIR)/debian/hurd%,$(SUID_PROGRAMS))
+endif
 
 override_dh_makeshlibs:
 	dh_makeshlibs -phurd-libs0.3 --add-udeb=hurd-libs0.3-udeb
@@ -131,4 +155,5 @@ override_dh_clean:
 
 debian/%.install: debian/%.install.in
 	cat $^ | sed -e 's/@DEB_HOST_MULTIARCH@/$(DEB_HOST_MULTIARCH)/g' > $@
+	[ ! -x $< ] || chmod +x $@
 
