@@ -60,9 +60,9 @@ hurd/streamio
 hurd/symlink
 hurd/term
 hurd/tmpfs
-lib/hurd/console/pc_kbd.so.* usr/lib/hurd/console
-lib/hurd/console/pc_mouse.so.* usr/lib/hurd/console
-lib/hurd/console/vga.so.* usr/lib/hurd/console
+lib/hurd/console/pc_kbd.so.* usr/lib/@DEB_HOST_MULTIARCH@/hurd/console
+lib/hurd/console/pc_mouse.so.* usr/lib/@DEB_HOST_MULTIARCH@/hurd/console
+lib/hurd/console/vga.so.* usr/lib/@DEB_HOST_MULTIARCH@/hurd/console
 lib/hurd/console-run sbin
 sbin/MAKEDEV
 sbin/e2os

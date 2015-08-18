@@ -46,7 +46,7 @@ etc/login/.profile
 etc/login/README
 etc/ttys
 hurd/*
-lib/@DEB_HOST_MULTIARCH@/hurd/console/*.so.* usr/lib/hurd/console
+lib/@DEB_HOST_MULTIARCH@/hurd/console/*.so.* usr/lib/@DEB_HOST_MULTIARCH@/hurd/console
 lib/hurd/console-run sbin
 lib/hurd/getty sbin
 lib/hurd/rc etc/hurd
