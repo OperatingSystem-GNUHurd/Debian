@@ -3,12 +3,12 @@ Section: admin
 Priority: required
 Maintainer: GNU Hurd Maintainers <debian-hurd@lists.debian.org>
 Standards-Version: 3.9.6
-Build-Depends: mig (>= 1.4-3~) <!stage1>, gnumach-dev (>= 1.4+git20141109~) <!stage1>,
- libc0.3-dev (>= 2.17-94~) <!stage1>, texinfo, libncursesw5-dev <!stage1>,
+Build-Depends: mig (>= 1.4-3~) <!stage1 !stage2>, gnumach-dev (>= 1.4+git20141109~) <!stage1 !stage2>,
+ libc0.3-dev (>= 2.17-94~) <!stage1>, texinfo, libncursesw5-dev <!stage1 !stage2>,
  debhelper (>= 7.0.50~), dh-exec (>= 0.15), autoconf, dh-autoreconf,
- libparted-dev <!stage1>, libpciaccess-dev <!stage1>, libx11-dev <!stage1>, x11proto-core-dev <!stage1>, pkg-config <!stage1>,
- xkb-data <!stage1>, gawk, flex, bison, autotools-dev, libdaemon-dev <!stage1>, libpcap0.8-dev <!stage1>,
- zlib1g-dev <!stage1>, libbz2-dev <!stage1>, uuid-dev <!stage1>, libblkid-dev <!stage1>
+ libparted-dev <!stage1 !stage2>, libpciaccess-dev <!stage1 !stage2>, libx11-dev <!stage1 !stage2>, x11proto-core-dev <!stage1 !stage2>, pkg-config <!stage1 !stage2>,
+ xkb-data <!stage1 !stage2>, gawk, flex, bison, autotools-dev, libdaemon-dev <!stage1 !stage2>, libpcap0.8-dev <!stage1 !stage2>,
+ zlib1g-dev <!stage1 !stage2>, libbz2-dev <!stage1 !stage2>, uuid-dev <!stage1 !stage2>, libblkid-dev <!stage1 !stage2>
 Uploaders: Michael Banck <mbanck@debian.org>, 
  Samuel Thibault <sthibault@debian.org>
 Homepage: http://www.gnu.org/software/hurd/hurd.html
@@ -21,7 +21,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Breaks: netdde (<< 0.0.20121127-3+)
 Architecture: hurd-any
-Build-Profiles: <!stage1>
+Build-Profiles: <!stage1 !stage2>
 Multi-Arch: same
 Description: GNU Hurd (libraries)
  This package contains the libraries used by GNU Hurd.
@@ -38,7 +38,7 @@ Provides: makedev, login, console-driver-xkb
 Replaces: makedev, login (<< 1:4.0.14-4), random-egd, console-driver-xkb
 Conflicts: makedev, login (<< 1:4.0.14-4), console-driver-xkb
 Architecture: hurd-any
-Build-Profiles: <!stage1>
+Build-Profiles: <!stage1 !stage2>
 Description: GNU Hurd
  This is the GNU Hurd package. It contains essential system software and
  libraries.
@@ -58,7 +58,7 @@ Package: hurd-dbg
 Priority: extra
 Section: debug
 Architecture: hurd-any
-Build-Profiles: <!stage1>
+Build-Profiles: <!stage1 !stage2>
 Depends: ${misc:Depends}, hurd (= ${binary:Version})
 Description: GNU Hurd (debugging files)
  This package includes the unstripped binaries and libraries.
@@ -67,7 +67,7 @@ Package: hurd-doc
 Priority: optional
 Section: doc
 Architecture: all
-Build-Profiles: <!stage1>
+Build-Profiles: <!stage1 !stage2>
 Depends: ${misc:Depends}
 Suggests: www-browser
 Description: GNU Hurd manual
@@ -78,7 +78,7 @@ Section: debian-installer
 Package-Type: udeb
 Priority: optional
 Architecture: hurd-any
-Build-Profiles: <!noudeb !stage1>
+Build-Profiles: <!noudeb !stage1 !stage2>
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: GNU Hurd (libraries) - udeb
  This package contains the libraries used by GNU Hurd udeb.
@@ -88,7 +88,7 @@ Package-Type: udeb
 Priority: optional
 Section: debian-installer
 Architecture: hurd-any
-Build-Profiles: <!noudeb !stage1>
+Build-Profiles: <!noudeb !stage1 !stage2>
 Depends: ${misc:Depends}, ${shlibs:Depends}, hurd-libs0.3-udeb (= ${binary:Version}), xkb-data-udeb
 Built-Using: ${built-using}
 Provides: hurd, ext2-modules, fat-modules, ipv6-modules, isofs-modules, loop-modules, mouse-modules, nfs-modules, socket-modules
