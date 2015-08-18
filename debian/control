@@ -74,6 +74,7 @@ Section: debian-installer
 Package-Type: udeb
 Priority: optional
 Architecture: hurd-any
+Build-Profiles: <!noudeb>
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: GNU Hurd (libraries) - udeb
  This package contains the libraries used by GNU Hurd udeb.
@@ -83,6 +84,7 @@ Package-Type: udeb
 Priority: optional
 Section: debian-installer
 Architecture: hurd-any
+Build-Profiles: <!noudeb>
 Depends: ${misc:Depends}, ${shlibs:Depends}, hurd-libs0.3-udeb (= ${binary:Version}), xkb-data-udeb
 Built-Using: ${built-using}
 Provides: hurd, ext2-modules, fat-modules, ipv6-modules, isofs-modules, loop-modules, mouse-modules, nfs-modules, socket-modules
