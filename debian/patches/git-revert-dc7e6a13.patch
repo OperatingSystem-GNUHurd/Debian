@@ -1,0 +1,29 @@
+We revert this, as it breaks rebootstrapping: AC_CHECK_FUNCS aborts, and we'll
+want to link executables in the end, anyway.
+
+commit dc7e6a136e9baf98a2323758765aeab7ebae336c
+Author: Ludovic Courtès <ludo@gnu.org>
+Date:   Thu May 29 23:09:06 2014 +0200
+
+    Disable linking when cross-compiling
+    
+    * configure.ac: Call AC_NO_EXECUTABLES when cross-compiling.
+
+diff --git b/configure.ac a/configure.ac
+index cf8590b..873ced8 100644
+--- b/configure.ac
++++ a/configure.ac
+@@ -83,13 +83,6 @@ AC_PROG_INSTALL
+ AC_PROG_AWK
+ AC_PROG_SED
+ 
+-if test "x$cross_compiling" = "xyes"; then
+-   # It may be that we don't have a working libc yet, for instance
+-   # because we're bootstrapping the cross-compilation tool chain.
+-   # Thus, use this undocumented Autoconf macro designed for this.
+-   AC_NO_EXECUTABLES
+-   AC_MSG_WARN("cross-compiling, disabling linking")
+-fi
+ AC_PROG_CC
+ # Require GCC.
+ if test x$GCC != xyes; then
