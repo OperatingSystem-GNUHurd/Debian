@@ -2,27 +2,7 @@ We should fix that into disabling targets
 
 --- a/configure.ac
 +++ b/configure.ac
-@@ -103,7 +103,7 @@ AC_CHECK_TOOL(RANLIB, ranlib)
- AC_CHECK_TOOL(MIG, mig)
- # Require MiG.
- if test x${MIG} = x; then
--  AC_MSG_ERROR([
-+  AC_MSG_WARN([
- *** You need GNU MiG to compile the GNU Hurd, please see
- *** http://www.gnu.org/software/hurd/mig.html for further details, or
- *** download it directly from the main GNU server (ftp.gnu.org) or any
-@@ -163,7 +163,9 @@ else
- fi
- AC_SUBST(VERSIONING)
- # Check if libc contains these functions.
--AC_CHECK_FUNCS(file_exec_file_name exec_exec_file_name _hurd_exec_file_name)
-+if test "x$cross_compiling" = "xno"; then
-+  AC_CHECK_FUNCS(file_exec_file_name exec_exec_file_name _hurd_exec_file_name)
-+fi
- 
- 
- # From glibc HEAD, 2007-11-07.
-@@ -250,7 +252,7 @@ AC_MSG_RESULT($boot_store_types)
+@@ -250,7 +250,7 @@ AC_MSG_RESULT($boot_store_types)
  AC_CHECK_LIB(pciaccess, pci_system_init, LIBPCIACCESS=-lpciaccess, LIBPCIACCESS=no)
  AC_SUBST(LIBPCIACCESS)
  if test "$LIBPCIACCESS" = "no"; then

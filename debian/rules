@@ -27,11 +27,18 @@ CONFIGURE_ARGS = \
 		 --disable-ncursesw \
 		 --without-libbz2 \
 		 --without-libz \
-		 --without-parted \
-		 --build=i586-gnu
-# Skip the clnt_create check because it expects
+		 --without-parted
+# Skip some checks because they expect
 # a working glibc causing a circular dependency.
+# TODO: rather disable the corresponding features in configure.ac
 export ac_cv_search_clnt_create=no
+export ac_cv_lib_pciaccess_pci_system_init=no
+export ac_cv_func_file_exec_file_name=no
+export ac_cv_func_exec_exec_file_name=no
+export ac_cv_func__hurd_exec_file_name=no
+export LEX=:
+export YACC=:
+export MIG=:
 endif
 CONFIGURE_ARGS_deb =
 CONFIGURE_ARGS_udeb = --without-libdaemon --without-libbz2
