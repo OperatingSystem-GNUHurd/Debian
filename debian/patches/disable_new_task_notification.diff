@@ -1,3 +1,5 @@
+Disable new task notification for now: it leaks a port
+
 diff --git a/proc/main.c b/proc/main.c
 index 6df4141..cbb8975 100644
 --- a/proc/main.c

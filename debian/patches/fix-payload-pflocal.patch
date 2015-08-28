@@ -1,3 +1,5 @@
+From git
+
 Index: hurd-debian/pflocal/mig-decls.h
 ===================================================================
 --- hurd-debian.orig/pflocal/mig-decls.h

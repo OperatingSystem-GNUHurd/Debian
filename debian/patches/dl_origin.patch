@@ -1,3 +1,5 @@
+Add basic support for $ORIGIN rpath expansion
+
 This only supports absolute paths, which is enough for ghc, but won't be enough
 for other uses. Perhaps it would be better to support it in glibc instead?
 
