@@ -37,6 +37,7 @@
 #include <asm/byteorder.h>
 
 #include <linux/device.h>
+#include <linux/rculist.h>
 #include <linux/percpu.h>
 #include <linux/dmaengine.h>
 #include <linux/workqueue.h>
