@@ -1,5 +1,7 @@
 Include DDE in the build
 
+TODO: We should turn AC_MSG_WARN into disabling targets
+
 Index: hurd-debian/Makefile
 ===================================================================
 --- hurd-debian.orig/Makefile
@@ -46,7 +48,7 @@ Index: hurd-debian/configure.ac
 +AC_CHECK_LIB(pciaccess, pci_system_init, LIBPCIACCESS=-lpciaccess, LIBPCIACCESS=no)
 +AC_SUBST(LIBPCIACCESS)
 +if test "$LIBPCIACCESS" = "no"; then
-+  AC_MSG_ERROR([libpciaccess must be install in order to use libddekit])
++  AC_MSG_WARN([libpciaccess must be install in order to use libddekit])
 +fi
 +
  # Check for ncursesw, which is needed for the console-curses client.

@@ -43,4 +43,3 @@ newRPC.patch
 dl_origin.patch
 fix-payload-pflocal.patch
 fakeroot-access.patch
-bootstrap.patch

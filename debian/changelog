@@ -3,7 +3,6 @@ hurd (1:0.6.git20150704-4) UNRELEASED; urgency=medium
   * Upgrade to compat 9.
   * Add a noudeb build profile.
   * Add stage1 and stage2 build profiles for cross-bootstrapping hurd.
-  * patches/git-revert-dc7e6a13: Revert upstream check against cross-compiling.
   * Move console modules to multiarch path.
   * Bump fakeroot-hurd priority so it becomes the default.
 
