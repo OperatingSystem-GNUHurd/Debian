@@ -106,6 +106,7 @@ SRC_C_libdde_linux26.o.a += \
 				lib/crc32.c \
 				lib/ctype.c \
 				lib/cpumask.c \
+				lib/devres.c \
 				lib/find_next_bit.c \
 				lib/hexdump.c \
 				lib/idr.c \
