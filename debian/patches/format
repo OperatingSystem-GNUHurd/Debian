@@ -1,0 +1,78 @@
+Index: hurd-debian/libdde-linux26/contrib/lib/kobject.c
+===================================================================
+--- hurd-debian.orig/libdde-linux26/contrib/lib/kobject.c
++++ hurd-debian/libdde-linux26/contrib/lib/kobject.c
+@@ -794,7 +794,7 @@ static struct kset *kset_create(const ch
+ 	kset = kzalloc(sizeof(*kset), GFP_KERNEL);
+ 	if (!kset)
+ 		return NULL;
+-	kobject_set_name(&kset->kobj, name);
++	kobject_set_name(&kset->kobj, "%s", name);
+ 	kset->uevent_ops = uevent_ops;
+ 	kset->kobj.parent = parent_kobj;
+ 
+Index: hurd-debian/libdde-linux26/contrib/drivers/base/attribute_container.c
+===================================================================
+--- hurd-debian.orig/libdde-linux26/contrib/drivers/base/attribute_container.c
++++ hurd-debian/libdde-linux26/contrib/drivers/base/attribute_container.c
+@@ -167,7 +167,7 @@ attribute_container_add_device(struct de
+ 		ic->classdev.parent = get_device(dev);
+ 		ic->classdev.class = cont->class;
+ 		cont->class->dev_release = attribute_container_release;
+-		dev_set_name(&ic->classdev, dev_name(dev));
++		dev_set_name(&ic->classdev, "%s", dev_name(dev));
+ 		if (fn)
+ 			fn(cont, dev, &ic->classdev);
+ 		else
+Index: hurd-debian/libdde-linux26/contrib/drivers/base/platform.c
+===================================================================
+--- hurd-debian.orig/libdde-linux26/contrib/drivers/base/platform.c
++++ hurd-debian/libdde-linux26/contrib/drivers/base/platform.c
+@@ -244,7 +244,7 @@ int platform_device_add(struct platform_
+ 	if (pdev->id != -1)
+ 		dev_set_name(&pdev->dev, "%s.%d", pdev->name,  pdev->id);
+ 	else
+-		dev_set_name(&pdev->dev, pdev->name);
++		dev_set_name(&pdev->dev, "%s", pdev->name);
+ 
+ 	for (i = 0; i < pdev->num_resources; i++) {
+ 		struct resource *p, *r = &pdev->resource[i];
+Index: hurd-debian/libdde-linux26/contrib/net/core/net-sysfs.c
+===================================================================
+--- hurd-debian.orig/libdde-linux26/contrib/net/core/net-sysfs.c
++++ hurd-debian/libdde-linux26/contrib/net/core/net-sysfs.c
+@@ -498,7 +498,7 @@ int netdev_register_kobject(struct net_d
+ 	dev->groups = groups;
+ 
+ 	BUILD_BUG_ON(BUS_ID_SIZE < IFNAMSIZ);
+-	dev_set_name(dev, net->name);
++	dev_set_name(dev, "%s", net->name);
+ 
+ #ifdef CONFIG_SYSFS
+ 	*groups++ = &netstat_group;
+Index: hurd-debian/libdde-linux26/lib/src/drivers/base/core.c
+===================================================================
+--- hurd-debian.orig/libdde-linux26/lib/src/drivers/base/core.c
++++ hurd-debian/libdde-linux26/lib/src/drivers/base/core.c
+@@ -1253,7 +1253,7 @@ struct device *__root_device_register(co
+ 	if (!root)
+ 		return ERR_PTR(err);
+ 
+-	err = dev_set_name(&root->dev, name);
++	err = dev_set_name(&root->dev, "%s", name);
+ 	if (err) {
+ 		kfree(root);
+ 		return ERR_PTR(err);
+Index: hurd-debian/libdde-linux26/contrib/drivers/base/sys.c
+===================================================================
+--- hurd-debian.orig/libdde-linux26/contrib/drivers/base/sys.c
++++ hurd-debian/libdde-linux26/contrib/drivers/base/sys.c
+@@ -137,7 +137,7 @@ int sysdev_class_register(struct sysdev_
+ 	cls->kset.kobj.parent = &system_kset->kobj;
+ 	cls->kset.kobj.ktype = &ktype_sysdev_class;
+ 	cls->kset.kobj.kset = system_kset;
+-	kobject_set_name(&cls->kset.kobj, cls->name);
++	kobject_set_name(&cls->kset.kobj, "%s", cls->name);
+ 	return kset_register(&cls->kset);
+ }
+ 
