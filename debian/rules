@@ -70,6 +70,7 @@ else
 ifeq (,$(filter noudeb,$(DEB_BUILD_PROFILES)))
 	dh_auto_build -Bbuild-udeb
 endif
+	dh_auto_build -Bbuild-deb
 	cd build-deb/doc && make && makeinfo --html --split=chapter ../../doc/hurd.texi
 	$(MAKE) -C libdde-linux26 BUILDDIR=$(CURDIR)/build-deb LDFLAGS=
 endif
