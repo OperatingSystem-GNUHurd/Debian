@@ -5,7 +5,7 @@ Maintainer: GNU Hurd Maintainers <debian-hurd@lists.debian.org>
 Standards-Version: 3.9.6
 Build-Depends: mig (>= 1.4-3~) <!stage1 !stage2>, gnumach-dev (>= 1.4+git20141109~) <!stage1 !stage2>,
  libc0.3-dev (>= 2.17-94~) <!stage1>, texinfo, libncursesw5-dev <!stage1 !stage2>,
- debhelper (>= 7.0.50~), dh-exec (>= 0.15), autoconf, dh-autoreconf,
+ debhelper (>= 9), dh-exec (>= 0.15), autoconf, dh-autoreconf,
  libparted-dev <!stage1 !stage2>, libpciaccess-dev <!stage1 !stage2>, libx11-dev <!stage1 !stage2>, x11proto-core-dev <!stage1 !stage2>, pkg-config <!stage1 !stage2>,
  xkb-data <!stage1 !stage2>, gawk, flex, bison, autotools-dev, libdaemon-dev <!stage1 !stage2>, libpcap0.8-dev <!stage1 !stage2>,
  zlib1g-dev <!stage1 !stage2>, libbz2-dev <!stage1 !stage2>, uuid-dev <!stage1 !stage2>, libblkid-dev <!stage1 !stage2>
