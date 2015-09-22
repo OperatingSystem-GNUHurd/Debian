@@ -1,5 +1,13 @@
-hurd (1:0.6.git20150704-4) UNRELEASED; urgency=medium
+hurd (1:0.6.git20150922-1) UNRELEASED; urgency=medium
 
+  * New upstream snapshot.
+    - libdde_netdev_tx_t.patch, libdde_pci-needs_freset.patch,
+    libdde_addr_list.patch, libdde_ucast_list.patch, libdde_addr_fix.patch,
+    libdde_group_addr.patch, libdde_rculist.patch, libdde_dma_head.patch,
+    libdde_mdio.patch, libdde_ethoc.patch, libdde_phy.patch,
+    libdde_pci_ids.h.patch, libdde_ethtool.patch, libdde_workqueue.patch,
+    libdde_trans_start.patch, libdde_devres.patch, libdde_pr_cont.patch,
+    libdde_rx_queue.patch, libdde_rcu.patch: Merged.
   * Upgrade to compat 9.
   * Add a noudeb build profile.
   * Add stage1 and stage2 build profiles for cross-bootstrapping hurd.

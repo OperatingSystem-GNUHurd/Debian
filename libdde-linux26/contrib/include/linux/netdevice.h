@@ -37,6 +37,7 @@
 #include <asm/byteorder.h>
 
 #include <linux/device.h>
+#include <linux/rculist.h>
 #include <linux/percpu.h>
 #include <linux/dmaengine.h>
 #include <linux/workqueue.h>
@@ -81,17 +82,19 @@ struct wireless_dev;
 #define net_xmit_eval(e)	((e) == NET_XMIT_CN? 0 : (e))
 #define net_xmit_errno(e)	((e) != NET_XMIT_CN ? -ENOBUFS : 0)
 
+/* Driver transmit return codes */
+enum netdev_tx {
+	NETDEV_TX_OK = 0,	/* driver took care of packet */
+	NETDEV_TX_BUSY,		/* driver tx path was busy*/
+	NETDEV_TX_LOCKED = -1,	/* driver tx lock was already taken */
+};
+typedef enum netdev_tx netdev_tx_t;
+
 #endif
 
 #define MAX_ADDR_LEN	32		/* Largest hardware address length */
 
-/* Driver transmit return codes */
-#define NETDEV_TX_OK 0		/* driver took care of packet */
-#define NETDEV_TX_BUSY 1	/* driver tx path was busy*/
-#define NETDEV_TX_LOCKED -1	/* driver tx lock was already taken */
-
 #ifdef  __KERNEL__
-
 /*
  *	Compute the worst case header length according to the protocols
  *	used.
@@ -208,6 +211,24 @@ struct dev_addr_list
 #define dmi_addrlen	da_addrlen
 #define dmi_users	da_users
 #define dmi_gusers	da_gusers
+
+struct netdev_hw_addr {
+	struct list_head	list;
+	unsigned char		addr[MAX_ADDR_LEN];
+	unsigned char		type;
+#define NETDEV_HW_ADDR_T_LAN		1
+#define NETDEV_HW_ADDR_T_SAN		2
+#define NETDEV_HW_ADDR_T_SLAVE		3
+#define NETDEV_HW_ADDR_T_UNICAST	4
+	int			refcount;
+	bool			synced;
+	struct rcu_head		rcu_head;
+};
+
+struct netdev_hw_addr_list {
+	struct list_head	list;
+	int			count;
+};
 
 struct hh_cache
 {
@@ -441,6 +462,10 @@ struct netdev_queue {
 	spinlock_t		_xmit_lock;
 	int			xmit_lock_owner;
 	struct Qdisc		*qdisc_sleeping;
+	/*
+	 * please use this field instead of dev->trans_start
+	 */
+	unsigned long		trans_start;
 } ____cacheline_aligned_in_smp;
 
 
@@ -467,9 +492,11 @@ struct netdev_queue {
  *     This function is called when network device transistions to the down
  *     state.
  *
- * int (*ndo_start_xmit)(struct sk_buff *skb, struct net_device *dev);
+ * netdev_tx_t (*ndo_start_xmit)(struct sk_buff *skb,
+ *                               struct net_device *dev);
  *	Called when a packet needs to be transmitted.
- *	Must return NETDEV_TX_OK , NETDEV_TX_BUSY, or NETDEV_TX_LOCKED,
+ *	Must return NETDEV_TX_OK , NETDEV_TX_BUSY.
+ *        (can also return NETDEV_TX_LOCKED iff NETIF_F_LLTX)
  *	Required can not be NULL.
  *
  * u16 (*ndo_select_queue)(struct net_device *dev, struct sk_buff *skb);
@@ -540,7 +567,7 @@ struct net_device_ops {
 	void			(*ndo_uninit)(struct net_device *dev);
 	int			(*ndo_open)(struct net_device *dev);
 	int			(*ndo_stop)(struct net_device *dev);
-	int			(*ndo_start_xmit) (struct sk_buff *skb,
+	netdev_tx_t		(*ndo_start_xmit) (struct sk_buff *skb,
 						   struct net_device *dev);
 	u16			(*ndo_select_queue)(struct net_device *dev,
 						    struct sk_buff *skb);
@@ -724,10 +751,10 @@ struct net_device
 	unsigned char		addr_len;	/* hardware address length	*/
 	unsigned short          dev_id;		/* for shared network cards */
 
-	spinlock_t		addr_list_lock;
-	struct dev_addr_list	*uc_list;	/* Secondary unicast mac addresses */
-	int			uc_count;	/* Number of installed ucasts	*/
+	struct netdev_hw_addr_list	uc;	/* Secondary unicast
+						   mac addresses */
 	int			uc_promisc;
+	spinlock_t		addr_list_lock;
 	struct dev_addr_list	*mc_list;	/* Multicast mac addresses	*/
 	int			mc_count;	/* Number of installed mcasts	*/
 	unsigned int		promiscuity;
@@ -753,8 +780,12 @@ struct net_device
  */
 	unsigned long		last_rx;	/* Time of last Rx	*/
 	/* Interface address info used in eth_type_trans() */
-	unsigned char		dev_addr[MAX_ADDR_LEN];	/* hw address, (before bcast 
-							   because most packets are unicast) */
+	unsigned char		*dev_addr;	/* hw address, (before bcast
+						   because most packets are
+						   unicast) */
+
+	struct netdev_hw_addr_list	dev_addrs; /* list of device
+						      hw addresses */
 
 	unsigned char		broadcast[MAX_ADDR_LEN];	/* hw bcast add	*/
 
@@ -774,6 +805,11 @@ struct net_device
  * One part is mostly used on xmit path (device)
  */
 	/* These may be needed for future network-power-down code. */
+
+	/*
+	 * trans_start here is expensive for high speed devices on SMP,
+	 * please use netdev_queue->trans_start instead.
+	 */
 	unsigned long		trans_start;	/* Time (in jiffies) of last Tx	*/
 
 	int			watchdog_timeo; /* used by dev_watchdog() */
@@ -1450,6 +1486,8 @@ static inline int netif_carrier_ok(const struct net_device *dev)
 	return !test_bit(__LINK_STATE_NOCARRIER, &dev->state);
 }
 
+extern unsigned long dev_trans_start(struct net_device *dev);
+
 extern void __netdev_watchdog_up(struct net_device *dev);
 
 extern void netif_carrier_on(struct net_device *dev);
@@ -1764,6 +1802,13 @@ static inline void netif_addr_unlock_bh(struct net_device *dev)
 	spin_unlock_bh(&dev->addr_list_lock);
 }
 
+/*
+ * dev_addrs walker. Should be used only for read access. Call with
+ * rcu_read_lock held.
+ */
+#define for_each_dev_addr(dev, ha) \
+		list_for_each_entry_rcu(ha, &dev->dev_addrs.list, list)
+
 /* These functions live elsewhere (drivers/net/net_init.c, but related) */
 
 extern void		ether_setup(struct net_device *dev);
@@ -1776,11 +1821,24 @@ extern struct net_device *alloc_netdev_mq(int sizeof_priv, const char *name,
 	alloc_netdev_mq(sizeof_priv, name, setup, 1)
 extern int		register_netdev(struct net_device *dev);
 extern void		unregister_netdev(struct net_device *dev);
+
+/* Functions used for device addresses handling */
+extern int dev_addr_add(struct net_device *dev, unsigned char *addr,
+			unsigned char addr_type);
+extern int dev_addr_del(struct net_device *dev, unsigned char *addr,
+			unsigned char addr_type);
+extern int dev_addr_add_multiple(struct net_device *to_dev,
+				 struct net_device *from_dev,
+				 unsigned char addr_type);
+extern int dev_addr_del_multiple(struct net_device *to_dev,
+				 struct net_device *from_dev,
+				 unsigned char addr_type);
+
 /* Functions used for secondary unicast and multicast support */
 extern void		dev_set_rx_mode(struct net_device *dev);
 extern void		__dev_set_rx_mode(struct net_device *dev);
-extern int		dev_unicast_delete(struct net_device *dev, void *addr, int alen);
-extern int		dev_unicast_add(struct net_device *dev, void *addr, int alen);
+extern int		dev_unicast_delete(struct net_device *dev, void *addr);
+extern int		dev_unicast_add(struct net_device *dev, void *addr);
 extern int		dev_unicast_sync(struct net_device *to, struct net_device *from);
 extern void		dev_unicast_unsync(struct net_device *to, struct net_device *from);
 extern int 		dev_mc_delete(struct net_device *dev, void *addr, int alen, int all);

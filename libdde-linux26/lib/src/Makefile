@@ -91,6 +91,8 @@ SRC_C_libdde_linux26.o.a += \
 				kernel/kthread.c \
 				kernel/mutex.c \
 				kernel/notifier.c \
+				kernel/rcupdate.c \
+				kernel/rcuclassic.c \
 				kernel/resource.c \
 				kernel/rwsem.c \
 				kernel/sched.c \
@@ -106,6 +108,7 @@ SRC_C_libdde_linux26.o.a += \
 				lib/crc32.c \
 				lib/ctype.c \
 				lib/cpumask.c \
+				lib/devres.c \
 				lib/find_next_bit.c \
 				lib/hexdump.c \
 				lib/idr.c \
