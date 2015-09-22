@@ -234,9 +234,9 @@ Index: hurd-debian/startup/startup.c
  #include <device/device.h>
  #include <stdio.h>
 @@ -376,13 +379,28 @@ run (const char *server, mach_port_t *po
+ 	      printf ("Pausing for %s\n", prog);
  	      getchar ();
  	    }
-           task_set_name (*task, (char *) prog);
 -	  err = file_exec (file, *task, 0,
 -			   (char *)prog, strlen (prog) + 1, /* Args.  */
 -			   startup_envz, startup_envz_len,
@@ -1016,15 +1016,6 @@ Index: hurd-debian/libtrivfs/Makefile
  
  libname = libtrivfs
  HURDLIBS = fshelp iohelp ports shouldbeinlibc
-@@ -54,7 +54,7 @@ MIGCOMSFLAGS = -prefix trivfs_
- installhdrs := trivfs.h
- mig-sheader-prefix = trivfs_
- ifndef no_deps
--installhdrs += $(patsubst %,trivfs_%_S.h,fs io fsys)
-+installhdrs += $(patsubst %,trivfs_%_S.h,fs fs_experimental io fsys)
- endif
- 
- include ../Makeconf
 Index: hurd-debian/libtrivfs/demuxer.c
 ===================================================================
 --- hurd-debian.orig/libtrivfs/demuxer.c

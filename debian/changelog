@@ -8,6 +8,9 @@ hurd (1:0.6.git20150922-1) UNRELEASED; urgency=medium
     libdde_pci_ids.h.patch, libdde_ethtool.patch, libdde_workqueue.patch,
     libdde_trans_start.patch, libdde_devres.patch, libdde_pr_cont.patch,
     libdde_rx_queue.patch, libdde_rcu.patch: Merged.
+    - fix-payload-pflocal.patch, fakeroot-access.patch, glibc_2.21.patch,
+    format: Merged.
+    - exec_filename_fs.patch: Refresh.
   * Upgrade to compat 9.
   * Add a noudeb build profile.
   * Add stage1 and stage2 build profiles for cross-bootstrapping hurd.
