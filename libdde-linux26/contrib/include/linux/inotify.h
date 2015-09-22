@@ -230,12 +230,12 @@ static inline void put_inotify_watch(struct inotify_watch *watch)
 {
 }
 
-extern inline int pin_inotify_watch(struct inotify_watch *watch)
+static inline int pin_inotify_watch(struct inotify_watch *watch)
 {
 	return 0;
 }
 
-extern inline void unpin_inotify_watch(struct inotify_watch *watch)
+static inline void unpin_inotify_watch(struct inotify_watch *watch)
 {
 }
 
