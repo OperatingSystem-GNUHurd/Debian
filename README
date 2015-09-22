@@ -15,6 +15,8 @@ git checkout dde
 git pull . dde-upstream
 
 # Remove files added outside DDE
+# Move libdde_linux26 files into libdde-linux26
+
 git push incubator dde:dde-debian
 git tag -m "New upstream snapshot" -a upstream/dde/$version$git
 for dir in devnode libbpf libdde-linux26 libddekit libhurd-slab libmachdev
@@ -26,6 +28,7 @@ git checkout eth
 git pull . dde-upstream
 
 # Remove files added outside eth-*
+
 git tag -m "New upstream snapshot" -a upstream/eth/$version$git
 for dir in eth-filter eth-multiplexer
 do
