@@ -482,7 +482,7 @@ netfs_validate_stat (struct node *np, struct iouser *cred)
   if (netfs_node_netnode (np)->faked & FAKE_AUTHOR)
     st.st_author = np->nn_stat.st_author;
   if (netfs_node_netnode (np)->faked & FAKE_MODE)
-    st.st_mode = np->nn_stat.st_mode;
+    st.st_mode = (st.st_mode & S_IFMT) | (np->nn_stat.st_mode & ~S_IFMT);
 
   np->nn_stat = st;
   np->nn_translated = S_ISLNK (st.st_mode) ? S_IFLNK : 0;
@@ -780,7 +780,11 @@ netfs_attempt_write (struct iouser *cred, struct node *np,
 error_t
 netfs_report_access (struct iouser *cred, struct node *np, int *types)
 {
-  *types = O_RDWR|O_EXEC;
+  struct netnode *nn = netfs_node_netnode (np);
+  if (!(nn->faked & FAKE_MODE))
+    return file_check_access (nn->file, types);
+  else
+    *types = O_RDWR|O_EXEC;
   return 0;
 }
 

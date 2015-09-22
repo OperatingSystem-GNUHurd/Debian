@@ -794,7 +794,7 @@ static struct kset *kset_create(const char *name,
 	kset = kzalloc(sizeof(*kset), GFP_KERNEL);
 	if (!kset)
 		return NULL;
-	kobject_set_name(&kset->kobj, name);
+	kobject_set_name(&kset->kobj, "%s", name);
 	kset->uevent_ops = uevent_ops;
 	kset->kobj.parent = parent_kobj;
 
