@@ -297,7 +297,7 @@ int diskfs_shortcut_ifsock;
 
 /* The user may define this variable, otherwise it has a default value of 30.
    diskfs_set_sync_interval is called with this value when the first diskfs
-   thread is started up (in diskfs_spawn_first_threa).   */
+   thread is started up (in diskfs_spawn_first_thread).   */
 extern int diskfs_default_sync_interval;
 
 /* The user must define this variable, which should be a string that somehow
@@ -731,6 +731,14 @@ struct node *diskfs_make_node_alloc (size_t size);
    explicitly provide the size.  The following two functions will use
    this value for offset calculations.  */
 extern const size_t _diskfs_sizeof_struct_node;
+
+/* Return the address of the disknode for NODE.  NODE must have been
+   allocated using diskfs_make_node_alloc.  */
+struct disknode *diskfs_node_disknode (struct node *node);
+
+/* Return the address of the node for DISKNODE.  DISKNODE must have
+   been allocated using diskfs_make_node_alloc.  */
+struct node *diskfs_disknode_node (struct disknode *disknode);
 
 #if defined(__USE_EXTERN_INLINES) || defined(DISKFS_DEFINE_EXTERN_INLINE)
 

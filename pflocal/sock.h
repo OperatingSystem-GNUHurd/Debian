@@ -114,13 +114,39 @@ void sock_free (struct sock *sock);
 /* Free a sock derefed too far.  */
 void _sock_norefs (struct sock *sock);
 
+/* Bind SOCK to ADDR.  */
+error_t sock_bind (struct sock *sock, struct addr *addr);
+
 /* Remove a reference from SOCK, possibly freeing it.  */
 static inline void __attribute__ ((unused))
 sock_deref (struct sock *sock)
 {
+  error_t err;
   pthread_mutex_lock (&sock->lock);
-  if (--sock->refs == 0)
+
+  sock->refs--;
+
+  if (sock->refs == 0)
     _sock_norefs (sock);
+  else if (sock->refs == 1 && sock->addr)
+    {
+      /* Last ref is the address, there won't be any more port for this socket,
+         unbind SOCK from its addr, and they will all die.  */
+
+      /* Keep another ref while unbinding.  */
+      sock->refs++;
+      pthread_mutex_unlock (&sock->lock);
+
+      /* Unbind */
+      err = sock_bind (sock, NULL);
+      assert (!err);
+
+      /* And release the ref, and thus kill SOCK.  */
+      pthread_mutex_lock (&sock->lock);
+      sock->refs--;
+      assert(sock->refs == 0);
+      _sock_norefs (sock);
+    }
   else
     pthread_mutex_unlock (&sock->lock);
 }
@@ -130,9 +156,6 @@ error_t sock_clone (struct sock *template, struct sock **sock);
 
 /* Return a new user port on SOCK in PORT.  */
 error_t sock_create_port (struct sock *sock, mach_port_t *port);
-
-/* Bind SOCK to ADDR.  */
-error_t sock_bind (struct sock *sock, struct addr *addr);
 
 /* Returns SOCK's address in ADDR, with an additional reference added.  If
    SOCK doesn't currently have an address, one is fabricated first.  */
