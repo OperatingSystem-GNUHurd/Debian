@@ -1,4 +1,4 @@
-hurd (1:0.6.git20150922-1) UNRELEASED; urgency=medium
+hurd (1:0.6.git20150922-1) unstable; urgency=medium
 
   * New upstream snapshot.
     - libdde_netdev_tx_t.patch, libdde_pci-needs_freset.patch,
@@ -18,7 +18,7 @@ hurd (1:0.6.git20150922-1) UNRELEASED; urgency=medium
   * Bump fakeroot-hurd priority so it becomes the default.
   * Fix build against glibc 2.21.
 
- -- Samuel Thibault <sthibault@debian.org>  Tue, 18 Aug 2015 10:50:47 +0000
+ -- Samuel Thibault <sthibault@debian.org>  Tue, 22 Sep 2015 19:06:22 +0000
 
 hurd (1:0.6.git20150704-3) unstable; urgency=medium
 
