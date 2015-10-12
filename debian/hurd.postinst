@@ -10,7 +10,8 @@ fi
 update-alternatives --quiet \
 	--install /etc/hurd/runsystem runsystem /etc/hurd/runsystem.gnu 5 \
 	--slave /sbin/halt halt /sbin/halt-hurd \
-	--slave /sbin/reboot reboot /sbin/reboot-hurd
+	--slave /sbin/reboot reboot /sbin/reboot-hurd \
+	--slave /sbin/poweroff poweroff /sbin/poweroff-hurd
 
 update-alternatives \
 	--install /usr/bin/fakeroot fakeroot /usr/bin/fakeroot-hurd 60
