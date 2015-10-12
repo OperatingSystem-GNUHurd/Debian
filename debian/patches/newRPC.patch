@@ -2,6 +2,8 @@ Just a build fix.
 
 # missing mach_notify_new_task RPCs
 
+To be removed with glibc 2.21
+
 Index: hurd-debian/proc/Makefile
 ===================================================================
 --- hurd-debian.orig/proc/Makefile

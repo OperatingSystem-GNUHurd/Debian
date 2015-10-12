@@ -1,1 +1,2 @@
 /usr/src/unifont.bdf /usr/share/hurd/vga-system.bdf
+/sbin/halt-hurd /sbin/poweroff-hurd
