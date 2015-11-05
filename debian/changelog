@@ -1,8 +1,8 @@
-hurd (1:0.7-1) UNRELEASED; urgency=medium
+hurd (1:0.7-1) unstable; urgency=medium
 
   * New upstream release
 
- -- Samuel Thibault <sthibault@debian.org>  Tue, 03 Nov 2015 22:10:23 +0000
+ -- Samuel Thibault <sthibault@debian.org>  Thu, 05 Nov 2015 00:20:12 +0000
 
 hurd (1:0.6.git20151012-1) unstable; urgency=medium
 
