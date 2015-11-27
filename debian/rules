@@ -38,6 +38,8 @@ export ac_cv_func_exec_exec_file_name=no
 export ac_cv_func__hurd_exec_file_name=no
 export LEX=:
 export YACC=:
+endif
+ifeq (stage1,$(filter stage1,$(DEB_BUILD_PROFILES)))
 export MIG=:
 endif
 CONFIGURE_ARGS_deb =
@@ -66,6 +68,8 @@ ifneq (,$(filter stage1,$(DEB_BUILD_PROFILES)))
 else
 ifneq (,$(filter stage2,$(DEB_BUILD_PROFILES)))
 	$(MAKE) -C build-deb/libihash libihash.a
+	$(MAKE) -C build-deb/libshouldbeinlibc libshouldbeinlibc.a
+	$(MAKE) -C build-deb/libps libps.a
 else
 ifeq (,$(filter noudeb,$(DEB_BUILD_PROFILES)))
 	dh_auto_build -Bbuild-udeb
@@ -92,6 +96,8 @@ ifneq (,$(filter stage1 stage2,$(DEB_BUILD_PROFILES)))
 	$(MAKE) -Cbuild-deb prefix=$(DEB_DESTDIR) install-headers no_deps=t
 ifneq (,$(filter stage2,$(DEB_BUILD_PROFILES)))
 	$(MAKE) -Cbuild-deb/libihash libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) $(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH)/libihash.a
+	$(MAKE) -Cbuild-deb/libshouldbeinlibc libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) $(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH)/libshouldbeinlibc.a
+	$(MAKE) -Cbuild-deb/libps libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) $(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH)/libps.a
 endif
 else
 	dh_auto_install -Bbuild-deb -- prefix=$(DEB_DESTDIR) libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) libexecdir=$(DEB_DESTDIR)/lib/hurd sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var XKB_BASE=$(DEB_DESTDIR)/usr/share/X11/xkb

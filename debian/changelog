@@ -1,3 +1,9 @@
+hurd (1:0.7-2) UNRELEASED; urgency=medium
+
+  * rules: Add libshouldbeinlibc.a and libps.a to stage2.
+
+ -- Samuel Thibault <sthibault@debian.org>  Fri, 27 Nov 2015 21:45:18 +0100
+
 hurd (1:0.7-1) unstable; urgency=medium
 
   * New upstream release
