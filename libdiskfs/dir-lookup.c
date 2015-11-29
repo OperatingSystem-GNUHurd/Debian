@@ -54,8 +54,8 @@ diskfs_S_dir_lookup (struct protid *dircred,
   int mustbedir = 0;
   size_t amt;
   int type;
-  struct protid *newpi;
-  struct peropen *newpo;
+  struct protid *newpi = 0;
+  struct peropen *newpo = 0;
 
   if (!dircred)
     return EOPNOTSUPP;
@@ -516,17 +516,13 @@ diskfs_S_dir_lookup (struct protid *dircred,
 
   if (! err)
     {
+      newpo = 0;
       if (flags & O_EXLOCK)
 	err = fshelp_acquire_lock (&np->userlock, &newpi->po->lock_status,
 				     &np->lock, LOCK_EX);
       else if (flags & O_SHLOCK)
 	err = fshelp_acquire_lock (&np->userlock, &newpi->po->lock_status,
 				     &np->lock, LOCK_SH);
-      if (error)
-	{
-	  mutex_unlock(&np->lock);
-	  ports_port_deref (newpi); /* Get rid of NEWPI.  */
-	}
     }
 
   if (! err)
@@ -549,6 +545,7 @@ diskfs_S_dir_lookup (struct protid *dircred,
 
       *returned_port = ports_get_right (newpi);
       ports_port_deref (newpi);
+      newpi = 0;
     }
 
  out:

@@ -88,8 +88,6 @@ diskfs_startup_diskfs (mach_port_t bootstrap, int flags)
       diskfs_nput (old);
     }
 
-  printf ("libdiskfs: check point 5\n");
-  fflush (stdout);
   if (bootstrap != MACH_PORT_NULL)
     {
       err = ports_create_port (diskfs_control_class, diskfs_port_bucket,
@@ -114,14 +112,10 @@ diskfs_startup_diskfs (mach_port_t bootstrap, int flags)
     {
       realnode = MACH_PORT_NULL;
 
-      printf ("libdiskfs: check point 7\n");
-      fflush (stdout);
       /* We are the bootstrap filesystem; do special boot-time setup.  */
       diskfs_start_bootstrap ();
     }
 
-  printf ("libdiskfs: check point 8\n");
-  fflush (stdout);
   if (diskfs_default_sync_interval)
     /* Start 'em sync'n */
     diskfs_set_sync_interval (diskfs_default_sync_interval);

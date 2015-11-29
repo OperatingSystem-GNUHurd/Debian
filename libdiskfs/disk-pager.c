@@ -20,7 +20,6 @@
 #include "diskfs-pager.h"
 #include <hurd/sigpreempt.h>
 #include <error.h>
-#include <string.h>
 
 __thread struct disk_image_user *diskfs_exception_diu;
 

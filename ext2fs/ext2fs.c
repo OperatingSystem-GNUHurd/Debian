@@ -167,29 +167,10 @@ main (int argc, char **argv)
   error_t err;
   mach_port_t bootstrap;
 
-  vm_address_t addr;
-  vm_size_t size;
-  vm_prot_t protection;
-  vm_prot_t max_protection;
-  vm_inherit_t inheritance;
-  boolean_t shared;
-  mach_port_t object_name;
-  vm_offset_t offset;
-
   /* Initialize the diskfs library, parse arguments, and open the store.
      This starts the first diskfs thread for us.  */
   store = diskfs_init_main (&startup_argp, argc, argv,
 			    &store_parsed, &bootstrap);
-
-  err = vm_region (mach_task_self (), &addr, &size, &protection,
-		   &max_protection, &inheritance, &shared, &object_name,
-		   &offset);
-  if (!err)
-    {
-      printf ("testing vm_region: object name: %d\n", object_name);
-      fflush (stdout);
-      mach_port_deallocate (mach_task_self (), object_name);
-    }
 
   if (store->size < SBLOCK_OFFS + SBLOCK_SIZE)
     ext2_panic ("device too small for superblock (%Ld bytes)", store->size);

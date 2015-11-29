@@ -34,14 +34,11 @@ master_thread_function (void *demuxer)
 
   do
     {
-      ports_manage_port_operations_one_thread (diskfs_port_bucket,
-					       (ports_demuxer_type) demuxer,
-					       thread_timeout);
-//      ports_manage_port_operations_multithread (diskfs_port_bucket,
-//						(ports_demuxer_type) demuxer,
-//						thread_timeout,
-//						server_timeout,
-//						0);
+      ports_manage_port_operations_multithread (diskfs_port_bucket,
+						(ports_demuxer_type) demuxer,
+						thread_timeout,
+						server_timeout,
+						0);
       err = diskfs_shutdown (0);
     }
   while (err);

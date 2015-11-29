@@ -302,7 +302,6 @@ free_modreqs (struct modreq *mr)
   struct modreq *tmp;
   for (; mr; mr = tmp)
     {
-      error_t err;
       mach_port_t old;
       /* Cancel the dead-name notification.  */
       err = mach_port_request_notification (mach_task_self (), mr->port,

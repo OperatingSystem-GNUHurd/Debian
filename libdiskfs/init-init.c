@@ -59,8 +59,6 @@ diskfs_init_diskfs (void)
 {
   error_t err;
 
-  printf ("libdiskfs: check point 1\n");
-  fflush (stdout);
   if (diskfs_boot_filesystem ())
     /* This is a boot filesystem, we have to do some things specially.  */
     {
@@ -79,8 +77,6 @@ diskfs_init_diskfs (void)
   else
     err = maptime_map (0, 0, &diskfs_mtime);
 
-  printf ("libdiskfs: check point 2: %s\n", strerror (err));
-  fflush (stdout);
   if (err)
     return err;
 

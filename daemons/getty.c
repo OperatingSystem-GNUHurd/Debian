@@ -200,8 +200,6 @@ main (int argc, char **argv)
 
   asprintf (&arg, "TERM=%s", tt ? tt->ty_type : "unknown");
 
-  printf ("execute %s\n", _PATH_LOGIN);
-
   if (tt && strcmp (tt->ty_type, "dialup") == 0)
     /* Dialup lines time out (which is login's default).  */
     execl (_PATH_LOGIN, "login", "-e", arg, NULL);

@@ -161,15 +161,11 @@ diskfs_start_bootstrap ()
       pthread_mutex_init (&execstartlock, NULL);
       pthread_cond_init (&execstarted, NULL);
       pthread_mutex_lock (&execstartlock);
-      printf ("libdiskfs: check point 7.1\n");
-      fflush (stdout);
       start_execserver ();
       pthread_cond_wait (&execstarted, &execstartlock);
       pthread_mutex_unlock (&execstartlock);
       assert (diskfs_exec_ctl != MACH_PORT_NULL);
 
-      printf ("libdiskfs: check point 7.2\n");
-      fflush (stdout);
       /* Contact the exec server.  */
       err = fsys_getroot (diskfs_exec_ctl, root_pt, MACH_MSG_TYPE_COPY_SEND,
 			  idlist, 3, idlist, 3, 0,
@@ -179,8 +175,6 @@ diskfs_start_bootstrap ()
       assert (retry_name[0] == '\0');
       assert (diskfs_exec != MACH_PORT_NULL);
 
-      printf ("libdiskfs: check point 7.3\n");
-      fflush (stdout);
       /* Attempt to set the active translator for the exec server so that
 	 filesystems other than the bootstrap can find it.  */
       err = dir_lookup (root_pt, _SERVERS_EXEC, O_NOTRANS, 0,
@@ -195,8 +189,6 @@ diskfs_start_bootstrap ()
 	  assert (retry == FS_RETRY_NORMAL);
 	  assert (retry_name[0] == '\0');
 	  assert (execnode != MACH_PORT_NULL);
-	  printf ("libdiskfs: check point 7.4\n");
-	  fflush (stdout);
 	  err = file_set_translator (execnode, 0, FS_TRANS_SET, 0, 0, 0,
 				     diskfs_exec_ctl, MACH_MSG_TYPE_COPY_SEND);
 	  mach_port_deallocate (mach_task_self (), diskfs_exec_ctl);
@@ -205,9 +197,6 @@ diskfs_start_bootstrap ()
 	}
       diskfs_exec_ctl = MACH_PORT_NULL;	/* Not used after this.  */
     }
-
-  printf ("libdiskfs: check point 7.5\n");
-  fflush (stdout);
 
   /* Cache the exec server port for file_exec to use.  */
   _hurd_port_set (&_diskfs_exec_portcell, diskfs_exec);
@@ -406,8 +395,6 @@ diskfs_execboot_fsys_startup (mach_port_t port, int flags,
   struct peropen *rootpo;
   mach_port_t rootport;
 
-  printf ("libdiskfs: check point 8\n");
-  fflush (stdout);
   if (!(pt = ports_lookup_port (diskfs_port_bucket, port,
 				diskfs_execboot_class)))
     return EOPNOTSUPP;

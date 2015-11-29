@@ -112,11 +112,8 @@ setup_terminal (struct terminal *t, struct ttyent *tt)
       else
 	{
 	  t->getty_argv = make_args (line);
-	  error (0, 0, "getty: %s", line);
 	  free (line);
 	}
-      if (tt->ty_window)
-	error (0, 0, "ty_window: %s", tt->ty_window);
       t->window_argv = tt->ty_window ? make_args (tt->ty_window) : 0;
     }
   else
@@ -282,8 +279,6 @@ startup_ttys (void)
   for (i = 0; i < nttys; i++)
     if (ttys[i].on)
       {
-	error (0, 0, "startup terminal: %s %s",
-	       ttys[i].getty_argv[0], ttys[i].getty_argv[1]);
 	fail = startup_terminal (&ttys[i]);
 	if (!fail)
 	  didone = 1;
@@ -471,7 +466,6 @@ main ()
     {
       error_t waiterr;
       pid_t pid = waitpid (WAIT_ANY, NULL, WUNTRACED);
-      error (0, 0, "one tty is stopped by some signal");
       waiterr = errno;
 
       /* Elicit a SIGLOST now if the console (on our stderr, i.e. fd 2) has
