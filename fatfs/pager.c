@@ -18,12 +18,20 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA. */
 
+#include <error.h>
 #include <string.h>
 #include <hurd/store.h>
 #include "fatfs.h"
 
-/* A ports bucket to hold pager ports.  */
-struct port_bucket *pager_bucket;
+/* A ports bucket to hold disk pager ports.  */
+struct port_bucket *disk_pager_bucket;
+
+/* A ports bucket to hold file pager ports.  */
+struct port_bucket *file_pager_bucket;
+
+/* Stores a reference to the requests instance used by the file pager so its
+   worker threads can be inhibited and resumed.  */
+struct pager_requests *file_pager_requests;
 
 /* Mapped image of the FAT.  */
 void *fat_image;
@@ -148,7 +156,7 @@ root_dir_pager_read_page (vm_offset_t page, void **buf, int *writelock)
   pthread_rwlock_unlock (&diskfs_root_node->dn->alloc_lock);
 
   if (overrun)
-    bzero ((void *) *buf + vm_page_size - overrun, overrun);
+    memset ((void *)*buf + vm_page_size - overrun, 0, overrun);
 
   return err;
 }
@@ -756,12 +764,50 @@ pager_dropweak (struct user_pager_info *p __attribute__ ((unused)))
 void
 create_fat_pager (void)
 {
+  error_t err;
+
+  /* The disk pager.  */
   struct user_pager_info *upi = malloc (sizeof (struct user_pager_info));
   upi->type = FAT;
-  pager_bucket = ports_create_bucket ();
-  diskfs_start_disk_pager (upi, pager_bucket, MAY_CACHE, 0,
+  disk_pager_bucket = ports_create_bucket ();
+  diskfs_start_disk_pager (upi, disk_pager_bucket, MAY_CACHE, 0,
 			   bytes_per_sector * sectors_per_fat,
 			   &fat_image);
+
+  /* The file pager.  */
+  file_pager_bucket = ports_create_bucket ();
+
+  /* Start libpagers worker threads.  */
+  err = pager_start_workers (file_pager_bucket, &file_pager_requests);
+  if (err)
+    error (2, err, "can't create libpager worker threads");
+}
+
+error_t
+inhibit_fat_pager (void)
+{
+  error_t err;
+
+  /* The file pager can rely on the disk pager, so inhibit the file
+     pager first.  */
+
+  err = pager_inhibit_workers (file_pager_requests);
+  if (err)
+    return err;
+
+  err = pager_inhibit_workers (diskfs_disk_pager_requests);
+  /* We don't want only one pager disabled.  */
+  if (err)
+    pager_resume_workers (file_pager_requests);
+
+  return err;
+}
+
+void
+resume_fat_pager (void)
+{
+  pager_resume_workers (diskfs_disk_pager_requests);
+  pager_resume_workers (file_pager_requests);
 }
 
 /* Call this to create a FILE_DATA pager and return a send right.
@@ -800,7 +846,7 @@ diskfs_get_filemap (struct node *node, vm_prot_t prot)
           upi->max_prot = prot;
           diskfs_nref_light (node);
           node->dn->pager =
-            pager_create (upi, pager_bucket, MAY_CACHE,
+            pager_create (upi, file_pager_bucket, MAY_CACHE,
                           MEMORY_OBJECT_COPY_DELAY, 0);
           if (node->dn->pager == 0)
             {
@@ -881,14 +927,13 @@ diskfs_shutdown_pager ()
   error_t shutdown_one (void *v_p)
     {
       struct pager *p = v_p;
-      if (p != diskfs_disk_pager)
-        pager_shutdown (p);
+      pager_shutdown (p);
       return 0;
     }
 
   write_all_disknodes ();
 
-  ports_bucket_iterate (pager_bucket, shutdown_one);
+  ports_bucket_iterate (file_pager_bucket, shutdown_one);
 
   pager_sync (diskfs_disk_pager, 1);
 
@@ -903,13 +948,12 @@ diskfs_sync_everything (int wait)
   error_t sync_one (void *v_p)
     {
       struct pager *p = v_p;
-      if (p != diskfs_disk_pager)
-        pager_sync (p, wait);
+      pager_sync (p, wait);
       return 0;
     }
 
   write_all_disknodes ();
-  ports_bucket_iterate (pager_bucket, sync_one);
+  ports_bucket_iterate (file_pager_bucket, sync_one);
   pager_sync (diskfs_disk_pager, wait);
 }
 
@@ -926,7 +970,8 @@ disable_caching ()
 
   /* Loop through the pagers and turn off caching one by one,
      synchronously.  That should cause termination of each pager.  */
-  ports_bucket_iterate (pager_bucket, block_cache);
+  ports_bucket_iterate (disk_pager_bucket, block_cache);
+  ports_bucket_iterate (file_pager_bucket, block_cache);
 }
 	  
 static void
@@ -954,7 +999,8 @@ enable_caching ()
       return 0;
     }
 
-  ports_bucket_iterate (pager_bucket, enable_cache);
+  ports_bucket_iterate (disk_pager_bucket, enable_cache);
+  ports_bucket_iterate (file_pager_bucket, enable_cache);
 }
 	    
 /* Tell diskfs if there are pagers exported, and if none, then
@@ -962,9 +1008,9 @@ enable_caching ()
 int
 diskfs_pager_users ()
 {
-  int npagers = ports_count_bucket (pager_bucket);
+  int npagers = ports_count_bucket (file_pager_bucket);
 
-  if (npagers <= 1)
+  if (npagers == 0)
     return 0;
 
   if (MAY_CACHE)
@@ -975,8 +1021,8 @@ diskfs_pager_users ()
 	 immediately.  XXX */
       sleep (1);
       
-      npagers = ports_count_bucket (pager_bucket);
-      if (npagers <= 1)
+      npagers = ports_count_bucket (file_pager_bucket);
+      if (npagers == 0)
 	return 0;
 
       /* Darn, there are actual honest users.  Turn caching back on,
@@ -984,7 +1030,7 @@ diskfs_pager_users ()
       enable_caching ();
     }
   
-  ports_enable_bucket (pager_bucket);
+  ports_enable_bucket (file_pager_bucket);
 
   return 1;
 }
@@ -995,21 +1041,18 @@ vm_prot_t
 diskfs_max_user_pager_prot ()
 {
   vm_prot_t max_prot = 0;
-  int npagers = ports_count_bucket (pager_bucket);
+  int npagers = ports_count_bucket (file_pager_bucket);
 
-  if (npagers > 1)
-    /* More than just the disk pager.  */
+  if (npagers > 0)
     {
       error_t add_pager_max_prot (void *v_p)
         {
           struct pager *p = v_p;
           struct user_pager_info *upi = pager_get_upi (p);
-          if (upi->type == FILE_DATA)
-            max_prot |= upi->max_prot;
+          max_prot |= upi->max_prot;
           /* Stop iterating if MAX_PROT is as filled as it is going to
 	     get.  */
-          return (max_prot
-		  == (VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE)) ? 1 : 0;
+          return max_prot == (VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE);
         }
 
       disable_caching ();               /* Make any silly pagers go away.  */
@@ -1018,12 +1061,12 @@ diskfs_max_user_pager_prot ()
          immediately.  XXX */
       sleep (1);
 
-      ports_bucket_iterate (pager_bucket, add_pager_max_prot);
+      ports_bucket_iterate (file_pager_bucket, add_pager_max_prot);
 
       enable_caching ();
     }
 
-  ports_enable_bucket (pager_bucket);
+  ports_enable_bucket (file_pager_bucket);
 
   return max_prot;
 }

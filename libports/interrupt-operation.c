@@ -24,17 +24,21 @@
 /* Cause a pending request on this object to immediately return.  The
    exact semantics are dependent on the specific object.  */
 kern_return_t
-ports_S_interrupt_operation (mach_port_t port,
+ports_S_interrupt_operation (struct port_info *pi,
 			     mach_port_seqno_t seqno)
 {
-  struct port_info *pi = ports_lookup_port (0, port, 0);
+  mach_port_seqno_t old;
+
   if (!pi)
     return EOPNOTSUPP;
-  pthread_mutex_lock (&_ports_lock);
-  if (pi->cancel_threshold < seqno)
-    pi->cancel_threshold = seqno;
-  pthread_mutex_unlock (&_ports_lock);
+
+ retry:
+  old = __atomic_load_n (&pi->cancel_threshold, __ATOMIC_SEQ_CST);
+  if (old < seqno
+      && ! __atomic_compare_exchange_n (&pi->cancel_threshold, &old, seqno,
+					0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST))
+	goto retry;
+
   ports_interrupt_rpcs (pi);
-  ports_port_deref (pi);
   return 0;
 }

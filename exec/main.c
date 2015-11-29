@@ -1,6 +1,6 @@
 /* GNU Hurd standard exec server, main program and server mechanics.
 
-   Copyright (C) 1992,93,94,95,96,97,98,99,2000,01,02
+   Copyright (C) 1992,93,94,95,96,97,98,99,2000,01,02,13
    	Free Software Foundation, Inc.
    Written by Roland McGrath.
    This file is part of the GNU Hurd.
@@ -21,22 +21,15 @@
 
 #include "priv.h"
 #include <error.h>
+#include <device/device.h>
 #include <hurd/paths.h>
 #include <hurd/startup.h>
 #include <argp.h>
+#include <argz.h>
 #include <version.h>
 #include <pids.h>
 
 const char *argp_program_version = STANDARD_HURD_VERSION (exec);
-
-#ifdef BFD
-bfd_arch_info_type host_bfd_arch_info;
-bfd host_bfd = { arch_info: &host_bfd_arch_info };
-extern error_t bfd_mach_host_arch_mach (host_t host,
-					enum bfd_architecture *bfd_arch,
-					long int *bfd_machine,
-					ElfW(Half) *elf_machine);
-#endif
 
 /* Trivfs hooks.  */
 int trivfs_fstype = FSTYPE_MISC;
@@ -45,24 +38,33 @@ int trivfs_support_read = 0;
 int trivfs_support_write = 0;
 int trivfs_allow_open = 0;
 
-struct port_class *trivfs_protid_portclasses[1];
-struct port_class *trivfs_cntl_portclasses[1];
-int trivfs_protid_nportclasses = 1;
-int trivfs_cntl_nportclasses = 1;
+/* Our port classes.  */
+struct port_class *trivfs_protid_class;
+struct port_class *trivfs_control_class;
 
 struct trivfs_control *fsys;
 
 char **save_argv;
+mach_port_t opt_device_master;
 
+
+#include "exec_S.h"
+#include "exec_startup_S.h"
 
 static int
 exec_demuxer (mach_msg_header_t *inp, mach_msg_header_t *outp)
 {
-  extern int exec_server (mach_msg_header_t *inp, mach_msg_header_t *outp);
-  extern int exec_startup_server (mach_msg_header_t *, mach_msg_header_t *);
-  return (exec_startup_server (inp, outp) ||
-	  exec_server (inp, outp) ||
-	  trivfs_demuxer (inp, outp));
+  mig_routine_t routine;
+  if ((routine = exec_server_routine (inp)) ||
+      (routine = NULL, trivfs_demuxer (inp, outp)) ||
+      (routine = exec_startup_server_routine (inp)))
+    {
+      if (routine)
+        (*routine) (inp, outp);
+      return TRUE;
+    }
+  else
+    return FALSE;
 }
 
 
@@ -85,11 +87,11 @@ deadboot (void *p)
   munmap (boot->intarray, boot->nints * sizeof (int));
 
   /* See if we are going away and this was the last thing keeping us up.  */
-  if (ports_count_class (trivfs_cntl_portclasses[0]) == 0)
+  if (ports_count_class (trivfs_control_class) == 0)
     {
       /* We have no fsys control port, so we are detached from the
 	 parent filesystem.  Maybe we have no users left either.  */
-      if (ports_count_class (trivfs_protid_portclasses[0]) == 0)
+      if (ports_count_class (trivfs_protid_class) == 0)
 	{
 	  /* We have no user ports left.  Are we still listening for
 	     exec_startup RPCs from any tasks we already started?  */
@@ -98,32 +100,110 @@ deadboot (void *p)
 	    exit (0);
 	  ports_enable_class (execboot_portclass);
 	}
-      ports_enable_class (trivfs_protid_portclasses[0]);
+      ports_enable_class (trivfs_protid_class);
     }
-  ports_enable_class (trivfs_cntl_portclasses[0]);
+  ports_enable_class (trivfs_control_class);
 }
 
+#define OPT_DEVICE_MASTER_PORT	(-1)
+
+static const struct argp_option options[] =
+{
+  {"device-master-port", OPT_DEVICE_MASTER_PORT, "PORT", 0,
+   "If specified, a boot-time exec server can print "
+   "diagnostic messages earlier.", 0},
+  {0}
+};
+
+static error_t
+parse_opt (int opt, char *arg, struct argp_state *state)
+{
+  switch (opt)
+    {
+    default:
+      return ARGP_ERR_UNKNOWN;
+    case ARGP_KEY_INIT:
+    case ARGP_KEY_SUCCESS:
+    case ARGP_KEY_ERROR:
+      break;
+
+    case OPT_DEVICE_MASTER_PORT:
+      opt_device_master = atoi (arg);
+      break;
+    }
+  return 0;
+}
+
+/* This will be called from libtrivfs to help construct the answer
+   to an fsys_get_options RPC.  */
+error_t
+trivfs_append_args (struct trivfs_control *fsys,
+		    char **argz, size_t *argz_len)
+{
+  error_t err = 0;
+  char *opt;
+
+  if (MACH_PORT_VALID (opt_device_master))
+    {
+      asprintf (&opt, "--device-master-port=%d", opt_device_master);
+
+      if (opt)
+	{
+	  err = argz_add (argz, argz_len, opt);
+	  free (opt);
+	}
+    }
+
+  return err;
+}
+
+static struct argp argp =
+{ options, parse_opt, 0, "Hurd standard exec server." };
+
+/* Setting this variable makes libtrivfs use our argp to
+   parse options passed in an fsys_set_options RPC.  */
+struct argp *trivfs_runtime_argp = &argp;
+
+/* Get our stderr set up to print on the console, in case we have to
+   panic or something.  */
+error_t
+open_console (mach_port_t device_master)
+{
+  static int got_console = 0;
+  mach_port_t cons;
+  error_t err;
+
+  if (got_console)
+    return 0;
+
+  err = device_open (device_master, D_READ|D_WRITE, "console", &cons);
+  if (err)
+    return err;
+
+  stdin = mach_open_devstream (cons, "r");
+  stdout = stderr = mach_open_devstream (cons, "w");
+
+  got_console = 1;
+  mach_port_deallocate (mach_task_self (), cons);
+  return 0;
+}
 
 int
 main (int argc, char **argv)
 {
   error_t err;
   mach_port_t bootstrap;
-  struct argp argp = { 0, 0, 0, "Hurd standard exec server." };
 
   argp_parse (&argp, argc, argv, 0, 0, 0);
 
-  save_argv = argv;
+  if (MACH_PORT_VALID (opt_device_master))
+    {
+      err = open_console (opt_device_master);
+      assert_perror (err);
+      mach_port_deallocate (mach_task_self (), opt_device_master);
+    }
 
-#ifdef BFD
-  /* Put the Mach kernel's idea of what flavor of machine this is into the
-     fake BFD against which architecture compatibility checks are made.  */
-  err = bfd_mach_host_arch_mach (mach_host_self (),
-				 &host_bfd.arch_info->arch,
-				 &host_bfd.arch_info->mach);
-  if (err)
-    error (1, err, "Getting host architecture from Mach");
-#endif
+  save_argv = argv;
 
   task_get_bootstrap_port (mach_task_self (), &bootstrap);
   if (bootstrap == MACH_PORT_NULL)
@@ -134,15 +214,29 @@ main (int argc, char **argv)
      S_exec_init (below).  */
   procserver = getproc ();
 
-  port_bucket = ports_create_bucket ();
-  trivfs_cntl_portclasses[0] = ports_create_class (trivfs_clean_cntl, 0);
-  trivfs_protid_portclasses[0] = ports_create_class (trivfs_clean_protid, 0);
+  err = trivfs_add_port_bucket (&port_bucket);
+  if (err)
+    error (1, 0, "error creating port bucket");
+
+  err = trivfs_add_control_port_class (&trivfs_control_class);
+  if (err)
+    error (1, 0, "error creating control port class");
+
+  err = trivfs_add_protid_port_class (&trivfs_protid_class);
+  if (err)
+    error (1, 0, "error creating protid port class");
+
   execboot_portclass = ports_create_class (deadboot, NULL);
 
   /* Reply to our parent.  */
   err = trivfs_startup (bootstrap, 0,
-			trivfs_cntl_portclasses[0], port_bucket,
-			trivfs_protid_portclasses[0], port_bucket,
+                        trivfs_control_class, port_bucket,
+                        trivfs_protid_class, port_bucket, &fsys);
+
+  /* Reply to our parent.  */
+  err = trivfs_startup (bootstrap, 0,
+			trivfs_control_class, port_bucket,
+			trivfs_protid_class, port_bucket,
 			&fsys);
   mach_port_deallocate (mach_task_self (), bootstrap);
   if (err)
@@ -168,11 +262,11 @@ trivfs_goaway (struct trivfs_control *fsys, int flags)
   int count;
 
   /* Stop new requests.  */
-  ports_inhibit_class_rpcs (trivfs_cntl_portclasses[0]);
-  ports_inhibit_class_rpcs (trivfs_protid_portclasses[0]);
+  ports_inhibit_class_rpcs (trivfs_control_class);
+  ports_inhibit_class_rpcs (trivfs_protid_class);
 
   /* Are there any extant user ports for the /servers/exec file?  */
-  count = ports_count_class (trivfs_protid_portclasses[0]);
+  count = ports_count_class (trivfs_protid_class);
   if (count == 0 || (flags & FSYS_GOAWAY_FORCE))
     {
       /* No users.  Disconnect from the filesystem.  */
@@ -195,9 +289,9 @@ trivfs_goaway (struct trivfs_control *fsys, int flags)
   else
     {
       /* We won't go away, so start things going again...  */
-      ports_enable_class (trivfs_protid_portclasses[0]);
-      ports_resume_class_rpcs (trivfs_cntl_portclasses[0]);
-      ports_resume_class_rpcs (trivfs_protid_portclasses[0]);
+      ports_enable_class (trivfs_protid_class);
+      ports_resume_class_rpcs (trivfs_control_class);
+      ports_resume_class_rpcs (trivfs_protid_class);
 
       return EBUSY;
     }
@@ -210,7 +304,7 @@ kern_return_t
 S_exec_init (struct trivfs_protid *protid,
 	     auth_t auth, process_t proc)
 {
-  mach_port_t host_priv, startup;
+  mach_port_t host_priv, device_master, startup;
   error_t err;
 
   if (! protid || ! protid->isroot)
@@ -242,13 +336,24 @@ S_exec_init (struct trivfs_protid *protid,
     mach_port_deallocate (mach_task_self (), right);
   }
 
-  err = get_privileged_ports (&host_priv, NULL);
+  err = get_privileged_ports (&host_priv, &device_master);
   assert_perror (err);
+
+  err = open_console (device_master);
+  assert_perror (err);
+  mach_port_deallocate (mach_task_self (), device_master);
 
   proc_register_version (procserver, host_priv, "exec", "", HURD_VERSION);
 
-  err = proc_getmsgport (procserver, HURD_PID_STARTUP, &startup);
-  assert_perror (err);
+  startup = file_name_lookup (_SERVERS_STARTUP, 0, 0);
+  if (startup == MACH_PORT_NULL)
+    {
+      error (0, errno, "%s", _SERVERS_STARTUP);
+
+      /* Fall back to abusing the message port lookup.  */
+      err = proc_getmsgport (procserver, HURD_PID_STARTUP, &startup);
+      assert_perror (err);
+    }
   mach_port_deallocate (mach_task_self (), procserver);
 
   /* Call startup_essential task last; init assumes we are ready to

@@ -29,6 +29,7 @@
 
 #include <version.h>
 #include "fatfs.h"
+#include "libdiskfs/fsys_S.h"
 
 struct node *diskfs_root_node;
 
@@ -142,7 +143,7 @@ fetch_root ()
 {
   error_t err;
   ino_t inum;
-  inode_t inode;
+  struct lookup_context ctx;
 
   memset (&dr_root_node, 0, sizeof(struct dirrect));
 
@@ -195,13 +196,13 @@ fetch_root ()
      from the vi_zero_key (in the dir_offset value) as well as all
      normal virtual inode keys (in the dir_inode value).  Enter the
      disknode into the inode table.  */
-  err = vi_new ((struct vi_key) {0, 1}, &inum, &inode);
+  err = vi_new ((struct vi_key) {0, 1}, &inum, &ctx.inode);
   assert_perror (err);
 
   /* Allocate a node for the root directory disknode in
      diskfs_root_node.  */
   if (!err)
-    err = diskfs_cached_lookup (inum, &diskfs_root_node);
+    err = diskfs_cached_lookup_context (inum, &diskfs_root_node, &ctx);
 
   assert_perror (err);
 
@@ -270,7 +271,7 @@ diskfs_readonly_changed (int readonly)
 /* FIXME: libdiskfs doesn't lock the parent dir when looking up a node
    for fsys_getfile, so we disable NFS.  */
 error_t
-diskfs_S_fsys_getfile (mach_port_t fsys,
+diskfs_S_fsys_getfile (struct diskfs_control *pt,
                       mach_port_t reply, mach_msg_type_name_t reply_type,
                       uid_t *uids, mach_msg_type_number_t nuids,
                       gid_t *gids, mach_msg_type_number_t ngids,

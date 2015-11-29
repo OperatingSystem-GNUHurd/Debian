@@ -24,6 +24,7 @@
 #include <strings.h>
 #include <unistd.h>
 #include <errno.h>
+#include <error.h>
 #include <sys/mman.h>
 #include <stdio.h>
 
@@ -141,21 +142,7 @@ pager_clear_user_data (struct user_pager_info *upi)
 }
 
 static struct port_bucket *pager_port_bucket = 0;
-
-/* A top-level function for the paging thread that just services paging
-   requests.  */
-static void *
-service_paging_requests (void *arg)
-{
-  (void) arg;
-
-  for (;;)
-    ports_manage_port_operations_multithread (pager_port_bucket,
-					      pager_demuxer,
-					      1000 * 30, 1000 * 60 * 5, 0);
-
-  return NULL;
-}
+static struct pager_requests *pager_requests;
 
 /* Initialize paging for this device.  */
 static void
@@ -168,19 +155,16 @@ init_dev_paging ()
       pthread_mutex_lock (&pager_global_lock);
       if (pager_port_bucket == NULL)
 	{
-	  pthread_t thread;
 	  error_t err;
 
 	  pager_port_bucket = ports_create_bucket ();
 
-	  /* Make a thread to service paging requests.  */
-	  err = pthread_create (&thread, NULL, service_paging_requests, NULL);
-	  if (!err)
-	    pthread_detach (thread);
-	  else
+	  /* Start libpagers worker threads.  */
+	  err = pager_start_workers (pager_port_bucket, &pager_requests);
+	  if (err)
 	    {
 	      errno = err;
-	      perror ("pthread_create");
+	      error (0, err, "pager_start_workers");
 	    }
 	}
       pthread_mutex_unlock (&pager_global_lock);

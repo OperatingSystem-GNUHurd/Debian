@@ -1,22 +1,95 @@
--*- Text -*-
+Version 0.7 (2015-10-31)
+
+The node cache in ext2fs has been improved, generalized, and moved to
+libdiskfs.  It is now also used by isofs and fatfs.
+
+The native fakeroot tool has been greatly improved.  It now handles
+named sockets, and multiple corner cases related to permissions were
+identified and fixed.
+
+A new utility `rpcscan' has been introduced.  It scans Mach servers
+and displays the RPCs handled by the associated demuxer.
+
+A long-standing synchronization issue involving the filesystem
+translators, libdiskfs, and libpager has been identified and fixed.
+
+The code has been updated to work with newer versions of the compiler
+and libc, and numerous bugs have been fixed throughout the code.
 
-XXX this needs much work, trolling through ChangeLogs.
+Version 0.6 (2015-04-10)
+
+Numerous cleanups and stylistic fixes of the code base.  Several
+problems have been identified using static analysis and exercising
+tools, and have subsequently been fixed.
+
+The message dispatching code in the Hurd servers has been improved.
+Among other things, we now make use of the protected payloads
+introduced in GNU Mach 1.5.
+
+The embedded gz and bz2 decompressor code has been removed, libz and
+libbz2 is used instead.
+
+The native fakeroot tool has been greatly improved and is now able to
+build many packages.  The portinfo and rpctrace tools now offer a
+better debugging experience.
+
+The performance of the integer hashing library has been improved.
+
+The init server has been split into the startup server (handling early
+system bootstrap and shutdown), and a SysV-style init program (aptly
+named `init').
+
+The procfs and random translators have been merged into this repository.
+
+Version 0.5 (2013-09-27)
+
+Really too many changes have been applied to list them individually.  Some
+highlights include:
+
+Numerous bug fixes, compatibility fixes (for compliance to standards such as
+POSIX), and stability fixes.
+
+Thread-local storage (TLS) support in the threading libraries.  Conversion from
+cthreads to POSIX Threads (pthreads).
+
+Large store support for ext2fs.
+
+A mtab translator.
+
+IPv6 support in pfinet, based on Linux 2.2.14.
+
+A XKB parser and wide character support for the Hurd console.
+
+The new remap translator can be used to create an environment in which
+some paths are redirected, for instance the TCP/IP stack, or /bin/sh.
+
+The new nullauth utility drops all authentication credentials before running a
+program.  This is also useful to drop privileges on behalf of translators that
+do not need any credentials.
+
+Several improvements to rpctrace, such as the -E option to add/change/unset
+environment variables among the ones inherited by the process.
+
+Improvements to the default pager and tmpfs virtual filesystem generally, and
+for the latter also add the possibility to specify the size with the --size
+parameter.
+
+The UFS filesystem translator and supporting utilities have been removed:
+unused/untested/unmaintained for a decade.
+
+Follows a list assembled in 2002, more than ten years ago:
 
 Many, many, many bugs have been fixed, including some resource
 consumption problems and race conditions.  The system can compile
 itself as well as most external applications.  The amount of stress
 the system can tolerate has increased a lot.
 
-The new remap translator can be used to create an environment in which
-some paths are redirected, for instance the TCP/IP stack, or /bin/sh,
-etc.
-
 The new ftpfs translator can be used to transparently access FTP
 servers through the filesystem.  Together with the new hostmux
 translator, which can invoke host-specific translators like ftpfs,
 this leads to a very comfortable way to use FTP archives on the Hurd.
 
-A new translator usermux can invoke user specific translators. It can
+A new translator usermux can invoke user-specific translators.  It can
 be used to provide a symlink to all users home directories in a single
 place (similar to amd/automount).
 
@@ -37,8 +110,7 @@ ioctls now.
 
 The Hurd can now access CD-ROMs containing an ISO9660 file format with
 the new iso9660fs translator. Rock Ridge extensions are supported, as
-well as some GNU extensions to store GNU specific file system
-attributes in such filesystems.
+well as some GNU extensions to store GNU-specific filesystem attributes.
 
 Two new translators, hello and hello-mt, illustrate how to implement
 simple trivfs based filesystems in the Hurd.
@@ -107,10 +179,8 @@ The Hurd interfaces have been changed to support large files.
 
 The new proxy-defpager translator grants unprivileged users access to
 the default pager.
-
 
-9 June 1997
-Version 0.2
+Version 0.2 (1997-06-09)
 
 Summary of important externally visible changes since version 0.1:
 
@@ -182,11 +252,8 @@ New library `libftpconn' is used to manage FTP connections.  We are
 already using this library for some local system administration tasks,
 and are making it the basis of the (as yet unfinished) ftpfs
 filesystem for the Hurd.
-
-
 
-6 September 1996
-Version 0.1.
+Version 0.1 (1996-09-06)
 
 Summary of important externally visible changes since version 0.0:
 
@@ -236,8 +303,7 @@ All disk filesystems (ext2fs) now do directory name caching of
 cache size to be large, and then do experiments and see what the cache
 hit rate would have been for various smaller sizes.  This should help
 in optimizing the size of the cache.
-
 
-6 August 1996
-Version 0.0
-Initial release
+Version 0.0 (1996-08-06)
+
+Initial release.

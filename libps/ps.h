@@ -343,6 +343,7 @@ struct proc_stat
 #define PSTAT_UMASK	      0x400000 /* The proc's current umask */
 #define PSTAT_HOOK	      0x800000 /* Has a non-zero hook */
 #define PSTAT_NUM_PORTS      0x4000000 /* Number of Mach ports in the task */
+#define PSTAT_TIMES          0x8000000 /* Task/thread user and system times */
 
 /* Flag bits that don't correspond precisely to any field.  */
 #define PSTAT_NO_MSGPORT     0x1000000 /* Don't use the msgport at all */
@@ -823,7 +824,7 @@ void ps_fmt_free (struct ps_fmt *fmt);
 error_t ps_fmt_clone (struct ps_fmt *fmt, struct ps_fmt **copy);
 
 /* Write an appropriate header line for FMT, containing the titles of all its
-   fields appropiately aligned with where the values would be printed, to
+   fields appropriately aligned with where the values would be printed, to
    STREAM (without a trailing newline).  If count is non-NULL, the total
    number number of characters output is added to the integer it points to.
    If any fatal error occurs, the error code is returned, otherwise 0.  */

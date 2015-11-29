@@ -1,21 +1,21 @@
 /* Session and process group manipulation
    Copyright (C) 1992,93,94,95,96,99,2001,02,13 Free Software Foundation, Inc.
 
-This file is part of the GNU Hurd.
+   This file is part of the GNU Hurd.
 
-The GNU Hurd is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   The GNU Hurd is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-The GNU Hurd is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   The GNU Hurd is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with the GNU Hurd; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with the GNU Hurd; see the file COPYING.  If not, write to
+   the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* Written by Michael I. Bushnell.  */
 
@@ -341,8 +341,14 @@ S_proc_setpgrp (struct proc *callerp,
 
   if (p->p_pgrp != pg)
     {
+      /* If we have to create a new pgrp, we have to do this before
+	 leaving the current one.  p->p_pgrp is deallocated if p is
+	 the last process in that group.  Likewise, if p->p_pgrp was
+	 the last group in p->p_pgrp->pg_session, the session is
+	 deallocated.  */
+      struct pgrp *new = pg ? pg : new_pgrp (pgid, p->p_pgrp->pg_session);
       leave_pgrp (p);
-      p->p_pgrp = pg ? pg : new_pgrp (pgid, p->p_pgrp->pg_session);
+      p->p_pgrp = new;
       join_pgrp (p);
     }
   else

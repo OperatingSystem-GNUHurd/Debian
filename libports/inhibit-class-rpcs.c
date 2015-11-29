@@ -32,19 +32,26 @@ ports_inhibit_class_rpcs (struct port_class *class)
     err = EBUSY;
   else
     {
-      struct port_info *pi;
-      struct rpc_info *rpc;
       int this_one = 0;
 
-      for (pi = class->ports; pi; pi = pi->next)
-	for (rpc = pi->current_rpcs; rpc; rpc = rpc->next)
-	  {
-	    /* Avoid cancelling the calling thread.  */
-	    if (rpc->thread == hurd_thread_self ())
-	      this_one = 1;
-	    else
-	      hurd_thread_cancel (rpc->thread);
-	  }
+      pthread_rwlock_rdlock (&_ports_htable_lock);
+      HURD_IHASH_ITERATE (&_ports_htable, portstruct)
+	{
+	  struct rpc_info *rpc;
+	  struct port_info *pi = portstruct;
+	  if (pi->class != class)
+	    continue;
+
+	  for (rpc = pi->current_rpcs; rpc; rpc = rpc->next)
+	    {
+	      /* Avoid cancelling the calling thread.  */
+	      if (rpc->thread == hurd_thread_self ())
+		this_one = 1;
+	      else
+		hurd_thread_cancel (rpc->thread);
+	    }
+	}
+      pthread_rwlock_unlock (&_ports_htable_lock);
 
       while (class->rpcs > this_one)
 	{

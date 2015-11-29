@@ -25,6 +25,7 @@
 __thread struct disk_image_user *diskfs_exception_diu;
 
 struct pager *diskfs_disk_pager;
+struct pager_requests *diskfs_disk_pager_requests;
 
 static void fault_handler (int sig, long int sigcode, struct sigcontext *scp);
 static struct hurd_signal_preemptor preemptor =
@@ -34,48 +35,26 @@ static struct hurd_signal_preemptor preemptor =
   handler: (sighandler_t) &fault_handler,
   };
 
-/* A top-level function for the paging thread that just services paging
-   requests.  */
-static void *
-service_paging_requests (void *arg)
-{
-  struct port_bucket *pager_bucket = arg;
-  for (;;)
-    ports_manage_port_operations_one_thread (pager_bucket,
-					     pager_demuxer,
-					     1000 * 60 * 2);
-//    ports_manage_port_operations_multithread (pager_bucket,
-//					      pager_demuxer,
-//					      1000 * 60 * 2,
-//					      1000 * 60 * 10, 0);
-  return NULL;
-}
-
 void
 diskfs_start_disk_pager (struct user_pager_info *upi,
 			 struct port_bucket *pager_bucket,
 			 int may_cache, int notify_on_evict,
 			 size_t size, void **image)
 {
-  pthread_t thread;
   error_t err;
   mach_port_t disk_pager_port;
 
-  /* Make a thread to service paging requests.  */
-  err = pthread_create (&thread, NULL, service_paging_requests, pager_bucket);
-  if (!err)
-    pthread_detach (thread);
-  else
-    {
-      errno = err;
-      perror ("pthread_create");
-    }
+  /* Start libpagers worker threads.  */
+  err = pager_start_workers (pager_bucket, &diskfs_disk_pager_requests);
+  if (err)
+    error (2, err, "creating pager worker threads failed");
 
   /* Create the pager.  */
   diskfs_disk_pager = pager_create (upi, pager_bucket,
 				    may_cache, MEMORY_OBJECT_COPY_NONE,
 				    notify_on_evict);
-  assert (diskfs_disk_pager);
+  if (diskfs_disk_pager == NULL)
+    error (2, errno, "creating diskfs_disk_pager failed");
 
   /* Get a port to the disk pager.  */
   disk_pager_port = pager_get_port (diskfs_disk_pager);
@@ -83,6 +62,7 @@ diskfs_start_disk_pager (struct user_pager_info *upi,
 			  MACH_MSG_TYPE_MAKE_SEND);
 
   /* Now map the disk image.  */
+  *image = 0;
   err = vm_map (mach_task_self (), (vm_address_t *)image, size,
 		0, 1, disk_pager_port, 0, 0,
 		VM_PROT_READ | (diskfs_readonly ? 0 : VM_PROT_WRITE),

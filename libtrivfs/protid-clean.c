@@ -23,32 +23,37 @@ void
 trivfs_clean_protid (void *arg)
 {
   struct trivfs_protid *cred = arg;
-  
+  struct trivfs_control *cntl = cred->po->cntl;
+
   if (trivfs_protid_destroy_hook && cred->realnode != MACH_PORT_NULL)
     /* Allow the user to clean up; If the realnode field is null, then CRED
        wasn't initialized to the point of needing user cleanup.  */
     (*trivfs_protid_destroy_hook) (cred);
 
   /* If we hold the only reference to the peropen, try to get rid of it. */
-  pthread_mutex_lock (&cred->po->cntl->lock);
-  if (cred->po->refcnt == 1 && trivfs_peropen_destroy_hook)
+  if (trivfs_peropen_destroy_hook)
     {
-      pthread_mutex_unlock (&cred->po->cntl->lock);
-      (*trivfs_peropen_destroy_hook) (cred->po);
-      pthread_mutex_lock (&cred->po->cntl->lock);
+      if (refcount_deref (&cred->po->refcnt) == 0)
+        {
+          /* Reacquire a reference while we call the hook.  */
+          refcount_unsafe_ref (&cred->po->refcnt);
+          (*trivfs_peropen_destroy_hook) (cred->po);
+          if (refcount_deref (&cred->po->refcnt) == 0)
+            {
+              ports_port_deref (cntl);
+              free (cred->po);
+            }
+        }
     }
-  if (--cred->po->refcnt == 0)
-    {
-      ports_port_deref (cred->po->cntl);
-      free (cred->po);
-    }
-  pthread_mutex_unlock (&cred->po->cntl->lock);
+  else
+    if (refcount_deref (&cred->po->refcnt) == 0)
+      {
+        ports_port_deref (cntl);
+        free (cred->po);
+      }
 
   iohelp_free_iouser (cred->user);
 
   if (cred->realnode != MACH_PORT_NULL)
     mach_port_deallocate (mach_task_self (), cred->realnode);
 }
-
-  
-

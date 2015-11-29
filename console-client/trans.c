@@ -31,6 +31,7 @@
 #include <stdio.h>
 
 #include "trans.h"
+#include "libnetfs/io_S.h"
 
 
 char *netfs_server_name = "console";
@@ -62,8 +63,16 @@ console_demuxer (mach_msg_header_t *inp,
   ret = netfs_demuxer (inp, outp);
   if (ret)
     return ret;
-  
-  user = ports_lookup_port (netfs_port_bucket, inop->msgh_local_port, netfs_protid_class);
+
+  if (MACH_MSGH_BITS_LOCAL (inp->msgh_bits) ==
+      MACH_MSG_TYPE_PROTECTED_PAYLOAD)
+    user = ports_lookup_payload (netfs_port_bucket,
+				 inop->msgh_protected_payload,
+				 netfs_protid_class);
+  else
+    user = ports_lookup_port (netfs_port_bucket,
+			      inop->msgh_local_port,
+			      netfs_protid_class);
   if (!user)
     return ret;
   
@@ -269,7 +278,20 @@ netfs_attempt_lookup (struct iouser *user, struct node *dir,
       {
 	if (cn->node == NULL)
 	  {
-	    struct netnode *nn = calloc (1, sizeof *nn);
+	    struct netnode *nn;
+	    ssize_t size = 0;
+
+	    if (cn->readlink)
+	      {
+		size = cn->readlink (user, NULL, NULL);
+		if (size < 0)
+		  {
+		    err = -size;
+		    goto out;
+		  }
+	      }
+
+	    nn = calloc (1, sizeof *nn);
 	    if (nn == NULL)
 	      {
 		err = ENOMEM;
@@ -283,15 +305,10 @@ netfs_attempt_lookup (struct iouser *user, struct node *dir,
 	    (*node)->nn_stat.st_mode = (netfs_root_node->nn_stat.st_mode & ~S_IFMT & ~S_ITRANS);
 	    (*node)->nn_stat.st_ino = 5;
 	    if (cn->readlink)
-	      {
 		(*node)->nn_stat.st_mode |= S_IFLNK;
-		(*node)->nn_stat.st_size = cn->readlink (user, NULL, NULL);
-	      }
 	    else
-	      {
 		(*node)->nn_stat.st_mode |= S_IFCHR;
-		(*node)->nn_stat.st_size = 0;
-	      }
+	    (*node)->nn_stat.st_size = size;
 	    cn->node = *node;
 	    goto out;
 	  }
@@ -482,7 +499,6 @@ netfs_attempt_mkfile (struct iouser *user, struct node *dir,
 
   *np = netfs_make_node (nn);
   pthread_mutex_lock (&(*np)->lock);
-  pthread_spin_unlock (&netfs_node_refcnt_lock);
 
   return 0;
 }
@@ -509,7 +525,13 @@ netfs_attempt_readlink (struct iouser *user, struct node *np,
 			char *buf)
 {
   if (np->nn->node && np->nn->node->readlink)
-    return np->nn->node->readlink (user, np, buf);
+  {
+    error_t err = np->nn->node->readlink (user, np, buf);
+    if (err < 0)
+      return -err;
+    else
+      return 0;
+  }
   return EOPNOTSUPP;
 }
 
@@ -624,7 +646,6 @@ void netfs_node_norefs (struct node *np)
   if (np->nn->symlink_path)
     free (np->nn->symlink_path);
 
-  pthread_spin_unlock (&netfs_node_refcnt_lock);
   free (np->nn);
   free (np);
 }

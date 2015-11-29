@@ -29,12 +29,10 @@ OBJS 	:= $(SRCS:.c=.o) \
 		       memory_object default_pager memory_object_default exc) \
 	   default_pager_replyUser.o
 
+HURDLIBS:= ihash
 OTHERLIBS:= -lpthread
 LDFLAGS += -static
 
 include ../Makeconf
 
-MIGSFLAGS = -DSEQNOS
-
-# Don't even bother.
-CFLAGS := $(filter-out -Wall,$(CFLAGS))
+MIGSFLAGS = -DSEQNOS -imacros $(srcdir)/mig-mutate.h -DHURD_DEFAULT_PAYLOAD_TO_PORT=1

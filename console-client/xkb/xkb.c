@@ -72,7 +72,7 @@ static group_t latchedgroup;
 static boolctrls bboolctrls;
 
 /* A counter to count how often the modifier was set. This is used
-   when two seperate actions set the same modifier. (example: Left
+   when two separate actions set the same modifier. (example: Left
    Shift and Right Shift.).  */
 modcount_t modsc;
 
@@ -546,7 +546,7 @@ setgroup (keypress_t key, group_t group, int flags)
       else
 	/* XXX: Maybe oldgroup should be restored for !groupAbsolute
 	   too, because wrapgroup might have affected the calculation
-	   and substracting will not undo the set operation. However
+	   and subtracting will not undo the set operation. However
 	   this way of handeling relative groups is better because the
 	   order of releasing keys when multiple relative setgroup keys
 	   are pressed doesn't matter.  */
@@ -606,16 +606,17 @@ clearcontrols (keypress_t key, boolctrls ctrls, int flags)
 static void
 lockcontrols (keypress_t key, boolctrls ctrls, int flags)
 {
+  /* XXX this needs a closer look.  */
   if (!key.rel)
     {
       //setcontrols (key, boolctrls, flags);
-      if (!(flags & noLock));
+      //if (!(flags & noLock))
       //	lboolctrls |= boolctrls;
     }
   else
     {
       //      clearcontrols (key, boolctrls, flags);
-      /* This unlock behaviour doesnt work and sucks, just like the protocol
+      /* This unlock behaviour doesn't work and sucks, just like the protocol
 	 specification where it was documented.  */
       //      if (!(flags & noUnlock))
       //	lboolctrls &= ~keystate[key.keycode].bool;

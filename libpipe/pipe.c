@@ -18,7 +18,7 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
 
-#include <string.h>		/* For bzero() */
+#include <string.h>		/* For memset() */
 #include <assert.h>
 #include <stdlib.h>
 
@@ -58,8 +58,8 @@ pipe_create (struct pipe_class *class, struct pipe **pipe)
   new->write_limit = 16*1024;
   new->write_atomic = 16*1024;
 
-  bzero (&new->read_time, sizeof (new->read_time));
-  bzero (&new->write_time, sizeof (new->write_time));
+  memset (&new->read_time, 0, sizeof(new->read_time));
+  memset (&new->write_time, 0, sizeof(new->write_time));
 
   pthread_cond_init (&new->pending_reads, NULL);
   pthread_cond_init (&new->pending_read_selects, NULL);
@@ -164,16 +164,15 @@ void _pipe_no_readers (struct pipe *pipe)
     pipe_free (pipe);
   else
     {
-      if (! pipe_is_connless (pipe))
+      /* When there is no reader, we have to break pipe even for
+         connection-less pipes.  */
+      pipe->flags |= PIPE_BROKEN;
+      if (pipe->writers)
+	/* Wake up writers for the bad news... */
 	{
-	  pipe->flags |= PIPE_BROKEN;
-	  if (pipe->writers)
-	    /* Wake up writers for the bad news... */
-	    {
-	      pthread_cond_broadcast (&pipe->pending_writes);
-	      pthread_cond_broadcast (&pipe->pending_write_selects);
-	      pipe_select_cond_broadcast (pipe);
-	    }
+	  pthread_cond_broadcast (&pipe->pending_writes);
+	  pthread_cond_broadcast (&pipe->pending_write_selects);
+	  pipe_select_cond_broadcast (pipe);
 	}
       pthread_mutex_unlock (&pipe->lock);
     }
@@ -316,7 +315,11 @@ pipe_send (struct pipe *pipe, int noblock, void *source,
 	   mach_port_t *ports, size_t num_ports,
 	   size_t *amount)
 {
-  error_t err = 0;
+  error_t err;
+
+  /* Nothing to do.  */
+  if (data_len == 0 && control_len == 0 && num_ports == 0)
+    return 0;
 
   err = pipe_wait_writable (pipe, noblock);
   if (err)
@@ -352,7 +355,9 @@ pipe_send (struct pipe *pipe, int noblock, void *source,
 	  if (!err)
 	    err = packet_set_ports (control_packet, ports, num_ports);
 	  if (err)
-	    /* Trash CONTROL_PACKET somehow XXX */;
+	    {
+	      /* Trash CONTROL_PACKET somehow XXX */
+	    }
 	}
     }
 

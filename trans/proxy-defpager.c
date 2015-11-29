@@ -25,16 +25,20 @@
 #include <hurd/paths.h>
 #include <string.h>
 
+#include "libtrivfs/trivfs_io_S.h"
 #include "ourdefault_pager_S.h"
 #include "ourdefault_pager_U.h"
 
 static mach_port_t real_defpager, dev_master;
 
+/* Our port class.  */
+struct port_class *trivfs_protid_class;
+
 static error_t
 allowed (mach_port_t port, int mode)
 {
-  struct trivfs_protid *cred = ports_lookup_port
-    (0, port, trivfs_protid_portclasses[0]);
+  struct trivfs_protid *cred
+    = ports_lookup_port (0, port, trivfs_protid_class);
   if (!cred)
     return MIG_BAD_ID;
   error_t result = (cred->po->openmodes & mode) ? 0 : EACCES;
@@ -45,8 +49,10 @@ allowed (mach_port_t port, int mode)
 kern_return_t
 S_default_pager_object_create (mach_port_t default_pager,
 			       memory_object_t *memory_object,
+			       mach_msg_type_name_t *memory_object_type,
 			       vm_size_t object_size)
 {
+  *memory_object_type = MACH_MSG_TYPE_COPY_SEND;
   error_t err;
   err = allowed (default_pager, O_EXEC)
     ?: default_pager_object_create (real_defpager, memory_object, object_size);
@@ -233,10 +239,16 @@ int
 proxy_defpager_demuxer (mach_msg_header_t *inp,
 			mach_msg_header_t *outp)
 {
-  extern int default_pager_server (mach_msg_header_t *, mach_msg_header_t *);
-
-  return default_pager_server (inp, outp)
-    || trivfs_demuxer (inp, outp);
+  mig_routine_t routine;
+  if ((routine = default_pager_server_routine (inp)) ||
+      (routine = NULL, trivfs_demuxer (inp, outp)))
+    {
+      if (routine)
+        (*routine) (inp, outp);
+      return TRUE;
+    }
+  else
+    return FALSE;
 }
 
 int
@@ -266,8 +278,12 @@ main (int argc, char **argv)
 
   trivfs_fsid = getpid ();
 
+  err = trivfs_add_protid_port_class (&trivfs_protid_class);
+  if (err)
+    error (1, 0, "error creating protid port class");
+
   /* Reply to our parent.  */
-  err = trivfs_startup (bootstrap, 0, 0, 0, 0, 0, &fsys);
+  err = trivfs_startup (bootstrap, 0, 0, 0, trivfs_protid_class, 0, &fsys);
   mach_port_deallocate (mach_task_self (), bootstrap);
   if (err)
     error (4, err, "Contacting parent");

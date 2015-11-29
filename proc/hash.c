@@ -1,21 +1,21 @@
 /* Hash table functions
    Copyright (C) 1993, 1994, 1995, 1996, 1997 Free Software Foundation
 
-This file is part of the GNU Hurd.
+   This file is part of the GNU Hurd.
 
-The GNU Hurd is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   The GNU Hurd is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-The GNU Hurd is distributed in the hope that it will be useful, 
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   The GNU Hurd is distributed in the hope that it will be useful, 
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with the GNU Hurd; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with the GNU Hurd; see the file COPYING.  If not, write to
+   the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* Written by Michael I. Bushnell.  */
 
@@ -73,17 +73,6 @@ task_find_nocreate (task_t task)
 {
   struct proc *p;
   p = hurd_ihash_find (&taskhash, task);
-  return (!p || p->p_dead) ? 0 : p;
-}
-
-/* Find the process corresponding to a given request port. */
-struct proc *
-reqport_find (mach_port_t reqport)
-{
-  struct proc *p;
-  p = ports_lookup_port (proc_bucket, reqport, proc_class);
-  if (p && p->p_dead)
-    ports_port_deref (p);
   return (!p || p->p_dead) ? 0 : p;
 }
 

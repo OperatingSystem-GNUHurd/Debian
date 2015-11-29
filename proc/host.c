@@ -1,21 +1,23 @@
 /* Proc server host management calls
-   Copyright (C) 1992,93,94,96,97,2001,02 Free Software Foundation, Inc.
 
-This file is part of the GNU Hurd.
+   Copyright (C) 1992, 1993, 1994, 1996, 1997, 2001, 2002, 2013 Free Software
+   Foundation, Inc.
 
-The GNU Hurd is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   This file is part of the GNU Hurd.
 
-The GNU Hurd is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   The GNU Hurd is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-You should have received a copy of the GNU General Public License
-along with the GNU Hurd; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   The GNU Hurd is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with the GNU Hurd; see the file COPYING.  If not, write to
+   the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* Written by Michael I. Bushnell.  */
 
@@ -68,8 +70,8 @@ S_proc_getprivports (struct proc *p,
   if (! check_uid (p, 0))
     return EPERM;
 
-  *hostpriv = master_host_port;
-  *devpriv = master_device_port;
+  *hostpriv = _hurd_host_priv;
+  *devpriv = _hurd_device_master;
   return 0;
 }
 
@@ -231,8 +233,7 @@ check_dead_execdata_notify (mach_port_t port)
 
 /* Version information handling.
 
-   A server registers its name and version with
-   startup_register_version.
+   A server registers its name and version with proc_register_version.
 
    The uname release is the most popular version number.
 
@@ -418,7 +419,7 @@ S_proc_register_version (pstruct_t server,
 
   /* No need to check SERVER here; we don't use it. */
 
-  if (credential != master_host_port)
+  if (credential != _hurd_host_priv)
     /* Must be privileged to register for uname. */
     return EPERM;
 

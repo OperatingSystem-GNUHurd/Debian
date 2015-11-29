@@ -196,7 +196,7 @@ ps_get_usr_time (struct proc_stat *ps, struct timeval *tv)
   tv->tv_usec = tvt.microseconds;
 }
 const struct ps_getter ps_usr_time_getter =
-{"usr_time", PSTAT_THREAD_BASIC, ps_get_usr_time};
+{"usr_time", PSTAT_TIMES, ps_get_usr_time};
 
 static void
 ps_get_sys_time (struct proc_stat *ps, struct timeval *tv)
@@ -206,7 +206,7 @@ ps_get_sys_time (struct proc_stat *ps, struct timeval *tv)
   tv->tv_usec = tvt.microseconds;
 }
 const struct ps_getter ps_sys_time_getter =
-{"sys_time", PSTAT_THREAD_BASIC, ps_get_sys_time};
+{"sys_time", PSTAT_TIMES, ps_get_sys_time};
 
 static void
 ps_get_tot_time (struct proc_stat *ps, struct timeval *tv)
@@ -217,7 +217,7 @@ ps_get_tot_time (struct proc_stat *ps, struct timeval *tv)
   tv->tv_usec = tvt.microseconds;
 }
 const struct ps_getter ps_tot_time_getter =
-{"tot_time", PSTAT_THREAD_BASIC, ps_get_tot_time};
+{"tot_time", PSTAT_TIMES, ps_get_tot_time};
 
 static void
 ps_get_start_time (struct proc_stat *ps, struct timeval *tv)
@@ -416,7 +416,7 @@ sprint_frac_value (char *buf,
 
   if (value >= 1000)            /* the integer part */
     value_len = 4;              /* values 1000-1023 */
-  if (value >= 100)		
+  else if (value >= 100)
     value_len = 3;
   else if (value >= 10)
     value_len = 2;
@@ -1036,7 +1036,7 @@ specs_add_alias (struct ps_fmt_specs *specs,
   exp->nominal_fn = alias->nominal_fn ?: src->nominal_fn;
 
   /* Now add the list-end marker.  */
-  bzero (exp + 1, sizeof (*exp));
+  memset (exp + 1, 0, sizeof(*exp));
 
   return exp;
 }

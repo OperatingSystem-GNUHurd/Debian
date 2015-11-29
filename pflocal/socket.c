@@ -92,7 +92,10 @@ S_socket_connect (struct sock_user *user, struct addr *addr)
     return EOPNOTSUPP;
 
   err = addr_get_sock (addr, &peer);
-  if (!err)
+  if (err == EADDRNOTAVAIL)
+    /* The server went away.  */
+    err = ECONNREFUSED;
+  else if (!err)
     {
       struct sock *sock = user->sock;
       struct connq *cq = peer->listen_queue;
@@ -198,7 +201,9 @@ S_socket_accept (struct sock_user *user,
 	      ports_port_deref (peer_addr);
 	    }
 	  else
-	    /* TEAR DOWN THE CONNECTION XXX */;
+	    {
+	      /* TEAR DOWN THE CONNECTION XXX */
+	    }
 	}
     }
 
@@ -293,6 +298,9 @@ S_socket_send (struct sock_user *user, struct addr *dest_addr, int flags,
   if (dest_addr)
     {
       err = addr_get_sock (dest_addr, &dest_sock);
+      if (err == EADDRNOTAVAIL)
+	/* The server went away.  */
+	err = ECONNREFUSED;
       if (err)
 	return err;
       if (sock->pipe_class != dest_sock->pipe_class)
@@ -401,7 +409,7 @@ S_socket_recv (struct sock_user *user,
     /* Setup mach ports for return.  */
     {
       *addr_type = MACH_MSG_TYPE_MAKE_SEND;
-      *ports_type = MACH_MSG_TYPE_COPY_SEND;
+      *ports_type = MACH_MSG_TYPE_MOVE_SEND;
       if (source_addr)
 	{
 	  *addr = ports_get_right (source_addr);
@@ -411,8 +419,7 @@ S_socket_recv (struct sock_user *user,
 	*addr = MACH_PORT_NULL;
     }
 
-  /* Fill in OUT_FLAGS from from any corresponding ones in FLAGS.  */
-  out_flags = 0;
+  *out_flags = 0;
 
   return err;
 }

@@ -94,6 +94,8 @@ diskfs_rename_dir (struct node *fdp, struct node *fnp, const char *fromname,
   ds = buf;
   err = diskfs_lookup (tdp, toname, RENAME, &tnp, ds, tocred);
   assert (err != EAGAIN);	/* <-> assert (TONAME != "..") */
+  if (err && err != ENOENT)
+    goto out;
 
   if (tnp == fnp)
     {
@@ -132,7 +134,7 @@ diskfs_rename_dir (struct node *fdp, struct node *fnp, const char *fromname,
       if (tdp->dn_stat.st_nlink == diskfs_link_max - 1)
 	{
 	  err = EMLINK;
-	  return EMLINK;
+	  goto out;
 	}
       tdp->dn_stat.st_nlink++;
       tdp->dn_set_ctime = 1;
@@ -209,7 +211,12 @@ diskfs_rename_dir (struct node *fdp, struct node *fnp, const char *fromname,
   if (tmpnp)
     diskfs_nrele (tmpnp);
   if (err)
-    goto out;
+    {
+      assert (!tmpnp);
+      /* diskfs_lookup has not locked fnp then, do not unlock it. */
+      fnp = NULL;
+      goto out;
+    }
 
   diskfs_dirremove (fdp, fnp, fromname, ds);
   ds = 0;

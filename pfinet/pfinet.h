@@ -83,17 +83,8 @@ void ip_rt_del (u_long, struct device *);
 struct sock;
 error_t tcp_tiocinq (struct sock *sk, mach_msg_type_number_t *amount);
 
-
-struct sock_user *begin_using_socket_port (socket_t);
-struct sock_addr *begin_using_sockaddr_port (socket_t);
-void end_using_socket_port (struct sock_user *);
-void end_using_sockaddr_port (struct sock_addr *);
 void clean_addrport (void *);
 void clean_socketport (void *);
-
-/* MiG bogosity */
-typedef struct sock_user *sock_user_t;
-typedef struct sock_addr *sock_addr_t;
 
 /* pfinet6 port classes. */
 enum {
@@ -101,11 +92,8 @@ enum {
   PORTCLASS_INET6,
 };
 
-extern struct port_class *trivfs_protid_portclasses[];
-extern int trivfs_protid_nportclasses;
-
-extern struct port_class *trivfs_cntl_portclasses[2];
-extern int trivfs_cntl_nportclasses;
+extern struct port_class *pfinet_protid_portclasses[2];
+extern struct port_class *pfinet_cntl_portclasses[2];
 
 /* Which portclass to install on the bootstrap port. */
 extern int pfinet_bootstrap_portclass;

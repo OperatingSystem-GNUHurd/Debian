@@ -25,11 +25,32 @@
    scope.  */
 struct user_pager_info;
 
-/* This de-muxer function is for use within libports_demuxer. */
-/* INP is a message we've received; OUTP will be filled in with
-   a reply message.  */
-int pager_demuxer (mach_msg_header_t *inp,
-		   mach_msg_header_t *outp);
+struct pager_requests;
+
+/* Start the worker threads libpager uses to service requests. If no
+   error is returned, *requests will be a valid pointer, else it will be
+   set to NULL.  */
+error_t
+pager_start_workers (struct port_bucket *pager_bucket,
+		     struct pager_requests **requests);
+
+/* Inhibit the worker threads libpager uses to service requests,
+   blocking until all requests sent before this function is called have
+   finished.
+   Note that RPCs will not be inhibited, so new requests will
+   queue up, but will not be handled until the workers are resumed. If
+   RPCs should be inhibited as well, call ports_inhibit_bucket_rpcs with
+   the bucket used to create the workers before calling this. However,
+   inhibiting RPCs and not calling this is generally insufficient, as
+   libports is unaware of our internal worker pool, and will return once
+   all the RPCs have been queued, before they have been handled by a
+   worker thread.  */
+error_t
+pager_inhibit_workers (struct pager_requests *requests);
+
+/* Resume the worker threads libpager uses to service requests.  */
+void
+pager_resume_workers (struct pager_requests *requests);
 
 /* Create a new pager.  The pager will have a port created for it
    (using libports, in BUCKET) and will be immediately ready
@@ -111,9 +132,9 @@ pager_offer_page (struct pager *pager,
 		  vm_address_t buf);  
 
 /* Change the attributes of the memory object underlying pager PAGER.
-   Args MAY_CACHE and COPY_STRATEGY are as for
-   memory_object_change_atributes.  Wait for the kernel to report completion
-   off WAIT is set.*/
+   Arguments MAY_CACHE and COPY_STRATEGY are as for
+   memory_object_change_attributes.  Wait for the kernel to report
+   completion if WAIT is set.  */
 void
 pager_change_attributes (struct pager *pager,
 			 boolean_t may_cache,

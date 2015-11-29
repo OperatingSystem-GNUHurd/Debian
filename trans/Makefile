@@ -1,6 +1,6 @@
 #
 #   Copyright (C) 1994, 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2006, 2007,
-#   2008 Free Software Foundation, Inc.
+#   2008, 2013, 2014 Free Software Foundation, Inc.
 #
 #   This program is free software; you can redistribute it and/or
 #   modify it under the terms of the GNU General Public License as
@@ -31,7 +31,25 @@ OBJS = $(SRCS:.c=.o) fsysServer.o ifsockServer.o passwordServer.o \
 	device_replyServer.o elfcore.o
 HURDLIBS = ports netfs trivfs iohelp fshelp pipe ihash shouldbeinlibc
 LDLIBS += -lpthread
-password-LDLIBS = $(LIBCRYPT)
+password-LDLIBS = -lcrypt
+password-MIGSFLAGS=\
+    "-DIO_INTRAN=trivfs_protid_t trivfs_begin_using_protid (io_t)" \
+    "-DIO_INTRAN_PAYLOAD=trivfs_protid_t trivfs_begin_using_protid_payload" \
+    "-DIO_DESTRUCTOR=trivfs_end_using_protid (trivfs_protid_t)" \
+    "-DPASSWORD_IMPORTS=import \"../libtrivfs/mig-decls.h\";"
+
+ifsock-MIGSFLAGS=\
+    "-DFILE_INTRAN=trivfs_protid_t trivfs_begin_using_protid (io_t)" \
+    "-DFILE_INTRAN_PAYLOAD=trivfs_protid_t trivfs_begin_using_protid_payload" \
+    "-DFILE_DESTRUCTOR=trivfs_end_using_protid (trivfs_protid_t)" \
+    "-DIFSOCK_IMPORTS=import \"../libtrivfs/mig-decls.h\";"
+
+# device_replyServer is used by the streamio translator.
+device_reply-MIGSFLAGS="-DMACH_PAYLOAD_TO_PORT=ports_payload_get_name"
+
+# fsysServer is only used by the symlink translator which does not use
+# libports.  Disable the default payload to port conversion.
+fsys-MIGSFLAGS = "-DHURD_DEFAULT_PAYLOAD_TO_PORT=1"
 
 include ../Makeconf
 
@@ -55,7 +73,7 @@ magic: ../libiohelp/libiohelp.a
 hello: ../libtrivfs/libtrivfs.a ../libfshelp/libfshelp.a ../libports/libports.a ../libihash/libihash.a
 fakeroot: ../libnetfs/libnetfs.a ../libfshelp/libfshelp.a ../libiohelp/libiohelp.a ../libports/libports.a ../libihash/libihash.a
 remap: ../libtrivfs/libtrivfs.a ../libfshelp/libfshelp.a ../libports/libports.a ../libihash/libihash.a
-mtab: ../libtrivfs/libtrivfs.a ../libfshelp/libfshelp.a ../libports/libports.a ../libihash/libihash.a fsysUser.o
+mtab: ../libtrivfs/libtrivfs.a ../libfshelp/libfshelp.a ../libports/libports.a ../libihash/libihash.a fsUser.o
 $(targets): ../libshouldbeinlibc/libshouldbeinlibc.a
 
 $(targets): %: %.o

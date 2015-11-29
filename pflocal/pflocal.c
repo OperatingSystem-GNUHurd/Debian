@@ -38,21 +38,24 @@ int trivfs_support_read = 0;
 int trivfs_support_write = 0;
 int trivfs_support_exec = 0;
 int trivfs_allow_open = 0;
-
-/* Trivfs noise.  */
-struct port_class *trivfs_protid_portclasses[1];
-struct port_class *trivfs_cntl_portclasses[1];
-int trivfs_protid_nportclasses = 1;
-int trivfs_cntl_nportclasses = 1;
 
 /* ---------------------------------------------------------------- */
+#include "socket_S.h"
 
 /* A demuxer to separate out pf-level operations on our node.  */
 static int
 pf_demuxer (mach_msg_header_t *inp, mach_msg_header_t *outp)
 {
-  extern int socket_server (mach_msg_header_t *inp, mach_msg_header_t *outp);
-  return socket_server (inp, outp) || trivfs_demuxer (inp, outp);
+  mig_routine_t routine;
+  if ((routine = socket_server_routine (inp)) ||
+      (routine = NULL, trivfs_demuxer (inp, outp)))
+    {
+      if (routine)
+        (*routine) (inp, outp);
+      return TRUE;
+    }
+  else
+    return FALSE;
 }
 
 
@@ -61,6 +64,7 @@ main(int argc, char *argv[])
 {
   error_t err;
   mach_port_t bootstrap;
+  struct trivfs_control *fsys;
 
   if (argc > 1)
     {
@@ -72,24 +76,17 @@ main(int argc, char *argv[])
   if (bootstrap == MACH_PORT_NULL)
     error(2, 0, "Must be started as a translator");
 
-  pf_port_bucket = ports_create_bucket ();
-
-  trivfs_cntl_portclasses[0] = ports_create_class (trivfs_clean_cntl, 0);
-  trivfs_protid_portclasses[0] = ports_create_class (trivfs_clean_protid, 0);
-
   /* Prepare to create sockets.  */
   err = sock_global_init ();
   if (err)
     error(3, err, "Initializing");
 
   /* Reply to our parent */
-  err =
-    trivfs_startup (bootstrap, 0,
-		    trivfs_cntl_portclasses[0], pf_port_bucket,
-		    trivfs_protid_portclasses[0], pf_port_bucket,
-		    NULL);
+  err = trivfs_startup (bootstrap, 0, 0, 0, 0, 0, &fsys);
   if (err)
     error(3, err, "Contacting parent");
+
+  pf_port_bucket = fsys->pi.bucket;
 
   /* Launch. */
   do

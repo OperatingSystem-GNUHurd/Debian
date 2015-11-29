@@ -100,6 +100,11 @@ struct node
   struct dirmod *dirmod_reqs;
 };
 
+struct netfs_control
+{
+  struct port_info pi;
+};
+
 /* The user must define this variable.  Set this to the name of the
    filesystem server. */
 extern char *netfs_server_name;
@@ -315,10 +320,11 @@ error_t netfs_file_get_storage_info (struct iouser *cred,
 				     mach_msg_type_number_t *data_len);
 
 /* The user may define this function.  The function must set source to
-   the source device of the filesystem. The function may return an
-   EOPNOTSUPP to indicate that the concept of a source device is not
-   applicable. The default function always returns EOPNOTSUPP. */
-error_t netfs_get_source (char *source);
+   the source of CRED. The function may return an EOPNOTSUPP to
+   indicate that the concept of a source device is not applicable. The
+   default function always returns EOPNOTSUPP. */
+error_t netfs_get_source (struct protid *cred,
+                          char *source, size_t source_len);
 
 /* Option parsing */
 
@@ -365,6 +371,33 @@ extern int netfs_maxsymlinks;
    structure.  The new node is not locked and has a single reference.
    If an error occurs, NULL is returned.  */
 struct node *netfs_make_node (struct netnode *);
+
+/* Create a new node structure.  Also allocate SIZE bytes for the
+   netnode.  The address of the netnode can be obtained using
+   netfs_node_netnode.  The new node will have one hard reference and
+   no light references.  If an error occurs, NULL is returned.  */
+struct node *netfs_make_node_alloc (size_t size);
+
+/* To avoid breaking the ABI whenever sizeof (struct node) changes, we
+   explicitly provide the size.  The following two functions will use
+   this value for offset calculations.  */
+extern const size_t _netfs_sizeof_struct_node;
+
+/* Return the address of the netnode for NODE.  NODE must have been
+   allocated using netfs_make_node_alloc.  */
+static inline struct netnode *
+netfs_node_netnode (struct node *node)
+{
+  return (struct netnode *) ((char *) node + _netfs_sizeof_struct_node);
+}
+
+/* Return the address of the node for NETNODE.  NETNODE must have been
+   allocated using netfs_make_node_alloc.  */
+static inline struct node *
+netfs_netnode_node (struct netnode *netnode)
+{
+  return (struct node *) ((char *) netnode - _netfs_sizeof_struct_node);
+}
 
 /* Whenever node->references is to be touched, this lock must be
    held.  Cf. netfs_nrele, netfs_nput, netfs_nref and netfs_drop_node.  */
@@ -436,6 +469,7 @@ extern auth_t netfs_auth_server_port;
 
 /* Mig gook. */
 typedef struct protid *protid_t;
+typedef struct netfs_control *control_t;
 
 
 #endif /* _HURD_NETFS_H_ */

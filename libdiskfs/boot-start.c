@@ -2,21 +2,21 @@
    Copyright (C) 1993,94,95,96,97,98,99,2000,01,02,10,11
    	Free Software Foundation, Inc.
 
-This file is part of the GNU Hurd.
+   This file is part of the GNU Hurd.
 
-The GNU Hurd is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   The GNU Hurd is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-The GNU Hurd is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   The GNU Hurd is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with the GNU Hurd; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with the GNU Hurd; see the file COPYING.  If not, write to
+   the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* Written by Michael I. Bushnell.  */
 
@@ -33,7 +33,8 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include <string.h>
 #include <argz.h>
 #include <error.h>
-#include <pids.h>
+#include "exec_S.h"
+#include "exec_startup_S.h"
 #include "fsys_S.h"
 #include "fsys_reply_U.h"
 
@@ -44,7 +45,7 @@ static task_t parent_task = MACH_PORT_NULL;
 static pthread_mutex_t execstartlock;
 static pthread_cond_t execstarted;
 
-const char *diskfs_boot_init_program = _HURD_INIT;
+const char *diskfs_boot_init_program = _HURD_STARTUP;
 
 static void start_execserver ();
 
@@ -60,6 +61,7 @@ get_console ()
     return MACH_PORT_NULL;
 
   err = device_open (device_master, D_WRITE | D_READ, "console", &console);
+  mach_port_deallocate (mach_task_self (), device_master);
   if (err)
     return MACH_PORT_NULL;
 
@@ -182,7 +184,7 @@ diskfs_start_bootstrap ()
       /* Attempt to set the active translator for the exec server so that
 	 filesystems other than the bootstrap can find it.  */
       err = dir_lookup (root_pt, _SERVERS_EXEC, O_NOTRANS, 0,
-			&retry, pathbuf, &execnode);
+			&retry, retry_name, &execnode);
       if (err)
 	{
 	  error (0, err, "cannot set translator on %s", _SERVERS_EXEC);
@@ -226,8 +228,9 @@ diskfs_start_bootstrap ()
       while (*initname == '/')
 	initname++;
 
-      exec_argvlen = asprintf (&exec_argv, "/%s%c", initname, '\0');
-      assert (exec_argvlen != -1);
+      int len = asprintf (&exec_argv, "/%s%c", initname, '\0');
+      assert (len != -1);
+      exec_argvlen = (size_t) len;
       err = argz_add_sep (&exec_argv, &exec_argvlen,
 			  diskfs_boot_command_line, ' ');
       assert_perror (err);
@@ -287,6 +290,7 @@ diskfs_start_bootstrap ()
   if (_diskfs_boot_pause)
     {
       printf ("pausing for %s...\n", exec_argv);
+      fflush (stdout);
       getc (stdin);
     }
   printf (" %s", basename (exec_argv));
@@ -310,7 +314,7 @@ diskfs_start_bootstrap ()
    call (as does any task) to get its state.  We can't give it all of
    its ports (we'll provide those with a later call to exec_init).  */
 kern_return_t
-diskfs_S_exec_startup_get_info (mach_port_t port,
+diskfs_S_exec_startup_get_info (struct bootinfo *upt,
 				vm_address_t *user_entry,
 				vm_address_t *phdr_data,
 				vm_size_t *phdr_size,
@@ -333,12 +337,10 @@ diskfs_S_exec_startup_get_info (mach_port_t port,
   error_t err;
   mach_port_t *portarray, *dtable;
   mach_port_t rootport;
-  struct ufsport *upt;
   struct protid *rootpi;
   struct peropen *rootpo;
 
-  if (!(upt = ports_lookup_port (diskfs_port_bucket, port,
-				 diskfs_execboot_class)))
+  if (! upt)
     return EOPNOTSUPP;
 
   *user_entry = 0;
@@ -379,13 +381,12 @@ diskfs_S_exec_startup_get_info (mach_port_t port,
   portarray[INIT_PORT_AUTH] = MACH_PORT_NULL;
   portarray[INIT_PORT_PROC] = MACH_PORT_NULL;
   portarray[INIT_PORT_CTTYID] = MACH_PORT_NULL;
-  portarray[INIT_PORT_BOOTSTRAP] = port; /* use the same port */
+  portarray[INIT_PORT_BOOTSTRAP] = upt->pi.port_right; /* use the same port */
 
   *portarraypoly = MACH_MSG_TYPE_MAKE_SEND;
 
   *dtablepoly = MACH_MSG_TYPE_COPY_SEND;
 
-  ports_port_deref (upt);
   return 0;
 }
 
@@ -439,17 +440,16 @@ diskfs_execboot_fsys_startup (mach_port_t port, int flags,
 /* Called by init to get the privileged ports as described
    in <hurd/fsys.defs>. */
 kern_return_t
-diskfs_S_fsys_getpriv (mach_port_t port,
+diskfs_S_fsys_getpriv (struct diskfs_control *init_bootstrap_port,
 		       mach_port_t reply, mach_msg_type_name_t reply_type,
 		       mach_port_t *host_priv, mach_msg_type_name_t *hp_type,
 		       mach_port_t *dev_master, mach_msg_type_name_t *dm_type,
 		       mach_port_t *fstask, mach_msg_type_name_t *task_type)
 {
   error_t err;
-  struct port_info *init_bootstrap_port =
-    ports_lookup_port (diskfs_port_bucket, port, diskfs_initboot_class);
 
-  if (!init_bootstrap_port)
+  if (!init_bootstrap_port
+      || init_bootstrap_port->pi.class != diskfs_initboot_class)
     return EOPNOTSUPP;
 
   err = get_privileged_ports (host_priv, dev_master);
@@ -460,20 +460,17 @@ diskfs_S_fsys_getpriv (mach_port_t port,
       *task_type = MACH_MSG_TYPE_COPY_SEND;
     }
 
-  ports_port_deref (init_bootstrap_port);
-
   return err;
 }
 
 /* Called by init to give us ports to the procserver and authserver as
    described in <hurd/fsys.defs>. */
 kern_return_t
-diskfs_S_fsys_init (mach_port_t port,
+diskfs_S_fsys_init (struct diskfs_control *pt,
 		    mach_port_t reply, mach_msg_type_name_t replytype,
 		    mach_port_t procserver,
 		    mach_port_t authhandle)
 {
-  struct port_infe *pt;
   static int initdone = 0;
   mach_port_t host, startup;
   error_t err;
@@ -481,10 +478,10 @@ diskfs_S_fsys_init (mach_port_t port,
   struct protid *rootpi;
   struct peropen *rootpo;
 
-  pt = ports_lookup_port (diskfs_port_bucket, port, diskfs_initboot_class);
-  if (!pt)
+  if (!pt
+      || pt->pi.class != diskfs_initboot_class)
     return EOPNOTSUPP;
-  ports_port_deref (pt);
+  
   if (initdone)
     return EOPNOTSUPP;
   initdone = 1;
@@ -619,9 +616,12 @@ diskfs_S_fsys_init (mach_port_t port,
 
   proc_register_version (procserver, host, diskfs_server_name, "",
 			 diskfs_server_version);
+  mach_port_deallocate (mach_task_self (), procserver);
 
-  err = proc_getmsgport (procserver, HURD_PID_STARTUP, &startup);
-  if (!err)
+  startup = file_name_lookup (_SERVERS_STARTUP, 0, 0);
+  if (startup == MACH_PORT_NULL)
+    error (0, errno, "%s", _SERVERS_STARTUP);
+  else
     {
       startup_essential_task (startup, mach_task_self (), MACH_PORT_NULL,
 			      diskfs_server_name, host);
@@ -629,7 +629,6 @@ diskfs_S_fsys_init (mach_port_t port,
     }
 
   mach_port_deallocate (mach_task_self (), host);
-  mach_port_deallocate (mach_task_self (), procserver);
 
   _diskfs_init_completed ();
 
@@ -652,15 +651,19 @@ start_execserver (void)
   assert_perror (err);
   right = ports_get_send_right (execboot_info);
   ports_port_deref (execboot_info);
-  task_set_special_port (diskfs_exec_server_task, TASK_BOOTSTRAP_PORT, right);
-  mach_port_deallocate (mach_task_self (), right);
+  err = task_set_special_port (diskfs_exec_server_task, TASK_BOOTSTRAP_PORT, right);
+  assert_perror (err);
+  err = mach_port_deallocate (mach_task_self (), right);
+  assert_perror (err);
 
   if (_diskfs_boot_pause)
     {
       printf ("pausing for exec\n");
+      fflush (stdout);
       getc (stdin);
     }
-  task_resume (diskfs_exec_server_task);
+  err = task_resume (diskfs_exec_server_task);
+  assert_perror (err);
 
   printf (" exec");
   fflush (stdout);

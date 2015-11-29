@@ -30,6 +30,8 @@
 #include "auth_request_U.h"
 #include "interrupt_S.h"
 
+#include "../auth/auth.h"
+
 /* Auth handles are server ports with sets of ids.  */
 struct authhandle
   {
@@ -48,7 +50,7 @@ create_authhandle (struct authhandle **new)
   error_t err = ports_create_port (authhandle_portclass, auth_bucket,
 				   sizeof **new, new);
   if (! err)
-    bzero (&(*new)->euids, (void *) &(*new)[1] - (void *) &(*new)->euids);
+    memset (&(*new)->euids, 0, (void *)&(*new)[1] - (void *)&(*new)->euids);
   return err;
 }
 
@@ -62,14 +64,6 @@ destroy_authhandle (void *p)
   idvec_free_contents (&h->egids);
   idvec_free_contents (&h->auids);
   idvec_free_contents (&h->agids);
-}
-
-/* Called by server stub functions.  */
-
-authhandle_t
-auth_port_to_handle (auth_t auth)
-{
-  return ports_lookup_port (auth_bucket, auth, authhandle_portclass);
 }
 
 /* id management.  */
@@ -299,14 +293,21 @@ S_interrupt_operation (mach_port_t port, mach_port_seqno_t seqno)
   return interrupt_operation (real_auth_port, 0);
 }
 
+#include "../libports/notify_S.h"
+
 static int
 auth_demuxer (mach_msg_header_t *inp, mach_msg_header_t *outp)
 {
-  extern int auth_server (mach_msg_header_t *inp, mach_msg_header_t *outp);
-  extern int interrupt_server (mach_msg_header_t *inp, mach_msg_header_t *);
-  return (auth_server (inp, outp) ||
-	  interrupt_server (inp, outp) ||
-	  ports_notify_server (inp, outp));
+  mig_routine_t routine;
+  if ((routine = auth_server_routine (inp)) ||
+      (routine = interrupt_server_routine (inp)) ||
+      (routine = ports_notify_server_routine (inp)))
+    {
+      (*routine) (inp, outp);
+      return TRUE;
+    }
+  else
+    return FALSE;
 }
 
 

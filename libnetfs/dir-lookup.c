@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 1995,96,97,98,99,2000,01,02,13
+   Copyright (C) 1995,96,97,98,99,2000,01,02,13,14
      Free Software Foundation, Inc.
    Written by Michael I. Bushnell, p/BSG.
 
@@ -66,6 +66,10 @@ netfs_S_dir_lookup (struct protid *diruser,
   relpath = strdup (filename);
   if (! relpath)
     return ENOMEM;
+
+  /* Keep a pointer to the start of the filename for length
+     calculations.  */
+  char *filename_start = filename;
 
   *retry_port_type = MACH_MSG_TYPE_MAKE_SEND;
   *do_retry = FS_RETRY_NORMAL;
@@ -256,10 +260,16 @@ netfs_S_dir_lookup (struct protid *diruser,
 		}
 	    }
 
+	  boolean_t register_translator = 0;
 	  if (! error)
 	    {
 	      dirport = ports_get_send_right (newpi);
-	      ports_port_deref (newpi);
+
+	      /* Check if an active translator is currently running.  If
+		 not, fshelp_fetch_root will start one.  In that case, we
+		 need to register it in the list of active
+		 translators.  */
+	      register_translator = np->transbox.active == MACH_PORT_NULL;
 
 	      error = fshelp_fetch_root (&np->transbox, diruser->po,
 					 dirport,
@@ -277,16 +287,52 @@ netfs_S_dir_lookup (struct protid *diruser,
 
 	  if (error != ENOENT)
 	    {
-	      netfs_nrele (dnp);
-	      netfs_nput (np);
 	      *retry_port_type = MACH_MSG_TYPE_MOVE_SEND;
 	      if (!lastcomp && !error)
 		{
 		  strcat (retry_name, "/");
 		  strcat (retry_name, nextname);
 		}
-	      return error;
+
+	      if (register_translator)
+		{
+		  char *translator_path = strdupa (relpath);
+		  char *complete_path;
+		  if (nextname != NULL)
+		    {
+		      /* This was not the last path component.
+			 NEXTNAME points to the next component, locate
+			 the end of the current component and use it
+			 to trim TRANSLATOR_PATH.  */
+		      char *end = nextname;
+		      while (*end != 0)
+			end--;
+		      translator_path[end - filename_start] = '\0';
+		    }
+
+		  if (diruser->po->path == NULL || !strcmp (diruser->po->path,"."))
+		      /* diruser is the root directory.  */
+		      complete_path = translator_path;
+		  else
+		      asprintf (&complete_path, "%s/%s", diruser->po->path, translator_path);
+
+		  error = fshelp_set_active_translator (&newpi->pi,
+							complete_path,
+							np->transbox.active);
+		  if (complete_path != translator_path)
+		    free(complete_path);
+		  if (error)
+		    {
+		      ports_port_deref (newpi);
+		      goto out;
+		    }
+		}
+
+	      ports_port_deref (newpi);
+	      goto out;
 	    }
+
+	  ports_port_deref (newpi);
 
 	  /* ENOENT means there was a hiccup, and the translator vanished
 	     while NP was unlocked inside fshelp_fetch_root; continue as normal. */
@@ -398,7 +444,7 @@ netfs_S_dir_lookup (struct protid *diruser,
     }
 
   free (newpi->po->path);
-  if (diruser->po->path == NULL)
+  if (diruser->po->path == NULL || !strcmp (diruser->po->path,"."))
     {
       /* diruser is the root directory.  */
       newpi->po->path = relpath;

@@ -23,22 +23,19 @@
    when a memory_object_lock_request call has completed.  Read this
    in combination with lock-object.c.  */
 kern_return_t
-_pager_seqnos_memory_object_lock_completed (mach_port_t object,
-					    mach_port_seqno_t seqno,
+_pager_S_memory_object_lock_completed (struct pager *p,
 					    mach_port_t control,
 					    vm_offset_t offset,
 					    vm_size_t length)
 {
   error_t err = 0;
-  struct pager *p;
   struct lock_request *lr;
 
-  p = ports_lookup_port (0, object, _pager_class);
-  if (!p)
+  if (!p
+      || p->port.class != _pager_class)
     return EOPNOTSUPP;
 
   pthread_mutex_lock (&p->interlock);
-  _pager_wait_for_seqno (p, seqno);
 
   if (control != p->memobjcntl)
     {
@@ -60,9 +57,7 @@ _pager_seqnos_memory_object_lock_completed (mach_port_t object,
       }
       
  out:
-  _pager_release_seqno (p, seqno);
   pthread_mutex_unlock (&p->interlock);
-  ports_port_deref (p);
 
   return err;
 }

@@ -26,13 +26,9 @@ PC_KBD_SO_SRCS = pc-kbd.c kbd-repeat.c
 PC_MOUSE_SO_SRCS = pc-mouse.c
 GENERIC_SPEAKER_SO_SRCS = generic-speaker.c
 CURRENT_VCS_SO_SRCS = current-vcs.c
-ifneq ($(LIBNCURSESW),)
-NCURSESW_SO_SRCS = ncursesw.c
-endif
 SRCS = $(CONSOLE_SRCS) \
   $(VGA_SO_SRCS) $(PC_KBD_SO_SRCS) $(PC_MOUSE_SO_SRCS) \
-  $(GENERIC_SPEAKER_SO_SRCS) $(CURRENT_VCS_SO_SRCS) $(NCURSESW_SO_SRCS) \
-  $(XKB_SRCS)
+  $(GENERIC_SPEAKER_SO_SRCS) $(CURRENT_VCS_SO_SRCS) $(XKB_SRCS)
 
 VPATH += $(srcdir)/xkb
 OBJS = $(addsuffix .o,$(basename $(notdir $(SRCS)))) kdioctlServer.o
@@ -48,10 +44,6 @@ XKB_DATA_FILES = keymap/hurd types/hurd symbols/hurd
 
 # In seeking, thou shalt find it!
 CPPFLAGS += -DQUAERENDO_INVENIETIS
-
-DIST_FILES = xkb/HACKING xkb/MISSING-FEATURES xkb/README xkb/TODO \
-             xkb/kstoucs_map.sh \
-             $(addprefix xkb/xkb-data/, $(XKB_DATA_FILES))
 
 include ../Makeconf
 
@@ -75,6 +67,8 @@ generic_speaker.so.$(hurd-version): $(patsubst %.c,%_pic.o,$(GENERIC_SPEAKER_SO_
 current_vcs.so.$(hurd-version): $(patsubst %.c,%_pic.o,$(CURRENT_VCS_SO_SRCS))
 
 ifneq ($(LIBNCURSESW),)
+NCURSESW_SO_SRCS = ncursesw.c
+SRCS += $(NCURSESW_SO_SRCS)
 modules += ncursesw
 ncursesw.so.$(hurd-version): $(patsubst %.c,%_pic.o,$(NCURSESW_SO_SRCS))
 ncursesw-CPPFLAGS = $(NCURSESW_INCLUDE)

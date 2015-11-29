@@ -42,10 +42,8 @@ pager_create (struct user_pager_info *upi,
   p->notify_on_evict = notify_on_evict;
   p->memobjcntl = MACH_PORT_NULL;
   p->memobjname = MACH_PORT_NULL;
-  p->seqno = -1;
   p->noterm = 0;
   p->termwaiting = 0;
-  p->waitingforseqno = 0;
   p->pagemap = 0;
   p->pagemapsize = 0;
 
@@ -62,5 +60,3 @@ create_class ()
   _pager_class = ports_create_class (_pager_clean, _pager_real_dropweak);
   (void) &create_class;		/* Avoid warning */
 }
-
-

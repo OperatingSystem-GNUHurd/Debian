@@ -40,7 +40,6 @@ static char *targets;
 static size_t targets_len;
 static int readonly;
 static int verbose;
-static int passive_flags = FS_TRANS_SET;
 static int active_flags = FS_TRANS_SET;
 static int goaway_flags;
 static int source_goaway;
@@ -139,7 +138,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
   return 0;
 }
 
-static const char doc[] = "Stop active and remove passive translators";
+static const char doc[] = "Stop active filesystem translators";
 static const char args_doc[] = "DEVICE|DIRECTORY [DEVICE|DIRECTORY ...]";
 
 static struct argp fstab_argp_mtab; /* Slightly modified version.  */
@@ -200,7 +199,7 @@ do_umount (struct fs *fs)
     }
 
   if (verbose)
-    printf ("settrans -apg%s%s %s\n",
+    printf ("settrans -ag%s%s %s\n",
 	    goaway_flags & FSYS_GOAWAY_NOSYNC? "S": "",
 	    goaway_flags & FSYS_GOAWAY_FORCE? "f": "",
 	    fs->mntent.mnt_dir);
@@ -208,7 +207,7 @@ do_umount (struct fs *fs)
   if (! fake)
     {
       err = file_set_translator (node,
-				 passive_flags, active_flags, goaway_flags,
+				 0, active_flags, goaway_flags,
 				 NULL, 0,
 				 MACH_PORT_NULL, MACH_MSG_TYPE_COPY_SEND);
       if (! err)
@@ -236,6 +235,8 @@ do_umount (struct fs *fs)
 					 NULL, 0,
 					 MACH_PORT_NULL,
 					 MACH_MSG_TYPE_COPY_SEND);
+	      if (!(goaway_flags & FSYS_GOAWAY_FORCE))
+		err = 0;
 	      if (err)
 		error (0, err, "%s", fs->mntent.mnt_fsname);
 
@@ -293,8 +294,6 @@ main (int argc, char **argv)
 	    fs = fstab_find_device (fstab, t);
 	    if (! fs)
 	      {
-		error (0, 0, "could not find entry for: %s", t);
-
 		/* As last resort, just assume it is the mountpoint.  */
 		struct mntent m =
 		  {
@@ -308,7 +307,7 @@ main (int argc, char **argv)
 
 		err = fstab_add_mntent (fstab, &m, &fs);
 		if (err)
-		  error (2, err, "%s", t);
+		  error (2, err, "could not find entry for: %s", t);
 	      }
 	  }
 

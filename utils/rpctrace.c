@@ -1,7 +1,7 @@
 /* Trace RPCs sent to selected ports
 
-   Copyright (C) 1998, 1999, 2001, 2002, 2003, 2005, 2006, 2009, 2011
-   Free Software Foundation, Inc.
+   Copyright (C) 1998, 1999, 2001, 2002, 2003, 2005, 2006, 2009, 2011,
+   2013 Free Software Foundation, Inc.
 
    This file is part of the GNU Hurd.
 
@@ -26,9 +26,7 @@
 #include <mach/message.h>
 #include <assert.h>
 #include <fcntl.h>
-#include <fnmatch.h>
 #include <sys/stat.h>
-#include <dirent.h>
 #include <unistd.h>
 #include <argp.h>
 #include <error.h>
@@ -41,24 +39,15 @@
 #include <argz.h>
 #include <envz.h>
 
-const char *argp_program_version = STANDARD_HURD_VERSION (rpctrace);
+#include "msgids.h"
 
-#define STD_MSGIDS_DIR DATADIR "/msgids/"
+const char *argp_program_version = STANDARD_HURD_VERSION (rpctrace);
 
 static unsigned strsize = 80;
 
-#define OPT_NOSTDINC -1
 static const struct argp_option options[] =
 {
   {"output", 'o', "FILE", 0, "Send trace output to FILE instead of stderr."},
-  {"nostdinc", OPT_NOSTDINC, 0, 0, 
-   "Do not search inside the standard system directory, `" STD_MSGIDS_DIR
-   "', for `.msgids' files."},
-  {"rpc-list", 'i', "FILE", 0,
-   "Read FILE for assocations of message ID numbers to names."},
-  {0, 'I', "DIR", 0,
-   "Add the directory DIR to the list of directories to be searched for files "
-   "containing message ID numbers."},
   {0, 's', "SIZE", 0, "Specify the maximum string size to print (the default is 80)."},
   {0, 'E', "var[=value]", 0,
    "Set/change (var=value) or remove (var) an environment variable among the "
@@ -71,32 +60,12 @@ static const struct argp_option options[] =
 static const char args_doc[] = "COMMAND [ARG...]";
 static const char doc[] = "Trace Mach Remote Procedure Calls.";
 
-/* The msgid_ihash table maps msgh_id values to names.  */
-
-struct msgid_info
-{
-  char *name;
-  char *subsystem;
-};
-
-static void
-msgid_ihash_cleanup (void *element, void *arg)
-{
-  struct msgid_info *info = element;
-  free (info->name);
-  free (info->subsystem);
-  free (info);
-}
-
 /* This structure stores the information of the traced task. */
 struct task_info
 {
   task_t task;
   boolean_t threads_wrapped;	/* All threads of the task has been wrapped? */
 };
-
-static struct hurd_ihash msgid_ihash
-  = HURD_IHASH_INITIALIZER (HURD_IHASH_NO_LOCP);
 
 static struct hurd_ihash task_ihash
   = HURD_IHASH_INITIALIZER (HURD_IHASH_NO_LOCP);
@@ -124,86 +93,6 @@ void
 remove_task (task_t task)
 {
   hurd_ihash_remove (&task_ihash, task);
-}
-
-/* Parse a file of RPC names and message IDs as output by mig's -list
-   option: "subsystem base-id routine n request-id reply-id".  Put each
-   request-id value into `msgid_ihash' with the routine name as its value.  */
-static void
-parse_msgid_list (const char *filename)
-{
-  FILE *fp;
-  char *buffer = NULL;
-  size_t bufsize = 0;
-  unsigned int lineno = 0;
-  char *name, *subsystem;
-  unsigned int msgid;
-  error_t err;
-
-  fp = fopen (filename, "r");
-  if (fp == 0)
-    {
-      error (2, errno, "%s", filename);
-      return;
-    }
-
-  while (getline (&buffer, &bufsize, fp) > 0)
-    {
-      ++lineno;
-      if (buffer[0] == '#' || buffer[0] == '\0')
-	continue;
-      if (sscanf (buffer, "%ms %*u %ms %*u %u %*u\n",
-		  &subsystem, &name, &msgid) != 3)
-	error (0, 0, "%s:%u: invalid format in RPC list file",
-	       filename, lineno);
-      else
-	{
-	  struct msgid_info *info = malloc (sizeof *info);
-	  if (info == 0)
-	    error (1, errno, "malloc");
-	  info->name = name;
-	  info->subsystem = subsystem;
-	  err = hurd_ihash_add (&msgid_ihash, msgid, info);
-	  if (err)
-	    error (1, err, "hurd_ihash_add");
-	}
-    }
-
-  free (buffer);
-  fclose (fp);
-}
-
-/* Look for a name describing MSGID.  We check the table directly, and
-   also check if this looks like the ID of a reply message whose request
-   ID is already in the table.  */
-static const struct msgid_info *
-msgid_info (mach_msg_id_t msgid)
-{
-  const struct msgid_info *info = hurd_ihash_find (&msgid_ihash, msgid);
-  if (info == 0 && (msgid / 100) % 2 == 1)
-    {
-      /* This message ID is not in the table, and its number makes it
-	 what should be an RPC reply message ID.  So look up the message
-	 ID of the corresponding RPC request and synthesize a name from
-	 that.  Then stash that name in the table so the next time the
-	 lookup will match directly.  */
-      info = hurd_ihash_find (&msgid_ihash, msgid - 100);
-      if (info != 0)
-	{
-	  struct msgid_info *reply_info = malloc (sizeof *info);
-	  if (reply_info != 0)
-	    {
-	      reply_info->subsystem = strdup (info->subsystem);
-	      reply_info->name = 0;
-	      asprintf (&reply_info->name, "%s-reply", info->name);
-	      hurd_ihash_add (&msgid_ihash, msgid, reply_info);
-	      info = reply_info;
-	    }
-	  else
-	    info = 0;
-	}
-    }
-  return info;
 }
 
 static const char *
@@ -404,7 +293,8 @@ new_receiver_info (mach_port_t right, mach_port_t owner)
 					MACH_MSG_TYPE_MAKE_SEND_ONCE, &foo);
   if (err)
     error (2, err, "mach_port_request_notification");
-  mach_port_deallocate (mach_task_self (), foo);
+  if (MACH_PORT_VALID (foo))
+    mach_port_deallocate (mach_task_self (), foo);
 
   err = hurd_ihash_add (&traced_names, info->forward, info);
   if (err)
@@ -431,7 +321,9 @@ destroy_receiver_info (struct receiver_info *info)
   while (send_wrapper)
     {
       struct sender_info *next = send_wrapper->next;
-      assert (TRACED_INFO (send_wrapper)->pi.refcnt == 1);
+      assert (
+	refcounts_hard_references (&TRACED_INFO (send_wrapper)->pi.refcounts)
+	== 1);
       /* Reset the receive_right of the send wrapper in advance to avoid
        * destroy_receiver_info is called when the port info is destroyed. */
       send_wrapper->receive_right = NULL;
@@ -727,8 +619,6 @@ rewrite_right (mach_port_t *right, mach_msg_type_name_t *type,
        * has the receive right, we move the send right of the traced port to
        * the destination; otherwise, we move the one of the send wrapper.
        */
-      assert (req);
-
       /* See if this is already one of our own wrapper ports.  */
       send_wrapper = ports_lookup_port (traced_bucket, *right, 0);
       if (send_wrapper)
@@ -760,7 +650,7 @@ rewrite_right (mach_port_t *right, mach_msg_type_name_t *type,
 	  return TRACED_INFO (send_wrapper)->name;
 	}
 
-      if (req->req_id == 3216)	    /* mach_port_extract_right */
+      if (req && req->req_id == 3216)	    /* mach_port_extract_right */
 	receiver_info = discover_receive_right (*right, dest);
       else
 	receiver_info = discover_receive_right (*right, source);
@@ -770,6 +660,8 @@ rewrite_right (mach_port_t *right, mach_msg_type_name_t *type,
 	   * We ignore it. */
 	  if (source != unknown_task)
 	    {
+	      /* TODO: this happens on fork() when the new process does not
+	         have the send right yet (it is about to get inserted).  */
 	      error (0, 0, "get an unknown send right from process %d",
 		     task2pid (source));
 	      return dummy_wrapper.name;
@@ -848,7 +740,11 @@ rewrite_right (mach_port_t *right, mach_msg_type_name_t *type,
 	    hurd_ihash_locp_remove (&traced_names, receiver_info->locp);
 
 	    send_wrapper2 = get_send_wrapper (receiver_info, dest, &rr);
-	    assert (TRACED_INFO (send_wrapper2)->pi.refcnt == 1);
+	    assert (
+	      refcounts_hard_references (
+		&TRACED_INFO (send_wrapper2)->pi.refcounts)
+	      == 1);
+
 	    name = TRACED_INFO (send_wrapper2)->name;
 	    TRACED_INFO (send_wrapper2)->name = NULL;
 	    /* send_wrapper2 isn't destroyed normally, so we need to unlink
@@ -1189,6 +1085,16 @@ wrap_new_task (mach_msg_header_t *inp, struct req_info *req)
   ports_port_deref (task_wrapper1);
 }
 
+/* Returns true if the given message is a Mach notification.  */
+static inline int
+is_notification (const mach_msg_header_t *InHeadP)
+{
+  int msgh_id = InHeadP->msgh_id - 64;
+  if ((msgh_id > 8) || (msgh_id < 0))
+    return 0;
+  return 1;
+}
+
 int
 trace_and_forward (mach_msg_header_t *inp, mach_msg_header_t *outp)
 {
@@ -1213,7 +1119,24 @@ trace_and_forward (mach_msg_header_t *inp, mach_msg_header_t *outp)
   /* Look up our record for the receiving port.  There is no need to check
      the class, because our port bucket only ever contains one class of
      ports (traced_class).  */
-  info = ports_lookup_port (traced_bucket, inp->msgh_local_port, 0);
+
+  if (MACH_MSGH_BITS_LOCAL (inp->msgh_bits) == MACH_MSG_TYPE_PROTECTED_PAYLOAD)
+    {
+      info = ports_lookup_payload (traced_bucket, inp->msgh_protected_payload,
+				   NULL);
+      if (info)
+	{
+	  /* Undo the protected payload optimization.  */
+	  inp->msgh_bits = MACH_MSGH_BITS (
+	    MACH_MSGH_BITS_REMOTE (inp->msgh_bits),
+	    is_notification (inp)? MACH_MSG_TYPE_MOVE_SEND_ONCE: info->type)
+	    | MACH_MSGH_BITS_OTHER (inp->msgh_bits);
+	  inp->msgh_local_port = ports_payload_get_name (info);
+	}
+    }
+  else
+    info = ports_lookup_port (traced_bucket, inp->msgh_local_port, NULL);
+
   assert (info);
 
   /* A notification message from the kernel appears to have been sent
@@ -1286,24 +1209,34 @@ trace_and_forward (mach_msg_header_t *inp, mach_msg_header_t *outp)
 	/* The reply port might be dead, e.g., the traced task has died. */
 	&& MACH_PORT_VALID (inp->msgh_local_port))
       {
-	struct send_once_info *info;
-	// TODO is the reply port always a send once right?
-	assert (reply_type == MACH_MSG_TYPE_PORT_SEND_ONCE);
-	info = new_send_once_wrapper (inp->msgh_local_port,
-				      &inp->msgh_local_port);
-	reply_type = MACH_MSG_TYPE_MAKE_SEND_ONCE;
-	assert (inp->msgh_local_port);
-
-	if (TRACED_INFO (info)->name == 0)
+	switch (reply_type)
 	  {
-	    if (msgid == 0)
-	      asprintf (&TRACED_INFO (info)->name, "reply(%u:%u)",
-			(unsigned int) TRACED_INFO (info)->pi.port_right,
-			(unsigned int) inp->msgh_id);
-	    else
-	      asprintf (&TRACED_INFO (info)->name, "reply(%u:%s)",
-			(unsigned int) TRACED_INFO (info)->pi.port_right,
-			msgid->name);
+	  case MACH_MSG_TYPE_PORT_SEND:
+	    rewrite_right (&inp->msgh_local_port, &reply_type, NULL);
+	    break;
+
+	  case MACH_MSG_TYPE_PORT_SEND_ONCE:;
+	    struct send_once_info *info;
+	    info = new_send_once_wrapper (inp->msgh_local_port,
+					  &inp->msgh_local_port);
+	    reply_type = MACH_MSG_TYPE_MAKE_SEND_ONCE;
+	    assert (inp->msgh_local_port);
+
+	    if (TRACED_INFO (info)->name == 0)
+	      {
+		if (msgid == 0)
+		  asprintf (&TRACED_INFO (info)->name, "reply(%u:%u)",
+			    (unsigned int) TRACED_INFO (info)->pi.port_right,
+			    (unsigned int) inp->msgh_id);
+		else
+		  asprintf (&TRACED_INFO (info)->name, "reply(%u:%s)",
+			    (unsigned int) TRACED_INFO (info)->pi.port_right,
+			    msgid->name);
+	      }
+	    break;
+
+	  default:
+	    error (1, 0, "Reply type %i not handled", reply_type);
 	  }
       }
 
@@ -1478,10 +1411,27 @@ static const char *const msg_types[] =
 };
 #endif
 
+/* We keep track of the last reply port used in a request we print to
+   ostream.  This way we can end incomplete requests with an ellipsis
+   and the name of the reply port.  When the reply finally arrives, we
+   start a new line with that port name and an ellipsis, making it
+   easy to match it to the associated request.  */
+static mach_port_t last_reply_port;
+
+/* Print an ellipsis if necessary.  */
+static void
+print_ellipsis (void)
+{
+  if (MACH_PORT_VALID (last_reply_port))
+    fprintf (ostream, " ...%u\n", (unsigned int) last_reply_port);
+}
+
 static void
 print_request_header (struct sender_info *receiver, mach_msg_header_t *msg)
 {
   const char *msgname = msgid_name (msg->msgh_id);
+  print_ellipsis ();
+  last_reply_port = msg->msgh_local_port;
 
   if (TRACED_INFO (receiver)->name != 0)
     fprintf (ostream, "%4s->", TRACED_INFO (receiver)->name);
@@ -1499,6 +1449,13 @@ static void
 print_reply_header (struct send_once_info *info, mig_reply_header_t *reply,
 		    struct req_info *req)
 {
+  if (last_reply_port != info->pi.pi.port_right)
+    {
+      print_ellipsis ();
+      fprintf (ostream, "%u...", (unsigned int) info->pi.pi.port_right);
+    }
+  last_reply_port = MACH_PORT_NULL;
+
   /* We have printed a partial line for the request message,
      and now we have the corresponding reply.  */
   if (reply->Head.msgh_id == req->req_id + 100)
@@ -1520,6 +1477,20 @@ print_reply_header (struct send_once_info *info, mig_reply_header_t *reply,
     }
 }
 
+static char escape_sequences[0x100] =
+  {
+    ['\0'] = '0',
+    ['\a'] = 'a',
+    ['\b'] = 'b',
+    ['\f'] = 'f',
+    ['\n'] = 'n',
+    ['\r'] = 'r',
+    ['\t'] = 't',
+    ['\v'] = 'v',
+    ['\\'] = '\\',
+    ['\''] = '\'',
+    ['"'] = '"',
+  };
 
 static void
 print_data (mach_msg_type_name_t type,
@@ -1547,8 +1518,38 @@ print_data (mach_msg_type_name_t type,
     case MACH_MSG_TYPE_CHAR:
       if (nelt > strsize)
 	nelt = strsize;
-      fprintf (ostream, "\"%.*s\"",
-	       (int) (nelt * eltsize), (const char *) data);
+      fprintf (ostream, "\"");
+      /* Scan data for non-printable characters.  p always points to
+	 the first character that has not yet been printed.  */
+      const char *p, *q;
+      p = q = (const char *) data;
+      while (q && *q && q - (const char *) data < (int) (nelt * eltsize))
+	{
+	  if (isgraph (*q) || *q == ' ')
+	    {
+	      q += 1;
+	      continue;
+	    }
+
+	  /* We encountered a non-printable character.  Print anything
+	     that has not been printed so far.  */
+	  if (p < q)
+	    fprintf (ostream, "%.*s", q - p, p);
+
+	  char c = escape_sequences[*((const unsigned char *) q)];
+	  if (c)
+	    fprintf (ostream, "\\%c", c);
+	  else
+	    fprintf (ostream, "\\x%02x", *((const unsigned char *) q));
+
+	  q += 1;
+	  p = q;
+	}
+
+      /* Print anything that has not been printed so far.  */
+      if (p < q)
+	fprintf (ostream, "%.*s", q - p, p);
+      fprintf (ostream, "\"");
       return;
 
 #if 0
@@ -1669,55 +1670,9 @@ traced_spawn (char **argv, char **envp)
   return pid;
 }
 
-
-static void
-scan_msgids_dir (char **argz, size_t *argz_len, char *dir, bool append)
-{
-  struct dirent **eps;
-  int n;
-	    
-  int
-    msgids_file_p (const struct dirent *eps)
-    {
-      if (fnmatch ("*.msgids", eps->d_name, 0) != FNM_NOMATCH)
-        return 1;
-      return 0;
-    }
-	    
-  n = scandir (dir, &eps, msgids_file_p, NULL);
-  if (n >= 0)
-    {
-      for (int cnt = 0; cnt < n; ++cnt)
-	{
-	  char *msgids_file;
-
-	  if (asprintf (&msgids_file, "%s/%s", dir, eps[cnt]->d_name) < 0)
-	    error (1, errno, "asprintf");
-
-	  if (append == TRUE)
-	    {
-	      if (argz_add (argz, argz_len, msgids_file) != 0)
-		error (1, errno, "argz_add");
-	    }
-	  else
-	    {
-	      if (argz_insert (argz, argz_len, *argz, msgids_file) != 0)
-		error (1, errno, "argz_insert");
-	    }
-	  free (msgids_file);
-	}
-    }
-
-  /* If the directory couldn't be scanned for whatever reason, just ignore
-     it. */
-}
-
 int
 main (int argc, char **argv, char **envp)
 {
-  char *msgids_files_argz = NULL;
-  size_t msgids_files_argz_len = 0;
-  bool nostdinc = FALSE;
   const char *outfile = 0;
   char **cmd_argv = 0;
   pthread_t thread;
@@ -1733,21 +1688,6 @@ main (int argc, char **argv, char **envp)
 	{
 	case 'o':
 	  outfile = arg;
-	  break;
-
-	case OPT_NOSTDINC:
-	  nostdinc = TRUE;
-	  break;
-
-	case 'i':
-	  if (argz_add (&msgids_files_argz, &msgids_files_argz_len, 
-			arg) != 0)
-	    error (1, errno, "argz_add");
-	  break;
-
-	case 'I':
-	  scan_msgids_dir (&msgids_files_argz, &msgids_files_argz_len,
-			  arg, TRUE);
 	  break;
 
 	case 's':
@@ -1796,7 +1736,12 @@ main (int argc, char **argv, char **envp)
 	}
       return 0;
     }
-  const struct argp argp = { options, parse_opt, args_doc, doc };
+  const struct argp_child children[] =
+    {
+      { .argp=&msgid_argp, },
+      { 0 }
+    };
+  const struct argp argp = { options, parse_opt, args_doc, doc, &children };
 
   /* Parse our arguments.  */
   argp_parse (&argp, argc, argv, ARGP_IN_ORDER, 0, 0);
@@ -1804,23 +1749,6 @@ main (int argc, char **argv, char **envp)
   err = mach_port_allocate (mach_task_self (), MACH_PORT_RIGHT_DEAD_NAME,
 			    &unknown_task);
   assert_perror (err);
-
-  /* Insert the files from STD_MSGIDS_DIR at the beginning of the list, so that
-     their content can be overridden by subsequently parsed files.  */
-  if (nostdinc == FALSE)
-    scan_msgids_dir (&msgids_files_argz, &msgids_files_argz_len,
-		    STD_MSGIDS_DIR, FALSE);
-
-  if (msgids_files_argz != NULL)
-    {
-      char *msgids_file = NULL;
-
-      while ((msgids_file = argz_next (msgids_files_argz,
-				       msgids_files_argz_len, msgids_file)))
-	parse_msgid_list (msgids_file);
-
-      free (msgids_files_argz);
-    }
 
   if (outfile)
     {
@@ -1838,8 +1766,6 @@ main (int argc, char **argv, char **envp)
   err = ports_create_port (other_class, traced_bucket,
 			   sizeof (*notify_pi), &notify_pi);
   assert_perror (err);
-
-  hurd_ihash_set_cleanup (&msgid_ihash, msgid_ihash_cleanup, 0);
 
   /* Spawn a single thread that will receive intercepted messages, print
      them, and interpose on the ports they carry.  The access to the

@@ -22,20 +22,16 @@
 /* Implement the object initialiation call as described in
    <mach/memory_object.defs>.  */
 kern_return_t
-_pager_seqnos_memory_object_init (mach_port_t object, 
-				  mach_port_seqno_t seqno,
+_pager_S_memory_object_init (struct pager *p,
 				  mach_port_t control,
 				  mach_port_t name,
 				  vm_size_t pagesize)
 {
-  struct pager *p;
-
-  p = ports_lookup_port (0, object, _pager_class);
-  if (!p)
+  if (!p
+      || p->port.class != _pager_class)
     return EOPNOTSUPP;
 
   pthread_mutex_lock (&p->interlock);
-  _pager_wait_for_seqno (p, seqno);
 
   if (pagesize != __vm_page_size)
     {
@@ -71,9 +67,7 @@ _pager_seqnos_memory_object_init (mach_port_t object,
   p->pager_state = NORMAL;
 
  out:
-  _pager_release_seqno (p, seqno);
   pthread_mutex_unlock (&p->interlock);
-  ports_port_deref (p);
 
   return 0;
 }

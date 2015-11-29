@@ -1,25 +1,26 @@
 /*
    Copyright (C) 1993,94,95,96,2000,01,02 Free Software Foundation, Inc.
 
-This file is part of the GNU Hurd.
+   This file is part of the GNU Hurd.
 
-The GNU Hurd is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   The GNU Hurd is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-The GNU Hurd is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   The GNU Hurd is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with the GNU Hurd; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with the GNU Hurd; see the file COPYING.  If not, write to
+   the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* Written by Michael I. Bushnell.  */
 
 #include "priv.h"
+#include "trivfs_io_S.h"
 #include <assert.h>
 #include <string.h>
 
@@ -51,7 +52,8 @@ trivfs_S_io_reauthenticate (struct trivfs_protid *cred,
   assert (newright != MACH_PORT_NULL);
 
   err = iohelp_reauth (&newcred->user, auth, rendport, newright, 1);
-  mach_port_deallocate (mach_task_self (), rendport);
+  if (!err)
+    mach_port_deallocate (mach_task_self (), rendport);
   mach_port_deallocate (mach_task_self (), auth);
   if (err)
     return err;
@@ -61,11 +63,8 @@ trivfs_S_io_reauthenticate (struct trivfs_protid *cred,
     newcred->isroot = 1;
 
   newcred->hook = cred->hook;
-
-  pthread_mutex_lock (&cred->po->cntl->lock);
   newcred->po = cred->po;
-  newcred->po->refcnt++;
-  pthread_mutex_unlock (&cred->po->cntl->lock);
+  refcount_ref (&newcred->po->refcnt);
 
   do
     err = io_restrict_auth (newcred->po->cntl->underlying, &newcred->realnode,

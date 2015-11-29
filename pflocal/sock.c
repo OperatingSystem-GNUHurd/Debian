@@ -277,11 +277,14 @@ sock_bind (struct sock *sock, struct addr *addr)
   error_t err = 0;
   struct addr *old_addr;
 
-  pthread_mutex_lock (&addr->lock);
+  if (addr)
+    pthread_mutex_lock (&addr->lock);
   pthread_mutex_lock (&sock->lock);
 
   old_addr = sock->addr;
   if (addr && old_addr)
+    err = EINVAL;		/* SOCK already bound.  */
+  else if (!addr && !old_addr)
     err = EINVAL;		/* SOCK already bound.  */
   else if (addr && addr->sock)
     err = EADDRINUSE;		/* Something else already bound ADDR.  */
@@ -294,18 +297,23 @@ sock_bind (struct sock *sock, struct addr *addr)
     {
       sock->addr = addr;
       if (addr)
-	sock->refs++;
+	{
+	  sock->refs++;
+	  ports_port_ref_weak (addr);
+	}
       if (old_addr)
 	{
 	  /* Note that we don't have to worry about SOCK's ref count going to
 	     zero because whoever's calling us should be holding a ref.  */
 	  sock->refs--;
+	  ports_port_deref_weak (old_addr);
 	  assert (sock->refs > 0);	/* But make sure... */
 	}
     }
 
   pthread_mutex_unlock (&sock->lock);
-  pthread_mutex_unlock (&addr->lock);
+  if (addr)
+    pthread_mutex_unlock (&addr->lock);
 
   return err;
 }
@@ -402,7 +410,7 @@ sock_connect (struct sock *sock1, struct sock *sock2)
     /* If SOCK1 == SOCK2, then we get a fifo!  */
     pthread_mutex_lock (&sock2->lock);
 
-  if ((sock1->flags & PFLOCAL_SOCK_CONNECTED) || (sock2->flags & SOCK_CONNECTED))
+  if ((sock1->flags & PFLOCAL_SOCK_CONNECTED) || (sock2->flags & PFLOCAL_SOCK_CONNECTED))
     /* An already-connected socket.  */
     err = EISCONN;
   else
@@ -455,13 +463,13 @@ sock_shutdown (struct sock *sock, unsigned flags)
   old_flags = sock->flags;
   sock->flags |= flags;
 
-  if (flags & PFLOCAL_SOCK_SHUTDOWN_READ && !(old_flags & SOCK_SHUTDOWN_READ))
+  if (flags & PFLOCAL_SOCK_SHUTDOWN_READ && !(old_flags & PFLOCAL_SOCK_SHUTDOWN_READ))
     {
       /* Shutdown the read half.  */
       read_pipe = sock->read_pipe;
       sock->read_pipe = NULL;
     }
-  if (flags & PFLOCAL_SOCK_SHUTDOWN_WRITE && !(old_flags & SOCK_SHUTDOWN_WRITE))
+  if (flags & PFLOCAL_SOCK_SHUTDOWN_WRITE && !(old_flags & PFLOCAL_SOCK_SHUTDOWN_WRITE))
     {
       /* Shutdown the write half.  */
       write_pipe = sock->write_pipe;

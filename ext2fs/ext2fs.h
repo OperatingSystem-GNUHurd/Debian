@@ -50,9 +50,12 @@ typedef int8_t    __s8;
 #undef ext2_debug
 
 #ifdef EXT2FS_DEBUG
+#include <stdio.h>
 extern int ext2_debug_flag;
+#define ext2_debug_(f, a...) \
+ fprintf (stderr, "ext2fs: (debug) %s: " f "\n", __FUNCTION__ , ## a)
 #define ext2_debug(f, a...) \
- do { if (ext2_debug_flag) printf ("ext2fs: (debug) %s: " f "\n", __FUNCTION__ , ## a); } while (0)
+ do { if (ext2_debug_flag) ext2_debug_(f, ## a); } while (0)
 #else
 #define ext2_debug(f, a...)	(void)0
 #endif
@@ -64,8 +67,6 @@ extern int ext2_debug_flag;
    of paging requests, which may be helpful in catching bugs. */
 
 #undef DONT_CACHE_MEMORY_OBJECTS
-
-int printf (const char *fmt, ...);
 
 /* A block number.  */
 typedef __u32 block_t;
@@ -159,9 +160,6 @@ struct disknode
      each DIRBLKSIZE piece of the directory. */
   int *dirents;
 
-  /* Links on hash list. */
-  struct node *hnext, **hprevp;
-
   /* Lock to lock while fiddling with this inode's block allocation info.  */
   pthread_rwlock_t alloc_lock;
 
@@ -203,6 +201,12 @@ struct user_pager_info
 
 /* Set up the disk pager.  */
 void create_disk_pager (void);
+
+/* Inhibit the disk pager.  */
+error_t inhibit_ext2_pager (void);
+
+/* Resume the disk pager.  */
+void resume_ext2_pager (void);
 
 /* Call this when we should turn off caching so that unused memory object
    ports get freed.  */
@@ -297,10 +301,14 @@ unsigned log2_stat_blocks_per_fs_block;
 /* A handy page of page-aligned zeros.  */
 vm_address_t zeroblock;
 
-/* Get the superblock from the disk, & setup various global info from it.  */
+/* Get the superblock from the disk, point `sblock' to it, and setup
+   various global info from it.  */
 void get_hypermetadata ();
 
-/* Map `sblock' and `group_desc_image' pointers to disk cache.  */
+/* Map `group_desc_image' pointers to disk cache.  Also, establish a
+   non-exported mapping to the superblock that will be used by
+   diskfs_set_hypermetadata to update the superblock from the cache
+   `sblock' points to.  */
 void map_hypermetadata ();
 
 /* ---------------------------------------------------------------- */
@@ -415,12 +423,6 @@ dino_deref (struct ext2_inode *inode)
 
 /* Write all active disknodes into the inode pager. */
 void write_all_disknodes ();
-
-/* Lookup node INUM (which must have a reference already) and return it
-   without allocating any new references. */
-struct node *ifind (ino_t inum);
-
-void inode_init (void);
 
 /* ---------------------------------------------------------------- */
 
@@ -499,7 +501,7 @@ record_indir_poke (struct node *node, void *ptr)
   ext2_debug ("(%llu, %p)", node->cache_id, ptr);
   assert (disk_cache_block_is_ref (block));
   global_block_modified (block);
-  pokel_add (&node->dn->indir_pokel, block_ptr, block_size);
+  pokel_add (&diskfs_node_disknode (node)->indir_pokel, block_ptr, block_size);
 }
 
 /* ---------------------------------------------------------------- */
@@ -520,7 +522,7 @@ alloc_sync (struct node *np)
       if (np)
 	{
 	  diskfs_node_update (np, 1);
-	  pokel_sync (&np->dn->indir_pokel, 1);
+	  pokel_sync (&diskfs_node_disknode (np)->indir_pokel, 1);
 	}
       diskfs_set_hypermetadata (1, 0);
     }

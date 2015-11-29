@@ -55,14 +55,9 @@ struct pager
   memory_object_control_t memobjcntl;
   memory_object_name_t memobjname;
 
-  mach_port_seqno_t seqno;
-
   int noterm;			/* number of threads blocking termination */
 
-  struct pager *next, **pprev;
-
   int termwaiting:1;
-  int waitingforseqno:1;
 
 #ifdef KERNEL_INIT_RACE
   /* Out of sequence object_init calls waiting for
@@ -136,9 +131,6 @@ extern int _pager_page_errors[];
 struct port_class *_pager_class;
 
 
-void _pager_wait_for_seqno (struct pager *, mach_port_seqno_t);
-void _pager_release_seqno (struct pager *, mach_port_seqno_t);
-void _pager_update_seqno (mach_port_t, mach_port_seqno_t);
 void _pager_block_termination (struct pager *);
 void _pager_allow_termination (struct pager *);
 error_t _pager_pagemap_resize (struct pager *, vm_address_t);

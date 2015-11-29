@@ -105,7 +105,7 @@ fmt_named_interval (struct timeval *tv, size_t width,
     {{0, 1},       {0, 1},     {0, 0},    {" microsecond", "us", 0 }},
     {{0, 0} }
   };
-  struct tscale *ts = time_scales;
+  struct tscale *ts;
 
   if (width <= 0 || width >= buf_len)
     width = buf_len - 1;
@@ -338,8 +338,8 @@ fmt_past_time (struct timeval *tv, struct timeval *now,
 
 	      end = stpcpy (end, *dfmt);
 	      end = stpcpy (end, *sep);
-	      end = stpcpy (end, *fmt);
-	      
+	      stpcpy (end, *fmt);
+
 	      used = strftime (buf, width + 1, whole_fmt, &tm);
 	    }
 

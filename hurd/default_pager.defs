@@ -29,6 +29,7 @@
 
 subsystem default_pager 2275;
 
+#include <hurd/hurd_types.defs>	/* For `MACH_PAYLOAD_TO_PORT'.  */
 #include <mach/std_types.defs>
 #include <mach/mach_types.defs>
 #include <mach/default_pager_types.defs>
@@ -36,10 +37,14 @@ subsystem default_pager 2275;
 
 import <hurd/default_pager_types.h>; /* XXX */
 
+#ifdef	DEFAULT_PAGER_IMPORTS
+DEFAULT_PAGER_IMPORTS
+#endif
+
 routine	default_pager_object_create(
 		default_pager		: mach_port_t;
 	out	memory_object		: memory_object_t =
-			MACH_MSG_TYPE_MAKE_SEND;
+			MACH_MSG_TYPE_PORT_SEND;
 		object_size		: vm_size_t);
 
 routine default_pager_info(
@@ -90,6 +95,6 @@ routine default_pager_paging_storage(
    to fix the object's maximum size.  Any references to pages beyond the limit
    will fail.  */
 routine default_pager_object_set_size(
-		memory_object		: mach_port_t;
+		memory_object		: memory_object_t;
        msgseqno seqno			: mach_port_seqno_t;
 		object_size_limit	: vm_size_t);

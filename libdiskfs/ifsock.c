@@ -121,7 +121,7 @@ diskfs_S_ifsock_getsockaddr (struct protid *cred,
 	  if (old != MACH_PORT_NULL)
 	    mach_port_deallocate (mach_task_self (), old);
 	  np->sockaddr = sockaddr;
-	  diskfs_nref (np);
+	  diskfs_nref_light (np);
 	}
     }      
   
@@ -129,4 +129,3 @@ diskfs_S_ifsock_getsockaddr (struct protid *cred,
   pthread_mutex_unlock (&np->lock);
   return 0;
 }
-      

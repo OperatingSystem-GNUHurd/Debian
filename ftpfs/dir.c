@@ -64,7 +64,7 @@ rehash (struct ftpfs_dir *dir, size_t new_len)
   if (! new_htable)
     return ENOMEM;
 
-  bzero (new_htable, new_len * sizeof (struct ftpfs_dir_entry *));
+  memset (new_htable, 0, new_len * sizeof(struct ftpfs_dir_entry *));
 
   for (i = 0; i < old_len; i++)
     while (old_htable[i])
@@ -124,7 +124,7 @@ lookup (struct ftpfs_dir *dir, const char *name, int add)
 	  e->node = 0;
 	  e->dir = dir;
 	  e->stat_timestamp = 0;
-	  bzero (&e->stat, sizeof e->stat);
+	  memset (&e->stat, 0, sizeof e->stat);
 	  e->symlink_target = 0;
 	  e->noent = 0;
 	  e->valid = 0;
@@ -384,14 +384,18 @@ refresh_dir (struct ftpfs_dir *dir, int update_stats, time_t timestamp,
   if (! err)
     err = update_ordered_name ("..", &dfs);
 
-  /* Refetch the directory from the server.  */
-  if (update_stats)
-    /* Fetch both names and stat info.  */
-    err = ftp_conn_get_stats (conn, dir->rmt_path, 1,
-			      update_ordered_entry, &dfs);
-  else
-    /* Just fetch names.  */
-    err = ftp_conn_get_names (conn, dir->rmt_path, update_ordered_name, &dfs);
+  if (! err)
+    {
+      /* Refetch the directory from the server.  */
+      if (update_stats)
+	/* Fetch both names and stat info.  */
+	err = ftp_conn_get_stats (conn, dir->rmt_path, 1,
+				  update_ordered_entry, &dfs);
+      else
+	/* Just fetch names.  */
+	err = ftp_conn_get_names (conn, dir->rmt_path,
+				  update_ordered_name, &dfs);
+    }
 
   if (! err)
     /* GC any directory entries that weren't seen this time.  */

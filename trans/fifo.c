@@ -35,6 +35,9 @@
 
 #include <version.h>
 
+#include "libtrivfs/trivfs_fs_S.h"
+#include "libtrivfs/trivfs_io_S.h"
+
 /* Global options.  These defaults are the standard ones, I think...   */
 int wait_for_reader = 1, wait_for_writer = 1;
 int one_reader = 1;
@@ -166,7 +169,7 @@ open_hook (struct trivfs_peropen *po)
 		 make us block because we've ensured that there's a reader
 		 for it.  */
 
-	      if (wait_for_writer)
+	      if (wait_for_writer && (!(flags & O_WRITE)))
 		/* Wait until there's a writer.  */
 		{
 		  WAIT (active_fifo->writers, 0);

@@ -40,7 +40,7 @@ static void *
 tickle_init (void *initport)
 {
   startup_essential_task ((mach_port_t) initport, mach_task_self (),
-			  MACH_PORT_NULL, "proc", master_host_port);
+			  MACH_PORT_NULL, "proc", _hurd_host_priv);
   return NULL;
 }
 
@@ -63,7 +63,7 @@ S_proc_setmsgport (struct proc *p,
     prociterate (check_message_return, p);
   p->p_checkmsghangs = 0;
 
-  if (p == startup_proc)
+  if (p == startup_proc && startup_fallback)
     {
     /* Init is single threaded, so we can't delay our reply for
        the essential task RPC; spawn a thread to do it. */
