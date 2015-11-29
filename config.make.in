@@ -66,6 +66,7 @@ VERSIONING = @VERSIONING@
 # If a separate libcrypt is available, use it.
 LIBCRYPT = @LIBCRYPT@
 
+# Whether pcap support is available.
 LIBPCAP = @LIBPCAP@
 
 # How to link against Parted libraries, if at all.
@@ -94,6 +95,9 @@ libblkid_LIBS = @libblkid_LIBS@
 
 # Whether Sun RPC support is available.
 HAVE_SUN_RPC = @HAVE_SUN_RPC@
+
+# Whether libpciaccess is available.
+LIBPCIACCESS = @LIBPCIACCESS@
 
 # Installation tools.
 INSTALL = @INSTALL@

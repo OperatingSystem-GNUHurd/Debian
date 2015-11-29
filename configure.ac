@@ -246,7 +246,7 @@ fi
 AC_CHECK_LIB(pciaccess, pci_system_init, LIBPCIACCESS=-lpciaccess, LIBPCIACCESS=no)
 AC_SUBST(LIBPCIACCESS)
 if test "$LIBPCIACCESS" = "no"; then
-  AC_MSG_ERROR([libpciaccess must be install in order to use libddekit])
+  AC_MSG_WARN([libpciaccess must be install in order to use libddekit])
 fi
 
 # Check for ncursesw, which is needed for the console-curses client.

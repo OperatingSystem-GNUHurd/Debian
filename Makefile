@@ -29,7 +29,11 @@ include ./Makeconf
 lib-subdirs = libshouldbeinlibc libihash libiohelp libports libthreads \
 	      libpager libfshelp libdiskfs libtrivfs libps \
 	      libnetfs libpipe libstore libhurdbugaddr libftpconn libcons \
-	      libmachdev libddekit libhurd-slab
+	      libhurd-slab
+
+ifneq ($(LIBPCIACCESS),no)
+lib-subdirs += libmachdev libddekit
+endif
 
 # Hurd programs
 prog-subdirs = auth proc exec init term \
