@@ -63,15 +63,10 @@ ifeq (,$(filter stage1 stage2 stage3 noudeb,$(DEB_BUILD_PROFILES)))
 endif
 
 override_dh_auto_build:
-ifneq (,$(filter stage1 stage2 stage3,$(DEB_BUILD_PROFILES)))
+ifneq (,$(filter stage1 stage2,$(DEB_BUILD_PROFILES)))
 	:
-  ifneq (,$(filter stage2 stage3,$(DEB_BUILD_PROFILES)))
+  ifneq (,$(filter stage2,$(DEB_BUILD_PROFILES)))
 	$(MAKE) -C build-deb/libihash libihash.a
-    ifneq (,$(filter stage3,$(DEB_BUILD_PROFILES)))
-	$(MAKE) -C build-deb/libihash libihash.so
-	$(MAKE) -C build-deb/libshouldbeinlibc libshouldbeinlibc.so
-	$(MAKE) -C build-deb/libps libps.so
-    endif
   endif
 else
   ifeq (,$(filter noudeb,$(DEB_BUILD_PROFILES)))
@@ -79,7 +74,9 @@ else
   endif
 	dh_auto_build -Bbuild-deb
 	cd build-deb/doc && make && makeinfo --html --split=chapter ../../doc/hurd.texi
+  ifeq (,$(filter stage3,$(DEB_BUILD_PROFILES)))
 	$(MAKE) -C libdde-linux26 BUILDDIR=$(CURDIR)/build-deb LDFLAGS=
+  endif
 endif
 
 override_dh_auto_clean:
@@ -94,22 +91,19 @@ endif
 	rm -f $(INSTALL_generated)
 
 override_dh_auto_install:
-ifneq (,$(filter stage1 stage2 stage3,$(DEB_BUILD_PROFILES)))
+ifneq (,$(filter stage1 stage2,$(DEB_BUILD_PROFILES)))
 	$(MAKE) -Cbuild-deb prefix=$(DEB_DESTDIR) install-headers no_deps=t
-  ifneq (,$(filter stage2 stage3,$(DEB_BUILD_PROFILES)))
+  ifneq (,$(filter stage2,$(DEB_BUILD_PROFILES)))
 	$(MAKE) -Cbuild-deb/libihash libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) $(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH)/libihash.a
-    ifneq (,$(filter stage3,$(DEB_BUILD_PROFILES)))
-	$(MAKE) -Cbuild-deb/libihash libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) $(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH)/libihash.so
-	$(MAKE) -Cbuild-deb/libshouldbeinlibc libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) $(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH)/libshouldbeinlibc.so
-	$(MAKE) -Cbuild-deb/libps libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) $(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH)/libps.so
-    endif
   endif
 else
 	dh_auto_install -Bbuild-deb -- prefix=$(DEB_DESTDIR) libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) libexecdir=$(DEB_DESTDIR)/lib/hurd sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var XKB_BASE=$(DEB_DESTDIR)/usr/share/X11/xkb
 ifeq (,$(filter noudeb,$(DEB_BUILD_PROFILES)))
 	dh_auto_install -Bbuild-udeb -- prefix=$(DEB_DESTDIR_UDEB) libdir=$(DEB_DESTDIR_UDEB)/lib libexecdir=$(DEB_DESTDIR_UDEB)/lib/hurd sysconfdir=$(DEB_DESTDIR_UDEB)/etc localstatedir=$(DEB_DESTDIR_UDEB)/var XKB_BASE=$(DEB_DESTDIR_UDEB)/usr/share/X11/xkb
 endif
+  ifeq (,$(filter stage3,$(DEB_BUILD_PROFILES)))
 	$(MAKE) -C libdde-linux26 INSTALLDIR=$(CURDIR)/debian/tmp/usr/share/libdde_linux26/build/include install
+  endif
 
 	# runsystem is managed by update-alternatives
 	mv debian/tmp/lib/hurd/runsystem debian/tmp/lib/hurd/runsystem.gnu
@@ -163,7 +157,7 @@ endif
 
 override_dh_fixperms:
 	dh_fixperms
-ifeq (,$(filter stage1 stage2 stage3,$(DEB_BUILD_PROFILES)))
+ifeq (,$(filter stage1 stage2,$(DEB_BUILD_PROFILES)))
 	chmod u+s $(patsubst %,$(CURDIR)/debian/hurd%,$(SUID_PROGRAMS))
 endif
 

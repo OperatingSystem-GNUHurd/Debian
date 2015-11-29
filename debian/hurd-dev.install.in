@@ -2,11 +2,11 @@
 <!stage1 !stage2 !stage3> ../../libdde-linux26/Makeconf* usr/share/libdde_linux26
 <!stage1 !stage2 !stage3> ../../libdde-linux26/lib/src/libdde_*.a usr/lib/@DEB_HOST_MULTIARCH@
 <!stage1 !stage2 !stage3> ../../libdde-linux26/mk usr/share/libdde_linux26
-<!stage1 !stage2 !stage3> ../local/cdrom.h usr/include/sys
-<!stage1 !stage2 !stage3> ../local/soundcard.h usr/include/sys
-<!stage1 !stage2 !stage3> bin/fstests
-<!stage1 !stage2 !stage3> bin/timertest
+<!stage1 !stage2 !stage3> usr/share/libdde_linux26/build usr/share/libdde_linux26
+<!stage1 !stage2> ../local/cdrom.h usr/include/sys
+<!stage1 !stage2> ../local/soundcard.h usr/include/sys
+<!stage1 !stage2> bin/fstests
+<!stage1 !stage2> bin/timertest
 include/* usr/include
 <!stage1> lib/@DEB_HOST_MULTIARCH@/*.a
 <!stage1 !stage2> lib/@DEB_HOST_MULTIARCH@/*.so
-<!stage1 !stage2 !stage3> usr/share/libdde_linux26/build usr/share/libdde_linux26

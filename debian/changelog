@@ -1,8 +1,7 @@
 hurd (1:0.7-2) UNRELEASED; urgency=medium
 
-  * control, rules: Add a stage3 which contains shared libraries for libihash,
-    libshouldbeinlibc, and libps. On the long run it will contain anything that
-    can be built with libc.so.
+  * control, rules: Add a stage3 which builds everything that can be built
+    with libc.so.
 
  -- Samuel Thibault <sthibault@debian.org>  Fri, 27 Nov 2015 21:45:18 +0100
 

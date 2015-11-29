@@ -38,7 +38,7 @@ Provides: makedev, login, console-driver-xkb
 Replaces: makedev, login (<< 1:4.0.14-4), random-egd, console-driver-xkb
 Conflicts: makedev, login (<< 1:4.0.14-4), console-driver-xkb
 Architecture: hurd-any
-Build-Profiles: <!stage1 !stage2 !stage3>
+Build-Profiles: <!stage1 !stage2>
 Description: GNU Hurd
  This is the GNU Hurd package. It contains essential system software and
  libraries.
@@ -67,7 +67,7 @@ Package: hurd-doc
 Priority: optional
 Section: doc
 Architecture: all
-Build-Profiles: <!stage1 !stage2 !stage3>
+Build-Profiles: <!stage1 !stage2>
 Depends: ${misc:Depends}
 Suggests: www-browser
 Description: GNU Hurd manual
