@@ -73,10 +73,9 @@ int trivfs_support_write = 0;
 int trivfs_support_exec = 0;
 int trivfs_allow_open = O_READ | O_WRITE;
 
-struct port_class *trivfs_protid_portclasses[1];
-struct port_class *trivfs_cntl_portclasses[1];
-int trivfs_protid_nportclasses = 1;
-int trivfs_cntl_nportclasses = 1;
+/* Our port classes.  */
+struct port_class *trivfs_protid_class;
+struct port_class *trivfs_cntl_class;
 
 static int
 devnode_demuxer (mach_msg_header_t *inp,
@@ -270,18 +269,18 @@ trivfs_goaway (struct trivfs_control *fsys, int flags)
   int count;
 
   /* Stop new requests.  */
-  ports_inhibit_class_rpcs (trivfs_cntl_portclasses[0]);
-  ports_inhibit_class_rpcs (trivfs_protid_portclasses[0]);
+  ports_inhibit_class_rpcs (trivfs_cntl_class);
+  ports_inhibit_class_rpcs (trivfs_protid_class);
 
-  count = ports_count_class (trivfs_protid_portclasses[0]);
+  count = ports_count_class (trivfs_protid_class);
   debug ("the number of ports alive: %d\n", count);
 
   if (count && !(flags & FSYS_GOAWAY_FORCE)) 
     {
       /* We won't go away, so start things going again...  */
-      ports_enable_class (trivfs_protid_portclasses[0]);
-      ports_resume_class_rpcs (trivfs_cntl_portclasses[0]);
-      ports_resume_class_rpcs (trivfs_protid_portclasses[0]); 
+      ports_enable_class (trivfs_protid_class);
+      ports_resume_class_rpcs (trivfs_cntl_class);
+      ports_resume_class_rpcs (trivfs_protid_class);
       return EBUSY;
     } 
 
@@ -326,8 +325,8 @@ main (int argc, char *argv[])
   const struct argp argp = { options, parse_opt, args_doc, doc };
 
   port_bucket = ports_create_bucket ();
-  trivfs_cntl_portclasses[0] = ports_create_class (trivfs_clean_cntl, 0);
-  trivfs_protid_portclasses[0] = ports_create_class (trivfs_clean_protid, 0);
+  trivfs_cntl_class = ports_create_class (trivfs_clean_cntl, 0);
+  trivfs_protid_class = ports_create_class (trivfs_clean_protid, 0);
 
   argp_parse (&argp, argc, argv, 0, 0, 0);
 
@@ -344,8 +343,8 @@ main (int argc, char *argv[])
 
   /* Reply to our parent.  */
   err = trivfs_startup (bootstrap, 0,
-			trivfs_cntl_portclasses[0], port_bucket,
-			trivfs_protid_portclasses[0], port_bucket, &fsys);
+			trivfs_cntl_class, port_bucket,
+			trivfs_protid_class, port_bucket, &fsys);
   mach_port_deallocate (mach_task_self (), bootstrap);
   if (err)
     error (1, err, "Contacting parent");
