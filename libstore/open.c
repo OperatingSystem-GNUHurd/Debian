@@ -18,7 +18,6 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111, USA. */
 
-#include <stdio.h>
 #include <fcntl.h>
 #include <hurd.h>
 
@@ -38,7 +37,6 @@ store_open (const char *name, int flags,
   int open_flags = (flags & STORE_HARD_READONLY) ? O_RDONLY : O_RDWR;
   file_t node = file_name_lookup (name, open_flags, 0);
 
-  fprintf (stderr, "store_open: %s\n", name);
   if (node == MACH_PORT_NULL && !(flags & STORE_HARD_READONLY)
       && (errno == EACCES || errno == EROFS))
     {

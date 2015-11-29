@@ -49,9 +49,9 @@ ports_get_right (void *port)
 					    pi->port_right,
 					    MACH_MSG_TYPE_MAKE_SEND_ONCE,
 					    &foo);
+      assert_perror (err);
       if (foo != MACH_PORT_NULL)
 	mach_port_deallocate (mach_task_self (), foo);
-      assert_perror (err);
     }
   pthread_mutex_unlock (&_ports_lock);
   return pi->port_right;

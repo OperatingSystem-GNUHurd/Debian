@@ -234,7 +234,6 @@
 #include <mach/message.h>
 #include <hurd/threadvar.h>	/* GNU */
 #include <assert.h>
-#include <stdio.h>
 
 /*
  * Port_entry's are used by cthread_mach_msg to store information

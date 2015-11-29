@@ -460,7 +460,6 @@ netfs_S_dir_lookup (struct protid *diruser,
     error = errno;
 
   *retry_port = ports_get_right (newpi);
-  fprintf (stderr, "dereference a port\n");
   ports_port_deref (newpi);
 
  out:

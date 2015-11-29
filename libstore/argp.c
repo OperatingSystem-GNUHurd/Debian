@@ -174,8 +174,6 @@ store_parsed_open (const struct store_parsed *parsed, int flags,
       const struct store_class *type = parsed->type;
       if (type->open)
 	{
-	  fprintf (stderr, "device type: %s\n", type->name);
-	  fflush (stderr);
 	  if (parsed->name_prefix)
 	    /* If there's a name prefix, we prefix any names we open with that
 	       and a colon.  */

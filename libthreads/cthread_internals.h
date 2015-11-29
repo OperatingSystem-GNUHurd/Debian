@@ -237,7 +237,7 @@ extern void mach_error();
 #ifndef	ASSERT
 #define ASSERT(x)
 #endif
-#define TRACE(x) do {x; fflush (stdout);} while (0)
+#define TRACE(x)
 
 /*
  * What we do to yield the processor:
