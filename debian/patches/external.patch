@@ -2,21 +2,25 @@ Include DDE in the build
 
 --- a/Makefile
 +++ b/Makefile
-@@ -28,7 +28,12 @@ include ./Makeconf
+@@ -28,7 +28,16 @@ include ./Makeconf
  # Hurd libraries
  lib-subdirs = libshouldbeinlibc libihash libiohelp libports libthreads \
  	      libpager libfshelp libdiskfs libtrivfs libps \
 -	      libnetfs libpipe libstore libhurdbugaddr libftpconn libcons
 +	      libnetfs libpipe libstore libhurdbugaddr libftpconn libcons \
-+	      libbpf libhurd-slab eth-filter eth-multiplexer
++	      libbpf libhurd-slab eth-multiplexer
 +
 +ifneq ($(LIBPCIACCESS),no)
 +lib-subdirs += libmachdev libddekit
 +endif
++
++ifeq ($(HAVE_PCAP),yes)
++lib-subdirs += eth-filter
++endif
  
  # Hurd programs
  prog-subdirs = auth proc exec term \
-@@ -42,6 +47,7 @@ prog-subdirs = auth proc exec term \
+@@ -42,6 +51,7 @@ prog-subdirs = auth proc exec term \
  	       procfs \
  	       startup \
  	       init \
@@ -37,7 +41,7 @@ Include DDE in the build
  
 --- a/configure.ac
 +++ b/configure.ac
-@@ -245,6 +245,12 @@ AC_SUBST(boot_store_types)dnl
+@@ -245,6 +245,13 @@ AC_SUBST(boot_store_types)dnl
  AC_MSG_CHECKING(boot store types)
  AC_MSG_RESULT($boot_store_types)
  
@@ -46,16 +50,20 @@ Include DDE in the build
 +if test "$LIBPCIACCESS" = "no"; then
 +  AC_MSG_WARN([libpciaccess must be installed in order to use libddekit])
 +fi
++AC_CHECK_HEADER([pcap.h], [HAVE_PCAP=yes], [HAVE_PCAP=no])
 +
  # Check for ncursesw, which is needed for the console-curses client.
  hurd_LIB_NCURSESW
  
 --- a/config.make.in
 +++ b/config.make.in
-@@ -98,6 +98,9 @@ libblkid_LIBS = @libblkid_LIBS@
+@@ -98,6 +98,12 @@ libblkid_LIBS = @libblkid_LIBS@
  # Whether Sun RPC support is available.
  HAVE_SUN_RPC = @HAVE_SUN_RPC@
  
++# Whether pcap support is available.
++HAVE_PCAP = @HAVE_PCAP@
++
 +# Whether libpciaccess is available.
 +LIBPCIACCESS = @LIBPCIACCESS@
 +

@@ -2,6 +2,8 @@ hurd (1:0.7-2) UNRELEASED; urgency=medium
 
   * control, rules: Add a stage3 which builds everything that can be built
     with libc.so.
+  * patches/external.patch: Do not build DDE when libpciaccess is not
+    available, do not build eth-filter when libpcap is not available.
 
  -- Samuel Thibault <sthibault@debian.org>  Fri, 27 Nov 2015 21:45:18 +0100
 
