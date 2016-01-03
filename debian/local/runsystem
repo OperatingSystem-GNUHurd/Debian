@@ -5,10 +5,8 @@ export PATH
 
 umask 022
 
-# Create a minimal subset of device and server nodes
-/usr/lib/hurd/setup-translators -m -k -p
-
-/hurd/mach-defpager
+mkdir -p /servers/socket
+settrans -c /servers/socket/1 /hurd/pflocal
 
 mem=`vmstat-hurd --size -k`
 if [ "$mem" -lt 240000 ]
@@ -20,6 +18,11 @@ then
 		sleep 60
 	done
 fi
+
+# Create a minimal subset of device and server nodes
+/usr/lib/hurd/setup-translators -m -k -p
+
+/hurd/mach-defpager
 
 # Get all kernel parameters that can be exported as environment variables
 envvars="$(echo $* | tr ' ' '\012' | egrep '^[-_/[:alnum:]]+=.*$')"

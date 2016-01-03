@@ -7,6 +7,8 @@ hurd (1:0.7-2) UNRELEASED; urgency=medium
   * patches/cross-link.patch: Fix cross-linking by making make look at the
     right library path.
   * hurd.install.in: Fix stage3 build by not including xkb files.
+  * local/runsystem: Try to warn even earlier about not enough memory for
+    running the installer.
 
  -- Samuel Thibault <sthibault@debian.org>  Fri, 27 Nov 2015 21:45:18 +0100
 
