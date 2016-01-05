@@ -7,7 +7,7 @@ Build-Depends: mig (>= 1.4-3~) <!stage1 !stage2 !stage3>, gnumach-dev (>= 1.4+gi
  libc0.3-dev (>= 2.17-94~) <!stage1>, texinfo, libncursesw5-dev <!stage1 !stage2 !stage3>,
  debhelper (>= 9), dh-exec (>= 0.17), autoconf, dh-autoreconf,
  libparted-dev <!stage1 !stage2 !stage3>, libpciaccess-dev <!stage1 !stage2 !stage3>, libx11-dev <!stage1 !stage2 !stage3>, x11proto-core-dev <!stage1 !stage2 !stage3>, pkg-config <!stage1 !stage2 !stage3>,
- xkb-data <!stage1 !stage2 !stage3>, gawk, flex, bison, autotools-dev, libdaemon-dev <!stage1 !stage2 !stage3>, libpcap0.8-dev <!stage1 !stage2 !stage3>,
+ xkb-data <!stage1 !stage2 !stage3>, gawk, flex, bison, autotools-dev, perl, libdaemon-dev <!stage1 !stage2 !stage3>, libpcap0.8-dev <!stage1 !stage2 !stage3>,
  zlib1g-dev <!stage1 !stage2 !stage3>, libbz2-dev <!stage1 !stage2 !stage3>, uuid-dev <!stage1 !stage2 !stage3>, libblkid-dev <!stage1 !stage2 !stage3>
 Uploaders: Michael Banck <mbanck@debian.org>, 
  Samuel Thibault <sthibault@debian.org>

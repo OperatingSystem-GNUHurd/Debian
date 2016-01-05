@@ -9,6 +9,7 @@ hurd (1:0.7-2) UNRELEASED; urgency=medium
   * hurd.install.in: Fix stage3 build by not including xkb files.
   * local/runsystem: Try to warn even earlier about not enough memory for
     running the installer.
+  * control: Add perl Build-depends.
 
  -- Samuel Thibault <sthibault@debian.org>  Fri, 27 Nov 2015 21:45:18 +0100
 
