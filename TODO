@@ -98,8 +98,6 @@ See `tasks', the exported task list.
 ** libpager:
 *** Put user-defined fns into a callback struct passed to pager_create. !
 *** Make libpager paging interface able to read/write multiple pages at once.
-*** Remove pagers from portset if there are too many incoming requests to
-    avoid forking too many threads. !
 *** flush functions don't actually force pending delayed copies. (and in
     fact, they seem to block if a delayed copy is wired down) !
 
@@ -108,8 +106,6 @@ See `tasks', the exported task list.
    Rename the rest to libhurdutil or somesuch.
 
 ** libdiskfs
-*** file_chflags does not do proper permission checking (non-root isn't
-    supposed to be able to change the low bits)
 *** Add the short-circuited-but-not-builtin translator startup code from
     dir-lookup to fsys_getroot.  Compare and match carefully these two
     routines and then share common code.

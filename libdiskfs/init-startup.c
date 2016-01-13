@@ -1,21 +1,21 @@
 /* diskfs_startup_diskfs -- advertise our fsys control port to our parent FS.
    Copyright (C) 1994,95,96,98,99,2000,02 Free Software Foundation
 
-This file is part of the GNU Hurd.
+   This file is part of the GNU Hurd.
 
-The GNU Hurd is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   The GNU Hurd is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-The GNU Hurd is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   The GNU Hurd is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with the GNU Hurd; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with the GNU Hurd; see the file COPYING.  If not, write to
+   the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* Written by Roland McGrath.  */
 
@@ -25,8 +25,10 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include <fcntl.h>
 #include <error.h>
 #include <hurd/fsys.h>
+#include <hurd/paths.h>
 #include <hurd/startup.h>
-#include <pids.h>
+
+#include "startup_S.h"
 
 char *_diskfs_chroot_directory;
 
@@ -86,8 +88,6 @@ diskfs_startup_diskfs (mach_port_t bootstrap, int flags)
       diskfs_nput (old);
     }
 
-  printf ("libdiskfs: check point 5\n");
-  fflush (stdout);
   if (bootstrap != MACH_PORT_NULL)
     {
       err = ports_create_port (diskfs_control_class, diskfs_port_bucket,
@@ -112,14 +112,10 @@ diskfs_startup_diskfs (mach_port_t bootstrap, int flags)
     {
       realnode = MACH_PORT_NULL;
 
-      printf ("libdiskfs: check point 7\n");
-      fflush (stdout);
       /* We are the bootstrap filesystem; do special boot-time setup.  */
       diskfs_start_bootstrap ();
     }
 
-  printf ("libdiskfs: check point 8\n");
-  fflush (stdout);
   if (diskfs_default_sync_interval)
     /* Start 'em sync'n */
     diskfs_set_sync_interval (diskfs_default_sync_interval);
@@ -199,15 +195,18 @@ _diskfs_init_completed ()
 
   /* Mark us as important.  */
   err = proc_mark_important (proc);
+  mach_port_deallocate (mach_task_self (), proc);
   /* This might fail due to permissions or because the old proc server
      is still running, ignore any such errors.  */
   if (err && err != EPERM && err != EMIG_BAD_ID)
     goto errout;
 
-  err = proc_getmsgport (proc, HURD_PID_STARTUP, &init);
-  mach_port_deallocate (mach_task_self (), proc);
-  if (err)
-    goto errout;
+  init = file_name_lookup (_SERVERS_STARTUP, 0, 0);
+  if (init == MACH_PORT_NULL)
+    {
+      err = errno;
+      goto errout;
+    }
 
   notify = ports_get_send_right (pi);
   ports_port_deref (pi);

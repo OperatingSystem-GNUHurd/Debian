@@ -5,25 +5,26 @@
 
    Can exec ELF format directly.
 
-This file is part of the GNU Hurd.
+   This file is part of the GNU Hurd.
 
-The GNU Hurd is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   The GNU Hurd is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-The GNU Hurd is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   The GNU Hurd is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with the GNU Hurd; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with the GNU Hurd; see the file COPYING.  If not, write to
+   the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 
 
 #include "priv.h"
+#include <mach/gnumach.h>
 #include <hurd.h>
 #include <hurd/exec.h>
 #include <sys/stat.h>
@@ -45,13 +46,6 @@ pthread_rwlock_t std_lock = PTHREAD_RWLOCK_INITIALIZER;
 /* Zero the specified region but don't crash the server if it faults.  */
 
 #include <hurd/sigpreempt.h>
-
-static error_t
-safe_bzero (void *ptr, size_t size)
-{
-  return hurd_safe_memset (ptr, 0, size);
-}
-
 
 /* Load or allocate a section.  */
 static void
@@ -327,7 +321,9 @@ load_section (void *section, struct execdata *u)
 	      vm_deallocate (u->task, mapstart, memsz);
 	      return;
 	    }
-	  u->error = safe_bzero ((void *) (ourpage + (addr - overlap_page)),
+	  u->error = hurd_safe_memset (
+				 (void *) (ourpage + (addr - overlap_page)),
+				 0,
 				 size - (addr - overlap_page));
 	  if (! u->error && !(vm_prot & VM_PROT_WRITE))
 	    u->error = vm_protect (u->task, overlap_page, size,
@@ -690,6 +686,36 @@ finish (struct execdata *e, int dealloc_file)
     }
 }
 
+/* Set the name of the new task so that the kernel can use it in error
+   messages.  If PID is not zero, it will be included the name.  */
+static void
+set_name (task_t task, const char *exec_name, pid_t pid)
+{
+  char *name;
+  int size;
+
+  if (pid)
+    size = asprintf (&name, "%s(%d)", exec_name, pid);
+  else
+    size = asprintf (&name, "%s", exec_name);
+
+  if (size == 0)
+    return;
+
+  /* This is an internal implementational detail of the GNU Mach kernel.  */
+#define TASK_NAME_SIZE	32
+  if (size < TASK_NAME_SIZE)
+    task_set_name (task, name);
+  else
+    {
+      char *abbr = name + size - TASK_NAME_SIZE + 1;
+      abbr[0] = abbr[1] = abbr[2] = '.';
+      task_set_name (task, abbr);
+    }
+#undef TASK_NAME_SIZE
+
+  free (name);
+}
 
 /* Load the file.  */
 static void
@@ -886,7 +912,7 @@ do_exec (file_t file,
 	pthread_rwlock_unlock (&std_lock);
 	goto out;
       }
-    bzero (&boot->pi + 1, (char *) &boot[1] - (char *) (&boot->pi + 1));
+    memset (&boot->pi + 1, 0, (char *) &boot[1] - (char *) (&boot->pi + 1));
 
     /* These flags say the information we pass through to the new program
        may need to be modified.  */
@@ -959,7 +985,7 @@ do_exec (file_t file,
     /* Keep track of which ports in BOOT->portarray come from the original
        PORTARRAY, and which we replace.  */
     ports_replaced = alloca (boot->nports * sizeof *ports_replaced);
-    bzero (ports_replaced, boot->nports * sizeof *ports_replaced);
+    memset (ports_replaced, 0, boot->nports * sizeof *ports_replaced);
 
     if (portarray[INIT_PORT_BOOTSTRAP] == MACH_PORT_NULL &&
 	oldtask != MACH_PORT_NULL)
@@ -1115,6 +1141,16 @@ do_exec (file_t file,
 	mach_port_destroy (oldtask, destroynames[i]);
     }
 
+  /* Map page zero redzoned.  */
+  {
+    vm_address_t addr = 0;
+    e.error = vm_map (newtask,
+		      &addr, vm_page_size, 0, 0, MACH_PORT_NULL, 0, 1,
+		      VM_PROT_NONE, VM_PROT_NONE, VM_INHERIT_COPY);
+    if (e.error)
+      goto out;
+  }
+
 /* XXX this should be below
    it is here to work around a vm_map kernel bug. */
   if (interp.file != MACH_PORT_NULL)
@@ -1151,14 +1187,26 @@ do_exec (file_t file,
       }
   boot->user_entry = e.entry;	/* already adjusted in `load' */
 
-  /* Set the start_code and end_code values for this process.
-     /hurd/exec is used to start /hurd/proc, so at this point there is
+  /* /hurd/exec is used to start /hurd/proc, so at this point there is
      no proc server, so we need to be careful here.  */
   if (boot->portarray[INIT_PORT_PROC] != MACH_PORT_NULL)
-    e.error = proc_set_code (boot->portarray[INIT_PORT_PROC],
-			     e.start_code, e.end_code);
-  if (e.error)
-    goto out;
+    {
+      /* Set the start_code and end_code values for this process.  */
+      e.error = proc_set_code (boot->portarray[INIT_PORT_PROC],
+			       e.start_code, e.end_code);
+      if (e.error)
+	goto out;
+
+      pid_t pid;
+      e.error = proc_task2pid (boot->portarray[INIT_PORT_PROC],
+			       newtask, &pid);
+      if (e.error)
+	goto out;
+
+      set_name (newtask, argv, pid);
+    }
+  else
+    set_name (newtask, argv, 0);
 
   /* Create the initial thread.  */
   e.error = thread_create (newtask, &thread);
@@ -1289,7 +1337,8 @@ do_exec (file_t file,
 	/* Kill the pointers to the argument information so the cleanup
 	   of BOOT doesn't deallocate it.  It will be deallocated my MiG
 	   when we return the error.  */
-	bzero (&boot->pi + 1, (char *) &boot[1] - (char *) (&boot->pi + 1));
+	memset (&boot->pi + 1, 0,
+		(char *) &boot[1] - (char *) (&boot->pi + 1));
       else
 	/* Do this before we release the last reference.  */
 	if (boot->nports > INIT_PORT_PROC)
@@ -1442,7 +1491,7 @@ S_exec_setexecdata (struct trivfs_protid *protid,
 /* RPC sent on the bootstrap port.  */
 
 kern_return_t
-S_exec_startup_get_info (mach_port_t port,
+S_exec_startup_get_info (struct bootinfo *boot,
 			 vm_address_t *user_entry,
 			 vm_address_t *phdr_data, vm_size_t *phdr_size,
 			 vm_address_t *stack_base, vm_size_t *stack_size,
@@ -1457,11 +1506,8 @@ S_exec_startup_get_info (mach_port_t port,
 			 mach_msg_type_number_t *nports,
 			 int **intarray, mach_msg_type_number_t *nints)
 {
-  struct bootinfo *boot = ports_lookup_port (port_bucket, port,
-					     execboot_portclass);
   if (! boot)
     return EOPNOTSUPP;
-  ports_port_deref (boot);
 
   /* Pass back all the information we are storing.  */
 

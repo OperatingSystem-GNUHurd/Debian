@@ -57,8 +57,10 @@ vcs_readlink (struct iouser *user, struct node *np, char *buf)
 	ret = sprintf (buf, "%s/%d", cons_file, cur);
 
       if (ret < 0)
-	ret = errno;
+	ret = -errno;
     }
+  else
+    ret = -ret;
   return ret;
 }
 
@@ -75,14 +77,14 @@ vcs_read (struct protid *user, char **data,
     {
       size = vcs_readlink (user->user, NULL, NULL);
       if (size < 0)
-	return size;
+	return -size;
 
       buf = alloca (size);
 
       err = vcs_readlink (user->user, NULL, buf);
 
       if (err < 0)
-	return err;
+	return -err;
 
       if (offset + amount > size)
 	amount = size - offset;
@@ -220,4 +222,3 @@ struct driver_ops driver_current_vcs_ops =
     current_vcs_start,
     current_vcs_fini
   };
-

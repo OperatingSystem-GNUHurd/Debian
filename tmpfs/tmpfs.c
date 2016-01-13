@@ -1,21 +1,21 @@
 /* Main program and global state for tmpfs.
    Copyright (C) 2000,01,02 Free Software Foundation, Inc.
 
-This file is part of the GNU Hurd.
+   This file is part of the GNU Hurd.
 
-The GNU Hurd is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   The GNU Hurd is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-The GNU Hurd is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   The GNU Hurd is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with the GNU Hurd; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with the GNU Hurd; see the file COPYING.  If not, write to
+   the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #include <argp.h>
 #include <argz.h>
@@ -29,12 +29,11 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include <fcntl.h>
 #include <hurd.h>
 #include <hurd/paths.h>
-#include <nullauth.h>
 
 char *diskfs_server_name = "tmpfs";
 char *diskfs_server_version = HURD_VERSION;
 char *diskfs_extra_version = "GNU Hurd";
-char *diskfs_disk_name = "swap";
+char *diskfs_disk_name = "none";
 
 /* We ain't got to show you no stinkin' sync'ing.  */
 int diskfs_default_sync_interval = 0;
@@ -68,10 +67,8 @@ diskfs_set_statfs (struct statfs *st)
   st->f_bsize = vm_page_size;
   st->f_blocks = tmpfs_page_limit;
 
-  pthread_spin_lock (&diskfs_node_refcnt_lock);
-  st->f_files = num_files;
-  pages = round_page (tmpfs_space_used) / vm_page_size;
-  pthread_spin_unlock (&diskfs_node_refcnt_lock);
+  st->f_files = __atomic_load_n (&num_files, __ATOMIC_RELAXED);
+  pages = round_page (get_used ()) / vm_page_size;
 
   st->f_bfree = pages < tmpfs_page_limit ? tmpfs_page_limit - pages : 0;
   st->f_bavail = st->f_bfree;
@@ -297,13 +294,14 @@ diskfs_append_args (char **argz, size_t *argz_len)
 static void *
 diskfs_thread_function (void *demuxer)
 {
+  static int thread_timeout = 1000 * 60 * 2; /* two minutes */
   error_t err;
 
   do
     {
       ports_manage_port_operations_multithread (diskfs_port_bucket,
 						(ports_demuxer_type) demuxer,
-						0,
+						thread_timeout,
 						0,
 						0);
       err = diskfs_shutdown (0);
@@ -437,11 +435,6 @@ main (int argc, char **argv)
 
   /* We must keep the REALNODE send right to remain the active
      translator for the underlying node.  */
-
-  /* Drop all privileges.  */
-  err = setnullauth();
-  if (err)
-    error (1, err, "Could not drop privileges");
 
   pthread_mutex_unlock (&diskfs_root_node->lock);
 

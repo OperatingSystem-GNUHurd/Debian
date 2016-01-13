@@ -21,13 +21,12 @@
 #include <string.h>
 #include <assert.h>
 
-/* Worker function used by _pager_seqnos_memory_object_data_return
-   and _pager_seqnos_memory_object_data_initialize.  All args are
-   as for _pager_seqnos_memory_object_data_return; the additional
+/* Worker function used by _pager_S_memory_object_data_return
+   and _pager_S_memory_object_data_initialize.  All args are
+   as for _pager_S_memory_object_data_return; the additional
    INITIALIZING arg identifies which function is calling us. */
 kern_return_t
-_pager_do_write_request (mach_port_t object,
-			 mach_port_seqno_t seqno,
+_pager_do_write_request (struct pager *p,
 			 mach_port_t control,
 			 vm_offset_t offset,
 			 pointer_t data,
@@ -36,7 +35,6 @@ _pager_do_write_request (mach_port_t object,
 			 int kcopy,
 			 int initializing)
 {
-  struct pager *p;
   short *pm_entries;
   int npages, i;
   char *notified;
@@ -47,13 +45,12 @@ _pager_do_write_request (mach_port_t object,
   int wakeup;
   int omitdata = 0;
 
-  p = ports_lookup_port (0, object, _pager_class);
-  if (!p)
+  if (!p
+      || p->port.class != _pager_class)
     return EOPNOTSUPP;
 
   /* Acquire the right to meddle with the pagemap */
   pthread_mutex_lock (&p->interlock);
-  _pager_wait_for_seqno (p, seqno);
 
   /* sanity checks -- we don't do multi-page requests yet.  */
   if (control != p->memobjcntl)
@@ -102,7 +99,6 @@ _pager_do_write_request (mach_port_t object,
           notified[i] = (p->notify_on_evict
                          && ! (pm_entries[i] & PM_PAGEINWAIT));
 
-        _pager_release_seqno (p, seqno);
         goto notify;
       }
       else {
@@ -116,6 +112,7 @@ _pager_do_write_request (mach_port_t object,
      than we really have to require (because *all* future writes on
      this object are going to wait for seqno while we wait for the
      previous write), but the case is relatively infrequent.  */
+  /* XXX: Is this still needed?  */
  retry:
   for (i = 0; i < npages; i++)
     if (pm_entries[i] & PM_PAGINGOUT)
@@ -159,7 +156,6 @@ _pager_do_write_request (mach_port_t object,
       }
 
   /* Let someone else in. */
-  _pager_release_seqno (p, seqno);
   pthread_mutex_unlock (&p->interlock);
 
   /* This is inefficient; we should send all the pages to the device at once
@@ -249,20 +245,16 @@ _pager_do_write_request (mach_port_t object,
 	}
     }
 
-  ports_port_deref (p);
   return 0;
 
  release_out:
-  _pager_release_seqno (p, seqno);
   pthread_mutex_unlock (&p->interlock);
-  ports_port_deref (p);
   return 0;
 }
 
 /* Implement pageout call back as described by <mach/memory_object.defs>. */
 kern_return_t
-_pager_seqnos_memory_object_data_return (mach_port_t object,
-					 mach_port_seqno_t seqno,
+_pager_S_memory_object_data_return (struct pager *p,
 					 mach_port_t control,
 					 vm_offset_t offset,
 					 pointer_t data,
@@ -270,6 +262,6 @@ _pager_seqnos_memory_object_data_return (mach_port_t object,
 					 int dirty,
 					 int kcopy)
 {
-  return _pager_do_write_request (object, seqno, control, offset, data,
+  return _pager_do_write_request (p, control, offset, data,
 				  length, dirty, kcopy, 0);
 }

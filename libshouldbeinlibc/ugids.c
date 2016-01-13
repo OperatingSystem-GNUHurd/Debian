@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "idvec.h"
 #include "ugids.h"
 
 /* Return a new ugids structure, or 0 if an allocation error occurs.  */
@@ -29,7 +30,7 @@ make_ugids ()
 {
   struct ugids *u = malloc (sizeof (struct ugids));
   if (u)
-    bzero (u, sizeof *u);
+    memset (u, 0, sizeof *u);
   return u;
 }
 
@@ -57,7 +58,7 @@ ugids_add_gid (struct ugids *ugids, gid_t gid, int avail)
 }
 
 /* Add UID to UGIDS, plus any gids to which that user belongs.  If AVAIL is
-   true, the are added to the avail gids instead of the effective ones.  */
+   true, they are added to the avail gids instead of the effective ones.  */
 error_t
 ugids_add_user (struct ugids *ugids, uid_t uid, int avail)
 {

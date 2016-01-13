@@ -36,6 +36,9 @@
 #include <linux/ppp_defs.h>
 #include <linux/if_ppp.h>
 
+#include "libtrivfs/trivfs_fs_S.h"
+#include "libtrivfs/trivfs_io_S.h"
+
 struct port_class *tunnel_cntlclass;
 struct port_class *tunnel_class;
 
@@ -392,7 +395,7 @@ trivfs_S_io_write (struct trivfs_protid *cred,
   skb->len = datalen;
   skb->dev = &tdev->dev;
 
-  bcopy (data, skb->data, datalen);
+  memcpy (skb->data, data, datalen);
 
   /* Drop it on the queue. */
   skb->mac.raw = skb->data;

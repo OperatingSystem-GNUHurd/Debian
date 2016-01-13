@@ -158,7 +158,7 @@ add_utmp_entry (char *args, unsigned args_len, int inherit_host)
   char const *host = 0;
   long addr = 0;
 
-  bzero (&utmp, sizeof (utmp));
+  memset (&utmp, 0, sizeof(utmp));
 
   gettimeofday (&utmp.ut_tv, 0);
   strncpy (utmp.ut_name, envz_get (args, args_len, "USER") ?: "",
@@ -263,7 +263,7 @@ check_owned (process_t proc_server, pid_t pid, int *owned)
   char *waits = 0;
   mach_msg_type_number_t num_waits = 0;
   struct procinfo _pi, *pi = &_pi;
-  mach_msg_type_number_t pi_size = sizeof pi;
+  mach_msg_type_number_t pi_size = sizeof _pi / sizeof (*(procinfo_t)0);
   error_t err =
     proc_getprocinfo (proc_server, pid, &flags, (procinfo_t *)&pi, &pi_size,
 		      &waits, &num_waits);
@@ -272,7 +272,7 @@ check_owned (process_t proc_server, pid_t pid, int *owned)
     {
       *owned = !(pi->state & PI_NOTOWNED);
       if (pi != &_pi)
-	munmap (pi, pi_size);
+	munmap (pi, pi_size * sizeof (*(procinfo_t)0));
     }
 
   return err;
@@ -683,7 +683,7 @@ main(int argc, char *argv[])
     proc_setowner (proc_server, 0, 1); /* Clear the owner.  */
 
   /* Now start constructing the exec arguments.  */
-  bzero (ints, sizeof (*ints) * INIT_INT_MAX);
+  memset (ints, 0, sizeof (*ints) * INIT_INT_MAX);
   arg = envz_get (args, args_len, "UMASK");
   ints[INIT_UMASK] = arg && *arg ? strtoul (arg, 0, 8) : umask (0);
 

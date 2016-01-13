@@ -35,13 +35,13 @@ IOSRCS= io-async-icky.c io-async.c io-duplicate.c io-get-conch.c io-revoke.c \
 	io-select.c io-stat.c io-stubs.c io-write.c io-version.c io-sigio.c
 FSYSSRCS=fsys-getroot.c fsys-goaway.c fsys-startup.c fsys-getfile.c \
 	fsys-options.c fsys-syncfs.c fsys-forward.c \
-	fsys-get-children.c fsys-get-source.c
+	file-get-children.c file-get-source.c
 IFSOCKSRCS=ifsock.c
 OTHERSRCS = conch-fetch.c conch-set.c dir-clear.c dir-init.c dir-renamed.c \
 	extern-inline.c \
 	node-create.c node-drop.c node-make.c node-rdwr.c node-update.c \
 	node-nref.c node-nput.c node-nrele.c node-nrefl.c node-nputl.c \
-	node-nrelel.c \
+	node-nrelel.c node-cache.c \
 	peropen-make.c peropen-rele.c protid-make.c protid-rele.c \
 	init-init.c init-startup.c init-first.c init-main.c \
 	rdwr-internal.c boot-start.c demuxer.c node-times.c shutdown.c \
@@ -68,6 +68,7 @@ fsys-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h -DREPLY_PORTS
 fs-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h
 io-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h
 ifsock-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h
+exec_startup-MIGSFLAGS = -imacros $(srcdir)/fsmutations.h
 MIGCOMSFLAGS = -prefix diskfs_
 
 include ../Makeconf

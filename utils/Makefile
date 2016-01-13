@@ -1,4 +1,4 @@
-#   Copyright (C) 1994,95,96,97,98,99,2000,01,02,12 Free Software Foundation,
+#   Copyright (C) 1994,95,96,97,98,99,2000,01,02,12,14 Free Software Foundation,
 #   Inc.
 #
 #   This program is free software; you can redistribute it and/or
@@ -22,7 +22,7 @@ targets = shd ps settrans showtrans syncfs fsysopts \
 	storeinfo login w uptime ids loginpr sush vmstat portinfo \
 	devprobe vminfo addauth rmauth unsu setauth ftpcp ftpdir storecat \
 	storeread msgport rpctrace mount gcore fakeauth fakeroot remap \
-	umount nullauth
+	umount nullauth rpcscan
 
 special-targets = loginpr sush uptime fakeroot remap
 SRCS = shd.c ps.c settrans.c syncfs.c showtrans.c addauth.c rmauth.c \
@@ -31,14 +31,14 @@ SRCS = shd.c ps.c settrans.c syncfs.c showtrans.c addauth.c rmauth.c \
 	parse.c frobauth.c frobauth-mod.c setauth.c pids.c nonsugid.c \
 	unsu.c ftpcp.c ftpdir.c storeread.c storecat.c msgport.c \
 	rpctrace.c mount.c gcore.c fakeauth.c fakeroot.sh remap.sh \
-	nullauth.c match-options.c
+	nullauth.c match-options.c msgids.c rpcscan.c
 
 OBJS = $(filter-out %.sh,$(SRCS:.c=.o))
 HURDLIBS = ps ihash store fshelp ports ftpconn shouldbeinlibc
 LDLIBS += -lpthread
-login-LDLIBS = -lutil $(LIBCRYPT)
-addauth-LDLIBS = $(LIBCRYPT)
-setauth-LDLIBS = $(LIBCRYPT)
+login-LDLIBS = -lutil -lcrypt
+addauth-LDLIBS = -lcrypt
+setauth-LDLIBS = -lcrypt
 mount-LDLIBS = $(libblkid_LIBS)
 mount-CPPFLAGS = $(libblkid_CFLAGS)
 
@@ -54,6 +54,7 @@ login addauth setauth: nonsugid.o
 addauth rmauth setauth unsu: frobauth.o
 rmauth setauth unsu: frobauth-mod.o
 ps w: psout.o ../libps/libps.a ../libihash/libihash.a
+portinfo: ../libps/libps.a
 
 storeinfo storecat storeread: ../libstore/libstore.a
 ftpcp ftpdir: ../libftpconn/libftpconn.a
@@ -61,18 +62,20 @@ ftpcp ftpdir: ../libftpconn/libftpconn.a
 settrans: ../libfshelp/libfshelp.a ../libports/libports.a
 ps w ids settrans syncfs showtrans fsysopts storeinfo login vmstat portinfo \
   devprobe vminfo addauth rmauth setauth unsu ftpcp ftpdir storeread \
-  storecat msgport mount umount nullauth: \
+  storecat msgport mount umount nullauth rpctrace: \
 	../libshouldbeinlibc/libshouldbeinlibc.a
 
 $(filter-out $(special-targets), $(targets)): %: %.o
 
-rpctrace: ../libports/libports.a ../libihash/libihash.a
-rpctrace-CPPFLAGS = -DDATADIR=\"${datadir}\"
+rpctrace: ../libports/libports.a
+rpctrace rpcscan: msgids.o \
+	  ../libihash/libihash.a
+msgids-CPPFLAGS = -DDATADIR=\"${datadir}\"
 
 fakeauth: authServer.o auth_requestUser.o interruptServer.o \
 	  ../libports/libports.a ../libihash/libihash.a \
 	  ../libshouldbeinlibc/libshouldbeinlibc.a
-auth-MIGSFLAGS = -imacros $(srcdir)/../auth/authmutations.h
+auth-MIGSFLAGS = -imacros $(srcdir)/../auth/mig-mutate.h
 fakeauth-CPPFLAGS = -I$(srcdir)/../auth
 authServer-CPPFLAGS = -I$(srcdir)/../auth
 auth_requestUser-CPPFLAGS = -I$(srcdir)/../auth

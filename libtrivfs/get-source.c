@@ -21,8 +21,8 @@
 
 #include "priv.h"
 
-error_t
-trivfs_get_source (char *source)
+error_t __attribute__ ((weak))
+trivfs_get_source (struct trivfs_protid *cred, char *source, size_t source_len)
 {
   return EOPNOTSUPP;
 }

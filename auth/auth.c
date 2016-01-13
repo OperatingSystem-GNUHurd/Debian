@@ -25,6 +25,7 @@
 #include <pthread.h>
 #include <hurd.h>
 #include <hurd/startup.h>
+#include <hurd/paths.h>
 #include <hurd/ports.h>
 #include <hurd/ihash.h>
 #include <idvec.h>
@@ -34,6 +35,8 @@
 #include <version.h>
 #include "auth_S.h"
 #include "auth_reply_U.h"
+
+#include "auth.h"
 
 const char *argp_program_version = STANDARD_HURD_VERSION(auth);
 
@@ -57,7 +60,7 @@ create_authhandle (struct authhandle **new)
   error_t err = ports_create_port (authhandle_portclass, auth_bucket,
 				   sizeof **new, new);
   if (! err)
-    bzero (&(*new)->euids, (void *) &(*new)[1] - (void *) &(*new)->euids);
+    memset (&(*new)->euids, 0, (void *)&(*new)[1] - (void *)&(*new)->euids);
   return err;
 }
 
@@ -71,14 +74,6 @@ destroy_authhandle (void *p)
   idvec_free_contents (&h->egids);
   idvec_free_contents (&h->auids);
   idvec_free_contents (&h->agids);
-}
-
-/* Called by server stub functions.  */
-
-authhandle_t
-auth_port_to_handle (auth_t auth)
-{
-  return ports_lookup_port (auth_bucket, auth, authhandle_portclass);
 }
 
 /* id management.  */
@@ -305,7 +300,7 @@ S_auth_user_authenticate (struct authhandle *userauth,
   if (! userauth)
     return EOPNOTSUPP;
 
-  if (rendezvous == MACH_PORT_NULL || rendezvous == MACH_PORT_DEAD)
+  if (! MACH_PORT_VALID (rendezvous))
     return EINVAL;
 
   u.user = userauth;
@@ -381,12 +376,12 @@ S_auth_server_authenticate (struct authhandle *serverauth,
 {
   struct pending_user *u;
   struct authhandle *user;
-  error_t err;
+  error_t err = 0;
 
   if (! serverauth)
     return EOPNOTSUPP;
 
-  if (rendezvous == MACH_PORT_NULL || rendezvous == MACH_PORT_DEAD)
+  if (! MACH_PORT_VALID (rendezvous))
     return EINVAL;
 
   pthread_mutex_lock (&pending_lock);
@@ -464,14 +459,22 @@ S_auth_server_authenticate (struct authhandle *serverauth,
 }
 
 
+#include "../libports/notify_S.h"
+#include "../libports/interrupt_S.h"
 
 static int
 auth_demuxer (mach_msg_header_t *inp, mach_msg_header_t *outp)
 {
-  extern int auth_server (mach_msg_header_t *inp, mach_msg_header_t *outp);
-  return (auth_server (inp, outp) ||
-	  ports_interrupt_server (inp, outp) ||
-	  ports_notify_server (inp, outp));
+  mig_routine_t routine;
+  if ((routine = auth_server_routine (inp)) ||
+      (routine = ports_interrupt_server_routine (inp)) ||
+      (routine = ports_notify_server_routine (inp)))
+    {
+      (*routine) (inp, outp);
+      return TRUE;
+    }
+  else
+    return FALSE;
 }
 
 
@@ -480,6 +483,7 @@ main (int argc, char **argv)
 {
   error_t err;
   mach_port_t boot;
+  mach_port_t startup;
   process_t proc;
   mach_port_t hostpriv, masterdev;
   struct authhandle *firstauth;
@@ -516,10 +520,21 @@ main (int argc, char **argv)
   _hurd_port_set (&_hurd_ports[INIT_PORT_PROC], proc);
   _hurd_proc_init (argv, NULL, 0);
 
+  startup = file_name_lookup (_SERVERS_STARTUP, 0, 0);
+  if (! MACH_PORT_VALID (startup))
+    {
+      error (0, errno, "%s", _SERVERS_STARTUP);
+      /* Fall back to using the bootstrap port as before.  */
+      startup = boot;
+    }
+
   /* Init knows intimately that we will be ready for messages
      as soon as this returns. */
-  startup_essential_task (boot, mach_task_self (), MACH_PORT_NULL, "auth",
+  startup_essential_task (startup, mach_task_self (), MACH_PORT_NULL, "auth",
 			  hostpriv);
+
+  if (startup != boot)
+    mach_port_deallocate (mach_task_self (), startup);
   mach_port_deallocate (mach_task_self (), boot);
   mach_port_deallocate (mach_task_self (), hostpriv);
 

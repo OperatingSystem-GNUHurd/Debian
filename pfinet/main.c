@@ -24,13 +24,13 @@
 #include <arpa/inet.h>
 #include <error.h>
 #include <argp.h>
+#include <hurd/paths.h>
 #include <hurd/startup.h>
 #include <string.h>
 #include <fcntl.h>
 #include <version.h>
-#include <pids.h>
 
-/* Include Hurd's errno.h file, but don't include glue-include/hurd/errno.h,
+/* Include Hurd's errno.h file, but don't include glue-include/linux/errno.h,
    since it #undef's the errno macro. */
 #define _HACK_ERRNO_H
 #include <errno.h>
@@ -56,11 +56,9 @@ int trivfs_support_write = 1;
 int trivfs_support_exec = 0;
 int trivfs_allow_open = O_READ | O_WRITE;
 
-struct port_class *trivfs_protid_portclasses[2];
-int trivfs_protid_nportclasses = 2;
-
-struct port_class *trivfs_cntl_portclasses[2];
-int trivfs_cntl_nportclasses = 2;
+/* We have a class each per portclass.  */
+struct port_class *pfinet_protid_portclasses[2];
+struct port_class *pfinet_cntl_portclasses[2];
 
 /* Which portclass to install on the bootstrap port, default to IPv4. */
 int pfinet_bootstrap_portclass = PORTCLASS_INET;
@@ -72,38 +70,65 @@ const char *argp_program_version = STANDARD_HURD_VERSION (pfinet);
 /* Option parser.  */
 extern struct argp pfinet_argp;
 
+#include "io_S.h"
+#include "socket_S.h"
+#include "pfinet_S.h"
+#include "iioctl_S.h"
+#include "startup_notify_S.h"
+
 int
 pfinet_demuxer (mach_msg_header_t *inp,
 		mach_msg_header_t *outp)
 {
   struct port_info *pi;
-  extern int io_server (mach_msg_header_t *, mach_msg_header_t *);
-  extern int socket_server (mach_msg_header_t *, mach_msg_header_t *);
-  extern int startup_notify_server (mach_msg_header_t *, mach_msg_header_t *);
-  extern int pfinet_server (mach_msg_header_t *, mach_msg_header_t *);
-  extern int iioctl_server (mach_msg_header_t *, mach_msg_header_t *);
 
   /* We have several classes in one bucket, which need to be demuxed
      differently.  */
-  pi = ports_lookup_port(pfinet_bucket, inp->msgh_local_port, socketport_class);
-  
+  if (MACH_MSGH_BITS_LOCAL (inp->msgh_bits) ==
+      MACH_MSG_TYPE_PROTECTED_PAYLOAD)
+    pi = ports_lookup_payload (pfinet_bucket,
+			       inp->msgh_protected_payload,
+			       socketport_class);
+  else
+    pi = ports_lookup_port (pfinet_bucket,
+			    inp->msgh_local_port,
+			    socketport_class);
+
   if (pi)
     {
       ports_port_deref (pi);
-      
-      return (io_server (inp, outp)
-	      || socket_server (inp, outp)
-	      || pfinet_server (inp, outp)
-	      || iioctl_server (inp, outp)
-	      || trivfs_demuxer (inp, outp)
-	      || startup_notify_server (inp, outp));
+
+      mig_routine_t routine;
+      if ((routine = io_server_routine (inp)) ||
+          (routine = socket_server_routine (inp)) ||
+          (routine = pfinet_server_routine (inp)) ||
+          (routine = iioctl_server_routine (inp)) ||
+          (routine = NULL, trivfs_demuxer (inp, outp)) ||
+          (routine = startup_notify_server_routine (inp)))
+        {
+          if (routine)
+            (*routine) (inp, outp);
+          return TRUE;
+        }
+      else
+        return FALSE;
     }
   else
-    return (socket_server (inp, outp)
-	    || pfinet_server (inp, outp)
-	    || iioctl_server (inp, outp)
-	    || trivfs_demuxer (inp, outp)
-	    || startup_notify_server (inp, outp));
+    {
+      mig_routine_t routine;
+      if ((routine = socket_server_routine (inp)) ||
+          (routine = pfinet_server_routine (inp)) ||
+          (routine = iioctl_server_routine (inp)) ||
+          (routine = NULL, trivfs_demuxer (inp, outp)) ||
+          (routine = startup_notify_server_routine (inp)))
+        {
+          if (routine)
+            (*routine) (inp, outp);
+          return TRUE;
+        }
+      else
+        return FALSE;
+    }
 }
 
 /* The system is going down; destroy all the extant port rights.  That
@@ -135,7 +160,6 @@ arrange_shutdown_notification ()
 {
   error_t err;
   mach_port_t initport, notify;
-  process_t procserver;
   struct port_info *pi;
 
   shutdown_notify_class = ports_create_class (0, 0);
@@ -150,13 +174,8 @@ arrange_shutdown_notification ()
   if (err)
     return;
 
-  procserver = getproc ();
-  if (!procserver)
-    return;
-
-  err = proc_getmsgport (procserver, HURD_PID_STARTUP, &initport);
-  mach_port_deallocate (mach_task_self (), procserver);
-  if (err)
+  initport = file_name_lookup (_SERVERS_STARTUP, 0, 0);
+  if (initport == MACH_PORT_NULL)
     return;
 
   notify = ports_get_send_right (pi);
@@ -250,6 +269,8 @@ extern void sk_init (void), skb_init (void);
 extern int net_dev_init (void);
 extern void inet6_proto_init (struct net_proto *pro);
 
+#define ARRAY_SIZE(x)       (sizeof(x) / sizeof((x)[0]))
+
 int
 main (int argc,
       char **argv)
@@ -313,7 +334,7 @@ main (int argc,
 
   if (bootstrap != MACH_PORT_NULL) {
     /* Create portclass to install on the bootstrap port. */
-    if(trivfs_protid_portclasses[pfinet_bootstrap_portclass]
+    if(pfinet_protid_portclasses[pfinet_bootstrap_portclass]
        != MACH_PORT_NULL)
       error(1, 0, "No portclass left to assign to bootstrap port");
 
@@ -321,17 +342,23 @@ main (int argc,
     if (pfinet_bootstrap_portclass == PORTCLASS_INET6)
       pfinet_activate_ipv6 ();
 #endif
-    
-    trivfs_protid_portclasses[pfinet_bootstrap_portclass] =
-      ports_create_class (trivfs_clean_protid, 0);
-    trivfs_cntl_portclasses[pfinet_bootstrap_portclass] =
-      ports_create_class (trivfs_clean_cntl, 0);
+
+    err = trivfs_add_protid_port_class (
+	&pfinet_protid_portclasses[pfinet_bootstrap_portclass]);
+    if (err)
+      error (1, 0, "error creating control port class");
+
+    err = trivfs_add_control_port_class (
+	&pfinet_cntl_portclasses[pfinet_bootstrap_portclass]);
+    if (err)
+      error (1, 0, "error creating control port class");
 
     /* Talk to parent and link us in.  */
     err = trivfs_startup (bootstrap, 0,
-			  trivfs_cntl_portclasses[pfinet_bootstrap_portclass],
-			  pfinet_bucket, trivfs_protid_portclasses
-			  [pfinet_bootstrap_portclass], pfinet_bucket, 
+			  pfinet_cntl_portclasses[pfinet_bootstrap_portclass],
+			  pfinet_bucket,
+                          pfinet_protid_portclasses[pfinet_bootstrap_portclass],
+                          pfinet_bucket,
 			  &pfinetctl);
 
     if (err)
@@ -349,11 +376,11 @@ main (int argc,
     int i;
     /* Check that at least one portclass has been bound, 
        error out otherwise. */
-    for (i = 0; i < trivfs_protid_nportclasses; i ++)
-      if (trivfs_protid_portclasses[i] != MACH_PORT_NULL)
+    for (i = 0; i < ARRAY_SIZE (pfinet_protid_portclasses); i++)
+      if (pfinet_protid_portclasses[i] != MACH_PORT_NULL)
 	break;
 
-    if (i == trivfs_protid_nportclasses)
+    if (i == ARRAY_SIZE (pfinet_protid_portclasses))
       error (1, 0, "should be started as a translator.\n");
   }
 
@@ -364,7 +391,7 @@ main (int argc,
   /* Launch */
   ports_manage_port_operations_multithread (pfinet_bucket,
 					    pfinet_demuxer,
-					    0, 0, 0);
+					    30 * 1000, 2 * 60 * 1000, 0);
   return 0;
 }
 
@@ -403,22 +430,25 @@ pfinet_bind (int portclass, const char *name)
     err = errno;
 
   if (! err) {
-    if (trivfs_protid_portclasses[portclass] != MACH_PORT_NULL)
+    if (pfinet_protid_portclasses[portclass] != MACH_PORT_NULL)
       error (1, 0, "Cannot bind one protocol to multiple nodes.\n");
 
 #ifdef CONFIG_IPV6
     if (portclass == PORTCLASS_INET6)
       pfinet_activate_ipv6 ();
 #endif
+    //mark
+    err = trivfs_add_protid_port_class (&pfinet_protid_portclasses[portclass]);
+    if (err)
+      error (1, 0, "error creating control port class");
 
-    trivfs_protid_portclasses[portclass] =
-      ports_create_class (trivfs_clean_protid, 0);
-    trivfs_cntl_portclasses[portclass] =
-      ports_create_class (trivfs_clean_cntl, 0);
+    err = trivfs_add_control_port_class (&pfinet_cntl_portclasses[portclass]);
+    if (err)
+      error (1, 0, "error creating control port class");
 
-    err = trivfs_create_control (file, trivfs_cntl_portclasses[portclass],
-				 pfinet_bucket, 
-				 trivfs_protid_portclasses[portclass], 
+    err = trivfs_create_control (file, pfinet_cntl_portclasses[portclass],
+				 pfinet_bucket,
+				 pfinet_protid_portclasses[portclass],
 				 pfinet_bucket, &cntl);
   }
 
@@ -452,8 +482,8 @@ trivfs_goaway (struct trivfs_control *cntl, int flags)
   else
     {
       /* Stop new requests.  */
-      ports_inhibit_class_rpcs (trivfs_cntl_portclasses[0]);
-      ports_inhibit_class_rpcs (trivfs_protid_portclasses[0]);
+      ports_inhibit_class_rpcs (pfinet_cntl_portclasses[0]);
+      ports_inhibit_class_rpcs (pfinet_protid_portclasses[0]);
       ports_inhibit_class_rpcs (socketport_class);
 
       int count = ports_count_class (socketport_class);
@@ -462,8 +492,8 @@ trivfs_goaway (struct trivfs_control *cntl, int flags)
 	{
 	  /* We won't go away, so start things going again...  */
 	  ports_enable_class (socketport_class);
-	  ports_resume_class_rpcs (trivfs_cntl_portclasses[0]);
-	  ports_resume_class_rpcs (trivfs_protid_portclasses[0]);
+	  ports_resume_class_rpcs (pfinet_cntl_portclasses[0]);
+	  ports_resume_class_rpcs (pfinet_protid_portclasses[0]);
 
 	  return EBUSY;
 	}

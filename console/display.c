@@ -42,6 +42,7 @@
 #include "display.h"
 #include "pager.h"
 
+#include "notify_S.h"
 
 struct changes
 {
@@ -297,18 +298,18 @@ nowait_file_changed (mach_port_t notify_port, natural_t tickno,
 static void
 free_modreqs (struct modreq *mr)
 {
+  error_t err;
   struct modreq *tmp;
   for (; mr; mr = tmp)
     {
-      error_t err;
       mach_port_t old;
       /* Cancel the dead-name notification.  */
       err = mach_port_request_notification (mach_task_self (), mr->port,
 					    MACH_NOTIFY_DEAD_NAME, 0,
 					    MACH_PORT_NULL,
 					    MACH_MSG_TYPE_MAKE_SEND_ONCE, &old);
-      assert_perror (err);
-      mach_port_deallocate (mach_task_self (), old);
+      if (! err && MACH_PORT_VALID (old))
+	mach_port_deallocate (mach_task_self(), old);
 
       /* Deallocate the user's port.  */
       mach_port_deallocate (mach_task_self (), mr->port);
@@ -320,7 +321,7 @@ free_modreqs (struct modreq *mr)
 /* A port deleted notification is generated when we deallocate the
    user's notify port before it is dead.  */
 error_t
-do_mach_notify_port_deleted (mach_port_t notify, mach_port_t name)
+do_mach_notify_port_deleted (struct port_info *pi, mach_port_t name)
 {
   /* As we cancel the dead-name notification before deallocating the
      port, this should not happen.  */
@@ -329,15 +330,16 @@ do_mach_notify_port_deleted (mach_port_t notify, mach_port_t name)
 
 /* We request dead name notifications for the user ports.  */
 error_t
-do_mach_notify_dead_name (mach_port_t notify, mach_port_t dead_name)
+do_mach_notify_dead_name (struct port_info *pi, mach_port_t dead_name)
 {
-  struct notify *notify_port = ports_lookup_port (notify_bucket,
-						  notify, notify_class);
+  struct notify *notify_port = (struct notify *) pi;
   struct display *display;
   struct modreq **preq;
   struct modreq *req;
 
-  if (!notify_port)
+  if (!notify_port
+      || notify_port->pi.bucket != notify_bucket
+      || notify_port->pi.class != notify_class)
     return EOPNOTSUPP;
 
   display = notify_port->display;
@@ -371,30 +373,35 @@ do_mach_notify_dead_name (mach_port_t notify, mach_port_t dead_name)
   return 0;
 }
 
-void do_mach_notify_port_destroyed (void) { assert (0); }
+error_t
+do_mach_notify_port_destroyed (struct port_info *pi, mach_port_t rights)
+{
+  assert (0);
+}
 
 error_t
-do_mach_notify_no_senders (mach_port_t port, mach_port_mscount_t count)
+do_mach_notify_no_senders (struct port_info *pi, mach_port_mscount_t count)
 {
-  return ports_do_mach_notify_no_senders (port, count);
+  return ports_do_mach_notify_no_senders (pi, count);
 }
 
 kern_return_t
-do_mach_notify_send_once (mach_port_t notify)
+do_mach_notify_send_once (struct port_info *pi)
 {
   return 0;
 }
 
 kern_return_t
-do_mach_notify_msg_accepted (mach_port_t notify, mach_port_t send)
+do_mach_notify_msg_accepted (struct port_info *pi, mach_port_t send)
 {
-  struct notify *notify_port = ports_lookup_port (notify_bucket,
-						  notify, notify_class);
+  struct notify *notify_port = (struct notify *) pi;
   struct display *display;
   struct modreq **preq;
   struct modreq *req;
 
-  if (!notify_port)
+  if (!notify_port
+      || notify_port->pi.bucket != notify_bucket
+      || notify_port->pi.class != notify_class)
     return EOPNOTSUPP;
 
   /* If we deallocated the send right in display_destroy before the
@@ -403,7 +410,6 @@ do_mach_notify_msg_accepted (mach_port_t notify, mach_port_t send)
   if (!send)
     {
       assert(0);
-      ports_port_deref (notify_port);
       return 0;
     }
 
@@ -420,7 +426,6 @@ do_mach_notify_msg_accepted (mach_port_t notify, mach_port_t send)
     {
       assert(0);
       pthread_mutex_unlock (&display->lock);
-      ports_port_deref (notify_port);
       return 0;
     }
   req = *preq;
@@ -432,25 +437,25 @@ do_mach_notify_msg_accepted (mach_port_t notify, mach_port_t send)
 	 and stay in pending queue.  */
       req->pending = 0;
       err = nowait_file_changed (req->port, 0, FILE_CHANGED_WRITE, -1, -1,
-				 notify);
+				 notify_port->pi.port_right);
       if (err && err != MACH_SEND_WILL_NOTIFY)
 	{
-	  error_t err;
+	  error_t e;
 	  mach_port_t old;
 	  *preq = req->next;
 	  pthread_mutex_unlock (&display->lock);
 
-	  /* Cancel the dead-name notification.  */
-	  err = mach_port_request_notification (mach_task_self (), req->port,
-						MACH_NOTIFY_DEAD_NAME, 0,
-						MACH_PORT_NULL,
-						MACH_MSG_TYPE_MAKE_SEND_ONCE,
-						&old);
-	  mach_port_deallocate (mach_task_self (), old);
+	  /* Cancel the dead-name notification.	 */
+	  e = mach_port_request_notification (mach_task_self (), req->port,
+					      MACH_NOTIFY_DEAD_NAME, 0,
+					      MACH_PORT_NULL,
+					      MACH_MSG_TYPE_MAKE_SEND_ONCE,
+					      &old);
+	  if (! e && MACH_PORT_VALID (old))
+	    mach_port_deallocate (mach_task_self(), old);
 
 	  mach_port_deallocate (mach_task_self (), req->port);
 	  free (req);
-	  ports_port_deref (notify_port);
 	  return err;
 	}
       if (err == MACH_SEND_WILL_NOTIFY)
@@ -466,7 +471,6 @@ do_mach_notify_msg_accepted (mach_port_t notify, mach_port_t send)
   req->next = display->filemod_reqs;
   display->filemod_reqs = req;
   pthread_mutex_unlock (&display->lock);
-  ports_port_deref (notify_port);
   return 0;
 }
 
@@ -565,18 +569,15 @@ display_notice_filechange (display_t display)
 	    }
 	  else
 	    {
-	      error_t err;
+	      error_t e;
 	      mach_port_t old;
 
 	      /* Cancel the dead-name notification.  */
-	      err = mach_port_request_notification (mach_task_self (),
-						    req->port,
-						    MACH_NOTIFY_DEAD_NAME, 0,
-						    MACH_PORT_NULL,
-						    MACH_MSG_TYPE_MAKE_SEND_ONCE,
-						    &old);
-	      assert_perror (err);
-	      mach_port_deallocate (mach_task_self (), old);
+	      e = mach_port_request_notification (mach_task_self (), req->port,
+						  MACH_NOTIFY_DEAD_NAME, 0,
+						  MACH_PORT_NULL, 0, &old);
+	      if (! e && MACH_PORT_VALID (old))
+		mach_port_deallocate (mach_task_self(), old);
 	      mach_port_deallocate (mach_task_self (), req->port);
 	      free (req);
 	    }
@@ -1195,8 +1196,9 @@ handle_esc_bracket (display_t display, char op)
     case 'B':		/* ECMA-48 <CUD>.  */
     case 'e':		/* ECMA-48 <VPR>.  */
       /* Cursor down: <cud1>, <cud>.  */
-      user->cursor.row += (parse->params[0] ?: 1);
-      limit_cursor (display);
+      /* Most implementations scroll the screen.  */
+      for (i = 0; i < (parse->params[0] ?: 1); i++)
+	linefeed (display);
       break;
     case 'C':		/* ECMA-48 <CUF>.  */
       /* Cursor right: <cuf1>, <cuf>.  */
@@ -1206,6 +1208,18 @@ handle_esc_bracket (display_t display, char op)
     case 'D':		/* ECMA-48 <CUB>.  */
       /* Cursor left: <cub>, <cub1>.  */
       user->cursor.col -= (parse->params[0] ?: 1);
+      limit_cursor (display);
+      break;
+    case 's':		/* ANSI.SYS: Save cursor and attributes.  */
+      /* Save cursor position: <scp>.  */
+      display->cursor.saved_x = user->cursor.col;
+      display->cursor.saved_y = user->cursor.row;
+      break;
+    case 'u':		/* ANSI.SYS: Restore cursor and attributes.  */
+      /* Restore cursor position: <rcp>.  */
+      user->cursor.col = display->cursor.saved_x;
+      user->cursor.row = display->cursor.saved_y;
+      /* In case the screen was larger before:  */
       limit_cursor (display);
       break;
     case 'l':

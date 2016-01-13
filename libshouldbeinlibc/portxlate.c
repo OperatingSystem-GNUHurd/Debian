@@ -17,7 +17,7 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
 
-#include <malloc.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/mman.h>
 
@@ -35,7 +35,9 @@ port_name_xlator_create (mach_port_t from_task, mach_port_t to_task,
   if (! x)
     return ENOMEM;
 
+  mach_port_mod_refs (mach_task_self (), from_task, MACH_PORT_RIGHT_SEND, +1);
   x->from_task = from_task;
+  mach_port_mod_refs (mach_task_self (), to_task, MACH_PORT_RIGHT_SEND, +1);
   x->to_task = to_task;
   x->to_names = 0;
   x->to_types = 0;
@@ -64,6 +66,10 @@ port_name_xlator_create (mach_port_t from_task, mach_port_t to_task,
 		  x->to_names_len * sizeof (mach_port_t));
 	  munmap ((caddr_t) x->to_types,
 		  x->to_types_len * sizeof (mach_port_type_t));
+
+	  mach_port_deallocate (mach_task_self (), x->to_task);
+	  mach_port_deallocate (mach_task_self (), x->from_task);
+
 	  err = ENOMEM;
 	}
     }
@@ -107,7 +113,7 @@ port_name_xlator_xlate (struct port_name_xlator *x,
   error_t err;
   mach_port_t port;
   mach_msg_type_number_t i;
-  mach_msg_type_name_t aquired_type;
+  mach_msg_type_name_t acquired_type;
   mach_msg_type_name_t valid_to_types;
 
   if (from_type == 0)
@@ -131,7 +137,7 @@ port_name_xlator_xlate (struct port_name_xlator *x,
 			      ? MACH_MSG_TYPE_MAKE_SEND
 			      : MACH_MSG_TYPE_COPY_SEND),
 			     &port,
-			     &aquired_type);
+			     &acquired_type);
 
   if (err)
     return err;
@@ -149,7 +155,7 @@ port_name_xlator_xlate (struct port_name_xlator *x,
 				      ? MACH_MSG_TYPE_MAKE_SEND
 				      : MACH_MSG_TYPE_COPY_SEND),
 				     &x->ports[i],
-				     &aquired_type);
+				     &acquired_type);
 	  if (err)
 	    x->to_types[i] = 0;	/* Don't try to fetch this port again.  */
 	}

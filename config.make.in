@@ -1,7 +1,9 @@
 # @configure_input@
 
-# What version of the Hurd is this?
-hurd-version := @PACKAGE_VERSION@
+package-version := @PACKAGE_VERSION@
+# What version of the Hurd is this?  For compatibility (libraries' SONAMEs),
+# hard-code this to 0.3 instead of coupling with PACKAGE_VERSION.
+hurd-version := 0.3
 
 # Machine architecture.
 machine = @host_cpu@
@@ -63,9 +65,7 @@ gnu89-inline-CFLAGS = @libc_cv_gnu89_inline@
 # `yes' or `no' to indicate if ld --version-script is available.
 VERSIONING = @VERSIONING@
 
-# If a separate libcrypt is available, use it.
-LIBCRYPT = @LIBCRYPT@
-
+# Whether pcap support is available.
 LIBPCAP = @LIBPCAP@
 
 # How to link against Parted libraries, if at all.
@@ -87,6 +87,12 @@ HAVE_DAEMON = @HAVE_DAEMON@
 libdaemon_CFLAGS = @libdaemon_CFLAGS@
 libdaemon_LIBS = @libdaemon_LIBS@
 
+# How to compile and link against libbz2.
+HAVE_LIBBZ2 = @HAVE_LIBBZ2@
+
+# How to compile and link against libz.
+HAVE_LIBZ = @HAVE_LIBZ@
+
 # How to compile and link against libblkid.
 HAVE_BLKID = @HAVE_BLKID@
 libblkid_CFLAGS = @libblkid_CFLAGS@
@@ -94,6 +100,9 @@ libblkid_LIBS = @libblkid_LIBS@
 
 # Whether Sun RPC support is available.
 HAVE_SUN_RPC = @HAVE_SUN_RPC@
+
+# Whether libpciaccess is available.
+LIBPCIACCESS = @LIBPCIACCESS@
 
 # Installation tools.
 INSTALL = @INSTALL@

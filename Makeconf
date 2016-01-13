@@ -1,7 +1,7 @@
 # Generic configuration for Hurd compilation		-*- makefile-gmake -*-
 
 # Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2001, 2002, 2003,
-# 2006, 2007, 2008, 2010, 2011, 2012 Free Software Foundation, Inc.
+# 2006, 2007, 2008, 2010, 2011, 2012, 2013 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -77,7 +77,7 @@ INCLUDES += -I.. $(top_srcdirinc)
 endif
 INCLUDES += -I$(..)include -I$(top_srcdir)/include
 CPPFLAGS += $(INCLUDES) \
-	     -D_GNU_SOURCE -D_IO_MTSAFE_IO -D_FILE_OFFSET_BITS=64 \
+	     -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
 	    $($*-CPPFLAGS)
 CFLAGS += -std=gnu99 $(gnu89-inline-CFLAGS) -Wall -g -O3 \
 	    $($*-CFLAGS)
@@ -546,6 +546,7 @@ MIGCOMFLAGS := -subrprefix __
 
 %.sdefsi %.sdefs.d: %.defs
 	$(CPP) $(CPPFLAGS) $(MIGSFLAGS) $($*-MIGSFLAGS) -DSERVERPREFIX=S_ \
+	  -DHURD_SERVER=1 \
 	  -MD -MF $*.sdefs.d.new \
 	  $< -o $*.sdefsi
 	sed -e 's/[^:]*:/$*Server.c $(mig-sheader-prefix)$*_S.h:/' \
@@ -575,14 +576,21 @@ vpath %.defs $(top_srcdir)/hurd
 # These we want to find in the libc include directory...
 mach_defs_names = bootstrap exc mach mach4 \
 	mach_host mach_port mach_timer_reply memory_object \
-	memory_object_default notify
+	memory_object_default notify \
+	gnumach \
+	task_notify \
+
+mach_debug_defs_names = mach_debug
 device_defs_names = dev_forward device device_reply device_request
 
 mach_defs = $(addsuffix .defs,$(mach_defs_names))
+mach_debug_defs = $(addsuffix .defs,$(mach_debug_defs_names))
 device_defs = $(addsuffix .defs,$(device_defs_names))
 
 $(mach_defs): %.defs:
 	echo '#include <mach/$@>' > $@
+$(mach_debug_defs): %.defs:
+	echo '#include <mach_debug/$@>' > $@
 $(device_defs): %.defs:
 	echo '#include <device/$@>' > $@
 
@@ -647,5 +655,5 @@ endef
 
 # Rule to make executable shell scripts from .sh files.
 %: %.sh $(..)config.make
-	sed -e 's/STANDARD_HURD_VERSION_\(.[^_]*\)_/\1 (GNU Hurd) $(hurd-version)/' < $< > $@
+	sed -e 's/STANDARD_HURD_VERSION_\(.[^_]*\)_/\1 (GNU Hurd) $(package-version)/' < $< > $@
 	chmod +x $@

@@ -18,19 +18,15 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
 
-#include <stdio.h>
 #include "ports.h"
 #include <assert.h>
+#include <error.h>
 #include <stdio.h>
 #include <mach/message.h>
 #include <mach/thread_info.h>
 #include <mach/thread_switch.h>
 
 #define STACK_SIZE (64 * 1024)
-
-/* FIXME Until threadvars are completely replaced with correct TLS, use this
-   hack to set the stack size.  */
-size_t __pthread_stack_default_size = STACK_SIZE;
 
 #define THREAD_PRI 2
 
@@ -53,36 +49,49 @@ adjust_priority (unsigned int totalthreads)
   t = 10 + (((totalthreads - 1) / 100) + 1) * 10;
   thread_switch (MACH_PORT_NULL, SWITCH_OPTION_DEPRESS, t);
 
-  self = MACH_PORT_NULL;
-
   err = get_privileged_ports (&host_priv, NULL);
+  if (err == MACH_SEND_INVALID_DEST)
+    /* This is returned if we neither have the privileged host control
+       port cached nor have a proc server to talk to.  Give up.  */
+    return;
+
   if (err)
-    goto out;
+    goto error_host_priv;
 
   self = mach_thread_self ();
   err = thread_get_assignment (self, &pset);
   if (err)
-    goto out;
+    goto error_pset;
 
   err = host_processor_set_priv (host_priv, pset, &pset_priv);
   if (err)
-    goto out;
+    goto error_pset_priv;
 
   err = thread_max_priority (self, pset_priv, 0);
   if (err)
-    goto out;
+    goto error_max_priority;
 
   err = thread_priority (self, THREAD_PRI, 0);
+  if (err)
+    goto error_priority;
 
-out:
-  if (self != MACH_PORT_NULL)
-    mach_port_deallocate (mach_task_self (), self);
+  mach_port_deallocate (mach_task_self (), pset_priv);
+  mach_port_deallocate (mach_task_self (), pset);
+  mach_port_deallocate (mach_task_self (), self);
+  mach_port_deallocate (mach_task_self (), host_priv);
+  return;
 
-  if (err && err != EPERM)
-    {
-      errno = err;
-      perror ("unable to adjust libports thread priority");
-    }
+error_priority:
+error_max_priority:
+  mach_port_deallocate (mach_task_self (), pset_priv);
+error_pset_priv:
+  mach_port_deallocate (mach_task_self (), pset);
+error_pset:
+  mach_port_deallocate (mach_task_self (), self);
+  mach_port_deallocate (mach_task_self (), host_priv);
+error_host_priv:
+  if (err != EPERM)
+    error (0, err, "unable to adjust libports thread priority");
 }
 
 void
@@ -92,14 +101,16 @@ ports_manage_port_operations_multithread (struct port_bucket *bucket,
 					  int global_timeout,
 					  void (*hook)())
 {
-  volatile unsigned int nreqthreads;
-  volatile unsigned int totalthreads;
-  pthread_spinlock_t lock = PTHREAD_SPINLOCK_INITIALIZER;
+  /* totalthreads is the number of total threads created.  nreqthreads
+     is the number of threads not currently servicing any client.  The
+     initial values account for the main thread.  */
+  unsigned int totalthreads = 1;
+  unsigned int nreqthreads = 1;
+
   pthread_attr_t attr;
 
   auto void * thread_function (void *);
 
-  /* FIXME This is currently a no-op.  */
   pthread_attr_init (&attr);
   pthread_attr_setstacksize (&attr, STACK_SIZE);
 
@@ -121,31 +132,25 @@ ports_manage_port_operations_multithread (struct port_bucket *bucket,
 		/* msgt_unused = */		0
 	};
 
-      pthread_spin_lock (&lock);
-      assert (nreqthreads);
-      nreqthreads--;
-      if (nreqthreads != 0)
-	pthread_spin_unlock (&lock);
-      else
+      if (__atomic_sub_fetch (&nreqthreads, 1, __ATOMIC_RELAXED) == 0)
 	/* No thread would be listening for requests, spawn one. */
 	{
 	  pthread_t pthread_id;
 	  error_t err;
 
-	  totalthreads++;
-	  nreqthreads++;
-	  pthread_spin_unlock (&lock);
-	  printf ("libports: a new thread created\n");
-	  fflush (stdout);
+	  __atomic_add_fetch (&totalthreads, 1, __ATOMIC_RELAXED);
+	  __atomic_add_fetch (&nreqthreads, 1, __ATOMIC_RELAXED);
 
 	  err = pthread_create (&pthread_id, &attr, thread_function, NULL);
 	  if (!err)
 	    pthread_detach (pthread_id);
 	  else
 	    {
-	      /* XXX The number of threads should be adjusted but the code
-		 and design of the Hurd servers just don't handle thread
-		 creation failure.  */
+	      __atomic_sub_fetch (&totalthreads, 1, __ATOMIC_RELAXED);
+	      __atomic_sub_fetch (&nreqthreads, 1, __ATOMIC_RELAXED);
+	      /* There is not much we can do at this point.  The code
+		 and design of the Hurd servers just don't handle
+		 thread creation failure.  */
 	      errno = err;
 	      perror ("pthread_create");
 	    }
@@ -162,7 +167,26 @@ ports_manage_port_operations_multithread (struct port_bucket *bucket,
       outp->RetCodeType = RetCodeType;
       outp->RetCode = MIG_BAD_ID;
 
-      pi = ports_lookup_port (bucket, inp->msgh_local_port, 0);
+      if (MACH_MSGH_BITS_LOCAL (inp->msgh_bits) ==
+	  MACH_MSG_TYPE_PROTECTED_PAYLOAD)
+	pi = ports_lookup_payload (bucket, inp->msgh_protected_payload, NULL);
+      else
+	{
+	  pi = ports_lookup_port (bucket, inp->msgh_local_port, 0);
+	  if (pi)
+	    {
+	      /* Store the objects address as the payload and set the
+		 message type accordingly.  This prevents us from
+		 having to do another hash table lookup in the intran
+		 functions if protected payloads are not supported by
+		 the kernel.  */
+	      inp->msgh_bits = MACH_MSGH_BITS (
+		MACH_MSGH_BITS_REMOTE (inp->msgh_bits),
+		MACH_MSG_TYPE_PROTECTED_PAYLOAD);
+	      inp->msgh_protected_payload = (unsigned long) pi;
+	    }
+	}
+
       if (pi)
 	{
 	  error_t err = ports_begin_rpc (pi, inp->msgh_id, &link);
@@ -173,10 +197,12 @@ ports_manage_port_operations_multithread (struct port_bucket *bucket,
 	    }
 	  else
 	    {
-	      pthread_mutex_lock (&_ports_lock);
-	      if (inp->msgh_seqno < pi->cancel_threshold)
+	      mach_port_seqno_t cancel_threshold =
+		__atomic_load_n (&pi->cancel_threshold, __ATOMIC_SEQ_CST);
+
+	      if (inp->msgh_seqno < cancel_threshold)
 		hurd_thread_cancel (link.thread);
-	      pthread_mutex_unlock (&_ports_lock);
+
 	      status = demuxer (inp, outheadp);
 	      ports_end_rpc (pi, &link);
 	    }
@@ -188,9 +214,7 @@ ports_manage_port_operations_multithread (struct port_bucket *bucket,
 	  status = 1;
 	}
 
-      pthread_spin_lock (&lock);
-      nreqthreads++;
-      pthread_spin_unlock (&lock);
+      __atomic_add_fetch (&nreqthreads, 1, __ATOMIC_RELAXED);
 
       return status;
     }
@@ -198,12 +222,20 @@ ports_manage_port_operations_multithread (struct port_bucket *bucket,
   void *
   thread_function (void *arg)
     {
+      struct ports_thread thread;
       int master = (int) arg;
       int timeout;
       error_t err;
 
-      /* No need to lock as an approximation is sufficient. */
-      adjust_priority (totalthreads);
+      int synchronized_demuxer (mach_msg_header_t *inp,
+				mach_msg_header_t *outheadp)
+      {
+	int r = internal_demuxer (inp, outheadp);
+	_ports_thread_quiescent (&bucket->threadpool, &thread);
+	return r;
+      }
+
+      adjust_priority (__atomic_load_n (&totalthreads, __ATOMIC_RELAXED));
 
       if (hook)
 	(*hook) ();
@@ -213,51 +245,41 @@ ports_manage_port_operations_multithread (struct port_bucket *bucket,
       else
 	timeout = thread_timeout;
 
+      _ports_thread_online (&bucket->threadpool, &thread);
+
     startover:
 
       do
-	err = ported_mach_msg_server_timeout (internal_demuxer, 0, bucket->portset,
+	err = mach_msg_server_timeout (synchronized_demuxer,
+				       0, bucket->portset,
 				       timeout ? MACH_RCV_TIMEOUT : 0,
 				       timeout);
       while (err != MACH_RCV_TIMED_OUT);
 
       if (master)
 	{
-	  pthread_spin_lock (&lock);
-	  if (totalthreads != 1)
-	    {
-	      pthread_spin_unlock (&lock);
-	      goto startover;
-	    }
+	  if (__atomic_load_n (&totalthreads, __ATOMIC_RELAXED) != 1)
+	    goto startover;
 	}
       else
 	{
-	  pthread_spin_lock (&lock);
-	  if (nreqthreads == 1)
+	  if (__atomic_sub_fetch (&nreqthreads, 1, __ATOMIC_RELAXED) == 0)
 	    {
 	      /* No other thread is listening for requests, continue. */
-	      pthread_spin_unlock (&lock);
+	      __atomic_add_fetch (&nreqthreads, 1, __ATOMIC_RELAXED);
 	      goto startover;
 	    }
-	  nreqthreads--;
-	  totalthreads--;
-	  pthread_spin_unlock (&lock);
+	  __atomic_sub_fetch (&totalthreads, 1, __ATOMIC_RELAXED);
 	}
+      _ports_thread_offline (&bucket->threadpool, &thread);
       return NULL;
     }
 
-  printf ("libports: check point 1\n");
-  fflush (stdout);
-  thread_timeout = global_timeout = 0; /* XXX */
+  /* XXX It is currently unsafe for most servers to terminate based on
+     inactivity because a request may arrive after a server has started
+     shutting down, causing the client to receive an error.  Prevent the
+     master thread from going away.  */
+  global_timeout = 0;
 
-  nreqthreads = 1;
-  totalthreads = 1;
-  printf ("libports: check point 2\n");
-  fflush (stdout);
   thread_function ((void *) 1);
 }
-
-
-
-
-

@@ -150,11 +150,7 @@
 #include <cthreads.h>
 #include <mach/mig_support.h>
 #include "cthread_internals.h"
-#include <stdio.h>
-
-#ifdef HAVE_USELOCALE
-# include <locale.h>
-#endif
+#include <locale.h>
 
 /*
  * Thread status bits.
@@ -266,26 +262,6 @@ cthread_init(void)
  */
 vm_offset_t (*_cthread_init_routine)(void) = cthread_init;
 
-#define __libc_tsd_get(KEY) (__test_libc_tsd_##KEY)
-#define __libc_tsd_set(KEY, VALUE)     (__test_libc_tsd_##KEY = (VALUE))
-#define _NL_CURRENT_LOCALE      ((__locale_t) __libc_tsd_get (LOCALE))
-__thread void *__test_libc_tsd_LOCALE;
-//extern struct __locale_struct _nl_global_locale attribute_hidden;
-locale_t
-test_uselocale (locale_t newloc)
-{
-  locale_t oldloc = _NL_CURRENT_LOCALE;
-  return oldloc;
-
-//  if (newloc != NULL)
-//    {
-//      const locale_t locobj
-//	= newloc == LC_GLOBAL_LOCALE ? &_nl_global_locale : newloc;
-//      __libc_tsd_set (LOCALE, locobj);
-//    }
-//
-//  return oldloc == &_nl_global_locale ? LC_GLOBAL_LOCALE : oldloc;
-}
 
 /*
  * Procedure invoked at the base of each cthread.
@@ -313,11 +289,11 @@ cthread_body(cproc_t self)
 				/*
 				 * Execute the fork request.
 				 */
-#ifdef HAVE_USELOCALE
+
 			        /* A fresh thread needs to be bound to the
 				   global locale.  */
-//			  	uselocale (LC_GLOBAL_LOCALE);
-#endif
+			  	uselocale (LC_GLOBAL_LOCALE);
+
 				t->result = (*(t->func))(t->arg);
 			}
 			/*

@@ -36,14 +36,15 @@ SRCS = create-bucket.c create-class.c \
  interrupt-operation.c interrupt-on-notify.c interrupt-notified-rpcs.c \
  dead-name.c create-port.c import-port.c default-uninhibitable-rpcs.c \
  claim-right.c transfer-right.c create-port-noinstall.c create-internal.c \
- interrupted.c
+ interrupted.c extern-inline.c port-deref-deferred.c
 
-installhdrs = ports.h
+installhdrs = ports.h port-deref-deferred.h
 
 HURDLIBS= ihash
 LDLIBS += -lpthread
 OBJS = $(SRCS:.c=.o) notifyServer.o interruptServer.o
 
 MIGCOMSFLAGS = -prefix ports_
+MIGSFLAGS = -imacros $(srcdir)/mig-mutate.h
 
 include ../Makeconf

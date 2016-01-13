@@ -106,7 +106,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
       if (values == 0)
 	return ENOMEM;
       state->hook = values;
-      bzero (values, sizeof *values);
+      memset (values, 0, sizeof *values);
       values->sb_block = SBLOCK_BLOCK;
       break;
 
@@ -167,29 +167,10 @@ main (int argc, char **argv)
   error_t err;
   mach_port_t bootstrap;
 
-  vm_address_t addr;
-  vm_size_t size;
-  vm_prot_t protection;
-  vm_prot_t max_protection;
-  vm_inherit_t inheritance;
-  boolean_t shared;
-  mach_port_t object_name;
-  vm_offset_t offset;
-
   /* Initialize the diskfs library, parse arguments, and open the store.
      This starts the first diskfs thread for us.  */
   store = diskfs_init_main (&startup_argp, argc, argv,
 			    &store_parsed, &bootstrap);
-
-  err = vm_region (mach_task_self (), &addr, &size, &protection,
-		   &max_protection, &inheritance, &shared, &object_name,
-		   &offset);
-  if (!err)
-    {
-      printf ("testing vm_region: object name: %d\n", object_name);
-      fflush (stdout);
-      mach_port_deallocate (mach_task_self (), object_name);
-    }
 
   if (store->size < SBLOCK_OFFS + SBLOCK_SIZE)
     ext2_panic ("device too small for superblock (%Ld bytes)", store->size);
@@ -203,8 +184,6 @@ main (int argc, char **argv)
   pokel_init (&global_pokel, diskfs_disk_pager, disk_cache);
 
   map_hypermetadata ();
-
-  inode_init ();
 
   /* Set diskfs_root_node to the root inode. */
   err = diskfs_cached_lookup (EXT2_ROOT_INO, &diskfs_root_node);
@@ -228,10 +207,20 @@ main (int argc, char **argv)
 error_t
 diskfs_reload_global_state ()
 {
+  error_t err;
+
   pokel_flush (&global_pokel);
   pager_flush (diskfs_disk_pager, 1);
-  sblock = NULL;
+
+  /* libdiskfs is not responsible for inhibiting paging.  */
+  err = inhibit_ext2_pager ();
+  if (err)
+    return err;
+
   get_hypermetadata ();
   map_hypermetadata ();
+
+  resume_ext2_pager ();
+
   return 0;
 }

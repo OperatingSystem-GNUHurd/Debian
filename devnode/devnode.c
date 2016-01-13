@@ -145,7 +145,7 @@ ds_device_open (mach_port_t master_port, mach_port_t reply_port,
 {
   error_t err;
 
-  debug ("ds_device_open is called\n");
+  devnode_debug ("ds_device_open is called\n");
 
   if ((user_device_name && strcmp (user_device_name, name))
       || device_name == NULL) 
@@ -273,7 +273,7 @@ trivfs_goaway (struct trivfs_control *fsys, int flags)
   ports_inhibit_class_rpcs (trivfs_protid_class);
 
   count = ports_count_class (trivfs_protid_class);
-  debug ("the number of ports alive: %d\n", count);
+  devnode_debug ("the number of ports alive: %d\n", count);
 
   if (count && !(flags & FSYS_GOAWAY_FORCE)) 
     {
@@ -285,7 +285,7 @@ trivfs_goaway (struct trivfs_control *fsys, int flags)
     } 
 
   mach_port_deallocate (mach_task_self (), master_device);
-  debug ("the translator is gone away\n");
+  devnode_debug ("the translator is gone away\n");
   exit (0);
 }
 

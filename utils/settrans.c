@@ -1,8 +1,7 @@
 /* Set a file's translator.
 
-   Copyright (C) 1995, 1996, 1997, 1998, 2001, 2002, 2010
+   Copyright (C) 1995,96,97,98,2001,02,13,14
      Free Software Foundation, Inc.
-
    Written by Miles Bader <miles@gnu.org>
 
    This program is free software; you can redistribute it and/or
@@ -27,6 +26,7 @@
 #include <error.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #include <error.h>
 #include <argz.h>
@@ -52,12 +52,15 @@ const char *argp_program_version = STANDARD_HURD_VERSION (settrans);
 static struct argp_option options[] =
 {
   {"active",      'a', 0, 0, "Start TRANSLATOR and set it as NODE's active translator" },
+  {"start",       's', 0, 0, "Start the translator specified by the NODE's passive translator record and set it as NODE's active translator" },
   {"passive",     'p', 0, 0, "Change NODE's passive translator record (default)" },
   {"interactive", 'i', 0, 0, "Run TRANSLATOR as a regular command "
 			     "but still accept startup requests "
 			     "so that child translators gets set to NODE" },
   {"create",      'c', 0, 0, "Create NODE if it doesn't exist" },
   {"dereference", 'L', 0, 0, "If a translator exists, put the new one on top"},
+  {"pid-file",    'F', "FILENAME", 0, "When starting an active translator,"
+     " write its pid to this file"},
   {"pause",       'P', 0, 0, "When starting an active translator, prompt and"
      " wait for a newline on stdin before completing the startup handshake"},
   {"timeout",     't',"SEC",0, "Timeout for translator startup, in seconds"
@@ -271,6 +274,8 @@ main(int argc, char *argv[])
   /* Various option flags.  */
   int passive = 0, active = 0, keep_active = 0, pause = 0, kill_active = 0,
       orphan = 0, interactive = 0;
+  int start = 0;
+  char *pid_file = NULL;
   int excl = 0;
   int timeout = DEFAULT_TIMEOUT * 1000; /* ms */
   char **chroot_command = 0;
@@ -285,6 +290,9 @@ main(int argc, char *argv[])
 	    node_name = arg;
 	  else			/* command */
 	    {
+	      if (start)
+		argp_error (state, "both --start and TRANSLATOR given");
+
 	      error_t err =
 		argz_create (state->argv + state->next - 1, &argz, &argz_len);
 	      if (err)
@@ -298,12 +306,22 @@ main(int argc, char *argv[])
 	  return EINVAL;
 
 	case 'a': active = 1; break;
+	case 's':
+	  start = 1;
+	  active = 1;	/* start implies active */
+	  break;
 	case 'p': passive = 1; break;
 	case 'i': interactive = 1; break;
 	case 'k': keep_active = 1; break;
 	case 'g': kill_active = 1; break;
 	case 'x': excl = 1; break;
 	case 'P': pause = 1; break;
+	case 'F':
+	  pid_file = strdup (arg);
+	  if (pid_file == NULL)
+	    error(3, ENOMEM, "Failed to duplicate argument");
+	  break;
+
 	case 'o': orphan = 1; break;
 
 	case 'C':
@@ -458,6 +476,26 @@ main(int argc, char *argv[])
 	error (10, 0, "translator exited in an unknown fashion");
     }
 
+  if (start)
+    {
+      /* Retrieve the passive translator record in argz.  */
+      mach_port_t node = file_name_lookup (node_name, lookup_flags, 0);
+      if (node == MACH_PORT_NULL)
+	error (4, errno, "%s", node_name);
+
+      char buf[1024];
+      argz = buf;
+      argz_len = sizeof (buf);
+
+      err = file_get_translator (node, &argz, &argz_len);
+      if (err == EINVAL)
+	error (4, 0, "%s: no passive translator record found", node_name);
+      if (err)
+	error (4, err, "%s", node_name);
+
+      mach_port_deallocate (mach_task_self (), node);
+    }
+
   if ((active || chroot_command) && argz_len > 0)
     {
       /* Error during file lookup; we use this to avoid duplicating error
@@ -475,6 +513,17 @@ main(int argc, char *argv[])
 	      fprintf (stderr, "Translator pid: %d\nPausing...",
 	               task2pid (task));
 	      getchar ();
+	    }
+
+	  if (pid_file != NULL)
+	    {
+	      FILE *h;
+	      h = fopen (pid_file, "w");
+	      if (h == NULL)
+		error (4, errno, "Failed to open pid file");
+
+	      fprintf (h, "%i\n", task2pid (task));
+	      fclose (h);
 	    }
 
 	  node = file_name_lookup (node_name, flags | lookup_flags, 0666);
@@ -515,33 +564,59 @@ main(int argc, char *argv[])
 
   if (chroot_command)
     {
-      /* We will act as the parent filesystem would for a lookup
-	 of the active translator's root node, then use this port
-	 as our root directory while we exec the command.  */
+      pid_t child;
+      int status;
+      switch ((child = fork ()))
+	{
+	case -1:
+	  error (6, errno, "fork");
 
-      char retry_name[1024];	/* XXX */
-      retry_type do_retry;
-      mach_port_t root;
-      err = fsys_getroot (active_control,
-			  MACH_PORT_NULL, MACH_MSG_TYPE_COPY_SEND,
-			  NULL, 0, NULL, 0, 0, &do_retry, retry_name, &root);
-      mach_port_deallocate (mach_task_self (), active_control);
-      if (err)
-	error (6, err, "fsys_getroot");
-      err = hurd_file_name_lookup_retry (&_hurd_ports_use, &getdport, 0,
-					 do_retry, retry_name, 0, 0,
-					 &root);
-      if (err)
-	error (6, err, "cannot resolve root port");
+	case 0:; /* Child.  */
+	  /* We will act as the parent filesystem would for a lookup
+	     of the active translator's root node, then use this port
+	     as our root directory while we exec the command.  */
 
-      if (setcrdir (root))
-	error (7, errno, "cannot install root port");
-      mach_port_deallocate (mach_task_self (), root);
-      if (chdir ("/"))
-	error (8, errno, "cannot chdir to new root");
+	  char retry_name[1024];	/* XXX */
+	  retry_type do_retry;
+	  mach_port_t root;
+	  err = fsys_getroot (active_control,
+			      MACH_PORT_NULL, MACH_MSG_TYPE_COPY_SEND,
+			      NULL, 0, NULL, 0, 0,
+			      &do_retry, retry_name, &root);
+	  mach_port_deallocate (mach_task_self (), active_control);
+	  if (err)
+	    error (6, err, "fsys_getroot");
+	  err = hurd_file_name_lookup_retry (&_hurd_ports_use, &getdport, 0,
+					     do_retry, retry_name, 0, 0,
+					     &root);
+	  if (err)
+	    error (6, err, "cannot resolve root port");
 
-      execvp (chroot_command[0], chroot_command);
-      error (8, errno, "cannot execute %s", chroot_command[0]);
+	  if (setcrdir (root))
+	    error (7, errno, "cannot install root port");
+	  mach_port_deallocate (mach_task_self (), root);
+	  if (chdir ("/"))
+	    error (8, errno, "cannot chdir to new root");
+
+	  execvp (chroot_command[0], chroot_command);
+	  error (8, errno, "cannot execute %s", chroot_command[0]);
+	  break;
+
+	default: /* Parent.  */
+	  if (waitpid (child, &status, 0) != child)
+	    error (8, errno, "waitpid on %d", child);
+
+	  err = fsys_goaway (active_control, goaway_flags);
+	  if (err && err != EBUSY)
+	    error (9, err, "fsys_goaway");
+
+	  if (WIFSIGNALED (status))
+	    error (WTERMSIG (status) + 128, 0,
+		   "%s for child %d", strsignal (WTERMSIG (status)), child);
+	  if (WEXITSTATUS (status) != 0)
+	    error (WEXITSTATUS (status), 0,
+		   "Error %d for child %d", WEXITSTATUS (status), child);
+	}
     }
 
   return 0;

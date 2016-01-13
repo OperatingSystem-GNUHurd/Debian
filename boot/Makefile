@@ -20,7 +20,7 @@ makemode := utility
 
 SRCS = mach-crt0.c boot.c ux.c sigvec.S syscall.S \
        boot_script.c userland-boot.c list.c mach_proxy.c
-COMMON-OBJS = notifyServer.o ourdeviceServer.o \
+COMMON-OBJS = notifyServer.o deviceServer.o \
        ioServer.o io_replyUser.o device_replyUser.o \
        termServer.o bootstrapServer.o boot_script.o userland-boot.o	\
        ourmach_hostServer.o ourmachServer.o ourmach_portServer.o
@@ -40,11 +40,9 @@ include ../Makeconf
 #/usr/local/bin/uxboot: uxboot
 #	cp $< $@
 
+MIGSFLAGS = -DHURD_DEFAULT_PAYLOAD_TO_PORT=1
+
 all: boot # uxboot
-
-ourdevice.defs: device.defs
-	$(CPP) $(CPPFLAGS) -x c $< | sed -e '/out[ 	]*device[ 	]*:[ 	]*device_t/s/device_t/mach_port_send_t/' > $@
-
 
 uxboot.o: boot.c
 	$(COMPILE.c) -DUX $< -o $@

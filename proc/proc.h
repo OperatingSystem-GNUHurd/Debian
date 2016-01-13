@@ -1,5 +1,6 @@
 /* Process server definitions
-   Copyright (C) 1992,93,94,95,96,99,2000,01 Free Software Foundation, Inc.
+   Copyright (C) 1992,93,94,95,96,99,2000,01,13
+     Free Software Foundation, Inc.
 
 This file is part of the GNU Hurd.
 
@@ -56,6 +57,10 @@ struct proc
 
   /* Process group structure */
   struct pgrp *p_pgrp;
+
+  /* Processes may live in a task namespace identified by the
+     notification port registered by proc_make_task_namespace.  */
+  mach_port_t p_task_namespace;	/* send right */
 
   /* Communication */
   mach_port_t p_msgport;	/* send right */
@@ -133,27 +138,20 @@ struct exc
 };
 
 mach_port_t authserver;
-struct proc *self_proc;		/* process 0 (us) */
-struct proc *startup_proc;	/* process 1 (init) */
+struct proc *self_proc;		/* process HURD_PID_PROC (us) */
+struct proc *init_proc;		/* process 1 (sysvinit) */
+struct proc *startup_proc;	/* process 2 (hurd/init) */
 
 struct port_bucket *proc_bucket;
 struct port_class *proc_class;
 struct port_class *generic_port_class;
 struct port_class *exc_class;
 
-mach_port_t master_host_port;
-mach_port_t master_device_port;
-
 mach_port_t generic_port;	/* messages not related to a specific proc */
 
 pthread_mutex_t global_lock;
 
-static inline void __attribute__ ((unused))
-process_drop (struct proc *p)
-{
-  if (p)
-    ports_port_deref (p);
-}
+extern int startup_fallback;	/* (ab)use /hurd/startup's message port */
 
 /* Forward declarations */
 void complete_wait (struct proc *, int);
@@ -161,12 +159,10 @@ int check_uid (struct proc *, uid_t);
 int check_owner (struct proc *, struct proc *);
 void addalltasks (void);
 void prociterate (void (*)(struct proc *, void *), void *);
-void count_up (void *);
-void store_pid (void *);
 void free_process (struct proc *);
 void panic (char *);
 int valid_task (task_t);
-int genpid ();
+int genpid (void);
 void abort_getmsgport (struct proc *);
 int zombie_check_pid (pid_t);
 void check_message_dying (struct proc *, struct proc *);
@@ -195,7 +191,7 @@ void exc_clean (void *);
 struct proc *add_tasks (task_t);
 int pidfree (pid_t);
 
-struct proc *create_startup_proc (void);
+struct proc *create_init_proc (void);
 struct proc *allocate_proc (task_t);
 void proc_death_notify (struct proc *);
 void complete_proc (struct proc *, pid_t);

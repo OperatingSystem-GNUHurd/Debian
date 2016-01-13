@@ -2,21 +2,21 @@
    Copyright (C) 2002, 2004, 2008 Free Software Foundation, Inc.
    Written by Roland McGrath.
 
-This file is part of the GNU Hurd.
+   This file is part of the GNU Hurd.
 
-The GNU Hurd is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   The GNU Hurd is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-The GNU Hurd is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   The GNU Hurd is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with the GNU Hurd; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with the GNU Hurd; see the file COPYING.  If not, write to
+   the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #include <hurd.h>
 #include <elf.h>
@@ -121,10 +121,12 @@ fetch_thread_fpregset (thread_t thread, prfpregset_t *fpregs)
 #endif
 
 
+#ifndef TIME_VALUE_TO_TIMESPEC
 #define TIME_VALUE_TO_TIMESPEC(tv, ts) {                                \
         (ts)->tv_sec = (tv)->seconds;                                   \
         (ts)->tv_nsec = (tv)->microseconds * 1000;                      \
 }
+#endif
 
 #define PAGES_TO_KB(x)	((x) * (vm_page_size / 1024))
 #define ENCODE_PCT(f)	((uint16_t) ((f) * 32768.0))
@@ -334,7 +336,7 @@ dump_core (task_t task, file_t file, off_t corelimit,
     mach_msg_type_number_t num_waits = 0;
     char pibuf[offsetof (struct procinfo, threadinfos[2])];
     struct procinfo *pi = (void *) &pibuf;
-    mach_msg_type_number_t pi_size = sizeof pibuf;
+    mach_msg_type_number_t pi_size = sizeof pibuf / sizeof (*(procinfo_t)0);
 
     memset (&pstatus.data, 0, sizeof pstatus.data);
     memset (&psinfo.data, 0, sizeof psinfo.data);
@@ -395,7 +397,7 @@ dump_core (task_t task, file_t file, off_t corelimit,
 	psinfo.data.pr_wstat = pi->exitstatus;
 
 	if ((void *) pi != &pibuf)
-	  munmap (pi, pi_size);
+	  munmap (pi, pi_size * sizeof (*(procinfo_t) 0));
       }
     if (err == 0)
       {

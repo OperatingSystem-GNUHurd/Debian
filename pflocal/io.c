@@ -19,7 +19,7 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
 
-#include <string.h>		/* For bzero() */
+#include <string.h>		/* For memset() */
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/fcntl.h>
@@ -37,7 +37,6 @@
 #include "sserver.h"
 
 #include "io_S.h"
-#include "interrupt_S.h"
 
 /* Read data from an IO object.  If offset if -1, read from the object
    maintained file pointer.  If the object is not seekable, offset is
@@ -298,6 +297,13 @@ S_io_select_timeout (struct sock_user *user,
   return io_select_common (user, reply, reply_type, &ts, select_type);
 }
 
+static inline void
+copy_time (time_value_t *from, time_t *to_sec, long *to_nsec)
+{
+  *to_sec = from->seconds;
+  *to_nsec = from->microseconds * 1000;
+}
+
 /* Return the current status of the object.  Not all the fields of the
    io_statuf_t are meaningful for all objects; however, the access and
    modify times, the optimal IO size, and the fs type are meaningful
@@ -308,18 +314,12 @@ S_io_stat (struct sock_user *user, struct stat *st)
   struct sock *sock;
   struct pipe *rpipe, *wpipe;
 
-  void copy_time (time_value_t *from, time_t *to_sec, long *to_nsec)
-    {
-      *to_sec = from->seconds;
-      *to_nsec = from->microseconds * 1000;
-    }
-
   if (!user)
     return EOPNOTSUPP;
 
   sock = user->sock;
 
-  bzero (st, sizeof (struct stat));
+  memset (st, 0, sizeof (struct stat));
 
   st->st_fstype = FSTYPE_SOCKET;
   st->st_mode = sock->mode;

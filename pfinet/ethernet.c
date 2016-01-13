@@ -119,12 +119,30 @@ ethernet_demuxer (mach_msg_header_t *inp,
   int datalen;
   struct ether_device *edev;
   struct device *dev = 0;
+  mach_port_t local_port;
 
   if (inp->msgh_id != NET_RCV_MSG_ID)
     return 0;
 
+  if (MACH_MSGH_BITS_LOCAL (inp->msgh_bits) ==
+      MACH_MSG_TYPE_PROTECTED_PAYLOAD)
+    {
+      struct port_info *pi = ports_lookup_payload (NULL,
+						   inp->msgh_protected_payload,
+						   NULL);
+      if (pi)
+	{
+	  local_port = pi->port_right;
+	  ports_port_deref (pi);
+	}
+      else
+	local_port = MACH_PORT_NULL;
+    }
+  else
+    local_port = inp->msgh_local_port;
+
   for (edev = ether_dev; edev; edev = edev->next)
-    if (inp->msgh_local_port == edev->readptname)
+    if (local_port == edev->readptname)
       dev = &edev->dev;
 
   if (! dev)
@@ -143,10 +161,10 @@ ethernet_demuxer (mach_msg_header_t *inp,
   skb->dev = dev;
 
   /* Copy the two parts of the frame into the buffer. */
-  bcopy (msg->header, skb->data, ETH_HLEN);
-  bcopy (msg->packet + sizeof (struct packet_header),
-	 skb->data + ETH_HLEN,
-	 datalen - ETH_HLEN);
+  memcpy (skb->data, msg->header, ETH_HLEN);
+  memcpy (skb->data + ETH_HLEN,
+	  msg->packet + sizeof (struct packet_header),
+	  datalen - ETH_HLEN);
 
   /* Drop it on the queue. */
   skb->protocol = eth_type_trans (skb, dev);
@@ -236,6 +254,19 @@ ethernet_open (struct device *dev)
   return 0;
 }
 
+int
+ethernet_close (struct device *dev)
+{
+  struct ether_device *edev = (struct ether_device *) dev->priv;
+
+  mach_port_deallocate (mach_task_self (), edev->readptname);
+  edev->readptname = MACH_PORT_NULL;
+  ports_destroy_right (edev->readpt);
+  edev->readpt = NULL;
+  device_close (edev->ether_port);
+  mach_port_deallocate (mach_task_self (), edev->ether_port);
+  edev->ether_port = MACH_PORT_NULL;
+}
 
 /* Transmit an ethernet frame */
 int
@@ -244,10 +275,31 @@ ethernet_xmit (struct sk_buff *skb, struct device *dev)
   error_t err;
   struct ether_device *edev = (struct ether_device *) dev->priv;
   u_int count;
+  u_int tried = 0;
 
-  err = device_write (edev->ether_port, D_NOWAIT, 0, skb->data, skb->len, &count);
-  assert_perror (err);
-  assert (count == skb->len);
+  do
+    {
+      tried++;
+      err = device_write (edev->ether_port, D_NOWAIT, 0, skb->data, skb->len, &count);
+      if (err == EMACH_SEND_INVALID_DEST || err == EMIG_SERVER_DIED)
+	{
+	  /* Device probably just died, try to reopen it.  */
+
+	  if (tried == 2)
+	    /* Too many tries, abort */
+	    break;
+
+	  ethernet_close (dev);
+	  ethernet_open (dev);
+	}
+      else
+	{
+	  assert_perror (err);
+	  assert (count == skb->len);
+	}
+    }
+  while (err);
+
   dev_kfree_skb (skb);
   return 0;
 }
@@ -340,7 +392,7 @@ setup_ethernet_device (char *name, struct device **device)
     error (2, err, "%s: Cannot get hardware Ethernet address", name);
   net_address[0] = ntohl (net_address[0]);
   net_address[1] = ntohl (net_address[1]);
-  bcopy (net_address, dev->dev_addr, ETH_ALEN);
+  memcpy (dev->dev_addr, net_address, ETH_ALEN);
 
   /* That should be enough.  */
 

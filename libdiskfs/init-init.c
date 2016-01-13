@@ -1,21 +1,21 @@
 /*
    Copyright (C) 1994, 95, 96, 97, 98, 99, 2001 Free Software Foundation, Inc.
 
-This file is part of the GNU Hurd.
+   This file is part of the GNU Hurd.
 
-The GNU Hurd is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   The GNU Hurd is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-The GNU Hurd is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   The GNU Hurd is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with the GNU Hurd; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with the GNU Hurd; see the file COPYING.  If not, write to
+   the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* Written by Michael I. Bushnell.  */
 
@@ -24,6 +24,10 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include <hurd/fsys.h>
 #include <stdio.h>
 #include <maptime.h>
+
+/* For safe inlining of diskfs_node_disknode and
+   diskfs_disknode_node.  */
+size_t const _diskfs_sizeof_struct_node = sizeof (struct node);
 
 mach_port_t diskfs_default_pager;
 mach_port_t diskfs_auth_server_port;
@@ -36,8 +40,6 @@ int _diskfs_nosuid, _diskfs_noexec;
 int _diskfs_noatime;
 
 struct hurd_port _diskfs_exec_portcell;
-
-pthread_spinlock_t diskfs_node_refcnt_lock = PTHREAD_SPINLOCK_INITIALIZER;
 
 pthread_spinlock_t _diskfs_control_lock = PTHREAD_SPINLOCK_INITIALIZER;
 int _diskfs_ncontrol_ports;
@@ -57,8 +59,6 @@ diskfs_init_diskfs (void)
 {
   error_t err;
 
-  printf ("libdiskfs: check point 1\n");
-  fflush (stdout);
   if (diskfs_boot_filesystem ())
     /* This is a boot filesystem, we have to do some things specially.  */
     {
@@ -77,8 +77,6 @@ diskfs_init_diskfs (void)
   else
     err = maptime_map (0, 0, &diskfs_mtime);
 
-  printf ("libdiskfs: check point 2: %s\n", strerror (err));
-  fflush (stdout);
   if (err)
     return err;
 

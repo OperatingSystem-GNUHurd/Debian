@@ -31,16 +31,30 @@ netfs_S_io_reauthenticate (struct protid *user, mach_port_t rend_port)
   if (!user)
     return EOPNOTSUPP;
 
+  /* This routine must carefully ignore EINTR because we
+     are a simpleroutine, so callers won't know to restart. */
+
   pthread_mutex_lock (&user->po->np->lock);
-  newpi = netfs_make_protid (user->po, 0);
+  do
+    newpi = netfs_make_protid (user->po, 0);
+  while (! newpi && errno == EINTR);
+  if (! newpi)
+    {
+      pthread_mutex_unlock (&user->po->np->lock);
+      return errno;
+    }
 
   newright = ports_get_send_right (newpi);
   assert (newright != MACH_PORT_NULL);
 
+  /* Release the node lock while blocking on the auth server and client.  */
+  pthread_mutex_unlock (&user->po->np->lock);
   err = iohelp_reauth (&newpi->user, netfs_auth_server_port, rend_port,
 		       newright, 1);
+  pthread_mutex_lock (&user->po->np->lock);
 
-  mach_port_deallocate (mach_task_self (), rend_port);
+  if (!err)
+    mach_port_deallocate (mach_task_self (), rend_port);
   mach_port_deallocate (mach_task_self (), newright);
 
   mach_port_move_member (mach_task_self (), newpi->pi.port_right,

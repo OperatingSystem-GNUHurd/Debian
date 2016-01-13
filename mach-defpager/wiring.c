@@ -79,7 +79,7 @@ wire_thread()
 void
 wire_all_memory()
 {
-	register kern_return_t kr;
+	kern_return_t kr;
 	vm_offset_t	address;
 	vm_size_t	size;
 	vm_prot_t	protection;
@@ -92,7 +92,7 @@ wire_all_memory()
 	if (priv_host_port == MACH_PORT_NULL)
 	    return;
 
-	/* iterate thru all regions, wiring */
+	/* iterate through all regions, wiring */
 	address = 0;
 	while (
 	    (kr = vm_region(this_task, &address,

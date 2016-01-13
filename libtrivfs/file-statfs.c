@@ -16,6 +16,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
 
 #include "priv.h"
+#include "trivfs_fs_S.h"
 #include <string.h>
 #include <unistd.h>
 
@@ -27,7 +28,7 @@ trivfs_S_file_statfs (struct trivfs_protid *cred,
   if (!trivfs_fsid)
     trivfs_fsid = getpid();
 
-  bzero (stb, sizeof (struct statfs));
+  memset (stb, 0, sizeof(struct statfs));
   stb->f_type = trivfs_fstype;
   stb->f_fsid = trivfs_fsid;
 

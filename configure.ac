@@ -1,7 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_REVISION([$Id: configure.in,v 1.38 2008/11/17 11:34:18 tschwinge Exp $])
 AC_PREREQ(2.54)			dnl Minimum Autoconf version required.
-AC_INIT([GNU Hurd], [0.3], [bug-hurd@gnu.org])
+AC_INIT([GNU Hurd], [0.7], [bug-hurd@gnu.org])
 AC_CONFIG_SRCDIR([hurd/hurd_types.h])	dnl File to look for in srcdir.
 
 AC_PREFIX_DEFAULT()		dnl Default to empty prefix, not /usr/local.
@@ -73,8 +72,8 @@ esac
 enable_static_progs=`echo "$enable_static_progs" | sed 's/[[, ]][[, ]]*/ /g'`
 AC_SUBST(enable_static_progs)
 
-[# Don't needlessly overwrite files that whose contents haven't changed.  This
-# helps for avoinding unneccessary recompilation cycles when keeping
+[# Don't needlessly overwrite files whose contents haven't changed.
+# This helps avoiding unnecessary recompilation cycles when keeping
 # cross-compilation toolchains up-to-date.  Thus, unconditionally use the
 # supplied `install-sh', as the GNU Coreutils one doesn't provide this
 # functionality yet (TODO: change that).  TODO: $ac_abs_top_builddir et al. are
@@ -84,6 +83,13 @@ AC_PROG_INSTALL
 AC_PROG_AWK
 AC_PROG_SED
 
+if test "x$cross_compiling" = "xyes"; then
+   # It may be that we don't have a working libc yet, for instance
+   # because we're bootstrapping the cross-compilation tool chain.
+   # Thus, use this undocumented Autoconf macro designed for this.
+   AC_NO_EXECUTABLES
+   AC_MSG_WARN("cross-compiling, disabling linking")
+fi
 AC_PROG_CC
 # Require GCC.
 if test x$GCC != xyes; then
@@ -106,10 +112,6 @@ fi
 
 dnl Let these propagate from the environment.
 AC_SUBST(CFLAGS) AC_SUBST(CPPFLAGS) AC_SUBST(LDFLAGS)
-
-# See if there's a separate libcrypt (many systems put crypt there).
-AC_CHECK_LIB(crypt, crypt, LIBCRYPT=-lcrypt)
-AC_SUBST(LIBCRYPT)
 
 hurd_MIG_RETCODE
 
@@ -161,9 +163,6 @@ else
 fi
 AC_SUBST(VERSIONING)
 
-# Check if libc contains getgrouplist and/or uselocale.
-AC_CHECK_FUNCS(getgrouplist uselocale)
-
 
 # From glibc HEAD, 2007-11-07.
 AC_CACHE_CHECK(for -fgnu89-inline, libc_cv_gnu89_inline, [dnl
@@ -212,13 +211,31 @@ AS_IF([test "x$with_parted" != xno], [
 ])
 AC_SUBST([PARTED_LIBS])
 
+AC_ARG_WITH([libbz2],
+  [AS_HELP_STRING([--without-libbz2], [disable libbz2])], , [with_libbz2=yes])
+
+AS_IF([test "x$with_libbz2" != xno], [
+  AC_CHECK_LIB(bz2, BZ2_bzCompress, [HAVE_LIBBZ2=1], [true])
+])
+AC_SUBST([HAVE_LIBBZ2])
+
+AC_ARG_WITH([libz],
+  [AS_HELP_STRING([--without-libz], [disable libz])], , [with_libz=yes])
+
+AS_IF([test "x$with_libz" != xno], [
+  AC_CHECK_LIB(z, deflate, [HAVE_LIBZ=1], [true])
+])
+AC_SUBST([HAVE_LIBZ])
+
 AC_ARG_ENABLE(boot-store-types,
 [  --enable-boot-store-types=TYPES...
 			  list of store types included in statically
 			  linked filesystems used for booting])dnl
 if test -z "$enable_boot_store_types"; then
-  boot_store_types='device remap gunzip bunzip2'
+  boot_store_types='device remap'
   test -z "$PARTED_LIBS" || boot_store_types="$boot_store_types part"
+  test -z "$HAVE_LIBBZ2" || boot_store_types="$boot_store_types bunzip2"
+  test -z "$HAVE_LIBZ"   || boot_store_types="$boot_store_types gunzip"
 elif test "x$enable_boot_store_types" = xno; then
   AC_MSG_WARN([you probably wanted --disable-static-progs])
 else
@@ -246,7 +263,7 @@ fi
 AC_CHECK_LIB(pciaccess, pci_system_init, LIBPCIACCESS=-lpciaccess, LIBPCIACCESS=no)
 AC_SUBST(LIBPCIACCESS)
 if test "$LIBPCIACCESS" = "no"; then
-  AC_MSG_ERROR([libpciaccess must be install in order to use libddekit])
+  AC_MSG_WARN([libpciaccess must be install in order to use libddekit])
 fi
 
 # Check for ncursesw, which is needed for the console-curses client.
@@ -281,7 +298,7 @@ PKG_CHECK_MODULES([X11], [x11 xproto],
     have_keysymdef_h=no
     AC_CHECK_HEADER([X11/keysymdef.h],
       [AC_MSG_CHECKING([for X11/keysymdef.h absolute location])
-       AC_PREPROC_IFELSE([#include <X11/keysymdef.h>],
+       AC_PREPROC_IFELSE([AC_LANG_SOURCE([[#include <X11/keysymdef.h>]])],
          [[X11_KEYSYMDEF_H=`$SED -n 's%^[^"]*"\([^"]*X11/keysymdef.h\)".*$%\1%p' conftest.i`]
           # did the sed magic above work?
           AS_IF([test -f "$X11_KEYSYMDEF_H"],
@@ -296,6 +313,14 @@ PKG_CHECK_MODULES([X11], [x11 xproto],
        have_x11=no])
   ], [have_x11=no])
 ])
+
+AS_IF([test "$have_x11" = "yes"],
+  [AC_MSG_CHECKING([whether AWK is usable])
+   AS_IF([test "$AWK" != ":" && $AWK 'BEGIN { strtonum("1"); }' 2>/dev/null],
+     [AC_MSG_RESULT([yes])],
+     [AC_MSG_RESULT([no])
+      AC_MSG_ERROR([$AWK does not provide required strtonum function])])])
+
 AC_SUBST([have_x11])
 AC_SUBST([XKB_BASE])
 AC_DEFINE_UNQUOTED([X11_PREFIX], "$X11_PREFIX")
@@ -318,9 +343,16 @@ else
 			    echo ${file}:build.mk.in; done`"
 fi
 
-PKG_CHECK_MODULES([libdaemon], [libdaemon],
-  [AC_DEFINE([HAVE_DAEMON], [1], [Use libdaemon])],
-  [true])
+AC_ARG_WITH([libdaemon],
+  [AS_HELP_STRING([--without-libdaemon], [disable libdaemon use in console client])],
+  [],
+  [with_libdaemon=yes])
+
+AS_IF([test "x$with_libdaemon" != xno], [
+  PKG_CHECK_MODULES([libdaemon], [libdaemon],
+    [AC_DEFINE([HAVE_DAEMON], [1], [Use libdaemon])],
+    [true])
+])
 AC_SUBST([libdaemon_LIBS])
 AC_SUBST([libdaemon_CFLAGS])
 

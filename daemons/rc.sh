@@ -2,9 +2,6 @@
 
 PATH=/bin:/sbin
 
-# Start the default pager.  It will bail if there is already one running.
-/hurd/mach-defpager
-
 # Set up swap space.  This will complain if no default pager is functioning.
 swapon -a
 
@@ -26,10 +23,15 @@ then
 	0)
 		;;
 	# Filesystem modified (but ok now)
-	1 | 2)
+	1)
+		;;
+	# Filesystem modified, filesystem should be restarted
+	# Ideally we would only restart the filesystem
+	2 | 3)
+		/sbin/reboot
 		;;
 	# Fsck couldn't fix it.
-	4 | 8)
+	4 | 5 | 8 | 9)
 		echo "Automatic boot failed... help!"
 		exit 1
 		;;

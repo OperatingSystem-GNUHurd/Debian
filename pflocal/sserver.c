@@ -1,6 +1,6 @@
 /* Server for socket ops
 
-   Copyright (C) 1995, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1997, 2013 Free Software Foundation, Inc.
 
    Written by Miles Bader <miles@gnu.ai.mit.edu>
 
@@ -32,17 +32,26 @@ struct port_bucket *sock_port_bucket;
 static int sock_server_active = 0;
 static pthread_spinlock_t sock_server_active_lock = PTHREAD_SPINLOCK_INITIALIZER;
 
+#include "io_S.h"
+#include "socket_S.h"
+#include "../libports/interrupt_S.h"
+#include "../libports/notify_S.h"
+
 /* A demuxer for socket operations.  */
 static int
 sock_demuxer (mach_msg_header_t *inp, mach_msg_header_t *outp)
 {
-  extern int socket_server (mach_msg_header_t *inp, mach_msg_header_t *outp);
-  extern int io_server (mach_msg_header_t *inp, mach_msg_header_t *outp);
-  return
-    socket_server (inp, outp)
-      || io_server (inp, outp)
-      || ports_interrupt_server (inp, outp)
-      || ports_notify_server (inp, outp);
+  mig_routine_t routine;
+  if ((routine = io_server_routine (inp)) ||
+      (routine = socket_server_routine (inp)) ||
+      (routine = ports_interrupt_server_routine (inp)) ||
+      (routine = ports_notify_server_routine (inp)))
+    {
+      (*routine) (inp, outp);
+      return TRUE;
+    }
+  else
+    return FALSE;
 }
 
 /* Handle socket requests while there are sockets around.  */

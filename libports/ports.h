@@ -27,6 +27,15 @@
 #include <hurd/ihash.h>
 #include <mach/notify.h>
 #include <pthread.h>
+#include <refcount.h>
+
+#include "port-deref-deferred.h"
+
+#ifdef PORTS_DEFINE_EI
+#define PORTS_EI
+#else
+#define PORTS_EI __extern_inline
+#endif
 
 /* These are global values for common flags used in the various structures.
    Not all of these are meaningful in all flag fields.  */
@@ -39,17 +48,18 @@
 struct port_info
 {
   struct port_class *class;
-  int refcnt;
-  int weakrefcnt;
+  refcounts_t refcounts;
   mach_port_mscount_t mscount;
-  mach_msg_seqno_t cancel_threshold;
+  mach_msg_seqno_t cancel_threshold;	/* needs atomic operations */
   int flags;
   mach_port_t port_right;
   struct rpc_info *current_rpcs;
   struct port_bucket *bucket;
   hurd_ihash_locp_t hentry;
-  struct port_info *next, **prevp; /* links on port_class list */
+  hurd_ihash_locp_t ports_htable_entry;
 };
+typedef struct port_info *port_info_t;
+
 /* FLAGS above are the following: */
 #define PORT_HAS_SENDRIGHTS	0x0001 /* send rights extant */
 #define PORT_INHIBITED		PORTS_INHIBITED
@@ -59,11 +69,13 @@ struct port_info
 struct port_bucket
 {
   mach_port_t portset;
+  /* Per-bucket hash table used for fast iteration.  Access must be
+     serialized using _ports_htable_lock.  */
   struct hurd_ihash htable;
   int rpcs;
   int flags;
   int count;
-  struct port_bucket *next;
+  struct ports_threadpool threadpool;
 };
 /* FLAGS above are the following: */
 #define PORT_BUCKET_INHIBITED	PORTS_INHIBITED
@@ -76,7 +88,6 @@ struct port_class
 {
   int flags;
   int rpcs;
-  struct port_info *ports;
   int count;
   void (*clean_routine) (void *);
   void (*dropweak_routine) (void *);
@@ -232,6 +243,56 @@ mach_port_t ports_get_send_right (void *port);
 void *ports_lookup_port (struct port_bucket *bucket,
 			 mach_port_t port, struct port_class *class);
 
+/* Like ports_lookup_port, but uses PAYLOAD to look up the object.  If
+   this function is used, PAYLOAD must be a pointer to the port
+   structure.  */
+extern void *ports_lookup_payload (struct port_bucket *bucket,
+				   unsigned long payload,
+				   struct port_class *class);
+
+/* This returns the ports name.  This function can be used as
+   intranpayload function turning payloads back into port names.  If
+   this function is used, PAYLOAD must be a pointer to the port
+   structure.  */
+extern mach_port_t ports_payload_get_name (unsigned int payload);
+
+#if defined(__USE_EXTERN_INLINES) || defined(PORTS_DEFINE_EI)
+
+PORTS_EI void *
+ports_lookup_payload (struct port_bucket *bucket,
+		      unsigned long payload,
+		      struct port_class *class)
+{
+  struct port_info *pi = (struct port_info *) payload;
+
+  if (pi && ! MACH_PORT_VALID (pi->port_right))
+    pi = NULL;
+
+  if (pi && bucket && pi->bucket != bucket)
+    pi = NULL;
+
+  if (pi && class && pi->class != class)
+    pi = NULL;
+
+  if (pi)
+    refcounts_unsafe_ref (&pi->refcounts, NULL);
+
+  return pi;
+}
+
+PORTS_EI mach_port_t
+ports_payload_get_name (unsigned int payload)
+{
+  struct port_info *pi = (struct port_info *) payload;
+
+  if (pi)
+    return pi->port_right;
+
+  return MACH_PORT_NULL;
+}
+
+#endif /* Use extern inlines.  */
+
 /* Allocate another reference to PORT. */
 void ports_port_ref (void *port);
 
@@ -275,7 +336,7 @@ error_t ports_class_iterate (struct port_class *class,
 			     error_t (*fun)(void *port));
 
 /* Internal entrypoint for above two.  */
-error_t _ports_bucket_class_iterate (struct port_bucket *bucket,
+error_t _ports_bucket_class_iterate (struct hurd_ihash *ht,
 				     struct port_class *class,
 				     error_t (*fun)(void *port));
 
@@ -383,23 +444,36 @@ void ports_interrupt_notified_rpcs (void *object, mach_port_t port,
 int ports_notify_server (mach_msg_header_t *, mach_msg_header_t *);
 
 /* Notification server routines called by ports_notify_server.  */
-extern kern_return_t ports_do_mach_notify_dead_name (mach_port_t notify, mach_port_t deadport);
-extern kern_return_t ports_do_mach_notify_msg_accepted (mach_port_t notify, mach_port_t name);
-extern kern_return_t ports_do_mach_notify_no_senders (mach_port_t port, mach_port_mscount_t count);
-extern kern_return_t ports_do_mach_notify_port_deleted (mach_port_t notify, mach_port_t name);
-extern kern_return_t ports_do_mach_notify_port_destroyed (mach_port_t notify, mach_port_t name);
 extern kern_return_t
- ports_do_mach_notify_send_once (mach_port_t notify);
-
-/* A default interrupt server */
-int ports_interrupt_server (mach_msg_header_t *, mach_msg_header_t *);
-extern kern_return_t ports_S_interrupt_operation (mach_port_t,
-						  mach_port_seqno_t);
+ ports_do_mach_notify_dead_name (struct port_info *pi, mach_port_t deadport);
+extern kern_return_t
+ ports_do_mach_notify_msg_accepted (struct port_info *pi, mach_port_t name);
+extern kern_return_t
+ ports_do_mach_notify_no_senders (struct port_info *pi,
+				  mach_port_mscount_t count);
+extern kern_return_t
+ ports_do_mach_notify_port_deleted (struct port_info *pi, mach_port_t name);
+extern kern_return_t
+ ports_do_mach_notify_port_destroyed (struct port_info *pi, mach_port_t name);
+extern kern_return_t
+ ports_do_mach_notify_send_once (struct port_info *pi);
 
 /* Private data */
 extern pthread_mutex_t _ports_lock;
 extern pthread_cond_t _ports_block;
-extern struct port_bucket *_ports_all_buckets;
+
+/* A global hash table mapping port names to port_info objects.  This
+   table is used for port lookups and to iterate over classes.
+
+   A port in this hash table carries an implicit light reference.
+   When the reference counts reach zero, we call
+   _ports_complete_deallocate.  There we reacquire our lock
+   momentarily to check whether someone else reacquired a reference
+   through the hash table.  */
+extern struct hurd_ihash _ports_htable;
+/* Access to all hash tables is protected by this lock.  */
+extern pthread_rwlock_t _ports_htable_lock;
+
 extern int _ports_total_rpcs;
 extern int _ports_flags;
 #define _PORTS_INHIBITED	PORTS_INHIBITED

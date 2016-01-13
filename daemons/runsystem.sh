@@ -1,9 +1,9 @@
 #!/bin/bash
 #
 # This program is run by /hurd/init at boot time after the essential
-# servers are up, and is responsible for running the "userland" parts of a
-# normal system.  This includes running the single-user shell as well as a
-# multi-user system.  This program is expected never to exit.
+# servers are up.  It does some initialization of its own and then
+# execs /hurd/init or any other roughly SysV init-compatible program
+# to bring up the "userland" parts of a normal system.
 #
 
 
@@ -22,11 +22,10 @@ fallback_shells='/bin/sh /bin/bash /bin/csh /bin/ash /bin/shd'
 # Shell used for normal single-user startup.
 SHELL=/bin/sh
 
-# Programs that do multi-user startup.
-RUNCOM=/libexec/rc
-RUNTTYS=/libexec/runttys
-# Signals that we should pass down to runttys.
-runttys_sigs='TERM INT HUP TSTP'
+# The init program to call.
+#
+# Can be overridden using init=something in the kernel command line.
+init=/hurd/init
 
 ###
 
@@ -44,7 +43,7 @@ trap 'reopen_console' SIGLOST
 # startup entirely.  We exec a single-user shell, so we will not come back
 # here.  The only way to get to multi-user from that shell will be
 # explicitly exec this script or something like that.
-function singleuser ()
+function singleuser()
 {
   test $# -eq 0 || echo "$0: $*"
   for try in ${fallback_shells}; do
@@ -54,6 +53,8 @@ function singleuser ()
   exit 127
 }
 
+# Print a newline.
+echo
 
 # See whether pflocal is set up already, and do so if not (install case)
 #
@@ -85,20 +86,23 @@ fi
 # The first argument is the kernel file name; skip that.
 shift
 flags=
+single=
 while [ $# -gt 0 ]; do
   arg="$1"
   shift
   case "$arg" in
   --*) ;;
+  init=*)
+    eval "${arg}"
+    ;;
   *=*) ;;
   -*)
     flags="${flags}${arg#-}"
     ;;
-  'single'|'emergency') # Linux compat
-    flags="${flags}s"
+  'single')
+    single="-s"
     ;;
-  'fastboot')
-    flags="${flags}f"
+  'fastboot'|'emergency')
     ;;
   esac
 done
@@ -106,50 +110,15 @@ done
 # Check boot flags.
 case "$flags" in
 *s*)
-  rc=false			# force single-user
-  ;;
-*f*)
-  rc="${RUNCOM}"		# fastboot
-  ;;
-*)
-  rc="${RUNCOM} autoboot"	# multi-user default
+  single="-s"			# force single-user
   ;;
 esac
 
-# Large infinite loop.  If this script ever exits, init considers that
-# a serious bogosity and punts to a fallback single-user shell.
-# We handle here the normal transitions between single-user and multi-user.
-while : ; do
+# Start the default pager.  It will bail if there is already one running.
+/hurd/mach-defpager
 
-  # Run the rc script.  As long as it exits nonzero, punt to single-user.
-  # After the single-user shell exits, we will start over attempting to
-  # run rc; but later invocations strip the `autoboot' argument.
-  until $rc; do
-    rc=${RUNCOM}
+# This is necessary to make stat / return the correct device ids.
+fsysopts / --update --readonly
 
-    # Run single-user shell and repeat as long as it dies with a signal.
-    until ${SHELL} || test $? -lt 128; do
-      :
-    done
-  done
-
-  # Now we are officially ready for normal multi-user operation.
-
-  # Trap certain signals and send them on to runttys.  For this to work, we
-  # must run it asynchronously and wait for it with the `wait' built-in.
-  runttys_pid=0
-  for sig in $runttys_sigs; do
-    trap "kill -$sig \${runttys_pid}" $sig
-  done
-
-  # This program reads /etc/ttys and starts the programs it says to.
-  ${RUNTTYS} &
-  runttys_pid=$!
-
-  # Wait for runttys to die, meanwhile handling trapped signals.
-  wait
-
-  # Go back to the top of the infinite loop, as if booting single-user.
-  rc=false
-
-done
+# Finally, start the actual init.
+exec ${init} ${single} -a

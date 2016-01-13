@@ -1,21 +1,22 @@
 /* Process management
-   Copyright (C) 1992,93,94,95,96,99,2000,01,02 Free Software Foundation, Inc.
+   Copyright (C) 1992,93,94,95,96,99,2000,01,02,13,14
+     Free Software Foundation, Inc.
 
-This file is part of the GNU Hurd.
+   This file is part of the GNU Hurd.
 
-The GNU Hurd is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   The GNU Hurd is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-The GNU Hurd is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   The GNU Hurd is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with the GNU Hurd; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with the GNU Hurd; see the file COPYING.  If not, write to
+   the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* Written by Michael I. Bushnell.  */
 
@@ -184,7 +185,7 @@ S_proc_child (struct proc *parentp,
   /* Process hierarchy.  Remove from our current location
      and place us under our new parent.  Sanity check to make sure
      parent is currently init. */
-  assert (childp->p_parent == startup_proc);
+  assert (childp->p_parent == init_proc);
   if (childp->p_sib)
     childp->p_sib->p_prevsib = childp->p_prevsib;
   *childp->p_prevsib = childp->p_sib;
@@ -217,6 +218,13 @@ S_proc_child (struct proc *parentp,
     {
       childp->start_code = parentp->start_code;
       childp->end_code = parentp->end_code;
+    }
+
+  if (MACH_PORT_VALID (parentp->p_task_namespace))
+    {
+      mach_port_mod_refs (mach_task_self (), parentp->p_task_namespace,
+			  MACH_PORT_RIGHT_SEND, +1);
+      childp->p_task_namespace = parentp->p_task_namespace;
     }
 
   return 0;
@@ -417,7 +425,7 @@ S_proc_handle_exceptions (struct proc *p,
    the thread_set_state requested by proc_handle_exceptions and then
    send an exception_raise message as requested. */
 kern_return_t
-S_proc_exception_raise (mach_port_t excport,
+S_proc_exception_raise (struct exc *e,
 			mach_port_t reply,
 			mach_msg_type_name_t reply_type,
 			mach_port_t thread,
@@ -428,15 +436,13 @@ S_proc_exception_raise (mach_port_t excport,
 {
   error_t err;
   struct proc *p;
-  struct exc *e = ports_lookup_port (proc_bucket, excport, exc_class);
-  if (!e)
+  if (!e || e->pi.bucket != proc_bucket || e->pi.class != exc_class)
     return EOPNOTSUPP;
 
   p = task_find (task);
   if (! p)
     {
       /* Bogus RPC.  */
-      ports_port_deref (e);
       return EINVAL;
     }
 
@@ -455,9 +461,10 @@ S_proc_exception_raise (mach_port_t excport,
 	 the faulting thread's state to run its recovery code, which should
 	 dequeue that message.  */
       err = thread_set_state (thread, e->flavor, e->thread_state, e->statecnt);
-      ports_port_deref (e);
       mach_port_deallocate (mach_task_self (), thread);
       mach_port_deallocate (mach_task_self (), task);
+      if (err)
+	return err;
       return MIG_NO_REPLY;
 
     default:
@@ -482,7 +489,6 @@ S_proc_exception_raise (mach_port_t excport,
       /* Nuke the task; we will get a notification message and report that
 	 it died with SIGNO.  */
       task_terminate (task);
-      ports_port_deref (e);
 
       /* In the MACH_SEND_NOTIFY_IN_PROGRESS case, the kernel did a
 	 pseudo-receive of the RPC request message that may have added user
@@ -514,6 +520,20 @@ S_proc_exception_raise (mach_port_t excport,
 
 }
 
+/* This function is used as callback in S_proc_getallpids.  */
+static void
+count_up (struct proc *p, void *counter)
+{
+  ++*(int *)counter;
+}
+
+/* This function is used as callback in S_proc_getallpids.  */
+static void
+store_pid (struct proc *p, void *loc)
+{
+  *(*(pid_t **)loc)++ = p->p_pid;
+}
+
 /* Implement proc_getallpids as described in <hurd/process.defs>. */
 kern_return_t
 S_proc_getallpids (struct proc *p,
@@ -522,15 +542,6 @@ S_proc_getallpids (struct proc *p,
 {
   int nprocs;
   pid_t *loc;
-
-  void count_up (struct proc *p, void *counter)
-    {
-      ++*(int *)counter;
-    }
-  void store_pid (struct proc *p, void *loc)
-    {
-      *(*(pid_t **)loc)++ = p->p_pid;
-    }
 
   /* No need to check P here; we don't use it. */
 
@@ -573,6 +584,7 @@ allocate_proc (task_t task)
 
   memset (&p->p_pi + 1, 0, sizeof *p - sizeof p->p_pi);
   p->p_task = task;
+  p->p_task_namespace = MACH_PORT_NULL;
   p->p_msgport = MACH_PORT_NULL;
 
   pthread_cond_init (&p->p_wakeup, NULL);
@@ -583,7 +595,7 @@ allocate_proc (task_t task)
 /* Allocate and initialize the proc structure for init (PID 1),
    the original parent of all other procs.  */
 struct proc *
-create_startup_proc (void)
+create_init_proc (void)
 {
   static const uid_t zero;
   struct proc *p;
@@ -592,7 +604,7 @@ create_startup_proc (void)
   p = allocate_proc (MACH_PORT_NULL);
   assert (p);
 
-  p->p_pid = HURD_PID_STARTUP;
+  p->p_pid = HURD_PID_INIT;
 
   p->p_parent = p;
   p->p_sib = 0;
@@ -640,7 +652,7 @@ proc_death_notify (struct proc *p)
 }
 
 /* Complete a new process that has been allocated but not entirely initialized.
-   This gets called for every process except startup_proc (PID 1).  */
+   This gets called for every process except init_proc (PID 1).  */
 void
 complete_proc (struct proc *p, pid_t pid)
 {
@@ -659,30 +671,47 @@ complete_proc (struct proc *p, pid_t pid)
 
   p->p_pid = pid;
 
-  ids_ref (&nullids);
-  p->p_id = &nullids;
+  if (pid == HURD_PID_STARTUP)
+    {
+      /* Equip HURD_PID_STARTUP with the same credentials as
+         HURD_PID_INIT.  */
+      static const uid_t zero;
+      p->p_id = make_ids (&zero, 1);
+      assert (p->p_id);
+    }
+  else
+    {
+      ids_ref (&nullids);
+      p->p_id = &nullids;
+    }
 
   p->p_login = nulllogin;
   p->p_login->l_refcnt++;
 
   /* Our parent is init for now.  */
-  p->p_parent = startup_proc;
+  p->p_parent = init_proc;
 
-  p->p_sib = startup_proc->p_ochild;
-  p->p_prevsib = &startup_proc->p_ochild;
+  p->p_sib = init_proc->p_ochild;
+  p->p_prevsib = &init_proc->p_ochild;
   if (p->p_sib)
     p->p_sib->p_prevsib = &p->p_sib;
-  startup_proc->p_ochild = p;
+  init_proc->p_ochild = p;
   p->p_loginleader = 0;
   p->p_ochild = 0;
   p->p_parentset = 0;
 
   p->p_noowner = 1;
 
-  p->p_pgrp = startup_proc->p_pgrp;
+  p->p_pgrp = init_proc->p_pgrp;
 
-  proc_death_notify (p);
-  add_proc_to_hash (p);
+  /* At this point, we do not know the task of the startup process,
+     defer registering death notifications and adding it to the hash
+     tables.  */
+  if (pid != HURD_PID_STARTUP)
+    {
+      proc_death_notify (p);
+      add_proc_to_hash (p);
+    }
   join_pgrp (p);
 }
 
@@ -700,6 +729,16 @@ new_proc (task_t task)
   return p;
 }
 
+/* Used with prociterate to terminate all tasks in a task
+   namespace.  */
+static void
+namespace_terminate (struct proc *p, void *cookie)
+{
+  mach_port_t *namespacep = cookie;
+  if (p->p_task_namespace == *namespacep)
+    task_terminate (p->p_task);
+}
+
 /* The task associated with process P has died.  Drop most state,
    and then record us as dead.  Our parent will eventually complete the
    deallocation. */
@@ -730,12 +769,38 @@ process_has_exited (struct proc *p)
 
   ids_rele (p->p_id);
 
-  /* Reparent our children to init by attaching the head and tail
-     of our list onto init's.  */
+  /* Reparent our children to init by attaching the head and tail of
+     our list onto init's.  If the process is part of a task
+     namespace, reparent to the process that created the namespace
+     instead.  */
   if (p->p_ochild)
     {
+      struct proc *reparent_to = init_proc;
       struct proc *tp;		/* will point to the last one.  */
       int isdead = 0;
+
+      if (MACH_PORT_VALID (p->p_task_namespace))
+	{
+	  for (tp = p;
+	       MACH_PORT_VALID (tp->p_parent->p_task_namespace);
+	       tp = tp->p_parent)
+	    {
+	      /* Walk up the process hierarchy until we find the
+		 creator of the task namespace.	 */
+	    }
+
+	  if (p == tp)
+	    {
+	      /* The creator of the task namespace died.  Terminate
+		 all tasks.  */
+	      prociterate (namespace_terminate, &p->p_task_namespace);
+
+	      mach_port_deallocate (mach_task_self (), p->p_task_namespace);
+	      p->p_task_namespace = MACH_PORT_NULL;
+	    }
+	  else
+	    reparent_to = tp;
+	}
 
       /* first tell them their parent is changing */
       for (tp = p->p_ochild; tp->p_sib; tp = tp->p_sib)
@@ -744,7 +809,7 @@ process_has_exited (struct proc *p)
 	    nowait_msg_proc_newids (tp->p_msgport, tp->p_task,
 				    1, tp->p_pgrp->pg_pgid,
 				    !tp->p_pgrp->pg_orphcnt);
-	  tp->p_parent = startup_proc;
+	  tp->p_parent = reparent_to;
 	  if (tp->p_dead)
 	    isdead = 1;
 	}
@@ -752,17 +817,17 @@ process_has_exited (struct proc *p)
 	nowait_msg_proc_newids (tp->p_msgport, tp->p_task,
 				1, tp->p_pgrp->pg_pgid,
 				!tp->p_pgrp->pg_orphcnt);
-      tp->p_parent = startup_proc;
+      tp->p_parent = reparent_to;
 
       /* And now append the lists. */
-      tp->p_sib = startup_proc->p_ochild;
+      tp->p_sib = reparent_to->p_ochild;
       if (tp->p_sib)
 	tp->p_sib->p_prevsib = &tp->p_sib;
-      startup_proc->p_ochild = p->p_ochild;
-      p->p_ochild->p_prevsib = &startup_proc->p_ochild;
+      reparent_to->p_ochild = p->p_ochild;
+      p->p_ochild->p_prevsib = &reparent_to->p_ochild;
 
       if (isdead)
-	alert_parent (startup_proc);
+	alert_parent (reparent_to);
     }
 
   /* If an operation is in progress for this process, cause it
@@ -774,6 +839,23 @@ process_has_exited (struct proc *p)
 
   /* Cancel any outstanding RPCs done on behalf of the dying process.  */
   ports_interrupt_rpcs (p);
+
+  /* No one is going to wait for processes in a task namespace.  */
+  if (MACH_PORT_VALID (p->p_task_namespace))
+    {
+      mach_port_t task;
+      mach_port_deallocate (mach_task_self (), p->p_task_namespace);
+      p->p_waited = 1;
+
+      /* XXX: `complete_exit' will destroy p->p_task if it is valid.
+	 Prevent this so that `do_mach_notify_dead_name' can
+	 deallocate the right.	The proper fix is not to use
+	 mach_port_destroy in the first place.	*/
+      task = p->p_task;
+      p->p_task = MACH_PORT_NULL;
+      complete_exit (p);
+      mach_port_deallocate (mach_task_self (), task);
+    }
 }
 
 void
@@ -821,7 +903,7 @@ add_tasks (task_t task)
 
       if (!foundp)
 	{
-	  host_processor_set_priv (master_host_port, psets[i], &psetpriv);
+	  host_processor_set_priv (_hurd_host_priv, psets[i], &psetpriv);
 	  processor_set_tasks (psetpriv, &tasks, &ntasks);
 	  for (j = 0; j < ntasks; j++)
 	    {
@@ -862,7 +944,7 @@ genpid ()
 {
 #define WRAP_AROUND 30000
 #define START_OVER 100
-  static int nextpid = 0;
+  static int nextpid = 1;
   static int wrap = WRAP_AROUND;
 
   while (nextpid < wrap && !pidfree (nextpid))
@@ -878,6 +960,24 @@ genpid ()
     }
 
   return nextpid++;
+}
+
+/* Implement proc_set_init_task as described in <hurd/process.defs>.  */
+error_t
+S_proc_set_init_task(struct proc *callerp,
+		     task_t task)
+{
+  if (! callerp)
+    return EOPNOTSUPP;
+
+  if (callerp != startup_proc)
+    return EPERM;
+
+  init_proc->p_task = task;
+  proc_death_notify (init_proc);
+  add_proc_to_hash (init_proc);
+
+  return 0;
 }
 
 /* Implement proc_mark_important as described in <hurd/process.defs>. */
@@ -939,6 +1039,72 @@ S_proc_get_code (struct proc *callerp,
 
   *start_code = callerp->start_code;
   *end_code = callerp->end_code;
+
+  return 0;
+}
+
+/* Handle new task notifications from the kernel.  */
+error_t
+S_mach_notify_new_task (mach_port_t notify,
+			mach_port_t task,
+			mach_port_t parent)
+{
+  struct proc *parentp, *childp;
+
+  if (notify != generic_port)
+    return EOPNOTSUPP;
+
+  parentp = task_find_nocreate (parent);
+  if (! parentp)
+    {
+      mach_port_deallocate (mach_task_self (), task);
+      mach_port_deallocate (mach_task_self (), parent);
+      return ESRCH;
+    }
+
+  childp = task_find_nocreate (task);
+  if (! childp)
+    {
+      mach_port_mod_refs (mach_task_self (), task, MACH_PORT_RIGHT_SEND, +1);
+      childp = new_proc (task);
+    }
+
+  if (MACH_PORT_VALID (parentp->p_task_namespace))
+    {
+      error_t err;
+      /* Tasks in a task namespace are not expected to call
+	 proc_child, so we do it on their behalf.  */
+      mach_port_mod_refs (mach_task_self (), task, MACH_PORT_RIGHT_SEND, +1);
+      err = S_proc_child (parentp, task);
+      if (! err)
+	/* Relay the notification.  This consumes TASK and PARENT.  */
+	return mach_notify_new_task (childp->p_task_namespace, task, parent);
+    }
+
+  mach_port_deallocate (mach_task_self (), task);
+  mach_port_deallocate (mach_task_self (), parent);
+  return 0;
+}
+
+/* Implement proc_make_task_namespace as described in
+   <hurd/process.defs>.  */
+error_t
+S_proc_make_task_namespace (struct proc *callerp,
+			    mach_port_t notify)
+{
+  if (! callerp)
+    return EOPNOTSUPP;
+
+  if (! MACH_PORT_VALID (notify))
+    return EINVAL;
+
+  if (MACH_PORT_VALID (callerp->p_task_namespace))
+    {
+      mach_port_deallocate (mach_task_self (), notify);
+      return EBUSY;
+    }
+
+  callerp->p_task_namespace = notify;
 
   return 0;
 }

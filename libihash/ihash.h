@@ -26,6 +26,7 @@
 #include <sys/types.h>
 #include <limits.h>
 #include <stdint.h>
+#include <stddef.h>
 
 
 /* The type of the values corresponding to the keys.  Must be a
@@ -40,6 +41,13 @@ typedef void *hurd_ihash_value_t;
    but stop at _HURD_IHASH_EMPTY.  */
 #define _HURD_IHASH_EMPTY	((hurd_ihash_value_t) 0)
 #define _HURD_IHASH_DELETED	((hurd_ihash_value_t) -1)
+
+/* Test if VALUE is valid.  */
+static inline int
+hurd_ihash_value_valid (hurd_ihash_value_t value)
+{
+  return value != _HURD_IHASH_EMPTY && value != _HURD_IHASH_DELETED;
+}
 
 /* The type of integer we want to use for the keys.  */
 typedef uintptr_t hurd_ihash_key_t;
@@ -79,8 +87,8 @@ struct hurd_ihash
   /* The offset of the location pointer from the hash value.  */
   intptr_t locp_offset;
 
-  /* The maximum load factor in percent.  */
-  int max_load;
+  /* The maximum load factor in binary percent.  */
+  unsigned int max_load;
 
   /* When freeing or overwriting an element, this function is called
      with the value as the first argument, and CLEANUP_DATA as the
@@ -93,8 +101,13 @@ typedef struct hurd_ihash *hurd_ihash_t;
 
 /* Construction and destruction of hash tables.  */
 
-/* The default value for the maximum load factor in percent.  */
-#define HURD_IHASH_MAX_LOAD_DEFAULT 80
+/* The size of the initial allocation in number of items.  This must
+   be a power of two.  */
+#define HURD_IHASH_MIN_SIZE	32
+
+/* The default value for the maximum load factor in binary percent.
+   96b% is equivalent to 75%, 128b% to 100%.  */
+#define HURD_IHASH_MAX_LOAD_DEFAULT 96
 
 /* The LOCP_OFFS to use if no location pointer is available.  */
 #define HURD_IHASH_NO_LOCP	INTPTR_MIN
@@ -139,14 +152,15 @@ void hurd_ihash_free (hurd_ihash_t ht);
 void hurd_ihash_set_cleanup (hurd_ihash_t ht, hurd_ihash_cleanup_t cleanup,
 			     void *cleanup_data);
 
-/* Set the maximum load factor in percent to MAX_LOAD, which should be
-   between 50 and 100.  The default is HURD_IHASH_MAX_LOAD_DEFAULT.
-   New elements are only added to the hash table while the number of
-   hashed elements is that much percent of the total size of the hash
-   table.  If more elements are added, the hash table is first
-   expanded and reorganized.  A MAX_LOAD of 100 will always fill the
-   whole table before enlarging it, but note that this will increase
-   the cost of operations significantly when the table is almost full.
+/* Set the maximum load factor in binary percent to MAX_LOAD, which
+   should be between 64 and 128.  The default is
+   HURD_IHASH_MAX_LOAD_DEFAULT.  New elements are only added to the
+   hash table while the number of hashed elements is that much binary
+   percent of the total size of the hash table.  If more elements are
+   added, the hash table is first expanded and reorganized.  A
+   MAX_LOAD of 128 will always fill the whole table before enlarging
+   it, but note that this will increase the cost of operations
+   significantly when the table is almost full.
 
    If the value is set to a smaller value than the current load
    factor, the next reorganization will happen when a new item is
@@ -154,6 +168,30 @@ void hurd_ihash_set_cleanup (hurd_ihash_t ht, hurd_ihash_cleanup_t cleanup,
 void hurd_ihash_set_max_load (hurd_ihash_t ht, unsigned int max_load);
 
 
+/* Get the current load factor of HT in binary percent, where 128b%
+   corresponds to 100%.  The reason we do this is that it is so
+   efficient to compute:
+
+   As the size is always a power of two, and 128 is also, the quotient
+   of both is also a power of two.  Therefore, we can use bit shifts
+   to scale the number of items.
+
+   load = nr_items * 128 / size
+        = nr_items * 2^{log2 (128) - log2 (size)}
+        = nr_items >> (log2 (size) - log2 (128))
+                                -- if size >= 128
+        = nr_items << (log2 (128) - log2 (size))
+                                -- otherwise
+
+   If you want to convert this to percent, just divide by 1.28.  */
+static inline unsigned int
+hurd_ihash_get_load (hurd_ihash_t ht)
+{
+  int d = __builtin_ctzl (ht->size) - 7;
+  return d >= 0 ? ht->nr_items >> d : ht->nr_items << -d;
+}
+
+
 /* Add ITEM to the hash table HT under the key KEY.  If there already
    is an item under this key, call the cleanup function (if any) for
    it before overriding the value.  If a memory allocation error
@@ -161,9 +199,60 @@ void hurd_ihash_set_max_load (hurd_ihash_t ht, unsigned int max_load);
 error_t hurd_ihash_add (hurd_ihash_t ht, hurd_ihash_key_t key,
 			hurd_ihash_value_t item);
 
+/* Add VALUE to the hash table HT under the key KEY at LOCP.  If there
+   already is an item under this key, call the cleanup function (if
+   any) for it before overriding the value.  This function is faster
+   than hurd_ihash_add.
+
+   If LOCP is NULL, fall back to hurd_ihash_add.  Otherwise, LOCP must
+   be valid and may either be obtained from hurd_ihash_locp_find, or
+   from an item that is currently in the hash table.  If an item is
+   replaced, KEY must match the key of the previous item.
+
+   If a memory allocation error occurs, ENOMEM is returned, otherwise
+   0.  */
+error_t hurd_ihash_locp_add (hurd_ihash_t ht, hurd_ihash_locp_t locp,
+                             hurd_ihash_key_t key, hurd_ihash_value_t value);
+
 /* Find and return the item in the hash table HT with key KEY, or NULL
    if it doesn't exist.  */
 hurd_ihash_value_t hurd_ihash_find (hurd_ihash_t ht, hurd_ihash_key_t key);
+
+/* Find the item in the hash table HT with key KEY.  If it is found,
+   return the location of its slot in the hash table.  If it is not
+   found, this function may still return a location.
+
+   This location pointer can always be safely accessed using
+   hurd_ihash_locp_value.  If the lookup is successful,
+   hurd_ihash_locp_value will return the value related to KEY.
+
+   If the lookup is successful, the returned location can be used with
+   hurd_ihash_locp_add to update the item, and with
+   hurd_ihash_locp_remove to remove it.
+
+   If the lookup is not successful, the returned location can be used
+   with hurd_ihash_locp_add to add the item.
+
+   Note that returned location is only valid until the next insertion
+   or deletion.  */
+hurd_ihash_locp_t hurd_ihash_locp_find (hurd_ihash_t ht,
+                                        hurd_ihash_key_t key);
+
+/* Given an hash table bucket location LOCP, return the value stored
+   there, or NULL if it is empty or LOCP is NULL.  */
+static inline void *
+hurd_ihash_locp_value (hurd_ihash_locp_t locp)
+{
+  struct _hurd_ihash_item *item = (struct _hurd_ihash_item *) locp;
+
+  if (item == NULL)
+    return NULL;
+
+  if (hurd_ihash_value_valid (item->value))
+    return item->value;
+
+  return NULL;
+}
 
 /* Iterate over all elements in the hash table.  You use this macro
    with a block, for example like this:
@@ -211,7 +300,8 @@ hurd_ihash_value_t hurd_ihash_find (hurd_ihash_t ht, hurd_ihash_key_t key);
   for (hurd_ihash_value_t val,						\
          *_hurd_ihash_valuep = (ht)->size ? &(ht)->items[0].value : 0;	\
        (ht)->size							\
-         && ((_hurd_ihash_item_t) _hurd_ihash_valuep) - &(ht)->items[0]	\
+	 && (size_t) ((_hurd_ihash_item_t) _hurd_ihash_valuep		\
+		      - &(ht)->items[0])				\
             < (ht)->size						\
          && (val = *_hurd_ihash_valuep, 1);				\
        _hurd_ihash_valuep = (hurd_ihash_value_t *)			\

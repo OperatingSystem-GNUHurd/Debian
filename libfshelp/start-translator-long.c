@@ -73,7 +73,7 @@ fshelp_start_translator_long (fshelp_open_fn_t underlying_open_fn,
   err = task_priority(task, 25, FALSE);
 
   if (err)
-    goto lose;
+    goto lose_task;
 
   /* Designate TASK as our child and set it's owner accordingly. */
   proc = getproc ();
@@ -81,11 +81,11 @@ fshelp_start_translator_long (fshelp_open_fn_t underlying_open_fn,
   err = proc_task2proc (proc, task, &childproc);
   mach_port_deallocate (mach_task_self (), proc);
   if (err)
-    goto lose;
+    goto lose_task;
   err = proc_setowner (childproc, owner_uid, owner_uid == (uid_t) -1);
   mach_port_deallocate (mach_task_self (), childproc);
   if (err)
-    goto lose;
+    goto lose_task;
 
   assert (ports_len > INIT_PORT_BOOTSTRAP);
   switch (ports_type)
@@ -126,10 +126,7 @@ fshelp_start_translator_long (fshelp_open_fn_t underlying_open_fn,
   ports[INIT_PORT_BOOTSTRAP] = saveport;
 
   if (err)
-    {
-      task_terminate (task);
-      goto lose;
-    }
+    goto lose_task;
 
   /* Ask to be told if TASK dies.  */
   err =
@@ -138,12 +135,16 @@ fshelp_start_translator_long (fshelp_open_fn_t underlying_open_fn,
 				   bootstrap, MACH_MSG_TYPE_MAKE_SEND_ONCE,
 				   &prev_notify);
   if (err)
-    return err;
+    goto lose_task;
 
   /* Ok, cool, we've got a running(?) program, now rendezvous with it if
      possible using the startup protocol on the bootstrap port... */
   err = fshelp_service_fsys_startup(underlying_open_fn, cookie, bootstrap,
 				    timeout, task, control);
+
+ lose_task:
+  if (err)
+    task_terminate (task);
 
  lose:
   if (!ports_moved)

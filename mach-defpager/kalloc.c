@@ -58,7 +58,7 @@ void (*__MALLOC_HOOK_VOLATILE __malloc_initialize_hook) (void) = init_hook;
  *	next highest power of 2.
  */
 vm_size_t	kalloc_max;		/* max before we use vm_allocate */
-#define		MINSIZE	4		/* minimum allocation size */
+#define		MINSIZE	sizeof(vm_offset_t)		/* minimum allocation size */
 
 struct free_list {
 	pthread_spinlock_t	lock;
@@ -92,15 +92,15 @@ boolean_t		kalloc_initialized = FALSE;
 
 void kalloc_init(void)
 {
-	register int i;
+	int i;
 
 	/*
 	 * Support free lists for items up to vm_page_size or
 	 * 16Kbytes, whichever is less.
 	 */
 
-	if (vm_page_size > 16*1024)
-		kalloc_max = 16*1024;
+	if (vm_page_size > (MINSIZE << (KLIST_MAX-1)))
+		kalloc_max = (MINSIZE << (KLIST_MAX-1));
 	else
 		kalloc_max = vm_page_size;
 
@@ -122,7 +122,7 @@ void kalloc_init(void)
  */
 vm_offset_t kget_space(vm_offset_t size)
 {
-	vm_size_t	space_to_add;
+	vm_size_t	space_to_add = 0;
 	vm_offset_t	new_space = 0;
 	vm_offset_t	addr;
 
@@ -185,9 +185,9 @@ vm_offset_t kget_space(vm_offset_t size)
 
 void *kalloc(vm_size_t size)
 {
-	register vm_size_t allocsize;
+	vm_size_t allocsize;
 	vm_offset_t addr;
-	register struct free_list *fl;
+	struct free_list *fl;
 
 	if (!kalloc_initialized) {
 	    kalloc_init();
@@ -197,7 +197,7 @@ void *kalloc(vm_size_t size)
 	/* compute the size of the block that we will actually allocate */
 
 	allocsize = size;
-	if (size < kalloc_max) {
+	if (size <= kalloc_max) {
 	    allocsize = MINSIZE;
 	    fl = kfree_list;
 	    while (allocsize < size) {
@@ -211,7 +211,7 @@ void *kalloc(vm_size_t size)
 	 * and allocate.
 	 */
 
-	if (allocsize < kalloc_max) {
+	if (allocsize <= kalloc_max) {
 	    pthread_spin_lock(&fl->lock);
 	    if ((addr = fl->head) != 0) {
 		fl->head = *(vm_offset_t *)addr;
@@ -237,11 +237,11 @@ void
 kfree(	void *data,
 	vm_size_t size)
 {
-	register vm_size_t freesize;
-	register struct free_list *fl;
+	vm_size_t freesize;
+	struct free_list *fl;
 
 	freesize = size;
-	if (size < kalloc_max) {
+	if (size <= kalloc_max) {
 	    freesize = MINSIZE;
 	    fl = kfree_list;
 	    while (freesize < size) {
@@ -250,7 +250,7 @@ kfree(	void *data,
 	    }
 	}
 
-	if (freesize < kalloc_max) {
+	if (freesize <= kalloc_max) {
 	    pthread_spin_lock(&fl->lock);
 	    *(vm_offset_t *)data = fl->head;
 	    fl->head = (vm_offset_t) data;

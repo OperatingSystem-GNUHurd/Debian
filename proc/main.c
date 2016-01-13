@@ -1,27 +1,28 @@
 /* Initialization of the proc server
-   Copyright (C) 1993,94,95,96,97,99,2000,01 Free Software Foundation, Inc.
+   Copyright (C) 1993,94,95,96,97,99,2000,01,13 Free Software Foundation, Inc.
 
-This file is part of the GNU Hurd.
+   This file is part of the GNU Hurd.
 
-The GNU Hurd is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   The GNU Hurd is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-The GNU Hurd is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   The GNU Hurd is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with the GNU Hurd; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with the GNU Hurd; see the file COPYING.  If not, write to
+   the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* Written by Michael I. Bushnell.  */
 
 #include <mach.h>
 #include <hurd/hurd_types.h>
 #include <hurd.h>
+#include <hurd/paths.h>
 #include <hurd/startup.h>
 #include <device/device.h>
 #include <assert.h>
@@ -31,37 +32,76 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include <pids.h>
 
 #include "proc.h"
+#include "gnumach_U.h"
 
 const char *argp_program_version = STANDARD_HURD_VERSION (proc);
+
+#include "process_S.h"
+#include "notify_S.h"
+#include "../libports/interrupt_S.h"
+#include "proc_exc_S.h"
+#include "task_notify_S.h"
 
 int
 message_demuxer (mach_msg_header_t *inp,
 		 mach_msg_header_t *outp)
 {
-  extern int process_server (mach_msg_header_t *, mach_msg_header_t *);
-  extern int notify_server (mach_msg_header_t *, mach_msg_header_t *);
-  extern int proc_exc_server (mach_msg_header_t *, mach_msg_header_t *);
-  int status;
-
-  pthread_mutex_lock (&global_lock);
-  status = (process_server (inp, outp)
-	    || notify_server (inp, outp)
-	    || ports_interrupt_server (inp, outp)
-	    || proc_exc_server (inp, outp));
-  pthread_mutex_unlock (&global_lock);
-  return status;
+  mig_routine_t routine;
+  if ((routine = process_server_routine (inp)) ||
+      (routine = notify_server_routine (inp)) ||
+      (routine = ports_interrupt_server_routine (inp)) ||
+      (routine = proc_exc_server_routine (inp)) ||
+      (routine = task_notify_server_routine (inp)))
+    {
+      pthread_mutex_lock (&global_lock);
+      (*routine) (inp, outp);
+      pthread_mutex_unlock (&global_lock);
+      return TRUE;
+    }
+  else
+    return FALSE;
 }
 
 pthread_mutex_t global_lock = PTHREAD_MUTEX_INITIALIZER;
+int startup_fallback;
+
+error_t
+increase_priority (void)
+{
+  mach_port_t pset = MACH_PORT_NULL, psetcntl = MACH_PORT_NULL;
+  error_t err;
+
+  err = thread_get_assignment (mach_thread_self (), &pset);
+  if (err)
+    goto out;
+
+  err = host_processor_set_priv (_hurd_host_priv, pset, &psetcntl);
+  if (err)
+    goto out;
+
+  err = thread_max_priority (mach_thread_self (), psetcntl, 0);
+  if (err)
+    goto out;
+
+  err = task_priority (mach_task_self (), 2, 1);
+
+ out:
+  if (MACH_PORT_VALID (pset))
+    mach_port_deallocate (mach_task_self (), pset);
+  if (MACH_PORT_VALID (psetcntl))
+    mach_port_deallocate (mach_task_self (), psetcntl);
+
+  return err;
+}
 
 int
 main (int argc, char **argv, char **envp)
 {
   mach_port_t boot;
   error_t err;
-  mach_port_t pset, psetcntl;
   void *genport;
   process_t startup_port;
+  mach_port_t startup;
   struct argp argp = { 0, 0, 0, "Hurd process server" };
 
   argp_parse (&argp, argc, argv, 0, 0, 0);
@@ -82,9 +122,14 @@ main (int argc, char **argv, char **envp)
   generic_port = ports_get_right (genport);
 
   /* Create the initial proc object for init (PID 1).  */
-  startup_proc = create_startup_proc ();
+  init_proc = create_init_proc ();
 
-  /* Create our own proc object (we are PID 0).  */
+  /* Create the startup proc object for /hurd/init (PID 2).  */
+  startup_proc = allocate_proc (MACH_PORT_NULL);
+  startup_proc->p_deadmsg = 1;
+  complete_proc (startup_proc, HURD_PID_STARTUP);
+
+  /* Create our own proc object.  */
   self_proc = allocate_proc (mach_task_self ());
   assert (self_proc);
 
@@ -92,7 +137,7 @@ main (int argc, char **argv, char **envp)
 
   startup_port = ports_get_send_right (startup_proc);
   err = startup_procinit (boot, startup_port, &startup_proc->p_task,
-			  &authserver, &master_host_port, &master_device_port);
+			  &authserver, &_hurd_host_priv, &_hurd_device_master);
   assert_perror (err);
   mach_port_deallocate (mach_task_self (), startup_port);
 
@@ -109,27 +154,47 @@ main (int argc, char **argv, char **envp)
 
   /* Give ourselves good scheduling performance, because we are so
      important. */
-  err = thread_get_assignment (mach_thread_self (), &pset);
-  assert_perror (err);
-  err = host_processor_set_priv (master_host_port, pset, &psetcntl);
-  assert_perror (err);
-  thread_max_priority (mach_thread_self (), psetcntl, 0);
-  task_priority (mach_task_self (), 2, 1);
+  err = increase_priority ();
+  if (err)
+    error (0, err, "Increasing priority failed");
 
-  mach_port_deallocate (mach_task_self (), pset);
-  mach_port_deallocate (mach_task_self (), psetcntl);
+  err = register_new_task_notification (_hurd_host_priv,
+					generic_port,
+					MACH_MSG_TYPE_MAKE_SEND);
+  if (err)
+    error (0, err, "Registering task notifications failed");
 
   {
     /* Get our stderr set up to print on the console, in case we have
        to panic or something.  */
     mach_port_t cons;
     error_t err;
-    err = device_open (master_device_port, D_READ|D_WRITE, "console", &cons);
+    err = device_open (_hurd_device_master, D_READ|D_WRITE, "console", &cons);
     assert_perror (err);
     stdin = mach_open_devstream (cons, "r");
     stdout = stderr = mach_open_devstream (cons, "w");
     mach_port_deallocate (mach_task_self (), cons);
   }
+
+  startup = file_name_lookup (_SERVERS_STARTUP, 0, 0);
+  if (MACH_PORT_VALID (startup))
+    {
+      err = startup_essential_task (startup, mach_task_self (),
+				    MACH_PORT_NULL, "proc", _hurd_host_priv);
+      if (err)
+	/* Due to the single-threaded nature of /hurd/startup, it can
+	   only handle requests once the core server bootstrap has
+	   completed.  Therefore, it does not bind itself to
+	   /servers/startup until it is ready.	*/
+	/* Fall back to abusing the message port lookup.  */
+	startup_fallback = 1;
+
+      err = mach_port_deallocate (mach_task_self (), startup);
+      assert_perror (err);
+    }
+  else
+    /* Fall back to abusing the message port lookup.	*/
+    startup_fallback = 1;
 
   while (1)
     ports_manage_port_operations_multithread (proc_bucket,
