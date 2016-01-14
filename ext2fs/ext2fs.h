@@ -116,14 +116,14 @@ void pokel_inherit (struct pokel *pokel, struct pokel *from);
 
 #include <stdint.h>
 
-extern int test_bit (unsigned num, char *bitmap);
+extern int test_bit (unsigned num, unsigned char *bitmap);
 
-extern int set_bit (unsigned num, char *bitmap);
+extern int set_bit (unsigned num, unsigned char *bitmap);
 
 #if defined(__USE_EXTERN_INLINES) || defined(EXT2FS_DEFINE_EI)
 /* Returns TRUE if bit NUM is set in BITMAP.  */
 EXT2FS_EI int
-test_bit (unsigned num, char *bitmap)
+test_bit (unsigned num, unsigned char *bitmap)
 {
   const uint32_t *const bw = (uint32_t *) bitmap + (num >> 5);
   const uint_fast32_t mask = 1 << (num & 31);
@@ -133,7 +133,7 @@ test_bit (unsigned num, char *bitmap)
 /* Sets bit NUM in BITMAP, and returns the previous state of the bit.  Unlike
    the linux version, this function is NOT atomic!  */
 EXT2FS_EI int
-set_bit (unsigned num, char *bitmap)
+set_bit (unsigned num, unsigned char *bitmap)
 {
   uint32_t *const bw = (uint32_t *) bitmap + (num >> 5);
   const uint_fast32_t mask = 1 << (num & 31);
@@ -143,7 +143,7 @@ set_bit (unsigned num, char *bitmap)
 /* Clears bit NUM in BITMAP, and returns the previous state of the bit.
    Unlike the linux version, this function is NOT atomic!  */
 EXT2FS_EI int
-clear_bit (unsigned num, char *bitmap)
+clear_bit (unsigned num, unsigned char *bitmap)
 {
   uint32_t *const bw = (uint32_t *) bitmap + (num >> 5);
   const uint_fast32_t mask = 1 << (num & 31);
@@ -244,7 +244,7 @@ extern int disk_cache_blocks;
 
 #define DC_NO_BLOCK	((block_t) -1L)
 
-#ifndef NDEBUG
+#ifdef DEBUG_DISK_CACHE
 #define DISK_CACHE_LAST_READ_XOR	0xDEADBEEF
 #endif
 
@@ -254,7 +254,8 @@ struct disk_cache_info
   block_t block;
   uint16_t flags;
   uint16_t ref_count;
-#ifndef NDEBUG
+  struct disk_cache_info *next;	/* List of reusable entries.  */
+#ifdef DEBUG_DISK_CACHE
   block_t last_read, last_read_xor;
 #endif
 };
@@ -436,7 +437,7 @@ struct pokel global_pokel;
 /* If the block size is less than the page size, then this bitmap is used to
    record which disk blocks are actually modified, so we don't stomp on parts
    of the disk which are backed by file pagers.  */
-char *modified_global_blocks;
+unsigned char *modified_global_blocks;
 pthread_spinlock_t modified_global_blocks_lock;
 
 extern int global_block_modified (block_t block);
