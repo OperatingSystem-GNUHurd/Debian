@@ -27,7 +27,7 @@ LCLHDRS = dev_hdr.h device_emul.h ds_routines.h vm_param.h \
 	  errno-base.h
 installhdrs = machdev.h
 HURDLIBS = ports trivfs bpf
-OTHERLIBS = -lpthread
+LDLIBS += -lpthread
 OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
 MIGSFLAGS = -imacros $(srcdir)/mig-mutate.h
 device-MIGSFLAGS="-DMACH_PAYLOAD_TO_PORT=ports_payload_get_name"

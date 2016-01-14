@@ -41,7 +41,7 @@ MIGSTUBS = experimentalUser.o
 OBJS = $(sort $(SRCS:.c=.o) $(MIGSTUBS))
 
 HURDLIBS = ports shouldbeinlibc hurd-slab
-OTHERLIBS = -lpthread
+LDLIBS += -lpthread
 
 MIGCOMSFLAGS = -prefix dde_
 
