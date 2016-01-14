@@ -1,5 +1,6 @@
-hurd (1:0.7-2) UNRELEASED; urgency=medium
+hurd (1:0.7+git20160114-1) UNRELEASED; urgency=medium
 
+  * New upstream snapshot
   * control, rules: Add a stage3 which builds everything that can be built
     with libc.so.
   * patches/external.patch: Do not build DDE when libpciaccess is not
