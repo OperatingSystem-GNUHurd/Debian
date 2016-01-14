@@ -2,13 +2,12 @@ Include DDE in the build
 
 --- a/Makefile
 +++ b/Makefile
-@@ -28,7 +28,16 @@ include ./Makeconf
- # Hurd libraries
+@@ -28,7 +28,15 @@ include ./Makeconf
  lib-subdirs = libshouldbeinlibc libihash libiohelp libports libthreads \
  	      libpager libfshelp libdiskfs libtrivfs libps \
--	      libnetfs libpipe libstore libhurdbugaddr libftpconn libcons
-+	      libnetfs libpipe libstore libhurdbugaddr libftpconn libcons \
-+	      libbpf libhurd-slab eth-multiplexer
+ 	      libnetfs libpipe libstore libhurdbugaddr libftpconn libcons \
+-	      libhurd-slab
++	      libhurd-slab libbpf eth-multiplexer
 +
 +ifneq ($(LIBPCIACCESS),no)
 +lib-subdirs += libmachdev libddekit
@@ -20,14 +19,6 @@ Include DDE in the build
  
  # Hurd programs
  prog-subdirs = auth proc exec term \
-@@ -42,6 +51,7 @@ prog-subdirs = auth proc exec term \
- 	       procfs \
- 	       startup \
- 	       init \
-+	       devnode
- 
- ifeq ($(HAVE_SUN_RPC),yes)
- prog-subdirs += nfs nfsd
 --- a/Makeconf
 +++ b/Makeconf
 @@ -576,7 +576,7 @@ vpath %.defs $(top_srcdir)/hurd

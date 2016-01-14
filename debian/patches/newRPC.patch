@@ -16,4 +16,4 @@ Index: hurd-debian/proc/Makefile
 +	task_notifyServer.o task_notifyUser.o
  OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
  HURDLIBS = ihash ports shouldbeinlibc
- 
+ LDLIBS = -lpthread
