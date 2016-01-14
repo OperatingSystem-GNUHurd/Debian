@@ -441,9 +441,32 @@ S_socket_getopt (struct sock_user *user,
       switch (opt)
 	{
 	case SO_TYPE:
-	  assert (*value_len >= sizeof (int));
+	  if (*value_len < sizeof (int))
+	    {
+	      ret = EINVAL;
+	      break;
+	    }
 	  *(int *)*value = user->sock->pipe_class->sock_type;
 	  *value_len = sizeof (int);
+	  break;
+	case SO_ERROR:
+	  /* We do not have asynchronous operations (such as connect), so no
+	     error to report.  */
+	  if (*value_len < sizeof (short))
+	  {
+	    *(char*)*value = 0;
+	    *value_len = sizeof(char);
+	  }
+	  else if (*value_len < sizeof (int))
+	  {
+	    *(short*)*value = 0;
+	    *value_len = sizeof(short);
+	  }
+	  else
+	  {
+	    *(int*)*value = 0;
+	    *value_len = sizeof(int);
+	  }
 	  break;
 	default:
 	  ret = ENOPROTOOPT;

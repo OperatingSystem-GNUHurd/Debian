@@ -1,5 +1,5 @@
 /* ihash.c - Integer-keyed hash table functions.
-   Copyright (C) 1993-1997, 2001, 2003, 2004, 2006
+   Copyright (C) 1993-1997, 2001, 2003, 2004, 2006, 2014, 2015
      Free Software Foundation, Inc.
    Written by Michael I. Bushnell.
    Revised by Miles Bader <miles@gnu.org>.
@@ -32,13 +32,29 @@
 
 #include "ihash.h"
 
+/* This function is used to hash the key.  */
+static inline hurd_ihash_key_t
+hash (hurd_ihash_t ht, hurd_ihash_key_t k)
+{
+  return ht->fct_hash ? ht->fct_hash ((const void *) k) : k;
+}
+
+/* This function is used to compare the key.  Returns true if A is
+   equal to B.  */
+static inline int
+compare (hurd_ihash_t ht, hurd_ihash_key_t a, hurd_ihash_key_t b)
+{
+  return
+    ht->fct_cmp ? (a && ht->fct_cmp ((const void *) a, (const void *) b))
+		: a == b;
+}
+
 /* Return 1 if the slot with the index IDX in the hash table HT is
    empty, and 0 otherwise.  */
 static inline int
 index_empty (hurd_ihash_t ht, unsigned int idx)
 {
-  return ht->items[idx].value == _HURD_IHASH_EMPTY
-    || ht->items[idx].value == _HURD_IHASH_DELETED;
+  return ! hurd_ihash_value_valid (ht->items[idx].value);
 }
 
 
@@ -47,7 +63,7 @@ index_empty (hurd_ihash_t ht, unsigned int idx)
 static inline int
 index_valid (hurd_ihash_t ht, unsigned int idx, hurd_ihash_key_t key)
 {
-  return !index_empty (ht, idx) && ht->items[idx].key == key;
+  return !index_empty (ht, idx) && compare (ht, ht->items[idx].key, key);
 }
 
 
@@ -59,11 +75,14 @@ find_index (hurd_ihash_t ht, hurd_ihash_key_t key)
 {
   unsigned int idx;
   unsigned int up_idx;
+  unsigned int first_deleted = 0;
+  int first_deleted_set = 0;
   unsigned int mask = ht->size - 1;
 
-  idx = key & mask;
+  idx = hash (ht, key) & mask;
 
-  if (ht->items[idx].value == _HURD_IHASH_EMPTY || ht->items[idx].key == key)
+  if (ht->items[idx].value == _HURD_IHASH_EMPTY
+      || compare (ht, ht->items[idx].key, key))
     return idx;
 
   up_idx = idx;
@@ -71,15 +90,21 @@ find_index (hurd_ihash_t ht, hurd_ihash_key_t key)
   do
     {
       up_idx = (up_idx + 1) & mask;
-      if (ht->items[up_idx].value == _HURD_IHASH_EMPTY
-	  || ht->items[up_idx].key == key)
+      if (ht->items[up_idx].value == _HURD_IHASH_EMPTY)
+        return first_deleted_set ? first_deleted : up_idx;
+      if (compare (ht, ht->items[up_idx].key, key))
 	return up_idx;
+      if (! first_deleted_set
+          && ht->items[up_idx].value == _HURD_IHASH_DELETED)
+        first_deleted = up_idx, first_deleted_set = 1;
     }
   while (up_idx != idx);
 
-  /* If we end up here, the item could not be found.  Return any
-     invalid index.  */
-  return idx;
+  /* If we end up here, the item could not be found.  Return the index
+     of the first deleted item, as this is the position where we can
+     insert an item with the given key once we established that it is
+     not in the table.  */
+  return first_deleted;
 }
 
 
@@ -89,9 +114,11 @@ find_index (hurd_ihash_t ht, hurd_ihash_key_t key)
 static inline void
 locp_remove (hurd_ihash_t ht, hurd_ihash_locp_t locp)
 {
+  struct _hurd_ihash_item *item = (struct _hurd_ihash_item *) locp;
   if (ht->cleanup)
-    (*ht->cleanup) (*locp, ht->cleanup_data);
-  *locp = _HURD_IHASH_DELETED;
+    (*ht->cleanup) (item->value, ht->cleanup_data);
+  item->value = _HURD_IHASH_DELETED;
+  item->key = 0;
   ht->nr_items--;
 }
 
@@ -107,6 +134,8 @@ hurd_ihash_init (hurd_ihash_t ht, intptr_t locp_offs)
   ht->locp_offset = locp_offs;
   ht->max_load = HURD_IHASH_MAX_LOAD_DEFAULT;
   ht->cleanup = 0;
+  ht->fct_hash = NULL;
+  ht->fct_cmp = NULL;
 }
 
 
@@ -167,6 +196,21 @@ hurd_ihash_set_cleanup (hurd_ihash_t ht, hurd_ihash_cleanup_t cleanup,
 }
 
 
+/* Use the generalized key interface.  Must be called before any item
+   is inserted into the table.  */
+void
+hurd_ihash_set_gki (hurd_ihash_t ht,
+		    hurd_ihash_fct_hash_t fct_hash,
+		    hurd_ihash_fct_cmp_t fct_cmp)
+{
+  assert (ht->size == 0 || !"called after insertion");
+  assert (fct_hash);
+  assert (fct_cmp);
+  ht->fct_hash = fct_hash;
+  ht->fct_cmp = fct_cmp;
+}
+
+
 /* Set the maximum load factor in binary percent to MAX_LOAD, which
    should be between 64 and 128.  The default is
    HURD_IHASH_MAX_LOAD_DEFAULT.  New elements are only added to the
@@ -197,47 +241,22 @@ static inline int
 add_one (hurd_ihash_t ht, hurd_ihash_key_t key, hurd_ihash_value_t value)
 {
   unsigned int idx;
-  unsigned int first_free;
-  unsigned int mask = ht->size - 1;
 
-  idx = key & mask;
-  first_free = idx;
-
-  if (ht->items[idx].value != _HURD_IHASH_EMPTY && ht->items[idx].key != key)
-    {
-      unsigned int up_idx = idx;
-
-      do
-	{
-        up_idx = (up_idx + 1) & mask;
-	  if (ht->items[up_idx].value == _HURD_IHASH_EMPTY
-	      || ht->items[up_idx].key == key)
-	    {
-	      idx = up_idx;
-	      break;
-	    }
-	}
-      while (up_idx != idx);
-    }
+  idx = find_index (ht, key);
 
   /* Remove the old entry for this key if necessary.  */
   if (index_valid (ht, idx, key))
     locp_remove (ht, &ht->items[idx].value);
 
-  /* If we have not found an empty slot, maybe the last one we
-     looked at was empty (or just got deleted).  */
-  if (!index_empty (ht, first_free))
-    first_free = idx;
- 
-  if (index_empty (ht, first_free))
+  if (index_empty (ht, idx))
     {
       ht->nr_items++;
-      ht->items[first_free].value = value;
-      ht->items[first_free].key = key;
+      ht->items[idx].value = value;
+      ht->items[idx].key = key;
 
       if (ht->locp_offset != HURD_IHASH_NO_LOCP)
 	*((hurd_ihash_locp_t *) (((char *) value) + ht->locp_offset))
-	  = &ht->items[first_free].value;
+	  = &ht->items[idx].value;
 
       return 1;
     }
@@ -245,7 +264,55 @@ add_one (hurd_ihash_t ht, hurd_ihash_key_t key, hurd_ihash_value_t value)
   return 0;
 }
 
-  
+
+/* Add VALUE to the hash table HT under the key KEY at LOCP.  If there
+   already is an item under this key, call the cleanup function (if
+   any) for it before overriding the value.  This function is faster
+   than hurd_ihash_add.
+
+   If LOCP is NULL, fall back to hurd_ihash_add.  Otherwise, LOCP must
+   be valid and may either be obtained from hurd_ihash_locp_find, or
+   from an item that is currently in the hash table.  If an item is
+   replaced, KEY must match the key of the previous item.
+
+   If a memory allocation error occurs, ENOMEM is returned, otherwise
+   0.  */
+error_t
+hurd_ihash_locp_add (hurd_ihash_t ht, hurd_ihash_locp_t locp,
+                     hurd_ihash_key_t key, hurd_ihash_value_t value)
+{
+  struct _hurd_ihash_item *item = (struct _hurd_ihash_item *) locp;
+
+  /* In case of complications, fall back to hurd_ihash_add.  */
+  if (ht->size == 0
+      || item == NULL
+      || item->value == _HURD_IHASH_DELETED
+      || ! compare (ht, item->key, key)
+      || hurd_ihash_get_load (ht) > ht->max_load)
+    return hurd_ihash_add (ht, key, value);
+
+  if (item->value == _HURD_IHASH_EMPTY)
+    {
+      item->key = key;
+      ht->nr_items += 1;
+    }
+  else
+    {
+      assert (compare (ht, item->key, key));
+      if (ht->cleanup)
+        (*ht->cleanup) (locp, ht->cleanup_data);
+    }
+
+  item->value = value;
+
+  if (ht->locp_offset != HURD_IHASH_NO_LOCP)
+    *((hurd_ihash_locp_t *) (((char *) value) + ht->locp_offset))
+      = locp;
+
+  return 0;
+}
+
+
 /* Add ITEM to the hash table HT under the key KEY.  If there already
    is an item under this key, call the cleanup function (if any) for
    it before overriding the value.  If a memory allocation error
@@ -255,12 +322,14 @@ hurd_ihash_add (hurd_ihash_t ht, hurd_ihash_key_t key, hurd_ihash_value_t item)
 {
   struct hurd_ihash old_ht = *ht;
   int was_added;
+  int fatal = 0;	/* bail out on allocation errors */
   unsigned int i;
 
   if (ht->size)
     {
       /* Only fill the hash table up to its maximum load factor.  */
       if (hurd_ihash_get_load (ht) <= ht->max_load)
+      add_one:
 	if (add_one (ht, key, item))
 	  return 0;
     }
@@ -278,7 +347,15 @@ hurd_ihash_add (hurd_ihash_t ht, hurd_ihash_key_t key, hurd_ihash_value_t item)
   if (ht->items == NULL)
     {
       *ht = old_ht;
-      return ENOMEM;
+      if (fatal || ht->size == 0)
+        return ENOMEM;
+
+      /* We prefer performance degradation over failure.  Therefore,
+	 we add the item even though we are above the load factor.  If
+	 the table is full, this will fail.  We set the fatal flag to
+	 avoid looping.	 */
+      fatal = 1;
+      goto add_one;
     }
 
   /* We have to rehash the old entries.  */
@@ -312,6 +389,34 @@ hurd_ihash_find (hurd_ihash_t ht, hurd_ihash_key_t key)
       int idx = find_index (ht, key);
       return index_valid (ht, idx, key) ? ht->items[idx].value : NULL;
     }
+}
+
+/* Find and return the item in the hash table HT with key KEY, or NULL
+   if it doesn't exist.  If it is not found, this function may still
+   return a location in SLOT.
+
+   If the lookup is successful, the returned location can be used with
+   hurd_ihash_locp_add to update the item, and with
+   hurd_ihash_locp_remove to remove it.
+
+   If the lookup is not successful, the returned location can be used
+   with hurd_ihash_locp_add to add the item.
+
+   Note that returned location is only valid until the next insertion
+   or deletion.  */
+hurd_ihash_value_t
+hurd_ihash_locp_find (hurd_ihash_t ht,
+		      hurd_ihash_key_t key,
+		      hurd_ihash_locp_t *slot)
+{
+  int idx;
+
+  if (ht->size == 0)
+    return NULL;
+
+  idx = find_index (ht, key);
+  *slot = &ht->items[idx].value;
+  return index_valid (ht, idx, key) ? ht->items[idx].value : NULL;
 }
 
 

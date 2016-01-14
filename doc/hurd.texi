@@ -314,6 +314,9 @@ File Transfer Protocol
 
 Networking
 
+* pfinet::			TCP/IP stack.
+* pflocal::
+* libpipe::
 * Socket Interface::            Network communication I/O protocol.
 
 Authentication
@@ -2318,17 +2321,6 @@ The functions and variables described in this subsection already have
 default definitions in @code{libtrivfs}, so you are not forced to define
 them; rather, they may be redefined on a case-by-case basis.
 
-@deftypevar {extern struct port_class *} trivfs_protid_portclasses []
-@deftypevarx {extern int} trivfs_protid_nportclasses
-@deftypevarx {extern struct port_class *} trivfs_cntl_portclasses []
-@deftypevarx {extern int} trivfs_cntl_nportclasses
-If you define these, they should be vectors (and the associated sizes)
-of port classes that will be translated into control and protid pointers
-for passing to RPCs, in addition to those passed to or created by
-@code{trivfs_create_control} (or @code{trivfs_startup}), which will
-automatically be recognized.
-@end deftypevar
-
 @deftypefn {Variable} error_t {(*trivfs_check_open_hook)} (@w{struct trivfs_control *@var{cntl}}, @w{struct iouser *@var{user}}, @w{int @var{flags}})
 If this variable is non-zero, it will be called every time an open happens.
 @var{user} and @var{flags} are from the open; @var{cntl} identifies the
@@ -2907,6 +2899,14 @@ FIXME: finish
 @node Special Files
 @chapter Special Files
 
+@menu
+* fifo::
+* ifsock::
+* magic::
+* null::
+* devnode::
+@end menu
+
 In Unix, any file that does not act as a general-purpose unit of storage
 is called a @dfn{special file}.  These are FIFOs, Unix-domain sockets,
 and device nodes.  In the Hurd, there is no need for the ``special
@@ -2925,10 +2925,57 @@ storeio server (FIXME xref).
 
 FIXME: finish
 
+@node fifo
 @section fifo
+
+@node ifsock
 @section ifsock
+
+@node magic
 @section magic
+
+@node null
 @section null
+
+@node devnode
+@section devnode
+
+@menu
+* Invoking devnode::
+@end menu
+
+@dfn{devnode} is a translator that creates the device file for the device,
+which provides another way for other programs to open the device.
+
+Clients need to get the port to the @dfn{devnode} translator by calling
+@dfn{file_name_lookup}() and uses this port as a master device port to open
+the device by calling @dfn{device_open}(). The device name used in
+@dfn{device_open}() is specified by @option{--name} of @dfn{devnode}.
+
+@node Invoking devnode
+@subsection Invoking devnode
+
+Usage: devnode [@var{option}@dots{}]
+
+@table @code
+@item --name=@var{devicename}
+@itemx -n
+Define the device name used by clients in device_open().
+
+@item --master-device=@var{devicefile}
+@itemx -M
+Get a pseudo master device port
+
+@end table
+
+Mandatory or optional arguments to long options are also mandatory or optional
+for any corresponding short options.
+
+If @option{--name} is specified, the client must use the device name in
+@dfn{device_open}. Otherwise, any device name is acceptable.
+
+@option{--master-device} can be useful to open the virtual interface
+created by some other programs, for example by eth-multiplexer.
 
 
 FIXME: a chapter on libtreefs and libdirmgt will probably go here
@@ -4550,12 +4597,19 @@ FIXME: finish
 FIXME: this subsystem is in flux @c Thomas, 26-03-1998
 
 @menu
+* pfinet::			TCP/IP stack.
+* pflocal::
+* libpipe::
 * Socket Interface::            Network communication I/O protocol.
 @end menu
 
-
+@node pfinet
 @section pfinet
+
+@node pflocal
 @section pflocal
+
+@node libpipe
 @section libpipe
 
 @node Socket Interface

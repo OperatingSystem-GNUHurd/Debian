@@ -1,5 +1,5 @@
 /* ihash.h - Integer keyed hash table interface.
-   Copyright (C) 1995, 2003, 2004 Free Software Foundation, Inc.
+   Copyright (C) 1995, 2003, 2004, 2014, 2015 Free Software Foundation, Inc.
    Written by Miles Bader <miles@gnu.org>.
    Revised by Marcus Brinkmann <marcus@gnu.org>.
 
@@ -26,6 +26,7 @@
 #include <sys/types.h>
 #include <limits.h>
 #include <stdint.h>
+#include <stddef.h>
 
 
 /* The type of the values corresponding to the keys.  Must be a
@@ -41,12 +42,33 @@ typedef void *hurd_ihash_value_t;
 #define _HURD_IHASH_EMPTY	((hurd_ihash_value_t) 0)
 #define _HURD_IHASH_DELETED	((hurd_ihash_value_t) -1)
 
+/* Test if VALUE is valid.  */
+static inline int
+hurd_ihash_value_valid (hurd_ihash_value_t value)
+{
+  return value != _HURD_IHASH_EMPTY && value != _HURD_IHASH_DELETED;
+}
+
 /* The type of integer we want to use for the keys.  */
 typedef uintptr_t hurd_ihash_key_t;
 
 /* The type of a location pointer, which is a pointer to the hash
    value stored in the hash table.  */
 typedef hurd_ihash_value_t *hurd_ihash_locp_t;
+
+
+/* We support non-integer keys using the generalized key interface.
+
+   To use it, supply a pair of functions matching the following
+   specification, and use pointers to the key instead of the key
+   itself in all calls to libihash.  */
+
+/* The type of a function computing a hash for the given key.  */
+typedef hurd_ihash_key_t (*hurd_ihash_fct_hash_t) (const void *);
+
+/* The type of a function comparing two given keys.  Return true if
+   both keys are equal.  */
+typedef int (*hurd_ihash_fct_cmp_t) (const void *, const void *);
 
 
 /* The type of the cleanup function, which is called for every value
@@ -87,6 +109,10 @@ struct hurd_ihash
      second argument.  This does not happen if CLEANUP is NULL.  */
   hurd_ihash_cleanup_t cleanup;
   void *cleanup_data;
+
+  /* User-supplied functions for the generalized key interface.  */
+  hurd_ihash_fct_hash_t fct_hash;
+  hurd_ihash_fct_cmp_t fct_cmp;
 };
 typedef struct hurd_ihash *hurd_ihash_t;
 
@@ -109,6 +135,16 @@ typedef struct hurd_ihash *hurd_ihash_t;
   { .nr_items = 0, .size = 0, .cleanup = (hurd_ihash_cleanup_t) 0,	\
     .max_load = HURD_IHASH_MAX_LOAD_DEFAULT,				\
     .locp_offset = (locp_offs)}
+
+#define HURD_IHASH_INITIALIZER_GKI(locp_offs, f_clean, f_clean_data,	\
+				   f_hash, f_compare)			\
+  { .nr_items = 0, .size = 0,						\
+    .cleanup = (f_clean),						\
+    .cleanup_data = (f_clean_data),					\
+    .max_load = HURD_IHASH_MAX_LOAD_DEFAULT,				\
+    .locp_offset = (locp_offs),						\
+    .fct_hash = (f_hash),						\
+    .fct_cmp = (f_compare)}						\
 
 /* Initialize the hash table at address HT.  If LOCP_OFFSET is not
    HURD_IHASH_NO_LOCP, then this is an offset (in bytes) from the
@@ -143,6 +179,12 @@ void hurd_ihash_free (hurd_ihash_t ht);
    invocation.  */
 void hurd_ihash_set_cleanup (hurd_ihash_t ht, hurd_ihash_cleanup_t cleanup,
 			     void *cleanup_data);
+
+/* Use the generalized key interface.  Must be called before any item
+   is inserted into the table.	*/
+void hurd_ihash_set_gki (hurd_ihash_t ht,
+			 hurd_ihash_fct_hash_t fct_hash,
+			 hurd_ihash_fct_cmp_t fct_cmp);
 
 /* Set the maximum load factor in binary percent to MAX_LOAD, which
    should be between 64 and 128.  The default is
@@ -191,9 +233,41 @@ hurd_ihash_get_load (hurd_ihash_t ht)
 error_t hurd_ihash_add (hurd_ihash_t ht, hurd_ihash_key_t key,
 			hurd_ihash_value_t item);
 
+/* Add VALUE to the hash table HT under the key KEY at LOCP.  If there
+   already is an item under this key, call the cleanup function (if
+   any) for it before overriding the value.  This function is faster
+   than hurd_ihash_add.
+
+   If LOCP is NULL, fall back to hurd_ihash_add.  Otherwise, LOCP must
+   be valid and may either be obtained from hurd_ihash_locp_find, or
+   from an item that is currently in the hash table.  If an item is
+   replaced, KEY must match the key of the previous item.
+
+   If a memory allocation error occurs, ENOMEM is returned, otherwise
+   0.  */
+error_t hurd_ihash_locp_add (hurd_ihash_t ht, hurd_ihash_locp_t locp,
+                             hurd_ihash_key_t key, hurd_ihash_value_t value);
+
 /* Find and return the item in the hash table HT with key KEY, or NULL
    if it doesn't exist.  */
 hurd_ihash_value_t hurd_ihash_find (hurd_ihash_t ht, hurd_ihash_key_t key);
+
+/* Find and return the item in the hash table HT with key KEY, or NULL
+   if it doesn't exist.  If it is not found, this function may still
+   return a location in SLOT.
+
+   If the lookup is successful, the returned location can be used with
+   hurd_ihash_locp_add to update the item, and with
+   hurd_ihash_locp_remove to remove it.
+
+   If the lookup is not successful, the returned location can be used
+   with hurd_ihash_locp_add to add the item.
+
+   Note that returned location is only valid until the next insertion
+   or deletion.  */
+hurd_ihash_value_t hurd_ihash_locp_find (hurd_ihash_t ht,
+					 hurd_ihash_key_t key,
+					 hurd_ihash_locp_t *slot);
 
 /* Iterate over all elements in the hash table.  You use this macro
    with a block, for example like this:
@@ -275,5 +349,10 @@ int hurd_ihash_remove (hurd_ihash_t ht, hurd_ihash_key_t key);
    was provided to hurd_ihash_add().  This call is faster than
    hurd_ihash_remove().  */
 void hurd_ihash_locp_remove (hurd_ihash_t ht, hurd_ihash_locp_t locp);
+
+/* We provide a general purpose hash function.  This function can be
+   used with the generalized key interface to use arbitrary data as
+   keys using this library.  */
+uint32_t hurd_ihash_hash32 (const void *buf, size_t len, uint32_t seed);
 
 #endif	/* _HURD_IHASH_H */
