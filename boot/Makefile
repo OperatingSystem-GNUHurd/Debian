@@ -30,8 +30,7 @@ UX-OBJS = mach-crt0.o uxboot.o sigvec.o syscall.o ux.o $(COMMON-OBJS)
 target = boot
 io-MIGSFLAGS=-DREPLY_PORTS
 HURDLIBS = store shouldbeinlibc
-OTHERLIBS = -lpthread
-DIST_FILES=frank1.ld frankemul.ld
+LDLIBS += -lpthread
 
 include ../Makeconf
 
