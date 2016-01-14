@@ -27,7 +27,7 @@ device-MIGSFLAGS="-DMACH_PAYLOAD_TO_PORT=ports_payload_get_name"
 OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
 LCLHDRS = ethernet.h util.h vdev.h netfs_impl.h
 HURDLIBS=ports fshelp shouldbeinlibc netfs bpf
-OTHERLIBS = -lpthread
+LDLIBS += -lpthread
 
 CFLAGS += -I$(top_srcdir)/libbpf
 

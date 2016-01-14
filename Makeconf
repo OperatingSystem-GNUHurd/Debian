@@ -36,7 +36,6 @@
 
 # Types `server' and `utility' should define
 #   target (the name of the program built)
-#   OTHERLIBS (all libraries used)
 
 # Types `servers' and `utilities' should define
 #   targets (the names of all the programs built)
@@ -309,7 +308,7 @@ $(installationdirlist): %:
 ifneq ($(makemode),misc)
 
 ifeq ($(doinst),one)
-$(linktarg): $(OBJS) $(OTHERLIBS) $(library_deps)
+$(linktarg): $(OBJS) $(library_deps)
 endif
 
 # Determine which sort of library we should link against from whether -static
@@ -324,7 +323,7 @@ _libsubst=${libsubst$(patsubst %,-override,${libsubst-override})}
 
 # Direct the linker where to find shared objects specified in the
 # dependencies of other shared objects it encounters.
-rpath := -Wl,-rpath-link=.:$(subst $. ,:,$(dir $(wildcard ../lib*/lib*.so)))
+lpath := -L. $(patsubst %,-L%,$(dir $(wildcard ../lib*/lib*.so)))
 
 # Main rule to link executables
 #
@@ -333,7 +332,7 @@ rpath := -Wl,-rpath-link=.:$(subst $. ,:,$(dir $(wildcard ../lib*/lib*.so)))
 ifeq ($(prof-depend),)
 
 define link-executable
-$(CC) $(rpath) $(CFLAGS) $($*-CFLAGS) $(LDFLAGS) $($*-LDFLAGS) \
+$(CC) $(lpath) $(CFLAGS) $($*-CFLAGS) $(LDFLAGS) $($*-LDFLAGS) \
       $(BUGADDR_REF) \
       -o $@
 endef
@@ -382,7 +381,7 @@ $(libname)_pic.a: $(patsubst %.o,%_pic.o,$(OBJS))
 # we make that a symlink.
 $(libname).so.$(hurd-version): $(patsubst %.o,%_pic.o,$(OBJS)) $(library_deps)
 	$(CC) -shared -Wl,-soname=$@ -o $@ \
-	      $(rpath) $(CFLAGS) $(LDFLAGS) $($(libname).so-LDFLAGS) \
+	      $(lpath) $(CFLAGS) $(LDFLAGS) $($(libname).so-LDFLAGS) \
 	      '-Wl,-(' $(filter-out %.map,$^) \
 		       $($(libname).so-LDLIBS) $(LDLIBS) \
 	      '-Wl,-)' $(filter %.map,$^)

@@ -30,8 +30,8 @@ OBJS 	:= $(SRCS:.c=.o) \
 	   default_pager_replyUser.o
 
 HURDLIBS:= ihash
-OTHERLIBS:= -lpthread
-LDFLAGS += -static
+LDFLAGS += -static -z muldefs
+LDLIBS:= -lpthread
 
 include ../Makeconf
 
