@@ -19,7 +19,7 @@ git pull . dde-upstream
 
 git push incubator dde:dde-debian
 git tag -m "New upstream snapshot" -a upstream/dde/$version$git
-for dir in devnode libbpf libdde-linux26 libddekit libhurd-slab libmachdev
+for dir in libbpf libdde-linux26 libddekit libmachdev
 do
   git archive HEAD $dir | bzip2 > ../hurd_$version$git.orig-$dir.tar.bz2
 done
@@ -43,7 +43,7 @@ git archive --prefix=hurd-$version$git/ HEAD | bzip2 > ../hurd_$version$git.orig
 
 git checkout upstream-merged
 rm * -fr
-for dir in devnode libbpf libdde-linux26 libddekit libhurd-slab libmachdev eth-filter eth-multiplexer
+for dir in libbpf libdde-linux26 libddekit libmachdev eth-filter eth-multiplexer
 do
   tar -xf ../hurd_$version$git.orig-$dir.tar.bz2
 done
