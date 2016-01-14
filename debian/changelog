@@ -1,4 +1,4 @@
-hurd (1:0.7+git20160114-1) UNRELEASED; urgency=medium
+hurd (1:0.7.git20160114-1) UNRELEASED; urgency=medium
 
   * New upstream snapshot
   * control, rules: Add a stage3 which builds everything that can be built
