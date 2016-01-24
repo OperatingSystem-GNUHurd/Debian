@@ -151,7 +151,7 @@ override_dh_installchangelogs:
 
 override_dh_strip:
 ifeq (,$(filter stage1 stage2,$(DEB_BUILD_PROFILES)))
-	dh_strip -phurd-libs0.3 -phurd --dbg-package=hurd-dbg
+	dh_strip -phurd-libs0.3 -phurd --ddeb-migration='hurd-dbg (<< 1:0.7.git20160114-2~)'
 endif
 	dh_strip --remaining-packages
 

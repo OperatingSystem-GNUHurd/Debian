@@ -2,6 +2,8 @@ hurd (1:0.7.git20160114-2) UNRELEASED; urgency=medium
 
   * control: Drop perl build-dep, it is already build-essential.
   * rules: Fix noudeb build profile.
+  * rules: Set ddeb-migration.
+  * control: Depend on debhelper 9.20150628 for ddeb-migration.
 
  -- Samuel Thibault <sthibault@debian.org>  Fri, 15 Jan 2016 19:45:32 +0100
 
