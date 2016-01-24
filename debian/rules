@@ -135,9 +135,11 @@ endif
 endif
 
 override_dh_install: $(INSTALL_generated)
-	dh_install --remaining-packages --list-missing --sourcedir=debian/tmp
 ifeq (,$(filter stage1 stage2 stage3 noudeb,$(DEB_BUILD_PROFILES)))
 	dh_install $(addprefix -p,$(filter %-udeb,$(shell dh_listpackages))) --sourcedir=debian/tmp-udeb
+endif
+	dh_install --remaining-packages --list-missing --sourcedir=debian/tmp
+ifeq (,$(filter stage1 stage2 stage3 noudeb,$(DEB_BUILD_PROFILES)))
 	mkdir -p debian/hurd-udeb/usr/share/lintian/overrides
 	install -p -m644 debian/hurd-udeb.lintian-overrides debian/hurd-udeb/usr/share/lintian/overrides/hurd-udeb
 endif
