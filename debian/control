@@ -54,15 +54,6 @@ Breaks: hurd (<< 20130226-2~)
 Description: GNU Hurd (development files)
  This package includes the header files and the static libraries.
 
-Package: hurd-dbg
-Priority: extra
-Section: debug
-Architecture: hurd-any
-Build-Profiles: <!stage1 !stage2>
-Depends: ${misc:Depends}, hurd (= ${binary:Version})
-Description: GNU Hurd (debugging files)
- This package includes the unstripped binaries and libraries.
-
 Package: hurd-doc
 Priority: optional
 Section: doc
