@@ -1,6 +1,11 @@
 hurd (1:0.7.git20160214-1) unstable; urgency=medium
 
   * New upstream snapshot
+  * control: Drop perl build-dep, it is already build-essential.
+  * rules: Fix noudeb build profile.
+  * rules: Set ddeb-migration.
+  * control: Depend on debhelper 9.20150628 for ddeb-migration.
+  * control: Bump Standards-Version to 3.9.7 (no change).
   * patches/mtab-siglost.patch: New patch to avoid mtab crashing when mounted
     from /etc/init.d/rc.
   * patches/procfs-compatible: New patch to make procfs use compatibility by
