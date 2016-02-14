@@ -300,8 +300,8 @@ Index: hurd-debian/exec/Makefile
 -       execServer.o exec_startupServer.o
 +       execServer.o exec_startupServer.o exec_experimentalServer.o
  
- target = exec
- #targets = exec exec.static
+ target = exec exec.static
+ HURDLIBS = trivfs fshelp iohelp ports ihash shouldbeinlibc
 @@ -30,6 +30,7 @@
  
  exec-MIGSFLAGS = -imacros $(srcdir)/execmutations.h
