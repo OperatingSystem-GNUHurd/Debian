@@ -24,3 +24,4 @@ newRPC.patch
 dl_origin.patch
 cross-link.patch
 mtab-siglost.patch
+procfs-compatible

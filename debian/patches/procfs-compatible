@@ -1,0 +1,16 @@
+Until /etc/init.d/rc uses -ocompatible (bug#814735)
+
+Index: hurd-debian/procfs/main.c
+===================================================================
+--- hurd-debian.orig/procfs/main.c
++++ hurd-debian/procfs/main.c
+@@ -318,6 +318,9 @@ int main (int argc, char **argv)
+   opt_fake_self = OPT_FAKE_SELF;
+   opt_kernel_pid = OPT_KERNEL_PID;
+   opt_anon_owner = OPT_ANON_OWNER;
++
++  set_compatibility_options ();
++
+   err = argp_parse (&argp, argc, argv, 0, 0, 0);
+   if (err)
+     error (1, err, "Could not parse command line");
