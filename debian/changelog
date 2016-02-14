@@ -1,5 +1,6 @@
-hurd (1:0.7.git20160114-2) UNRELEASED; urgency=medium
+hurd (1:0.7.git20160214-1) UNRELEASED; urgency=medium
 
+  * New upstream snapshot
   * patches/mtab-siglost.patch: New patch to avoid mtab crashing when mounted
     from /etc/init.d/rc.
 
