@@ -9,7 +9,7 @@ version=0.7
 git fetch --all
 
 git checkout dde-upstream
-git pull incubator dde:dde-upstream
+git pull incubator dde
 
 git checkout dde
 git pull . dde-upstream
