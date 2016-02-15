@@ -107,7 +107,6 @@ st socket/2 '/hurd/pfinet -6 /servers/socket/26' inet
 st socket/inet  '/hurd/symlink 2'  '(+link)'
 st socket/26 '/hurd/pfinet -4 /servers/socket/2' inet6
 st socket/inet6 '/hurd/symlink 26' '(+link)'
-st /proc '/hurd/procfs -c'
 touch startup 2> /dev/null
 
 if [ -z "$MINIMAL" ]; then
