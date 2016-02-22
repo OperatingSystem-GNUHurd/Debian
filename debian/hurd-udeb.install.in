@@ -34,6 +34,7 @@ hurd/auth
 hurd/console
 hurd/devnode
 hurd/exec
+hurd/exec.static /boot
 hurd/ext2fs
 hurd/ext2fs.static /boot
 hurd/fatfs
