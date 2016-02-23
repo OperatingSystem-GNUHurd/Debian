@@ -3,6 +3,7 @@ hurd (1:0.7.git20160214-3) UNRELEASED; urgency=medium
   * patches/mtab-siglost.patch: Replace with upstream patches/mount-nostd.patch
     to fix mtab crash, but also d-i ISO mount hang.
   * hurd-udeb.install.in: Install udeb's exec.static to /boot for d-i.
+  * patches/crash-logging.patch: New patch to dump information on process crash.
 
  -- Samuel Thibault <sthibault@debian.org>  Mon, 22 Feb 2016 19:14:25 +0000
 
