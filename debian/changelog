@@ -4,7 +4,6 @@ hurd (1:0.7.git20160223-1) UNRELEASED; urgency=medium
   * patches/mtab-siglost.patch: Remove, fixed upstream another way.
   * hurd-udeb.install.in: Install udeb's exec.static to /boot for d-i.
   * patches/crash-logging.patch: New patch to dump information on process crash.
-  * patches/disable-duplicate-lookup-optimization.patch: Disable again.
 
  -- Samuel Thibault <sthibault@debian.org>  Mon, 22 Feb 2016 19:14:25 +0000
 
