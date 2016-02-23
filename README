@@ -36,7 +36,7 @@ do
 done
 
 git checkout upstream
-git pull upstream master:upstream
+git pull upstream master
 
 git tag -m "New upstream snapshot" -a upstream/hurd/$version$git
 git archive --prefix=hurd-$version$git/ HEAD | bzip2 > ../hurd_$version$git.orig.tar.bz2
