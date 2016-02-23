@@ -26,3 +26,4 @@ cross-link.patch
 procfs-compatible
 mount-nostd.patch
 crash-logging.patch
+disable-duplicate-lookup-optimization.patch
