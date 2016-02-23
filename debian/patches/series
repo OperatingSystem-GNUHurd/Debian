@@ -24,6 +24,5 @@ newRPC.patch
 dl_origin.patch
 cross-link.patch
 procfs-compatible
-mount-nostd.patch
 crash-logging.patch
 disable-duplicate-lookup-optimization.patch

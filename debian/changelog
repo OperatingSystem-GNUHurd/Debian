@@ -1,7 +1,7 @@
-hurd (1:0.7.git20160214-3) UNRELEASED; urgency=medium
+hurd (1:0.7.git20160223-1) UNRELEASED; urgency=medium
 
-  * patches/mtab-siglost.patch: Replace with upstream patches/mount-nostd.patch
-    to fix mtab crash, but also d-i ISO mount hang.
+  * New upstream snapshot.
+  * patches/mtab-siglost.patch: Remove, fixed upstream another way.
   * hurd-udeb.install.in: Install udeb's exec.static to /boot for d-i.
   * patches/crash-logging.patch: New patch to dump information on process crash.
   * patches/disable-duplicate-lookup-optimization.patch: Disable again.
