@@ -1,3 +1,10 @@
+hurd (1:0.7.git20160223-2) UNRELEASED; urgency=medium
+
+  * control: Avoid sysv-rc, netdde, and xkb-data dependencies in stage3, they
+    are only really useful for the final stage.
+
+ -- Samuel Thibault <sthibault@debian.org>  Fri, 26 Feb 2016 00:21:01 +0100
+
 hurd (1:0.7.git20160223-1) unstable; urgency=medium
 
   * New upstream snapshot.
