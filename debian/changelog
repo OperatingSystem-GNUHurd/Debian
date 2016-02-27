@@ -7,7 +7,7 @@ hurd (1:0.7.git20160223-2) unstable; urgency=medium
   * Move stage1 hurd-dev content to hurd-headers-dev, and stage2 hurd-dev
     content to libihash-dev.
   * patches/parallel_build.diff: New patch to fix parallel install.
-  * control: Allow parallel build.
+  * rules: Allow parallel build.
   * patches/cross-fix.diff: Upstream patch to fix cross-linking.
 
  -- Samuel Thibault <sthibault@debian.org>  Sat, 27 Feb 2016 15:55:33 +0000
