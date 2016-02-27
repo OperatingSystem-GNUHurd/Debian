@@ -61,7 +61,7 @@ Priority: standard
 Section: libdevel
 Architecture: hurd-any
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Build-Profiles: <!stage3>
+Build-Profiles: <stage1> <stage2>
 Description: GNU Hurd (development files)
  This package includes the header files and the static libraries.
  .
@@ -72,7 +72,7 @@ Priority: standard
 Section: libdevel
 Architecture: hurd-any
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Build-Profiles: <!stage1 !stage3>
+Build-Profiles: <stage2>
 Description: GNU Hurd (development files)
  This package includes the header files and the static libraries.
  .
