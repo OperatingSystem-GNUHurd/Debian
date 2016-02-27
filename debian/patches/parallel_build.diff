@@ -1,0 +1,24 @@
+commit eeeb27ee14064dff84c833b4359d43d9869a9342
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Sat Feb 27 15:34:17 2016 +0100
+
+    Fix parallel install
+    
+    * sutils/Makefile (install): Do not depend on $(prefix)/dev.
+    ($(prefix)/dev/MAKEDEV): Depend on $(prefix)/dev²
+
+diff --git a/sutils/Makefile b/sutils/Makefile
+index 773a7da..e30bfb7 100644
+--- a/sutils/Makefile
++++ b/sutils/Makefile
+@@ -36,8 +36,8 @@ fsck: fstab.o clookup.o
+ swapon swapoff: ../libstore/libstore.a default_pagerUser.o
+ $(progs): %: %.o ../libshouldbeinlibc/libshouldbeinlibc.a
+ 
+-install: $(prefix)/dev $(prefix)/dev/MAKEDEV
+-$(prefix)/dev/MAKEDEV:
++install: $(prefix)/dev/MAKEDEV
++$(prefix)/dev/MAKEDEV: $(prefix)/dev
+ 	ln -s ../sbin/MAKEDEV $@
+ $(prefix)/dev:
+ 	@$(MKINSTALLDIRS) $@

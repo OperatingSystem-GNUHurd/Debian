@@ -54,7 +54,7 @@ INSTALL_generated := $(patsubst %.in,%,$(INSTALL_in))
 BUILT_USING := $(shell dpkg-query -f '$${source:Package} (= $${source:Version}), ' -W libc0.3-dev libparted-dev zlib1g-dev libbz2-dev uuid-dev libblkid-dev)
 
 %:
-	dh $@ -Bbuild-deb --with autotools_dev,autoreconf
+	dh $@ -Bbuild-deb --with autotools_dev,autoreconf --parallel
 
 override_dh_auto_configure:
 	dh_auto_configure -Bbuild-deb -- $(CONFIGURE_ARGS) $(CONFIGURE_ARGS_deb) $(shell dpkg-buildflags --export=configure)
