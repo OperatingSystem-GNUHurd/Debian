@@ -1,0 +1,21 @@
+commit 8f2d35538813669eb0bde0a41b0bc9c4484d59a8
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Thu Feb 25 23:22:23 2016 +0100
+
+    Add missing libraries to fix bootstrap link
+    
+    * eth-multiplexer/Makefile (HURDLIBS): Add ihash and iohelp.
+
+diff --git a/eth-multiplexer/Makefile b/eth-multiplexer/Makefile
+index 8b392f4..159f385 100644
+--- a/eth-multiplexer/Makefile
++++ b/eth-multiplexer/Makefile
+@@ -26,7 +26,7 @@ MIGSFLAGS = -imacros $(srcdir)/mig-mutate.h
+ device-MIGSFLAGS="-DMACH_PAYLOAD_TO_PORT=ports_payload_get_name"
+ OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
+ LCLHDRS = ethernet.h util.h vdev.h netfs_impl.h
+-HURDLIBS=ports fshelp shouldbeinlibc netfs bpf
++HURDLIBS = ihash iohelp ports fshelp shouldbeinlibc netfs bpf
+ LDLIBS += -lpthread
+ 
+ CFLAGS += -I$(top_srcdir)/libbpf
