@@ -25,5 +25,3 @@ dl_origin.patch
 cross-link.patch
 procfs-compatible
 crash-logging.patch
-parallel_build.diff
-cross-fix.diff

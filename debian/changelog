@@ -1,5 +1,7 @@
-hurd (1:0.7.git20160223-3) UNRELEASED; urgency=medium
+hurd (1:0.7.git20160228-1) UNRELEASED; urgency=medium
 
+  * New upstream snapshot.
+    - patches/parallel_build.diff,cross-fix.diff: Drop, merged upstream.
   * control: Fix spurious build of hurd-headers-dev and libihash-dev in unstaged
     builds.
   * rules: Fix cross-build of libdde-linux26.
