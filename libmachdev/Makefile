@@ -26,7 +26,7 @@ LCLHDRS = dev_hdr.h device_emul.h ds_routines.h vm_param.h \
 	  util.h queue.h io_req.h if_ether.h machdev.h linux-errno.h \
 	  errno-base.h
 installhdrs = machdev.h
-HURDLIBS = ports trivfs bpf
+HURDLIBS = ports trivfs bpf ddekit
 LDLIBS += -lpthread
 OBJS = $(SRCS:.c=.o) $(MIGSTUBS)
 MIGSFLAGS = -imacros $(srcdir)/mig-mutate.h
