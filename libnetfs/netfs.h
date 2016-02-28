@@ -51,7 +51,7 @@ struct peropen
 {
   loff_t filepointer;
   int lock_status;
-  int refcnt;
+  refcount_t refcnt;
   int openstat;
 
   struct node *np;
@@ -70,8 +70,6 @@ struct peropen
 /* A unique one of these exists for each node currently in use. */
 struct node
 {
-  struct node *next, **prevp;
-
   /* Protocol specific stuff; defined by user.  */
   struct netnode *nn;
 
