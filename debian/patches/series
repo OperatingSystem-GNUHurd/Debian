@@ -25,3 +25,5 @@ dl_origin.patch
 cross-link.patch
 procfs-compatible
 crash-logging.patch
+using_std.patch
+netdde_log.patch
