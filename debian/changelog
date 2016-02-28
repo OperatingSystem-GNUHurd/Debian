@@ -1,4 +1,4 @@
-hurd (1:0.7.git20160228-1) UNRELEASED; urgency=medium
+hurd (1:0.7.git20160228-1) unstable; urgency=medium
 
   * New upstream snapshot.
     - patches/parallel_build.diff,cross-fix.diff: Drop, merged upstream.
@@ -8,7 +8,7 @@ hurd (1:0.7.git20160228-1) UNRELEASED; urgency=medium
   * patches/using_std.patch: Fix external reference to using_std variable.
   * patches/netdde_log.patch: Move logs to /var/run.
 
- -- Samuel Thibault <sthibault@debian.org>  Sun, 28 Feb 2016 11:28:16 +0000
+ -- Samuel Thibault <sthibault@debian.org>  Sun, 28 Feb 2016 16:35:27 +0000
 
 hurd (1:0.7.git20160223-2) unstable; urgency=medium
 
