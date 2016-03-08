@@ -3,6 +3,8 @@ hurd (1:0.7.git20160223-3) UNRELEASED; urgency=medium
   * control: Fix spurious build of hurd-headers-dev and libihash-dev in unstaged
     builds.
   * rules: Fix cross-build of libdde-linux26.
+  * patches/libports-iterate-refcount.patch: New patch to avoid a crash in
+    libports.
 
  -- Samuel Thibault <sthibault@debian.org>  Sun, 28 Feb 2016 11:28:16 +0000
 
