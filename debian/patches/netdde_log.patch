@@ -1,0 +1,13 @@
+Index: hurd-debian/libddekit/printf.c
+===================================================================
+--- hurd-debian.orig/libddekit/printf.c
++++ hurd-debian/libddekit/printf.c
+@@ -79,7 +79,7 @@ int log_init ()
+ 		output = stderr;
+ 	}
+ 	else {
+-		char template[] = "/var/log/dde_log.XXXXXX";
++		char template[] = "/var/run/dde_log.XXXXXX";
+ 		int ret = mkstemp (template);
+ 		if (ret < 0) {
+ 			error (0, errno, "mkstemp");

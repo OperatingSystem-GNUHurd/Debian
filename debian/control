@@ -48,8 +48,8 @@ Priority: standard
 Section: libdevel
 Architecture: hurd-any
 Depends: ${misc:Depends}, ${shlibs:Depends}, ${perl:Depends},
- libc0.3-dev (>= 2.13-31~) <!stage1>, hurd (= ${binary:Version}) <!stage1 !stage2 !stage3>
-Provides: hurd-headers-dev, libihash-dev
+ libc0.3-dev (>= 2.13-31~) <!stage1>, hurd (= ${binary:Version}) <!stage3>
+Provides: hurd-headers-dev, libihash-dev, libdde-linux26-dev <!stage3>
 Replaces: hurd (<< 20130226-2~), hurd-headers-dev, libihash-dev
 Breaks: hurd (<< 20130226-2~), hurd-headers-dev, libihash-dev
 Build-Profiles: <!stage1 !stage2>
