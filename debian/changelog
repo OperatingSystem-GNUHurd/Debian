@@ -1,11 +1,11 @@
-hurd (1:0.7.git20160311-1) UNRELEASED; urgency=medium
+hurd (1:0.7.git20160311-1) unstable; urgency=medium
 
   * New upstream snapshot.
   * control: Make hurd-dev provides libdde-linux26-dev (but not at stage3).
   * patches/libports-iterate-refcount.patch: New patch to avoid a crash in
     libports.
 
- -- Samuel Thibault <sthibault@debian.org>  Sun, 28 Feb 2016 20:35:20 +0000
+ -- Samuel Thibault <sthibault@debian.org>  Fri, 11 Mar 2016 22:21:27 +0000
 
 hurd (1:0.7.git20160228-1) unstable; urgency=medium
 
