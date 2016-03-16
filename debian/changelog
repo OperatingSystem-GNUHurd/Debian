@@ -1,8 +1,8 @@
-hurd (1:0.7.git20160316-1) UNRELEASED; urgency=medium
+hurd (1:0.7.git20160316-1) unstable; urgency=medium
 
   * New upstream snapshot.
 
- -- Samuel Thibault <sthibault@debian.org>  Wed, 16 Mar 2016 00:57:19 +0000
+ -- Samuel Thibault <sthibault@debian.org>  Wed, 16 Mar 2016 00:58:03 +0000
 
 hurd (1:0.7.git20160311-1) unstable; urgency=medium
 
