@@ -56,27 +56,28 @@ Build-Profiles: <!stage1 !stage2>
 Description: GNU Hurd (development files)
  This package includes the header files and the static libraries.
 
-Package: hurd-headers-dev
-Priority: standard
-Section: libdevel
-Architecture: hurd-any
-Depends: ${misc:Depends}, ${shlibs:Depends}
-Build-Profiles: <stage1> <stage2>
-Description: GNU Hurd (development files)
- This package includes the header files and the static libraries.
- .
- This package is only used for bootstrap, it contains headers needed for libc
-
-Package: libihash-dev
-Priority: standard
-Section: libdevel
-Architecture: hurd-any
-Depends: ${misc:Depends}, ${shlibs:Depends}
-Build-Profiles: <stage2>
-Description: GNU Hurd (development files)
- This package includes the header files and the static libraries.
- .
- This package is only used for bootstrap, it contains libihash needed for libc.
+# Dropped for now, see #818618
+#Package: hurd-headers-dev
+#Priority: standard
+#Section: libdevel
+#Architecture: hurd-any
+#Depends: ${misc:Depends}, ${shlibs:Depends}
+#Build-Profiles: <stage1> <stage2>
+#Description: GNU Hurd (development files)
+# This package includes the header files and the static libraries.
+# .
+# This package is only used for bootstrap, it contains headers needed for libc
+#
+#Package: libihash-dev
+#Priority: standard
+#Section: libdevel
+#Architecture: hurd-any
+#Depends: ${misc:Depends}, ${shlibs:Depends}
+#Build-Profiles: <stage2>
+#Description: GNU Hurd (development files)
+# This package includes the header files and the static libraries.
+# .
+# This package is only used for bootstrap, it contains libihash needed for libc.
 
 Package: hurd-doc
 Priority: optional
