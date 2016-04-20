@@ -19,6 +19,9 @@
 
 DEB_DESTDIR = $(CURDIR)/debian/tmp
 DEB_DESTDIR_UDEB = $(CURDIR)/debian/tmp-udeb
+DEB_DESTDIR_PROF = $(CURDIR)/debian/tmp-prof
+
+TRANSLATORS_PROF = auth exec ext2fs pfinet pflocal proc procfs term
 
 ifeq (,$(filter stage1 stage2 stage3,$(DEB_BUILD_PROFILES)))
 CONFIGURE_ARGS = --disable-profile --enable-static-progs='ext2fs,iso9660fs'
@@ -64,6 +67,9 @@ endif
 
 override_dh_auto_configure:
 	dh_auto_configure -Bbuild-deb -- $(CONFIGURE_ARGS) $(CONFIGURE_ARGS_deb) $(shell dpkg-buildflags --export=configure)
+ifneq (,$(filter prof,$(DEB_BUILD_PROFILES)))
+	dh_auto_configure -Bbuild-prof -- $(CONFIGURE_ARGS) $(CONFIGURE_ARGS_deb) $(shell DEB_CFLAGS_APPEND=-pg dpkg-buildflags --export=configure)
+endif
 ifeq (,$(filter stage1 stage2 stage3 noudeb,$(DEB_BUILD_PROFILES)))
 	dh_auto_configure -Bbuild-udeb -- $(CONFIGURE_ARGS) $(CONFIGURE_ARGS_udeb) $(shell dpkg-buildflags --export=configure)
 endif
@@ -79,6 +85,12 @@ else
 	dh_auto_build -Bbuild-udeb
   endif
 	dh_auto_build -Bbuild-deb
+ifneq (,$(filter prof,$(DEB_BUILD_PROFILES)))
+	dh_auto_build -Bbuild-prof
+	for i in $(TRANSLATORS_PROF) ; do \
+		$(MAKE) -C build-prof/$$i $$i.static ; \
+	      done
+endif
 	cd build-deb/doc && make && makeinfo --html --split=chapter ../../doc/hurd.texi
   ifeq (,$(filter stage3,$(DEB_BUILD_PROFILES)))
 	$(MAKE) -C libdde-linux26 BUILDDIR=$(CURDIR)/build-deb LDFLAGS= CC=$(CC)
@@ -87,6 +99,9 @@ endif
 
 override_dh_auto_clean:
 	dh_auto_clean -Bbuild-deb
+ifneq (,$(filter prof,$(DEB_BUILD_PROFILES)))
+	dh_auto_clean -Bbuild-prof
+endif
 ifeq (,$(filter stage1 stage2 stage3 noudeb,$(DEB_BUILD_PROFILES)))
 	dh_auto_clean -Bbuild-udeb
 endif
@@ -104,6 +119,12 @@ ifneq (,$(filter stage1 stage2,$(DEB_BUILD_PROFILES)))
   endif
 else
 	dh_auto_install -Bbuild-deb -- prefix=$(DEB_DESTDIR) libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) libexecdir=$(DEB_DESTDIR)/lib/hurd sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var XKB_BASE=$(DEB_DESTDIR)/usr/share/X11/xkb
+ifneq (,$(filter prof,$(DEB_BUILD_PROFILES)))
+	install -d $(DEB_DESTDIR_PROF)/hurd
+	for i in $(TRANSLATORS_PROF) ; do \
+		install -m 755 build-prof/$$i/$$i.static $(DEB_DESTDIR_PROF)/hurd/$$i.prof ; \
+	done
+endif
 ifeq (,$(filter noudeb,$(DEB_BUILD_PROFILES)))
 	dh_auto_install -Bbuild-udeb -- prefix=$(DEB_DESTDIR_UDEB) libdir=$(DEB_DESTDIR_UDEB)/lib libexecdir=$(DEB_DESTDIR_UDEB)/lib/hurd sysconfdir=$(DEB_DESTDIR_UDEB)/etc localstatedir=$(DEB_DESTDIR_UDEB)/var XKB_BASE=$(DEB_DESTDIR_UDEB)/usr/share/X11/xkb
 endif
@@ -144,6 +165,9 @@ override_dh_install: $(INSTALL_generated)
 ifeq (,$(filter stage1 stage2 stage3 noudeb,$(DEB_BUILD_PROFILES)))
 	dh_install $(addprefix -p,$(filter %-udeb,$(shell dh_listpackages))) --sourcedir=debian/tmp-udeb
 endif
+ifneq (,$(filter prof,$(DEB_BUILD_PROFILES)))
+	dh_install -phurd-prof --sourcedir=debian/tmp-prof
+endif
 	dh_install --remaining-packages --list-missing --sourcedir=debian/tmp
 ifeq (,$(filter stage1 stage2 stage3 noudeb,$(DEB_BUILD_PROFILES)))
 	mkdir -p debian/hurd-udeb/usr/share/lintian/overrides
@@ -179,6 +203,7 @@ override_dh_gencontrol:
 override_dh_clean:
 	dh_clean
 	rm -rf debian/tmp-udeb
+	rm -rf debian/tmp-prof
 
 debian/%.install: debian/%.install.in
 	cat $^ | sed -e 's/@DEB_HOST_MULTIARCH@/$(DEB_HOST_MULTIARCH)/g' > $@
