@@ -1,0 +1,11 @@
+statically-linked-binary hurd/mach-defpager
+statically-linked-binary hurd/auth.prof
+statically-linked-binary hurd/exec.prof
+statically-linked-binary hurd/ext2fs.prof
+statically-linked-binary hurd/pfinet.prof
+statically-linked-binary hurd/pflocal.prof
+statically-linked-binary hurd/proc.prof
+statically-linked-binary hurd/procfs.prof
+statically-linked-binary hurd/term.prof
+embedded-library hurd/ext2fs.prof: bzip2
+embedded-library hurd/ext2fs.prof: zlib
