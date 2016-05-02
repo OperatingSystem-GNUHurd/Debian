@@ -1,7 +1,8 @@
-hurd (1:0.7.git20160320-3) UNRELEASED; urgency=medium
+hurd (1:0.7.git20160320-3) experimental; urgency=medium
 
-  * rules: Add prof dpkg build profile to build gprof versions of the main
+  * rules: Add hurd-prof package to ship gprof versions of the main
     translators.
+  * control: Depend on recent-enough gcc-5 to have gprof working.
 
  -- Samuel Thibault <sthibault@debian.org>  Wed, 20 Apr 2016 21:58:37 +0000
 
