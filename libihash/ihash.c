@@ -81,15 +81,9 @@ find_index (hurd_ihash_t ht, hurd_ihash_key_t key)
 
   idx = hash (ht, key) & mask;
 
-  if (ht->items[idx].value == _HURD_IHASH_EMPTY
-      || compare (ht, ht->items[idx].key, key))
-    return idx;
-
   up_idx = idx;
-
   do
     {
-      up_idx = (up_idx + 1) & mask;
       if (ht->items[up_idx].value == _HURD_IHASH_EMPTY)
         return first_deleted_set ? first_deleted : up_idx;
       if (compare (ht, ht->items[up_idx].key, key))
@@ -97,6 +91,7 @@ find_index (hurd_ihash_t ht, hurd_ihash_key_t key)
       if (! first_deleted_set
           && ht->items[up_idx].value == _HURD_IHASH_DELETED)
         first_deleted = up_idx, first_deleted_set = 1;
+      up_idx = (up_idx + 1) & mask;
     }
   while (up_idx != idx);
 
@@ -136,6 +131,7 @@ hurd_ihash_init (hurd_ihash_t ht, intptr_t locp_offs)
   ht->cleanup = 0;
   ht->fct_hash = NULL;
   ht->fct_cmp = NULL;
+  ht->nr_free = 0;
 }
 
 
@@ -251,6 +247,11 @@ add_one (hurd_ihash_t ht, hurd_ihash_key_t key, hurd_ihash_value_t value)
   if (index_empty (ht, idx))
     {
       ht->nr_items++;
+      if (ht->items[idx].value == _HURD_IHASH_EMPTY)
+        {
+          assert (ht->nr_free > 0);
+          ht->nr_free--;
+        }
       ht->items[idx].value = value;
       ht->items[idx].key = key;
 
@@ -288,13 +289,15 @@ hurd_ihash_locp_add (hurd_ihash_t ht, hurd_ihash_locp_t locp,
       || item == NULL
       || item->value == _HURD_IHASH_DELETED
       || ! compare (ht, item->key, key)
-      || hurd_ihash_get_load (ht) > ht->max_load)
+      || hurd_ihash_get_effective_load (ht) > ht->max_load)
     return hurd_ihash_add (ht, key, value);
 
   if (item->value == _HURD_IHASH_EMPTY)
     {
       item->key = key;
       ht->nr_items += 1;
+      assert (ht->nr_free > 0);
+      ht->nr_free -= 1;
     }
   else
     {
@@ -328,18 +331,21 @@ hurd_ihash_add (hurd_ihash_t ht, hurd_ihash_key_t key, hurd_ihash_value_t item)
   if (ht->size)
     {
       /* Only fill the hash table up to its maximum load factor.  */
-      if (hurd_ihash_get_load (ht) <= ht->max_load)
+      if (hurd_ihash_get_effective_load (ht) <= ht->max_load)
       add_one:
 	if (add_one (ht, key, item))
 	  return 0;
     }
 
-  /* The hash table is too small, and we have to increase it.  */
+  /* If the load exceeds the configured maximal load, then the hash
+     table is too small, and we have to increase it.  Otherwise we
+     merely rehash the table to get rid of the tombstones.  */
   ht->nr_items = 0;
   if (ht->size == 0)
       ht->size = HURD_IHASH_MIN_SIZE;
-  else
+  else if (hurd_ihash_get_load (&old_ht) > ht->max_load)
       ht->size <<= 1;
+  ht->nr_free = ht->size;
 
   /* calloc() will initialize all values to _HURD_IHASH_EMPTY implicitly.  */
   ht->items = calloc (ht->size, sizeof (struct _hurd_ihash_item));

@@ -64,6 +64,8 @@ static struct argp_option options[] =
   {"exclusive",   'x', 0, 0, "Only set the translator if there is not one already"},
   {"orphan",      'o', 0, 0, "Disconnect old translator from the filesystem "
 			     "(do not ask it to go away)"},
+  {"underlying",  'U', "NODE", 0, "Open NODE and hand it to the translator "
+				  "as the underlying node"},
 
   {"chroot",      'C', 0, 0,
    "Instead of setting the node's translator, take following arguments up to"
@@ -87,6 +89,44 @@ static struct argp_option options[] =
 static char *args_doc = "NODE [TRANSLATOR ARG...]";
 static char *doc = "Set the passive/active translator on NODE."
 "\vBy default the passive translator is set.";
+
+/* Authentication of the current process.  */
+uid_t *uids;
+gid_t *gids;
+size_t uids_len, gids_len;
+
+/* Initialize and populate the uids and gids vectors.  */
+error_t
+get_credentials (void)
+{
+  /* Fetch uids...  */
+  uids_len = geteuids (0, 0);
+  if (uids_len < 0)
+    return errno;
+
+  uids = malloc (uids_len * sizeof (uid_t));
+  if (! uids)
+    return ENOMEM;
+
+  uids_len = geteuids (uids_len, uids);
+  if (uids_len < 0)
+    return errno;
+
+  /* ... and gids.  */
+  gids_len = getgroups (0, 0);
+  if (gids_len < 0)
+    return errno;
+
+  gids = malloc (gids_len * sizeof (gid_t));
+  if (! uids)
+    return ENOMEM;
+
+  gids_len = getgroups (gids_len, gids);
+  if (gids_len < 0)
+    return errno;
+
+  return 0;
+}
 
 /* ---------------------------------------------------------------- */
 
@@ -119,6 +159,7 @@ main(int argc, char *argv[])
   char *pid_file = NULL;
   int excl = 0;
   int timeout = DEFAULT_TIMEOUT * 1000; /* ms */
+  char *underlying_node_name = NULL;
   char **chroot_command = 0;
   char *chroot_chdir = "/";
 
@@ -164,6 +205,11 @@ main(int argc, char *argv[])
 	  break;
 
 	case 'o': orphan = 1; break;
+	case 'U':
+	  underlying_node_name = strdup (arg);
+	  if (underlying_node_name == NULL)
+	    error(3, ENOMEM, "Failed to duplicate argument");
+	  break;
 
 	case 'C':
 	  if (chroot_command)
@@ -292,7 +338,20 @@ main(int argc, char *argv[])
 	      return open_err;
 	    }
 
-	  *underlying = node;
+	  if (underlying_node_name)
+	    {
+	      *underlying = file_name_lookup (underlying_node_name,
+					      flags | lookup_flags, 0666);
+	      if (! MACH_PORT_VALID (*underlying))
+		{
+		  /* For the error message.  */
+		  node_name = underlying_node_name;
+		  open_err = errno;
+		  return open_err;
+		}
+	    }
+	  else
+	    *underlying = node;
 	  *underlying_type = MACH_MSG_TYPE_COPY_SEND;
 
 	  return 0;
@@ -340,9 +399,14 @@ main(int argc, char *argv[])
 	  mach_port_t root;
 	  file_t executable;
 	  char *prefixed_name;
+
+	  err = get_credentials ();
+	  if (err)
+	    error (6, err, "getting credentials");
+
 	  err = fsys_getroot (active_control,
 			      MACH_PORT_NULL, MACH_MSG_TYPE_COPY_SEND,
-			      NULL, 0, NULL, 0, 0,
+			      uids, uids_len, gids, gids_len, 0,
 			      &do_retry, retry_name, &root);
 	  mach_port_deallocate (mach_task_self (), active_control);
 	  if (err)
