@@ -67,7 +67,7 @@ endif
 
 override_dh_auto_configure:
 	dh_auto_configure -Bbuild-deb -- $(CONFIGURE_ARGS) $(CONFIGURE_ARGS_deb) $(shell dpkg-buildflags --export=configure)
-ifneq (,$(filter prof,$(DEB_BUILD_PROFILES)))
+ifeq (,$(filter noprof,$(DEB_BUILD_PROFILES)))
 	dh_auto_configure -Bbuild-prof -- $(CONFIGURE_ARGS) $(CONFIGURE_ARGS_deb) $(shell DEB_CFLAGS_APPEND=-pg dpkg-buildflags --export=configure)
 endif
 ifeq (,$(filter stage1 stage2 stage3 noudeb,$(DEB_BUILD_PROFILES)))
@@ -85,7 +85,7 @@ else
 	dh_auto_build -Bbuild-udeb
   endif
 	dh_auto_build -Bbuild-deb
-ifneq (,$(filter prof,$(DEB_BUILD_PROFILES)))
+ifeq (,$(filter noprof,$(DEB_BUILD_PROFILES)))
 	dh_auto_build -Bbuild-prof
 	for i in $(TRANSLATORS_PROF) ; do \
 		$(MAKE) -C build-prof/$$i $$i.static ; \
@@ -99,7 +99,7 @@ endif
 
 override_dh_auto_clean:
 	dh_auto_clean -Bbuild-deb
-ifneq (,$(filter prof,$(DEB_BUILD_PROFILES)))
+ifeq (,$(filter noprof,$(DEB_BUILD_PROFILES)))
 	dh_auto_clean -Bbuild-prof
 endif
 ifeq (,$(filter stage1 stage2 stage3 noudeb,$(DEB_BUILD_PROFILES)))
@@ -119,7 +119,7 @@ ifneq (,$(filter stage1 stage2,$(DEB_BUILD_PROFILES)))
   endif
 else
 	dh_auto_install -Bbuild-deb -- prefix=$(DEB_DESTDIR) libdir=$(DEB_DESTDIR)/lib/$(DEB_HOST_MULTIARCH) libexecdir=$(DEB_DESTDIR)/lib/hurd sysconfdir=$(DEB_DESTDIR)/etc localstatedir=$(DEB_DESTDIR)/var XKB_BASE=$(DEB_DESTDIR)/usr/share/X11/xkb
-ifneq (,$(filter prof,$(DEB_BUILD_PROFILES)))
+ifeq (,$(filter noprof,$(DEB_BUILD_PROFILES)))
 	install -d $(DEB_DESTDIR_PROF)/hurd
 	for i in $(TRANSLATORS_PROF) ; do \
 		install -m 755 build-prof/$$i/$$i.static $(DEB_DESTDIR_PROF)/hurd/$$i.prof ; \
@@ -165,7 +165,7 @@ override_dh_install: $(INSTALL_generated)
 ifeq (,$(filter stage1 stage2 stage3 noudeb,$(DEB_BUILD_PROFILES)))
 	dh_install $(addprefix -p,$(filter %-udeb,$(shell dh_listpackages))) --sourcedir=debian/tmp-udeb
 endif
-ifneq (,$(filter prof,$(DEB_BUILD_PROFILES)))
+ifeq (,$(filter noprof,$(DEB_BUILD_PROFILES)))
 	dh_install -phurd-prof --sourcedir=debian/tmp-prof
 endif
 	dh_install --remaining-packages --list-missing --sourcedir=debian/tmp
