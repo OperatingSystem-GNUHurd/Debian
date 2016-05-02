@@ -234,7 +234,7 @@ Index: hurd-debian/startup/startup.c
  #include <device/device.h>
  #include <stdio.h>
 @@ -376,13 +379,28 @@ run (const char *server, mach_port_t *po
- 	      printf ("Pausing for %s\n", prog);
+ 	      fprintf (stderr, "Pausing for %s\n", prog);
  	      getchar ();
  	    }
 -	  err = file_exec (file, *task, 0,

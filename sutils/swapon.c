@@ -424,9 +424,7 @@ swaponoff (const char *file, int add, int skipnotexisting)
     {
       /* The default pager does not support the new protocol.
 	 We tried it in a previous call (below) and got MIG_BAD_ID.  */
-      char pname[sizeof "/dev/" + strlen (store->name) + 1];
-      strcpy (stpcpy (pname, "/dev/"), store->name);
-      err = default_pager_paging_file (def_pager, dev_master, pname, add);
+      err = default_pager_paging_file (def_pager, dev_master, file, add);
     }
   else
     {
@@ -439,7 +437,7 @@ swaponoff (const char *file, int add, int skipnotexisting)
 	  runs[j++] = store->runs[i].length;
 	}
       err = default_pager_paging_storage (def_pager, store->port,
-					  runs, j, store->name, add);
+					  runs, j, file, add);
       if (err == MIG_BAD_ID)
 	{
 	  /* The default pager does not support the new protocol.
@@ -571,7 +569,7 @@ main (int argc, char *argv[])
 
       get_def_pager();
 
-      err = default_pager_storage_info (def_pager, &free, &nfree, &size, &nsize,
+      err = default_pager_storage_info (def_pager, &size, &nsize, &free, &nfree,
 					&names, &names_len);
       if (err)
 	error (3, 0, "Can not get default pager storage information");
@@ -580,7 +578,7 @@ main (int argc, char *argv[])
       name = names;
       for (i = 0; i < nfree; i++)
 	{
-	  printf ("/dev/%s\tpartition\t%zuM\t%zuM\t-1\n",
+	  printf ("%s\tpartition\t%zuM\t%zuM\t-1\n",
 	  	  name, size[i] >> 20, (size[i] - free[i]) >> 20);
 	  name = argz_next (names, names_len, name);
 	}
