@@ -1,11 +1,11 @@
-hurd (1:0.7.git20160502-2) UNRELEASED; urgency=medium
+hurd (1:0.7.git20160502-2) unstable; urgency=medium
 
   * Bump gnumach-dev build-dep to fix stdint use in headers.
   * rules: Add hurd-prof package to ship gprof versions of the main
     translators.
   * control: Depend on recent-enough gcc-5 to have gprof working.
 
- -- Samuel Thibault <sthibault@debian.org>  Tue, 03 May 2016 09:58:10 +0200
+ -- Samuel Thibault <sthibault@debian.org>  Wed, 04 May 2016 18:03:36 +0000
 
 hurd (1:0.7.git20160502-1) unstable; urgency=medium
 
